@@ -1,0 +1,29 @@
+# Build / temp files
+*.zip
+*.backup
+*.anchors.json
+__pycache__/
+*.pyc
+*.log
+*.pid
+
+# Tooling
+.hotl/
+.trae/
+.trae-html-share-packages/
+accel/
+docs/
+anchor_map.json
+build*.js
+patch*.js
+test_*.js
+.zhiming_*
+
+# Secrets / auth
+NETLIFY_AUTH.txt
+*.token
+
+# Editor
+.DS_Store
+*.swp
+node_modules/

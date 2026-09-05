@@ -1,7 +1,0 @@
-[
-  {
-    "anchor": "  bindSubtabs();\n  try{ bootstrapUXBindings(); }catch(_){}\n\n  bindAllDrafts();\n  updateTopToday();\n  initTarotUI();\n  initZodiacUI();\n  loadProfiles();\n  if (window._activeProfileId){\n    try{ setActiveProfile(window._activeProfileId); }catch(e){}\n  }\n  paintPrimaryActionsSkeleton();",
-    "inject_before": false,
-    "code": "\n  requestAnimationFrame(function(){\n    paintRaf1Widgets();\n    requestAnimationFrame(function(){\n      paintRaf2Widgets();\n    });\n  });\n"
-  }
-]
