@@ -12850,15 +12850,26 @@ if (typeof window._profileSelEmoji === 'undefined') window._profileSelEmoji = "�
 
 /* ----- 档案：加载/保存 ----- */
 function loadProfiles(){
+  // 【防数据丢失】仅当 localStorage 有有效数据或内存为空时才覆盖；
+  // 若 localStorage 读失败/为空但内存已有档案，保留内存数据，避免破坏性清空。
+  let loaded = null;
   try{
     const raw = localStorage.getItem(PROFILE_KEY);
-    window._profiles = raw ? JSON.parse(raw) : [];
-  }catch(e){ window._profiles = []; }
-  if (!Array.isArray(window._profiles)) window._profiles = [];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) loaded = parsed;
+    }
+  }catch(e){ loaded = null; }
+  if (loaded !== null) {
+    window._profiles = loaded;
+  } else if (!Array.isArray(window._profiles) || window._profiles.length === 0) {
+    window._profiles = [];
+  }
   try{
-    window._activeProfileId = localStorage.getItem(ACTIVE_PROFILE_KEY);
-  }catch(e){ window._activeProfileId = null; }
-  // [Bug3 修复·星座不再固定白羊座] 若有档案但从未显式激活过，默认激活第一个档案，首页星座取其生日
+    const savedId = localStorage.getItem(ACTIVE_PROFILE_KEY);
+    if (savedId) window._activeProfileId = savedId;
+  }catch(e){ /* 保留内存中的 _activeProfileId */ }
+  // 若有档案但从未显式激活过，默认激活第一个
   if(!window._activeProfileId && window._profiles.length > 0){
     window._activeProfileId = window._profiles[0].id || null;
     try{ if(window._activeProfileId) localStorage.setItem(ACTIVE_PROFILE_KEY, window._activeProfileId); }catch(_){}
@@ -13195,7 +13206,11 @@ window.__closeModalById = function(id){
 
 function openProfileModal(){
   try{
-    loadProfiles();
+    // 【防数据丢失】不再每次打开都调用 loadProfiles()（会破坏性覆盖内存档案）；
+    // 直接用内存中的 _profiles 渲染，若内存为空才尝试从 localStorage 恢复。
+    if (!Array.isArray(window._profiles) || window._profiles.length === 0) {
+      loadProfiles();
+    }
     renderProfilesUI();
     window.__openModalById("profileModal");  // [Chrome83] 暴力修复
   }catch(e){
@@ -14070,10 +14085,12 @@ function _getHourIdx(h){
   if(h===23||h===0)return 0;
   return Math.floor((h+1)/2);
 }
-function hashDayScore(subKey, date, seedExtra){
+function hashDayScore(subKey, date, seedExtra, profileSeed){
   // 返回 40-100 的整数分数
+  // profileSeed 为档案生辰数字串（如 "1998061512"），用于让不同人得到不同运势
   const y = date.getFullYear(), m = date.getMonth()+1, d = date.getDate();
-  const seed = ((y*10000 + m*100 + d) * 2654435761 ^ ((subKey.charCodeAt(0)*131 + subKey.charCodeAt(subKey.length-1)*541 + (seedExtra||0)))) >>> 0;
+  const ps = profileSeed || 0;
+  const seed = ((y*10000 + m*100 + d) * 2654435761 ^ ((subKey.charCodeAt(0)*131 + subKey.charCodeAt(subKey.length-1)*541 + (seedExtra||0) + (ps*7)) >>> 0)) >>> 0;
   let s = seed;
   s = ((s*1103515245 + 12345) ^ (s>>16)) >>> 0;
   return 40 + (s % 61);
@@ -14085,7 +14102,7 @@ function _scoreClass(s){
   if(s>=55) return {cls:"warn", ring:"ftPurple", grade:"warn", badge:"⚠️ 小心"};
   return {cls:"bad", ring:"ftRed", grade:"bad", badge:"🛑 不宜"};
 }
-function _getGoodBadShichen(subKey, date, score){
+function _getGoodBadShichen(subKey, date, score, profileSeed){
   // 高分 → 2-3 好时辰 + 0-1 坏时辰；低分 → 0-1 好时辰 + 2-3 坏时辰；中分 → 1+1
   const y = date.getFullYear(), m = date.getMonth()+1, d = date.getDate();
   const daySeed = y*10000+m*100+d;
@@ -14096,19 +14113,34 @@ function _getGoodBadShichen(subKey, date, score){
   else if(score>=50){ g.push(3); b.push(1); b.push(11); }
   else { g.push(7); b.push(0); b.push(4); b.push(6); }
   // 打乱 + 用 seed 稳定排序
-  const shuffledG = g.map(i=>({i,h:hashDayScore(subKey+":g:"+i, date, daySeed)})).sort((a,b)=>b.h-a.h).map(x=>x.i);
-  const shuffledB = b.map(i=>({i,h:hashDayScore(subKey+":b:"+i, date, daySeed)})).sort((a,b)=>b.h-a.h).map(x=>x.i);
+  const shuffledG = g.map(i=>({i,h:hashDayScore(subKey+":g:"+i, date, daySeed, profileSeed)})).sort((a,b)=>b.h-a.h).map(x=>x.i);
+  const shuffledB = b.map(i=>({i,h:hashDayScore(subKey+":b:"+i, date, daySeed, profileSeed)})).sort((a,b)=>b.h-a.h).map(x=>x.i);
   return {
     good: shuffledG.slice(0, score>=60?2:1).map(i=>SHICHEN_RANGES[i]),
     bad: shuffledB.slice(0, score<55?3:(score<70?2:1)).map(i=>SHICHEN_RANGES[i])
   };
 }
+function _getProfileSeed(){
+  // 从当前激活档案生成数字种子：年+月+日+时+性别码
+  try{
+    const p = (typeof window.getActiveProfile==='function') ? window.getActiveProfile() : null;
+    if(!p) return 0;
+    const y = parseInt(p.year,10)||0;
+    const mo = parseInt(p.month,10)||0;
+    const d = parseInt(p.day,10)||0;
+    const h = parseInt(p.hour,10)||0;
+    const g = (p.gender==='女')?1:0;
+    return (y*1000000 + mo*10000 + d*100 + h)*10 + g;
+  }catch(_){ return 0; }
+}
+try{ window._getProfileSeed = _getProfileSeed; }catch(_){}
 function buildFortuneData(date){
   const out = [];
+  const ps = _getProfileSeed();
   FORTUNE_DIMS.forEach((D,i)=>{
-    const score = hashDayScore(D.key, date, i*17);
+    const score = hashDayScore(D.key, date, i*17, ps);
     const cls = _scoreClass(score);
-    const sb = _getGoodBadShichen(D.key, date, score);
+    const sb = _getGoodBadShichen(D.key, date, score, ps);
     out.push({D,score,cls,sb});
   });
   return out;
@@ -16245,7 +16277,7 @@ try{ window.rebuildCurrentShareCard = rebuildCurrentShareCard; }catch(_){}
   // === 今日运势大卡（10维度 + 详情弹窗） ===
   _mount([
     'renderWidget_fortuneGrid','openFortuneDetail','closeFortuneDetail',
-    'hashDayScore','buildFortuneData','_scoreClass','FORTUNE_DIMS','SHICHEN_RANGES'
+    'hashDayScore','buildFortuneData','_scoreClass','FORTUNE_DIMS','SHICHEN_RANGES','_getProfileSeed'
   ]);
   // === 梅花易数 8 卦 / 12 地支 / 生克对（const 声明在 PRE IIFE 之后，所以 PRE 挂不到） ===
   _mount(['MEIHUA_BAGUA_NUM','MEIHUA_ZHI_ORDER','MEIHUA_WX_SHENG_PAIRS','MEIHUA_WUXING_KE_PAIRS']);
