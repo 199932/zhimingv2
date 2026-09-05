@@ -1,0 +1,67 @@
+const fs = require('fs');
+
+const s4Anchor = 'const TYPE_LABEL = {bazi:"八字排盘",wuge:"姓名五格",zhouyi:"周易起卦",qimen:"奇门遁甲",xiaoliuren:"小六壬",cezi:"测字",meihua:"梅花易数",tarot:"韦特塔罗",tarot_daily:"每日塔罗",zodiac:"十二星座",lingshu:"生命灵数",almanac:"黄历",gongzhen:"共振判定"};';
+
+const s4Code = `
+/* ===== UX Smooth: 常量 & 新 key 命名（集中声明，不硬编码散点） ===== */
+const QC_CMDS = [
+  {cmd:"八字",   label:"算八字排盘",    sub:"中式命理 / 八字Tab", k:"☯", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn1'); }catch(_){} }},
+  {cmd:"奇门",   label:"排奇门遁甲盘",  sub:"中式命理 / 奇门Tab", k:"🧭", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn4'); }catch(_){} }},
+  {cmd:"周易",   label:"周易起卦",      sub:"中式命理 / 周易Tab", k:"☰", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn3'); }catch(_){} }},
+  {cmd:"五格",   label:"姓名五格起名",  sub:"中式命理 / 五格Tab", k:"🪧", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn2'); }catch(_){} }},
+  {cmd:"小六壬", label:"小六壬起课",    sub:"中式命理 / 小六壬Tab", k:"🔯", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn5'); }catch(_){} }},
+  {cmd:"测字",   label:"测字占卜",      sub:"中式命理 / 测字Tab", k:"✍", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn6'); }catch(_){} }},
+  {cmd:"梅花",   label:"梅花易数（互动起卦）", sub:"中式命理 / 梅花Tab", k:"🌸", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn7-2'); if(!window.switchSec) window.switchTab&&window.switchTab('cn'); }catch(_){ if(typeof window.switchSec !== 'function'){ try{ document.getElementById('sec-cn7-2')&&window.switchSec&&window.switchSec('cn7-2'); }catch(_x){ document.getElementById('page-cn')&&document.getElementById('page-cn').scrollIntoView({block:'start'}); } } } }},
+  {cmd:"灵数",   label:"西方九宫灵数画像", sub:"西玄 / 灵数Tab", k:"🔢", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu3'); }catch(_){} }},
+  {cmd:"大六壬", label:"排大六壬课",    sub:"中式命理 / 大六壬Tab", k:"📐", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn7'); }catch(_){} }},
+  {cmd:"塔罗",   label:"塔罗圣三角（过去·现在·未来）", sub:"西玄 / 塔罗Tab", k:"🃏", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu1'); window.__qcTarotPending=3; setTimeout(function(){var f=window.drawTarot||window.fnDrawTarot; if(f) try{f(3);}catch(_x){} },50); }catch(_){} }},
+  {cmd:"每日塔罗", label:"每日塔罗单抽", sub:"西玄 / 塔罗Tab", k:"🎴", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu1'); window.__qcTarotPending=1; setTimeout(function(){var f=window.drawTarotDaily; if(f) try{f();}catch(_x){var f2=window.drawTarot; if(f2) f2(1);} },80); }catch(_){} }},
+  {cmd:"星座",   label:"十二星座运势",  sub:"西玄 / 星座Tab", k:"⭐", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu2'); }catch(_){} }},
+  {cmd:"黄历",   label:"看今日黄历宜忌", sub:"黄历Tab", k:"❖", run(){ try{ window.switchTab&&window.switchTab('al'); }catch(_){} }},
+  {cmd:"词典",   label:"打开命理词典",  sub:"顶栏 → 词典", k:"📖", run(){ try{ window.openGlossary&&window.openGlossary(); }catch(_){} }},
+  {cmd:"历史",   label:"打开占卜历史",  sub:"顶栏 → 历史", k:"📚", run(){ try{ window.openHistory&&window.openHistory(); }catch(_){} }},
+  {cmd:"档案",   label:"切换人物档案",  sub:"顶栏 → 档案", k:"👤", run(){ try{ window.openProfileModal&&window.openProfileModal(); }catch(_){} }},
+  {cmd:"回测",   label:"八字回测案例",  sub:"中式命理 / 回测Tab", k:"⚖", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn1b'); }catch(_){} }},
+  {cmd:"流派",   label:"设置流派参数（拆补/置闰/飞盘）", sub:"顶栏 → 流派", k:"🧩", run(){ try{ window.openLiupaiModal&&window.openLiupaiModal(); }catch(_){} }},
+  {cmd:"日记",   label:"占卜日记签到",  sub:"顶栏 → 日记", k:"📓", run(){ try{ window.openDiaryModal&&window.openDiaryModal(); }catch(_){} }},
+  {cmd:"节气日历", label:"打开节气日历", sub:"中式命理 / 节气日历Tab", k:"📅", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn1c'); if(!window.switchSec) window.switchTab&&window.switchTab('today'); }catch(_){} }},
+  {cmd:"今日",   label:"回到今日Tab",   sub:"底部Tab → 今日", k:"🏠", run(){ try{ window.switchTab&&window.switchTab('today'); window.scrollTo&&window.scrollTo({top:0,behavior:'smooth'}); }catch(_){} }},
+  {cmd:"今日我想算", label:"回到顶部初级行动区", sub:"（新手引导）", k:"👆", run(){ try{ var z=document.getElementById('primaryActionZone'); if(z){z.scrollIntoView({behavior:'smooth',block:'start'});}else{window.scrollTo&&window.scrollTo({top:0,behavior:'smooth'});} }catch(_){} }},
+  {cmd:"分享卡主题", label:"切换分享卡 3 主题", sub:"中/吴/阿三主题", k:"🎨", run(){ try{ var cur = window.__shareCardTheme || 'cn'; var next = cur==='cn'?'wu':cur==='wu'?'al':'cn'; window.setShareCardTheme&&window.setShareCardTheme(next); window.showToastBottom&&window.showToastBottom('已切换分享卡主题：'+(next==='cn'?'中式青绿':next==='wu'?'吴式神秘紫':'阿拉伯赭石')); }catch(_){} }},
+  {cmd:"规律洞察", label:"打开我的规律图谱", sub:"历史 → 规律按钮", k:"🧠", run(){ try{ window.showMyPatterns&&window.showMyPatterns(); }catch(_){} }},
+  {cmd:"趋势",   label:"查看占卜趋势图",  sub:"历史 → 趋势按钮", k:"📈", run(){ try{ window.renderTrendCharts&&window.renderTrendCharts(); }catch(_){} }},
+  {cmd:"排行榜", label:"占卜复盘排行榜",  sub:"历史 → 排行按钮", k:"🏆", run(){ try{ window.showAccuracyDashboard&&window.showAccuracyDashboard(); }catch(_){} }},
+  {cmd:"反馈",   label:"反馈问题（复制错误信息）", sub:"帮助", k:"💡", run(){ try{ window.copyErrInfo&&window.copyErrInfo(); window.showToastBottom&&window.showToastBottom('已复制设备信息，粘贴给开发者即可'); }catch(_){} }},
+  {cmd:"主题",   label:"切换深浅模式",   sub:"顶栏 → ☀️/🌙", k:"🌓", run(){ try{ window.toggleTheme&&window.toggleTheme(); }catch(_){} }}
+];
+const DRAFT_DEBOUNCE_MS = 500;
+/* localStorage key names（集中声明避免散点硬编码） */
+const DRAFT_KEY_PREFIX       = 'zhiming_v2_draft_';
+const DRAFT_DIRTY_SUFFIX     = '_dirty';
+const LAST_CITY_KEY          = 'zhiming_v2_last_city';
+const CMP_IDS_KEY            = 'zhiming_v2_cmp_ids';
+const QC_RECENTS_KEY         = 'zhiming_v2_qc_recents';
+const HIST_FILTER_KEY        = 'zhiming_v2_history_filter_today';
+const UX_LAST_INTERACT_SUFFIX= '_lastin';
+/* 草稿覆盖的排盘类型（与 TYPE_LABEL.key 对齐，扩展 10 类 + 灵数） */
+const DRAFT_TYPES = ['bazi','bazi_ht','wuge','zhouyi','qimen','xiaoliuren','cezi','lingshu','daliuren','meihua'];
+/* 档案联动保护：最近交互未超此毫秒数就不自动覆盖字段（防用户正在手填） */
+const PROFILE_LINK_IDLE_MS = 30000;
+/* 五格常见复姓（简体中文，resovleWugeInput 优先识别） */
+const WUGE_COMPOUND_SURNAMES = ['欧阳','太史','端木','上官','司马','东方','独孤','南宫','万俟','闻人','夏侯','诸葛','尉迟','公羊','赫连','澹台','皇甫','宗政','濮阳','公冶','太叔','申屠','公孙','慕容','仲孙','钟离','长孙','宇文','司徒','司空','鲜于','闾丘','子车','亓官','司寇','巫马','公西','颛孙','壤驷','公良','漆雕','乐正','宰父','谷梁','拓跋','夹谷','轩辕','令狐','段干','百里','呼延','东郭','南门','羊舌','微生','梁丘','左丘','东门','西门','公乘','贯丘','公皙','南荣','东里','东宫','仲长','子书','桑丘','即墨','达奚','褚师','吴铭','令其','第五','言福','索阳','平陵','秃发','段干','百里','左人','宰父','巫马','梁丘'];
+`;
+
+const s4Patch = [
+  {
+    id: "ux3_const",
+    anchor: s4Anchor,
+    insert: "after",
+    code: s4Code,
+    required: true
+  }
+];
+
+fs.writeFileSync('/workspace/accel/patches/ux3_const.json', JSON.stringify(s4Patch, null, 2));
+console.log('✅ Step4 patch written: /workspace/accel/patches/ux3_const.json');
+console.log('   anchor length:', s4Anchor.length, 'chars');
+console.log('   code length:', s4Code.length, 'chars');

@@ -1,0 +1,12 @@
+[
+  {
+    "anchor": "    <div class=\"hint\">※ 卦辞与简解均为通用文本，64卦完整版仅用于娱乐参考。</div>\n  `;\n  document.getElementById(\"zy-result\").innerHTML = enhanceResultHtml(html);\n  document.getElementById(\"copyBar\").style.display = \"flex\";",
+    "inject_before": false,
+    "code": ""
+  },
+  {
+    "anchor": "  document.getElementById(\"zy-result\").innerHTML = enhanceResultHtml(html);\n  document.getElementById(\"copyBar\").style.display = \"flex\";\n  _lastZhouyiResult = {question, yaos:_zyYaos.slice(), changes:changePos, thisIdx, changeIdx, thisName, changeName, thisTuan, thisBrief};",
+    "inject_before": true,
+    "code": "  try{\n    var __zyr = document.getElementById(\"zy-result\");\n    if(__zyr && typeof renderActSuggestZhouyi==='function'){\n      var __zyopts = {guaName:thisName, thisName:thisName, changeName:changeName, dongYaoIdx:(changePos&&changePos[0])?changePos[0]:0, changePos:changePos, guaKey:''};\n      var __zyhtml = renderActSuggestZhouyi(__zyopts);\n      __zyr.insertAdjacentHTML('beforeend', __zyhtml);\n    }\n  }catch(__zy_e){}\n"
+  }
+]

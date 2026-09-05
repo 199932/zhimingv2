@@ -636,11 +636,11 @@ body.theme-dark .tmc-ji .yj-tag{background:#5a2a28;color:#f0a090;}
 .ft-good-list,.ft-bad-list{font-size:10px;color:var(--text-hint);display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;}
 .ft-good-list span{background:rgba(80,200,120,.12);color:#2e7d32;padding:1px 6px;border-radius:6px;}
 .ft-bad-list span{background:rgba(220,70,70,.12);color:#c62828;padding:1px 6px;border-radius:6px;}
-/* 圆环颜色:高→金;中→蓝紫;低→红 */
-.ft-ring.c-high .ft-ring-fill{stroke:url(#ftGold);}
-.ft-ring.c-mid .ft-ring-fill{stroke:url(#ftBlue);}
-.ft-ring.c-low .ft-ring-fill{stroke:url(#ftRed);}
-.ft-ring.c-mid2 .ft-ring-fill{stroke:url(#ftPurple);}
+/* 圆环颜色:高→金;中上→蓝;中下→紫;低→红（实色描边，兼容性最强） */
+.ft-ring.ftGold .ft-ring-fill{stroke:#ff9f1a;}
+.ft-ring.ftBlue .ft-ring-fill{stroke:#3a7bd5;}
+.ft-ring.ftPurple .ft-ring-fill{stroke:#8e7cc3;}
+.ft-ring.ftRed .ft-ring-fill{stroke:#e04646;}
 /* 详情弹窗 */
 .ft-detail-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:flex-end;justify-content:center;animation:ftFade .2s;}
 @keyframes ftFade{from{opacity:0}to{opacity:1}}

@@ -1,0 +1,7 @@
+Netlify 授权链接（复制下面这整行到手机浏览器打开）：
+
+https://app.netlify.com/authorize?response_type=ticket&ticket=bcf7c88ce27996f8cdff07309c8d0579
+
+ticket_id = bcf7c88ce27996f8cdff07309c8d0579
+
+操作：打开上面链接 → 点 Authorize 授权 → 回来告诉 AI "好了"

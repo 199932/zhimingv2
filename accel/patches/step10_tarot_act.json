@@ -1,0 +1,12 @@
+[
+  {
+    "anchor": "  const totalMs = 200 + cards.length*200 + 800;\n  setTimeout(()=>{\n    const interpretationHTML = renderTarotInterpretation(cards, question, spread);\n    document.getElementById(\"tarot-result\").innerHTML = enhanceResultHtml(interpretationHTML);\n    document.getElementById(\"copyBar\").style.display = \"flex\";",
+    "inject_before": false,
+    "code": ""
+  },
+  {
+    "anchor": "    document.getElementById(\"tarot-result\").innerHTML = enhanceResultHtml(interpretationHTML);\n    document.getElementById(\"copyBar\").style.display = \"flex\";\n    addHistory(\"tarot\", {question, spreadType:_tarotSpread, cards:cards.map(c=>({id:c.id,reversed:c.reversed}))}, {interpretationHTML}, \"\");",
+    "inject_before": true,
+    "code": "    try{\n      var __tr = document.getElementById(\"tarot-result\");\n      if(__tr && typeof renderActSuggestTarot==='function'){\n        var __cards3 = cards.slice(0,3);\n        var __pos = spread.positions || ['过去','现在','未来'];\n        var __thtml = renderActSuggestTarot(__cards3, __pos);\n        __tr.insertAdjacentHTML('beforeend', __thtml);\n      }\n    }catch(__t_e){}\n"
+  }
+]

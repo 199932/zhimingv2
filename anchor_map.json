@@ -1,0 +1,42 @@
+{
+  "style_end_before": {
+    "pos": 61923,
+    "type": "before"
+  },
+  "body_end_before": {
+    "pos": 561712,
+    "type": "before"
+  },
+  "js_pre_iife_before": {
+    "pos": 284203,
+    "type": "before"
+  },
+  "js_init_end_before": {
+    "pos": 308390,
+    "type": "after"
+  },
+  "type_label_before": {
+    "pos": 141230,
+    "type": "before"
+  },
+  "hist_type_color_after": {
+    "pos": 141255,
+    "type": "after"
+  },
+  "build_share_card_entrance": {
+    "pos": 453709,
+    "type": "after"
+  },
+  "accuracy_dashboard_entrance": {
+    "pos": 240412,
+    "type": "after"
+  },
+  "analyze_patterns_entrance": {
+    "pos": 246110,
+    "type": "after"
+  },
+  "end_of_switches_extra": {
+    "pos": 234467,
+    "type": "before_regex"
+  }
+}

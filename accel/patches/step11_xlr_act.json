@@ -1,0 +1,12 @@
+[
+  {
+    "anchor": "    <div class=\"hint\">※ 小六壬为诸葛孔明马前课改良简化版，六宫循环取象，仅供娱乐参考。</div>\n  `;\n  document.getElementById(\"xlr-result\").innerHTML = enhanceResultHtml(html);\n  document.getElementById(\"copyBar\").style.display = \"flex\";",
+    "inject_before": false,
+    "code": ""
+  },
+  {
+    "anchor": "  document.getElementById(\"xlr-result\").innerHTML = enhanceResultHtml(html);\n  document.getElementById(\"copyBar\").style.display = \"flex\";\n  _lastXiaoliurenResult = Object.assign({question}, resultObj);",
+    "inject_before": true,
+    "code": "  try{\n    var __xlrr = document.getElementById(\"xlr-result\");\n    if(__xlrr && typeof renderActSuggestXlr==='function'){\n      var __xlropts = {daxian:g.name, name:g.name};\n      var __xlrhtml = renderActSuggestXlr(__xlropts);\n      __xlrr.insertAdjacentHTML('beforeend', __xlrhtml);\n    }\n  }catch(__xlr_e){}\n"
+  }
+]

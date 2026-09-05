@@ -1,0 +1,12 @@
+[
+  {
+    "anchor": "  <div class=\"hint\">提示：本结果基于简化版命理模型，仅供娱乐参考</div>\n  `;\n  document.getElementById(\"bz-result\").innerHTML = enhanceResultHtml(html);\n  document.getElementById(\"copyBar\").style.display=\"flex\";",
+    "inject_before": false,
+    "code": ""
+  },
+  {
+    "anchor": "  document.getElementById(\"bz-result\").innerHTML = enhanceResultHtml(html);\n  document.getElementById(\"copyBar\").style.display=\"flex\";\n  addHistory(\"bazi\", {year:y,month:m,day:d,hour:h,minute:mn,gender:gd,cityLng:lng}, r, \"\");",
+    "inject_before": true,
+    "code": "  try{\n    var __bzr = document.getElementById(\"bz-result\");\n    if(__bzr && typeof renderActSuggestBazi==='function'){\n      var __lack = (r && r.lack) ? r.lack : [];\n      var __topShiShen = '比劫';\n      try{ var __ssc = {}; if(r.shiShenByStem){ for(var __sk in r.shiShenByStem){ var __v = r.shiShenByStem[__sk]; if(typeof __v==='string'){ __ssc[__v]=(__ssc[__v]||0)+1; } } } __topShiShen = _shiShenTopFromCount(__ssc); }catch(_){}\n      var __bopts = {wuxingMissing:__lack, shiShenTop:__topShiShen};\n      try{ if(typeof __getTodayYiJi==='function'){ var __yj = __getTodayYiJi(); __bopts.yiText = __bj.yi; __bopts.jiText = __yj.ji; } }catch(_){}\n      var __bhtml = renderActSuggestBazi(__bopts);\n      __bzr.insertAdjacentHTML('beforeend', __bhtml);\n    }\n  }catch(__bz_e){}\n"
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "bytes": 889690,
+  "syntax_ok": true,
+  "syntax_error": null,
+  "final_verify_exit": 0,
+  "ts": "2026-08-30T03:11:52.265Z",
+  "ua": "hotl controller inline step1",
+  "src_scripts_count": 4,
+  "src_head_size": 79002,
+  "src_body_size": 697424
+}

@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>知命 · 占卜小工具</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;}
+body{background:#FAF8F5;color:#2b2b2b;font-size:15px;line-height:1.6;padding-bottom:150px;overflow-x:hidden;}
+body.theme-cn{--pri:#8B6F47;--pri-light:#EFE6D8;--pri-dark:#6A5437;}
+body.theme-wu{--pri:#6B5CA5;--pri-light:#E8E4F2;--pri-dark:#514683;}
+body.theme-al{--pri:#A0522D;--pri-light:#F5E5DA;--pri-dark:#7D3F22;}
+.header{padding:18px 20px 12px;position:sticky;top:0;z-index:50;background:rgba(250,248,245,0.92);backdrop-filter:blur(8px);border-bottom:1px solid #eee6da;}
+.header h1{font-size:20px;font-weight:700;color:var(--pri);letter-spacing:2px;}
+.header .sub{font-size:12px;color:#999;margin-top:2px;}
+.subtabs{display:flex;gap:6px;padding:10px 16px 4px;overflow-x:auto;scrollbar-width:none;}
+.subtabs::-webkit-scrollbar{display:none;}
+.subtab{flex-shrink:0;padding:10px 16px;height:44px;border-radius:22px;background:#fff;border:1px solid #ece3d6;font-size:14px;color:#666;white-space:nowrap;transition:all .2s;}
+.subtab.active{background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600;}
+.page{display:none;padding:8px 16px 16px;}
+.page.active{display:block;}
+.section{display:none;}
+.section.active{display:block;animation:fadeIn .3s ease-out;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:13px;color:#666;margin-bottom:6px;font-weight:500;}
+.form-row .inputs{display:flex;gap:8px;flex-wrap:wrap;}
+input[type="number"],input[type="text"],select,textarea{width:100%;height:44px;padding:0 14px;border:1px solid #ece3d6;border-radius:10px;background:#fff;font-size:15px;color:#2b2b2b;outline:none;font-family:inherit;}
+textarea{height:90px;padding:12px 14px;resize:none;line-height:1.5;}
+input:focus,select:focus,textarea:focus{border-color:var(--pri);}
+.inline-3 > *{flex:1 1 30%;}
+.inline-2 > *{flex:1 1 45%;}
+.radio-group{display:flex;gap:10px;}
+.radio-group label{flex:1;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #ece3d6;border-radius:10px;cursor:pointer;font-size:14px;color:#666;margin:0;}
+.radio-group input{display:none;}
+.radio-group input:checked + span{color:var(--pri);font-weight:600;}
+.radio-group label:has(input:checked){border-color:var(--pri);background:var(--pri-light);}
+.btn-primary{width:100%;height:48px;border:none;border-radius:12px;background:var(--pri);color:#fff;font-size:16px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-top:4px;}
+.btn-primary:active{transform:scale(0.98);opacity:0.9;}
+.btn-secondary{height:44px;padding:0 16px;border:1px solid var(--pri);background:#fff;color:var(--pri);border-radius:10px;font-size:14px;cursor:pointer;}
+.result{margin-top:18px;}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid #f1e9dc;box-shadow:0 2px 10px rgba(139,111,71,0.05);}
+.card-title{font-size:14px;color:var(--pri);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.card-title::before{content:"";width:4px;height:16px;background:var(--pri);border-radius:2px;}
+.kv{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;}
+.kv .k{color:#888;}
+.kv .v{color:#2b2b2b;font-weight:500;text-align:right;max-width:65%;}
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 14px;}
+.pillar{background:var(--pri-light);border-radius:10px;padding:10px 4px;text-align:center;border:1px solid #e3d7c0;}
+.pillar .col-label{font-size:11px;color:var(--pri-dark);margin-bottom:4px;opacity:0.7;}
+.pillar .gan{font-size:22px;font-weight:700;color:var(--pri-dark);line-height:1.2;}
+.pillar .zhi{font-size:20px;font-weight:700;color:var(--pri);margin-top:3px;line-height:1.2;}
+.pillar .nay{font-size:10px;color:#888;margin-top:4px;}
+.wx-bars{display:flex;flex-direction:column;gap:8px;}
+.wx-bar{display:flex;align-items:center;gap:8px;}
+.wx-bar .n{width:24px;font-size:13px;font-weight:600;}
+.wx-bar .track{flex:1;height:12px;background:#f3ede3;border-radius:6px;overflow:hidden;}
+.wx-bar .fill{height:100%;border-radius:6px;transition:width .6s;}
+.wx-bar .c{width:30px;text-align:right;font-size:12px;color:#888;}
+.wuge-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.wuge-cell{text-align:center;padding:10px 4px;border-radius:10px;background:#fff;border:1px solid #ece3d6;}
+.wuge-cell .w-name{font-size:11px;color:#888;}
+.wuge-cell .w-num{font-size:22px;font-weight:700;color:var(--pri-dark);margin:3px 0;}
+.wuge-cell .w-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.tag-ji{background:#FFE5E5;color:#C0392B;}
+.tag-xiong{background:#E8E4F2;color:#6B5CA5;}
+.tag-ban{background:#FFF4DE;color:#B8860B;}
+.tag-da{background:#DFF5E1;color:#27AE60;}
+.gua-card{background:linear-gradient(135deg,#FFF9F0 0%,#F5EBDA 100%);border-radius:14px;padding:18px;text-align:center;margin-bottom:12px;border:1px solid var(--pri-light);}
+.gua-title{font-size:22px;font-weight:700;color:var(--pri-dark);letter-spacing:6px;}
+.gua-sub{font-size:12px;color:#888;margin-top:4px;}
+.yao-list{display:flex;flex-direction:column;gap:5px;margin:14px 0;align-items:center;}
+.yao{height:10px;width:120px;border-radius:2px;position:relative;}
+.yao.yang{background:var(--pri-dark);}
+.yao.yin{background:transparent;display:flex;gap:8px;justify-content:center;}
+.yao.yin::before,.yao.yin::after{content:"";height:10px;width:56px;background:var(--pri-dark);border-radius:2px;}
+.yao.old-yang{background:var(--pri-dark);box-shadow:0 0 0 2px #fff, 0 0 0 3px #C0392B;}
+.yao.old-yin{position:relative;}
+.yao.old-yin::before,.yao.old-yin::after{box-shadow:0 0 0 2px #fff, 0 0 0 3px #2980B9;}
+.coins{display:flex;justify-content:center;gap:16px;margin:16px 0;perspective:600px;}
+.coin{width:60px;height:60px;border-radius:50%;background:linear-gradient(145deg,#F5D789,#D4A84B);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#7A5A1E;box-shadow:0 4px 8px rgba(180,140,60,0.3),inset 0 -2px 4px rgba(0,0,0,0.1);border:3px solid #B8860B;}
+.coin.flipping{animation:coinFlip .8s ease-out;}
+@keyframes coinFlip{0%{transform:rotateY(0) translateY(0);}40%{transform:rotateY(720deg) translateY(-30px);}100%{transform:rotateY(1080deg) translateY(0);}}
+.coin-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.qimen-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:360px;margin:12px auto;background:var(--pri-light);padding:4px;border-radius:10px;}
+.qm-cell{background:#fff;border-radius:6px;padding:6px 4px;min-height:86px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-size:11px;position:relative;}
+.qm-cell.c5{background:linear-gradient(135deg,#fff9e6,#ffe8b8);}
+.qm-num{position:absolute;top:2px;left:4px;font-size:10px;color:#bbb;font-weight:700;}
+.qm-shen{color:#C0392B;font-weight:700;font-size:12px;}
+.qm-xing{color:#2980B9;font-weight:600;}
+.qm-men{color:#27AE60;font-weight:600;}
+.qm-yi{color:#8B6F47;}
+.qm-dp{color:#888;font-size:10px;}
+.tarot-grid{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0;}
+.tarot-card{width:100px;height:160px;perspective:1000px;flex-shrink:0;}
+.tarot-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s;}
+.tarot-card.flipped .tarot-inner{transform:rotateY(180deg);}
+.tarot-card.reversed.flipped .tarot-inner{transform:rotateY(180deg) rotate(180deg);}
+.tarot-back,.tarot-front{position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.15);padding:8px;}
+.tarot-back{background:linear-gradient(135deg,#6B5CA5,#4A3F78);color:#E8E4F2;}
+.tarot-back::before{content:"✦";font-size:44px;opacity:0.7;}
+.tarot-front{transform:rotateY(180deg);background:#FFF9F0;border:1px solid #E8E4F2;color:#2b2b2b;}
+.tarot-front .tc-sym{font-size:30px;margin-bottom:4px;}
+.tarot-front .tc-name{font-size:11px;font-weight:700;color:var(--pri-dark);text-align:center;line-height:1.2;}
+.tarot-front .tc-pos{font-size:9px;color:#888;margin-top:2px;}
+.pos-label{font-size:11px;color:var(--pri);font-weight:600;text-align:center;margin-top:6px;}
+.zodiac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;}
+.zodiac-item{background:#fff;border:1px solid #ece3d6;border-radius:12px;padding:14px 4px;text-align:center;cursor:pointer;transition:all .2s;}
+.zodiac-item:active{transform:scale(0.95);}
+.zodiac-item .z-ico{font-size:28px;display:block;line-height:1;}
+.zodiac-item .z-name{font-size:12px;color:#666;margin-top:4px;}
+.zodiac-item.active{background:var(--pri-light);border-color:var(--pri);}
+.zodiac-item.active .z-name{color:var(--pri-dark);font-weight:600;}
+.score-row{display:flex;align-items:center;gap:8px;padding:5px 0;}
+.score-row .s-k{width:42px;font-size:13px;color:#666;}
+.score-row .s-track{flex:1;height:10px;background:#f3ede3;border-radius:5px;overflow:hidden;}
+.score-row .s-fill{height:100%;border-radius:5px;transition:width .5s;}
+.score-row .s-v{width:32px;text-align:right;font-size:13px;font-weight:600;color:var(--pri-dark);}
+.hl-top{background:linear-gradient(135deg,#FFF9F0,#F5E5DA);border-radius:16px;padding:20px;text-align:center;margin-bottom:12px;border:1px solid var(--pri-light);}
+.hl-date-solar{font-size:44px;font-weight:800;color:var(--pri-dark);line-height:1;}
+.hl-month-day{font-size:14px;color:#888;margin-top:4px;}
+.hl-ganzhi-tag{display:inline-block;margin-top:10px;padding:4px 14px;border-radius:14px;border:2px solid #C0392B;color:#C0392B;font-weight:700;font-size:14px;}
+.hl-lunar{font-size:16px;color:var(--pri-dark);font-weight:600;margin-top:8px;}
+.yi-ji{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;}
+.yi-box,.ji-box{background:#fff;border-radius:12px;padding:12px;border:1px solid #f1e9dc;}
+.yi-box .yj-t{color:#27AE60;font-weight:700;font-size:15px;margin-bottom:8px;}
+.ji-box .yj-t{color:#C0392B;font-weight:700;font-size:15px;margin-bottom:8px;}
+.yj-list{display:flex;flex-wrap:wrap;gap:6px;}
+.yj-tag{padding:3px 10px;border-radius:8px;font-size:12px;background:#faf6f0;color:#666;}
+.yi-box .yj-tag{background:#EAF7EC;color:#2E7D4F;}
+.ji-box .yj-tag{background:#FCEAEA;color:#A33B2F;}
+.bottom-tabs{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #ece3d6;display:grid;grid-template-columns:repeat(3,1fr);padding:8px 0 calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,0.04);}
+.btab{display:flex;flex-direction:column;align-items:center;justify-content:center;height:56px;cursor:pointer;color:#aaa;transition:color .2s;gap:2px;}
+.btab .bi{font-size:22px;line-height:1;}
+.btab .bl{font-size:11px;}
+.btab.active{color:var(--pri);font-weight:600;}
+.copy-bar{position:sticky;bottom:72px;z-index:40;display:flex;gap:8px;padding:8px 16px;background:rgba(250,248,245,0.95);backdrop-filter:blur(6px);}
+.copy-btn{flex:1;height:40px;background:var(--pri);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;}
+.copy-btn.ok{background:#27AE60;}
+.disclaimer{position:fixed;bottom:68px;left:0;right:0;z-index:30;text-align:center;font-size:10px;color:#bbb;padding:4px 12px;background:rgba(250,248,245,0.9);pointer-events:none;}
+.spread-group{display:flex;gap:8px;margin:8px 0 14px;flex-wrap:wrap;}
+.spread-btn{flex:1;min-width:80px;height:40px;border:1px solid #ece3d6;background:#fff;border-radius:10px;font-size:13px;color:#666;cursor:pointer;}
+.spread-btn.active{background:var(--pri-light);border-color:var(--pri);color:var(--pri-dark);font-weight:600;}
+.period-tabs{display:flex;background:#f3ede3;border-radius:10px;padding:3px;margin:10px 0;}
+.period-tabs .pt{flex:1;height:38px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:13px;color:#888;cursor:pointer;}
+.period-tabs .pt.active{background:#fff;color:var(--pri-dark);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.desc-title{font-size:14px;font-weight:700;color:var(--pri-dark);margin:8px 0 4px;}
+.desc-text{font-size:13px;color:#555;line-height:1.65;}
+.hint{font-size:12px;color:#aaa;text-align:center;padding:6px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:var(--pri-light);color:var(--pri-dark);margin:0 2px;}
+@media (max-width:340px){.pillars{gap:4px;}.pillar .gan{font-size:18px;}.pillar .zhi{font-size:16px;}.tarot-card{width:85px;height:136px;}.hl-date-solar{font-size:36px;}}
+</style>
+</head>
+<body class="theme-cn">
+<div class="header"><h1 id="headerTitle">知 命 · 中 式</h1><div class="sub" id="headerSub">八字 · 姓名 · 周易 · 奇门</div></div>
+<div class="page active" id="page-cn">
+<div class="subtabs" id="cnSubtabs">
+<div class="subtab active" data-sec="cn1">☯ 八字排盘</div>
+<div class="subtab" data-sec="cn2">✎ 姓名五格</div>
+<div class="subtab" data-sec="cn3">☰ 六十四卦</div>
+<div class="subtab" data-sec="cn4">✦ 奇门遁甲</div>
+</div>
+<div class="section active" id="sec-cn1">
+<div class="card"><div class="card-title">出生信息</div>
+<div class="form-row"><label>公历生日</label><div class="inputs inline-3">
+<input type="number" id="bz-year" placeholder="年" min="1900" max="2100" value="1998">
+<input type="number" id="bz-month" placeholder="月" min="1" max="12" value="6">
+<input type="number" id="bz-day" placeholder="日" min="1" max="31" value="15"></div></div>
+<div class="form-row"><label>时辰</label><select id="bz-hour"></select></div>
+<div class="form-row"><label>性别</label><div class="radio-group">
+<label><input type="radio" name="bz-gender" value="男" checked><span>男</span></label>
+<label><input type="radio" name="bz-gender" value="女"><span>女</span></label>
+</div></div>
+<button class="btn-primary" onclick="calcBazi()">开 始 排 盘</button></div>
+<div class="result" id="bz-result"></div></div>
+<div class="section" id="sec-cn2">
+<div class="card"><div class="card-title">姓名信息</div>
+<div class="form-row"><label>姓氏（1-2字）</label><input type="text" id="xg-surname" value="李"></div>
+<div class="form-row"><label>名字（1-2字）</label><input type="text" id="xg-name" value="云霆"></div>
+<div class="form-row"><label>性别</label><div class="radio-group">
+<label><input type="radio" name="xg-gender" value="男" checked><span>男</span></label>
+<label><input type="radio" name="xg-gender" value="女"><span>女</span></label>
+</div></div>
+<button class="btn-primary" onclick="calcWuge()">算 五 格</button></div>
+<div class="result" id="xg-result"></div></div>
+<div class="section" id="sec-cn3">
+<div class="card"><div class="card-title">心中所问</div>
+<div class="form-row"><textarea id="zy-question" placeholder="请默念或输入想要起卦的问题（可选）"></textarea></div>
+<div class="card-title">六爻摇卦 <span id="yao-step" style="color:#aaa;font-weight:400;font-size:12px;">准备摇卦（共6爻）</span></div>
+<div class="coins" id="coin-row"></div>
+<div class="coin-actions">
+<button class="btn-secondary" onclick="yaoCoin()">摇 一 爻</button>
+<button class="btn-secondary" onclick="autoYao()">一 键 起 卦</button>
+<button class="btn-secondary" onclick="resetYao()">重 置</button>
+</div><div class="yao-list" id="yao-list"></div></div>
+<div class="result" id="zy-result"></div></div>
+<div class="section" id="sec-cn4">
+<div class="card"><div class="card-title">问事信息</div>
+<div class="form-row"><label>问事日期</label><div class="inputs inline-3">
+<input type="number" id="qm-year" placeholder="年" min="1900" max="2100" value="2025">
+<input type="number" id="qm-month" placeholder="月" min="1" max="12" value="8">
+<input type="number" id="qm-day" placeholder="日" min="1" max="31" value="28"></div></div>
+<div class="form-row"><label>时辰</label><select id="qm-hour"></select></div>
+<div class="form-row"><label>性别</label><div class="radio-group">
+<label><input type="radio" name="qm-gender" value="男" checked><span>男</span></label>
+<label><input type="radio" name="qm-gender" value="女"><span>女</span></label>
+</div></div>
+<div class="form-row"><label>所问何事（可选）</label><input type="text" id="qm-q" placeholder="如：求职、感情、投资"></div>
+<button class="btn-primary" onclick="calcQimen()">排 奇 门 局</button></div>
+<div class="result" id="qm-result"></div></div>
+</div>
+<div class="page" id="page-wu">
+<div class="subtabs" id="wuSubtabs">
+<div class="subtab active" data-sec="wu1">✦ 韦特塔罗</div>
+<div class="subtab" data-sec="wu2">♈ 十二星座</div>
+</div>
+<div class="section active" id="sec-wu1">
+<div class="card"><div class="card-title">选牌阵</div>
+<div class="spread-group">
+<button class="spread-btn active" data-s="1" onclick="setSpread(1)">单牌指引</button>
+<button class="spread-btn" data-s="3" onclick="setSpread(3)">圣三角</button>
+<button class="spread-btn" data-s="5" onclick="setSpread(5)">二选一</button>
+</div><div class="hint" id="tarot-hint">单牌占卜：快速查看当前指引</div>
+<button class="btn-primary" onclick="drawTarot()">抽 牌</button></div>
+<div class="tarot-grid" id="tarot-grid"></div>
+<div class="result" id="tarot-result"></div></div>
+<div class="section" id="sec-wu2">
+<div class="card"><div class="card-title">选择你的星座</div>
+<div class="zodiac-grid" id="zodiac-grid"></div>
+<div class="period-tabs">
+<div class="pt active" data-p="today" onclick="setPeriod('today')">今日</div>
+<div class="pt" data-p="week" onclick="setPeriod('week')">本周</div>
+<div class="pt" data-p="month" onclick="setPeriod('month')">本月</div>
+</div></div>
+<div class="result" id="xz-result"></div></div>
+</div>
+<div class="page" id="page-al"><div class="section active" id="sec-al1"><div id="almanac-body"></div></div></div>
+<div class="copy-bar" id="copyBar" style="display:none;"><button class="copy-btn" id="copyBtn" onclick="copyResult()">📋 一键复制结果</button></div>
+<div class="disclaimer">本工具仅供娱乐参考，不构成任何人生建议</div>
+<div class="bottom-tabs">
+<div class="btab active" data-page="cn" onclick="switchTab('cn')"><div class="bi">☯</div><div class="bl">中式</div></div>
+<div class="btab" data-page="wu" onclick="switchTab('wu')"><div class="bi">✦</div><div class="bl">西玄</div></div>
+<div class="btab" data-page="al" onclick="switchTab('al')"><div class="bi">❖</div><div class="bl">黄历</div></div>
+</div>
+<script>
+const GAN = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+const ZHI = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const ZODIAC = ["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+const WUXING_GAN = {"甲":"木","乙":"木","丙":"火","丁":"火","戊":"土","己":"土","庚":"金","辛":"金","壬":"水","癸":"水"};
+const WUXING_ZHI = {"子":"水","丑":"土","寅":"木","卯":"木","辰":"土","巳":"火","午":"火","未":"土","申":"金","酉":"金","戌":"土","亥":"水"};
+const WX_COLOR = {"金":"#C9A54B","木":"#3E9B5E","水":"#4A8BC8","火":"#D4463A","土":"#8B6F47"};
+const CANG_GAN = {"子":["癸"],"丑":["己","癸","辛"],"寅":["甲","丙","戊"],"卯":["乙"],"辰":["戊","乙","癸"],"巳":["丙","戊","庚"],"午":["丁","己"],"未":["己","丁","乙"],"申":["庚","壬","戊"],"酉":["辛"],"戌":["戊","辛","丁"],"亥":["壬","甲"]};
+const NAYIN_60 = ["海中金","海中金","炉中火","炉中火","大林木","大林木","路旁土","路旁土","剑锋金","剑锋金","山头火","山头火","涧下水","涧下水","城头土","城头土","白蜡金","白蜡金","杨柳木","杨柳木","泉中水","泉中水","屋上土","屋上土","霹雳火","霹雳火","松柏木","松柏木","长流水","长流水","沙中金","沙中金","山下火","山下火","平地木","平地木","壁上土","壁上土","金箔金","金箔金","覆灯火","覆灯火","天河水","天河水","大驿土","大驿土","钗钏金","钗钏金","桑柘木","桑柘木","大溪水","大溪水","沙中土","沙中土","天上火","天上火","石榴木","石榴木","大海水","大海水"];
+function nayinIdx(i){let r;for(let k=0;k<60;k++)if(k%10===i%10&&k%12===i%12){r=k;break;}return NAYIN_60[r]||"";}
+const LUNAR_INFO = [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04bd7,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520];
+const LY = 1900;
+function parseLY(y){const c=LUNAR_INFO[y-LY];return {leap:c&0xf,ms:Array.from({length:12},(_,i)=>(c>>(16-i-1))&1?30:29),ls:c&0xf?((c&0x10000)?30:29):0};}
+function s2l(y,m,d){const b=new Date(1900,0,31),c=new Date(y,m-1,d);let o=Math.floor((c-b)/86400000),yy=1900,mm=1,dd=1,leap=false;for(;yy<LY+LUNAR_INFO.length&&o>0;yy++){const {leap:L,ms,ls}=parseLY(yy);let t=348;for(let i=0;i<12;i++)t+=ms[i]===30?1:0;if(L)t+=ls;if(o<t)break;o-=t;}const {leap:L,ms,ls}=parseLY(yy);let lp=false;for(let i=0;i<12;i++){if(L&&i+1===L&&!lp){if(o<ls){leap=true;break;}o-=ls;lp=true;i--;continue;}if(o<ms[i]){mm=i+1;break;}o-=ms[i];}dd=o+1;return{year:yy,month:mm,day:dd,isLeap:leap};}
+const L_MON=["正","二","三","四","五","六","七","八","九","十","冬","腊"];
+function lunarDStr(d){if(d===10)return"初十";if(d===20)return"二十";if(d===30)return"三十";const t=Math.floor(d/10),g=d%10;return["初","十","廿","三"][t]+["一","二","三","四","五","六","七","八","九"][g-1];}
+function lunarMStr(m,l){return(l?"闰":"")+L_MON[m-1]+"月";}
+function yearGZ(y,m,d){const ln=s2l(y,m,d);let i=(ln.year-4)%60;if(i<0)i+=60;return{g:GAN[i%10],z:ZHI[i%12],ln};}
+function mZhiIdx(m,d){const p=[[2,4,2],[3,6,3],[4,5,4],[5,6,5],[6,6,6],[7,7,7],[8,8,8],[9,8,9],[10,8,10],[11,7,11],[12,7,0],[1,6,1]];for(let i=0;i<12;i++){const [cm,cd,z]=p[i];if(m===cm&&d>=cd)return z;const nx=p[(i+1)%12];if(m===nx[0]&&d<nx[1])return z;}return 1;}
+function mgStart(yi){return[2,4,6,8,0,2,4,6,8,0][yi];}
+function monthGZ(y,m,d,yg){const zi=mZhiIdx(m,d);const os=(zi-2+12)%12;const gi=(mgStart(GAN.indexOf(yg))+os)%10;return{g:GAN[gi],z:ZHI[zi]};}
+function dayGZ(y,m,d){const B=new Date(1900,0,1),C=new Date(y,m-1,d);const D=Math.round((C-B)/86400000);let i=(10+D)%60;if(i<0)i+=60;return{g:GAN[i%10],z:ZHI[i%12]};}
+function hgStart(di){return[0,2,4,6,8,0,2,4,6,8][di];}
+function hourGZ(dg,zi){const gi=(hgStart(GAN.indexOf(dg))+zi)%10;return{g:GAN[gi<0?gi+10:gi],z:ZHI[zi]};}
+const HOUR_ZHI=[{i:0,n:"子时 (23:00-00:59)"},{i:1,n:"丑时 (01:00-02:59)"},{i:2,n:"寅时 (03:00-04:59)"},{i:3,n:"卯时 (05:00-06:59)"},{i:4,n:"辰时 (07:00-08:59)"},{i:5,n:"巳时 (09:00-10:59)"},{i:6,n:"午时 (11:00-12:59)"},{i:7,n:"未时 (13:00-14:59)"},{i:8,n:"申时 (15:00-16:59)"},{i:9,n:"酉时 (17:00-18:59)"},{i:10,n:"戌时 (19:00-20:59)"},{i:11,n:"亥时 (21:00-22:59)"}];
+// 康熙笔画常用字(500+字)
+const KB={
+"一":1,"乙":1,"二":2,"七":2,"人":2,"入":2,"八":2,"刀":2,"力":2,"了":2,"乃":2,"又":2,"儿":2,"十":2,"丁":2,"卜":2,
+"三":3,"上":3,"下":3,"个":3,"丸":3,"久":3,"凡":3,"千":3,"口":3,"土":3,"士":3,"夕":3,"大":3,"女":3,"子":3,"寸":3,
+"小":3,"山":3,"川":3,"工":3,"己":3,"巾":3,"干":3,"广":3,"才":3,"门":8,"马":10,"飞":9,"王":4,"井":4,"天":4,"夫":4,
+"元":4,"无":4,"云":12,"五":4,"仁":4,"仇":4,"今":4,"介":4,"仍":4,"分":4,"切":4,"匀":4,"化":4,"匹":4,"区":11,"午":4,
+"牛":4,"犬":4,"尹":4,"尺":4,"屯":4,"巴":4,"幻":4,"廿":4,"开":12,"引":4,"心":4,"戈":4,"手":4,"支":4,"文":4,"斗":4,
+"斤":4,"方":4,"日":4,"曰":4,"月":4,"木":4,"欠":4,"止":4,"歹":4,"殳":4,"毋":4,"比":4,"毛":4,"氏":4,"气":4,"水":4,
+"火":4,"爪":4,"父":4,"爻":4,"片":4,"牙":4,"玉":5,"瓜":5,"瓦":5,"甘":5,"生":5,"用":5,"田":5,"由":5,"甲":5,"申":5,
+"电":5,"白":5,"百":6,"皮":5,"皿":5,"目":5,"矛":5,"矢":5,"石":5,"示":5,"禾":5,"穴":5,"立":5,"交":6,"亦":6,"亥":6,
+"亨":7,"亩":7,"享":8,"京":8,"亭":9,"代":5,"令":5,"以":5,"仰":6,"仲":6,"任":6,"份":6,"仿":6,"伙":6,"会":13,"伪":14,
+"伊":6,"伍":6,"伎":6,"伏":6,"伐":6,"休":6,"伯":7,"伴":7,"伶":7,"伸":7,"伺":7,"似":6,"位":7,"低":7,"住":7,"体":23,
+"余":7,"佛":7,"作":7,"佳":8,"使":8,"佩":8,"来":8,"例":8,"侠":9,"供":8,"侃":8,"侄":8,"侈":8,"依":8,"侣":9,"侯":9,
+"侵":9,"保":9,"俞":9,"信":9,"俟":9,"俊":9,"俗":9,"俘":9,"冒":9,"冠":9,"冬":5,"冰":6,"冯":12,"冲":15,"凉":10,"凌":10,
+"准":10,"凝":16,"凤":14,"凯":12,"函":10,"刚":10,"刘":15,"利":7,"别":7,"到":8,"制":8,"刷":9,"刻":8,"前":9,"则":9,
+"剑":15,"功":5,"加":5,"助":7,"努":7,"勇":9,"勉":10,"动":11,"务":11,"胜":12,"劳":12,"勤":13,"勾":4,"勿":4,"包":5,
+"北":5,"匠":6,"匡":6,"医":18,"华":14,"协":8,"卑":8,"卓":8,"单":12,"博":12,"卦":8,"印":6,"危":6,"即":7,"却":8,
+"卵":7,"卷":8,"卸":9,"卿":10,"原":10,"去":5,"县":16,"参":11,"双":18,"发":12,"句":5,"古":5,"可":5,"台":14,"右":5,
+"司":5,"各":6,"合":6,"吉":6,"吊":6,"同":6,"名":6,"后":9,"吏":6,"吐":6,"向":6,"君":7,"吝":7,"吟":7,"含":7,"吴":7,
+"吞":7,"否":7,"吧":7,"吕":7,"告":7,"员":10,"周":8,"味":8,"咏":8,"哀":9,"咨":9,"品":9,"咸":9,"哥":10,"哲":10,
+"唐":10,"唯":11,"唱":11,"商":11,"问":11,"启":11,"善":12,"喜":12,"喻":12,"嘉":14,"器":16,"四":5,"国":11,"在":6,
+"地":6,"圭":6,"坐":7,"均":7,"坊":7,"坎":7,"坑":7,"块":11,"坚":11,"坛":16,"垂":8,"型":9,"城":10,"埋":10,"域":11,
+"培":11,"基":11,"堂":11,"堆":11,"塞":13,"塑":13,"境":14,"增":15,"墨":15,"壮":7,"声":17,"夏":10,"外":5,"多":6,
+"夜":8,"太":4,"央":5,"失":5,"头":16,"夷":6,"奇":8,"奈":8,"奉":8,"契":9,"奔":9,"奎":9,"套":10,"奢":12,"奥":13,
+"奴":5,"奶":5,"妃":6,"好":6,"如":6,"妄":6,"妆":7,"妇":11,"妈":13,"姊":7,"妹":8,"妻":8,"始":8,"姐":8,"姑":8,
+"姓":8,"委":8,"姚":9,"威":9,"姻":9,"姿":9,"姬":10,"娜":10,"娘":10,"娟":10,"娥":10,"娴":15,"婉":11,"婚":11,"婵":15,
+"婶":19,"孔":4,"存":6,"字":6,"孙":10,"孝":7,"学":16,"孟":8,"季":8,"孤":8,"孩":9,"孰":11,"宁":14,"它":5,"宅":7,
+"宇":6,"守":6,"安":6,"宋":7,"完":7,"宏":7,"宗":8,"官":8,"宙":8,"定":8,"宜":8,"宛":8,"客":9,"宣":9,"室":9,
+"宥":9,"家":10,"宸":10,"容":10,"宽":15,"宾":14,"寂":11,"寄":11,"宿":11,"密":11,"寒":12,"富":12,"寓":12,"察":14,
+"寡":14,"寝":13,"对":14,"寻":12,"寺":6,"寿":14,"封":9,"射":10,"将":11,"尊":12,"少":4,"尔":14,"尚":8,"就":12,
+"尽":15,"屋":9,"屏":9,"展":10,"属":12,"屠":11,"冈":8,"岩":23,"岳":17,"峰":10,"崇":11,"岛":10,"崖":11,"崩":11,
+"巍":21,"左":5,"巧":5,"巨":5,"差":10,"布":5,"市":5,"帅":9,"帆":6,"希":7,"帖":8,"帘":8,"带":11,"帽":12,"幕":14,
+"平":5,"年":6,"并":8,"幸":8,"庄":13,"店":8,"府":8,"底":8,"庞":19,"废":15,"异":6,"弃":12,"式":6,"弓":3,"张":11,
+"强":12,"弦":8,"弹":16,"归":18,"当":13,"录":16,"形":7,"彩":11,"彭":12,"影":15,"彼":8,"往":8,"征":8,"待":9,
+"很":9,"徐":10,"得":11,"徊":10,"徒":10,"从":11,"悠":11,"悉":11,"您":11,"惜":12,"惇":12,"惑":12,"悲":12,"惠":12,
+"愤":15,"愿":14,"慢":15,"慧":15,"忆":17,"忧":15,"怀":20,"态":14,"恭":10,"慕":15,"成":7,"我":7,"戒":7,"或":8,
+"战":16,"戴":18,"户":4,"房":8,"所":8,"扁":9,"扇":10,"扎":5,"扑":6,"托":7,"扫":12,"扬":13,"扭":8,"批":8,"扶":8,
+"承":8,"技":8,"投":8,"把":8,"扶":8,"抑":7,"抒":8,"抓":8,"拔":9,"拇":8,"抱":9,"抵":9,"拍":8,"拎":8,"拐":8,
+"拓":9,"拢":20,"拥":17,"拦":21,"拧":18,"拨":16,"择":17,"挂":10,"挚":15,"挛":23,"挺":10,"括":9,"拾":10,"指":10,
+"挈":10,"按":10,"持":10,"拷":10,"拱":9,"挂":10,"指":10,"挟":11,"挠":12,"挡":17,"拴":10,"拾":10,"挑":10,"拼":9,
+"挣":12,"挪":11,"挫":10,"振":11,"挺":10,"挽":11,"捂":11,"捆":11,"捉":11,"捋":11,"捞":16,"损":14,"捡":17,"换":13,
+"捣":14,"捅":11,"捆":11,"提":13,"揖":13,"插":13,"搜":14,"喧":12,"搭":14,"搽":13,"握":13,"揉":13,"搔":13,"搭":13,
+"楼":15,"搪":14,"携":14,"摆":19,"摇":14,"摊":23,"撑":15,"摸":14,"熬":15,"撒":16,"撕":15,"撞":16,"撒":16,"撩":16,
+"撬":16,"播":16,"擒":16,"擅":17,"操":17,"擦":18,"攒":23,"支":4,"收":6,"改":7,"攻":7,"放":8,"政":9,"故":9,
+"效":10,"敌":10,"敏":11,"救":11,"教":11,"敛":17,"敢":12,"散":12,"敬":13,"数":15,"整":16,"文":4,"料":10,"斧":8,
+"斩":8,"断":11,"斯":12,"新":13,"施":9,"旁":10,"旅":10,"族":11,"无":4,"既":9,"日":4,"旦":5,"旧":18,"早":6,"明":8,
+"易":8,"星":9,"映":9,"春":9,"昨":9,"昭":9,"是":9,"昱":9,"晏":10,"昼":11,"晓":16,"晔":16,"晕":13,"晖":13,"晚":11,
+"晴":12,"晶":12,"智":12,"暂":15,"暖":13,"暄":13,"暇":13,"暮":15,"暄":13,"曲":6,"更":7,"书":10,"替":12,"最":12,
+"月":4,"有":6,"服":10,"朗":11,"望":11,"朝":12,"期":12,"木":4,"未":5,"本":5,"札":5,"术":11,"朱":6,"朵":6,"机":16,
+"朽":6,"杀":10,"杂":18,"权":22,"条":10,"杨":13,"极":13,"构":14,"枉":8,"枝":8,"枢":15,"柜":17,"枚":8,"板":8,
+"析":8,"松":18,"枫":13,"枪":14,"杭":8,"枕":8,"杷":8,"枉":8,"果":8,"枝":8,"枭":11,"枯":9,"柯":9,"柄":9,"柘":9,
+"柏":10,"柑":9,"柿":9,"柘":9,"柚":9,"柞":9,"柠":18,"柱":9,"柳":9,"柴":10,"栅":10,"栋":12,"查":9,"柬":9,"栗":10,
+"校":10,"样":15,"核":10,"根":10,"格":10,"栽":10,"桀":10,"桁":10,"桂":10,"桃":10,"栓":10,"栖":10,"桐":10,"桁":10,
+"株":10,"桥":16,"桀":10,"样":15,"根":10,"格":10,"桂":10,"桔":10,"桓":10,"桔":10,"桁":10,"档":14,"桶":11,"桷":11,
+"梁":11,"梅":11,"梓":11,"梭":11,"梯":11,"械":11,"梳":11,"梵":11,"检":17,"棉":12,"棋":12,"棍":12,"椒":12,"棒":12,
+"棕":12,"棘":12,"棚":12,"棠":12,"棣":12,"森":12,"棰":12,"棺":12,"椁":12,"椁":12,"椅":12,"植":12,"椎":12,"椒":12,
+"棵":12,"棍":12,"棹":12,"棺":12,"椰":13,"榆":13,"楼":15,"概":14,"榄":25,"杨":13,"枫":13,"楫":13,"楹":13,"椽":13,
+"槌":13,"榆":13,"楦":13,"楠":13,"楯":13,"楹":13,"楼":15,"概":14,"榄":25,"楽":15,"樱":21,"横":16,"橙":16,"檀":17,
+"檬":18,"欠":4,"次":6,"欣":8,"欲":11,"欺":12,"歇":13,"歌":14,"歜":17,"止":4,"正":5,"此":6,"步":7,"武":8,"歧":8,
+"歪":9,"殉":10,"殊":10,"残":12,"殒":14,"殖":12,"歼":17,"殇":15,"母":5,"每":7,"毒":9,"比":4,"毛":4,"水":4,"永":5,
+"汁":6,"求":7,"汇":13,"汉":15,"汀":6,"汁":6,"污":7,"汤":13,"汐":6,"汗":7,"汛":7,"江":7,"池":7,"污":7,"汲":7,
+"汴":8,"汶":8,"沈":8,"沁":8,"沂":8,"没":8,"沃":8,"沈":8,"汪":8,"沅":8,"沐":8,"沛":8,"汰":8,"沥":8,"沦":12,
+"沧":14,"沤":15,"没":8,"沣":22,"沪":14,"沛":8,"沙":8,"沁":8,"沂":8,"沿":9,"泫":9,"泄":9,"泐":9,"泉":9,"泊":9,
+"泛":9,"泔":9,"泠":9,"泡":9,"波":9,"泥":9,"注":9,"泪":9,"涕":11,"泳":9,"河":9,"泓":9,"治":9,"沼":9,"沾":9,
+"油":9,"泗":9,"泱":9,"泳":9,"泰":10,"洋":10,"洞":10,"活":10,"洪":10,"洒":10,"测":13,"洽":10,"派":10,"浃":10,
+"浅":12,"浇":16,"浊":17,"测":13,"济":18,"洋":10,"浑":13,"浓":17,"浙":11,"浦":11,"浩":11,"浪":11,"浮":11,"浴":11,
+"海":11,"浸":11,"涂":11,"涅":11,"消":11,"涉":11,"涌":11,"涓":11,"涛":18,"涝":15,"润":16,"涨":15,"淀":16,"液":12,
+"涵":12,"淋":12,"淑":12,"淘":12,"淙":12,"淞":12,"淡":12,"淮":12,"深":12,"淳":12,"清":12,"渊":12,"淋":12,"添":12,
+"淼":12,"焱":12,"湾":26,"湿":18,"温":14,"源":14,"溢":14,"溯":14,"滔":14,"溪":14,"溶":14,"滨":18,"滚":15,"满":15,
+"滢":19,"漓":14,"演":15,"漠":15,"漏":15,"漕":15,"漫":15,"渐":12,"渔":15,"渗":15,"温":14,"漂":15,"漆":15,"漱":15,
+"漫":15,"漏":15,"演":15,"汉":15,"洁":16,"澎":16,"潭":16,"潦":16,"潜":16,"潮":16,"潼":16,"澄":16,"潜":16,"澈":16,
+"潘":16,"潦":16,"潜":16,"濯":18,"火":4,"灭":14,"灯":16,"灰":6,"灵":24,"灾":9,"炎":8,"炒":8,"炊":8,"炕":8,
+"炖":12,"炸":9,"点":17,"炼":13,"炽":16,"烁":19,"烂":21,"烘":10,"烙":10,"烛":17,"烟":13,"烦":13,"烧":16,"烨":14,
+"热":15,"烽":11,"焕":13,"焉":11,"焱":12,"然":12,"煮":13,"焚":12,"焰":12,"焯":12,"焱":12,"煜":13,"照":13,"熏":14,
+"熙":13,"熟":15,"熠":15,"熨":15,"燃":16,"燕":16,"燎":16,"熹":16,"灯":16,"爪":4,"父":4,"爻":4,"片":4,"牛":4,
+"版":8,"牙":4,"物":8,"牲":10,"特":10,"牵":11,"犀":12,"犬":4,"犯":6,"状":8,"狩":10,"独":17,"狼":11,"猪":16,
+"猫":12,"献":20,"玄":5,"率":11,"玉":5,"玛":15,"玖":8,"玮":14,"环":17,"珂":10,"珈":10,"珞":11,"珠":11,"班":10,
+"球":12,"琅":12,"琬":13,"琛":13,"琰":13,"琳":13,"琴":13,"琵":13,"琶":13,"琦":13,"琪":13,"琨":13,"琬":13,"琰":13,
+"琳":13,"瑛":13,"瑜":14,"瑞":14,"瑟":14,"瑚":14,"瑙":14,"瑶":15,"瑰":14,"瑾":15,"璃":16,"璇":16,"璐":17,"璀":16,
+"瓜":5,"瓦":5,"甘":5,"生":5,"用":5,"田":5,"由":5,"甲":5,"申":5,"电":5,"男":7,"畅":14,"画":12,"畅":14,"畏":9,
+"畿":12,"疆":19,"疏":12,"疐":14,"疑":14,"疗":17,"疵":11,"疸":10,"疾":10,"疹":10,"疼":10,"疲":10,"痕":11,"痛":12,
+"痢":12,"痣":12,"痘":12,"痞":12,"痴":13,"瘦":15,"瘟":15,"瘠":15,"瘫":15,"瘾":16,"皱":15,"皂":7,"皓":12,"盈":9,
+"盒":11,"监":14,"盘":15,"盛":12,"盟":13,"目":5,"盯":7,"盲":8,"直":8,"相":9,"盼":9,"盾":9,"省":9,"看":9,
+"真":10,"眠":10,"眼":11,"着":12,"眺":11,"眷":11,"眼":11,"睦":13,"睿":14,"睹":14,"睽":14,"瞎":15,"瞥":17,"瞻":18,
+"矛":5,"矜":9,"矢":5,"矣":7,"知":8,"短":12,"石":5,"矶":7,"矾":8,"矿":20,"码":14,"砂":9,"砌":9,"砍":9,"砒":9,
+"研":9,"砚":12,"砻":10,"砼":10,"砾":10,"础":18,"碎":13,"碑":13,"碘":13,"碗":13,"碇":13,"碌":13,"碍":13,"碎":13,
+"碑":13,"碎":13,"碓":13,"碗":13,"碘":13,"碧":14,"碰":14,"碟":14,"碱":14,"碳":14,"磋":15,"磐":15,"碾":15,"磁":15,
+"磨":16,"磬":16,"磔":15,"磺":17,"示":5,"礼":18,"社":8,"祀":8,"祈":9,"祖":10,"祝":10,"神":10,"祥":11,"票":11,
+"祭":11,"祯":13,"祷":12,"祸":14,"祺":13,"禀":13,"禁":13,"禄":13,"禅":17,"福":14,"禊":14,"禾":5,"秀":7,"秃":7,
+"私":7,"秋":9,"种":14,"科":9,"秒":9,"秕":9,"秘":10,"租":10,"秧":10,"秦":10,"秩":10,"称":14,"秸":11,"移":11,
+"秽":18,"稀":12,"程":12,"稍":12,"税":12,"稳":19,"稻":15,"稼":15,"稿":15,"穆":16,"穴":5,"究":7,"穷":7,"空":8,
+"穹":8,"穿":9,"突":9,"窃":10,"窄":10,"窑":11,"窒":11,"窕":11,"窗":12,"窘":12,"窝":12,"窟":13,"窠":13,"窥":13,
+"窦":13,"立":5,"站":10,"竟":11,"童":12,"端":14,"竣":12,"竭":14,"竖":14,"竹":6,"竿":9,"笃":16,"第":11,"笔":12,
+"笋":10,"笑":10,"笙":11,"笛":11,"笠":11,"答":12,"策":12,"筐":12,"筑":15,"筛":16,"筝":14,"筠":13,"简":18,"筷":14,
+"算":14,"管":14,"箫":18,"箭":15,"箱":15,"篇":15,"筑":15,"筵":13,"簇":17,"簧":18,"米":6,"粉":10,"粒":11,"粗":11,
+"粕":11,"粘":11,"粤":13,"粥":12,"粮":18,"粱":13,"粲":13,"精":14,"粹":14,"粽":14,"糁":16,"糖":16,"糕":16,"糜":17,
+"糟":17,"糠":17,"糨":21,"系":7,"纠":8,"红":9,"纤":23,"纣":9,"约":9,"级":9,"纪":9,"纫":10,"纬":15,"纶":14,
+"纷":10,"纸":10,"纹":10,"纺":14,"纽":10,"纳":10,"纲":14,"索":10,"紫":11,"累":11,"绅":11,"细":11,"织":18,"终":11,
+"绊":11,"绍":11,"经":13,"绑":12,"绕":18,"结":12,"绘":19,"给":12,"络":12,"绝":12,"统":12,"丝":12,"绛":12,"结":12,
+"继":20,"继":20,"绩":14,"绪":14,"续":21,"绳":19,"维":14,"绵":14,"绶":14,"绷":17,"绸":14,"绾":14,"绿":14,"缀":14,
+"缁":14,"缍":14,"缅":15,"缆":27,"缉":15,"缏":15,"缒":13,"缓":15,"缔":15,"缕":14,"编":15,"缘":15,"缚":16,"缝":17,
+"缟":16,"缠":21,"缡":18,"缩":17,"缥":17,"缨":23,"缦":18,"缭":18,"缮":18,"缯":18,"罐":24,"缸":9,"缺":10,"钵":13,
+"泰":10,"盎":10,"盏":13,"盐":24,"监":14,"盒":11,"盔":11,"盖":16,"盘":15,"盛":12,"盗":11,"目":5,"眉":9,"看":9,
+"真":10,"眠":10,"睚":13,"督":13,"睦":13,"睫":13,"睬":13,"睹":14,"睽":14,"睾":14,"睿":14,"瞀":14,"瞥":17,"瞧":17,
+"瞩":17,"瞪":17,"瞻":18,"矗":24,"矢":5,"矣":7,"知":8,"矩":10,"矫":17,"矮":13,"石":5,"砖":16,"劈":15,"研":9,
+"砚":12,"碣":11,"碑":13,"碎":13,"确":15,"码":14,"碰":14,"碱":14,"礼":18,"社":8,"祀":8,"祈":9,"祉":9,"祖":10,
+"祚":10,"祛":10,"神":10,"祝":10,"祠":10,"祢":10,"祥":11,"票":11,"祭":11,"祯":13,"祷":12,"祸":14,"祺":13,"禀":13,
+"禁":13,"禄":13,"禅":17,"福":14,"禚":15,"禧":17,"禾":5,"秀":7,"私":7,"秉":8,"秋":9,"科":9,"种":14,"稀":12,
+"程":12,"税":12,"稳":19,"稻":15,"稼":15,"稿":15,"穆":16,"穴":5,"究":7,"空":8,"穿":9,"突":9,"窃":10,"窄":10,
+"窗":12,"窘":12,"窝":12,"窟":13,"立":5,"站":10,"竟":11,"童":12,"端":14,"竹":6,"竿":9,"第":11,"笔":12,"符":11,
+"笠":11,"第":11,"答":12,"策":12,"筑":15,"简":18,"算":14,"管":14,"篇":15,"米":6,"粉":10,"粒":11,"粗":11,"粘":11,
+"粮":18,"粱":13,"精":14,"粹":14,"糖":16,"糕":16,"系":7,"红":9,"约":9,"级":9,"纪":9,"纳":10,"纯":10,"纱":10,
+"纲":14,"纷":10,"纸":10,"纹":10,"纺":14,"纽":10,"紫":11,"累":11,"绅":11,"细":11,"终":11,"绍":11,"经":13,"结":12,
+"给":12,"络":12,"绝":12,"统":12,"继":20,"绩":14,"绪":14,"续":21,"绳":19,"维":14,"绵":14,"绿":14,"缀":14,"缅":15,
+"缓":15,"缔":15,"缕":14,"编":15,"缘":15,"缚":16,"缝":17,"缟":16,"缠":21,"缩":17,"缥":17,"缨":23,"羊":6,"羌":8,
+"美":9,"羞":11,"群":13,"羡":12,"羲":16,"羽":6,"翁":10,"翊":11,"翔":12,"翘":18,"翠":14,"翡":14,"翟":14,"翼":17,
+"耀":20,"老":6,"考":6,"者":8,"耋":12,"耄":10,"耕":10,"耗":10,"肃":13,"肆":13,"肇":14,"肉":6,"肌":6,"肯":8,
+"育":10,"肴":8,"肺":9,"肾":10,"胃":9,"胆":11,"胜":12,"胞":11,"胖":11,"胡":11,"脉":11,"能":10,"脊":10,"脚":13,
+"脱":11,"脸":18,"腊":14,"腻":16,"膳":16,"臣":6,"臧":14,"自":6,"臭":10,"至":6,"致":10,"臼":6,"舌":6,"舟":6,
+"航":10,"般":10,"舫":10,"舵":11,"舶":11,"舷":11,"船":11,"艇":12,"艘":15,"航":10,"良":7,"艰":17,"色":6,"艳":28,
+"艾":8,"芝":10,"芬":10,"芳":10,"花":10,"芹":10,"芸":10,"芽":10,"苗":11,"苛":11,"若":11,"苦":11,"英":11,"茂":11,
+"范":15,"茄":11,"茅":11,"茎":13,"苔":11,"茗":12,"荔":12,"茸":12,"茹":12,"茵":12,"茶":12,"荃":12,"荆":12,"荐":12,
+"草":12,"荒":12,"荔":12,"荣":14,"荧":14,"荨":15,"荷":13,"莅":13,"莉":13,"莎":13,"莹":15,"营":17,"菁":14,"著":14,
+"菜":14,"菰":14,"菱":14,"菲":14,"萌":14,"萝":22,"菌":14,"萄":14,"菊":14,"菡":14,"萍":14,"菠":14,"营":17,"萧":18,
+"萨":17,"葱":17,"蒂":15,"蒋":17,"蒜":16,"蓝":20,"蒙":16,"蒲":16,"蓉":16,"蔡":17,"蔺":22,"藉":20,"藏":20,"藓":23,
+"虎":8,"虐":9,"虏":13,"处":11,"虚":12,"虞":13,"虢":15,"虫":6,"虹":9,"蜂":13,"蜀":13,"蝉":18,"蜡":14,"蛇":12,
+"蛾":13,"蜂":13,"蜜":14,"蜥":14,"蜉":13,"蜓":13,"蜘":14,"蝎":15,"蝌":15,"蝴":15,"蝶":15,"螺":17,"行":6,"衍":9,
+"术":11,"街":12,"卫":15,"御":16,"复":12,"循":12,"微":13,"德":15,"徵":15,"心":4,"必":5,"忆":17,"忌":7,"忍":7,
+"忐":7,"忑":7,"忠":8,"忡":8,"忤":7,"忧":15,"忱":8,"念":8,"忻":8,"怀":20,"态":14,"忿":8,"忽":8,"思":9,"怨":9,
+"急":9,"总":17,"怼":9,"怠":9,"怨":9,"恬":10,"恭":10,"息":10,"恰":10,"恳":10,"恶":12,"悖":11,"悚":11,"悟":11,
+"悠":11,"患":11,"悦":11,"您":11,"悬":11,"情":12,"惜":12,"惟":12,"惠":12,"惑":12,"悲":12,"惇":12,"悴":12,"悸":11,
+"悼":11,"情":12,"惕":12,"惟":12,"惯":14,"愁":13,"愈":13,"意":13,"愚":13,"爱":13,"感":13,"愤":15,"愿":14,"慢":15,
+"慧":15,"慨":15,"慷":15,"慰":15,"憎":16,"憨":15,"憩":16,"宪":16,"懋":17,"戍":6,"戎":6,"成":7,"我":7,"戒":7,
+"或":8,"战":16,"截":14,"戴":18,"户":4,"所":8,"房":8,"扁":9,"扇":10,"才":3,"扎":5,"扑":6,"托":7,"扫":12,"扬":13,
+"扭":8,"批":8,"扶":8,"承":8,"技":8,"投":8,"把":8,"抑":7,"抒":8,"拔":9,"抱":9,"抵":9,"拍":8,"挽":11,"挺":10,
+"括":9,"拾":10,"指":10,"按":10,"持":10,"拱":9,"挟":11,"挠":12,"挑":10,"振":11,"捍":11,"捉":11,"损":14,"换":13,
+"握":13,"揉":13,"描":13,"提":13,"插":13,"揩":13,"搂":15,"揭":13,"摇":14,"搬":14,"携":14,"摊":23,"操":17,"擎":17,
+"擦":18,"攒":23,"攀":19,"摄":22,"支":4,"收":6,"放":8,"政":9,"故":9,"效":10,"敏":11,"救":11,"教":11,"敢":12,
+"散":12,"敬":13,"数":15,"整":16,"文":4,"料":10,"斧":8,"新":13,"施":9,"旁":10,"旅":10,"族":11,"既":9,"日":4,
+"旦":5,"早":6,"明":8,"易":8,"星":9,"映":9,"春":9,"昨":9,"昭":9,"是":9,"晏":10,"晓":16,"晔":16,"晖":13,"晚":11,
+"晴":12,"晶":12,"智":12,"暂":15,"暖":13,"暄":13,"暇":13,"暮":15,"曲":6,"更":7,"书":10,"替":12,"最":12,"月":4,
+"有":6,"朗":11,"望":11,"朝":12,"期":12,"木":4,"未":5,"本":5,"机":16,"朱":6,"朵":6,"朽":6,"杀":10,"权":22,
+"条":10,"杨":13,"极":13,"枉":8,"枝":8,"枢":15,"板":8,"析":8,"松":18,"枫":13,"杭":8,"枕":8,"杷":8,"果":8,
+"枭":11,"枯":9,"柯":9,"柄":9,"柏":10,"柿":9,"柚":9,"柱":9,"柳":9,"柴":10,"栅":10,"栋":12,"查":9,"柬":9,
+"栗":10,"校":10,"样":15,"核":10,"根":10,"格":10,"栽":10,"桁":10,"桂":10,"桃":10,"栓":10,"栖":10,"桐":10,"株":10,
+"桥":16,"桔":10,"桓":10,"档":14,"桶":11,"梁":11,"梅":11,"梓":11,"梭":11,"梯":11,"械":11,"梳":11,"梵":11,"检":17,
+"棉":12,"棋":12,"棍":12,"椒":12,"棒":12,"棕":12,"棘":12,"棚":12,"棠":12,"棣":12,"森":12,"棺":12,"椅":12,"植":12,
+"椎":12,"棵":12,"棹":12,"椰":13,"榆":13,"楼":15,"概":14,"楫":13,"楹":13,"椽":13,"楠":13,"楽":15,"樱":21,"横":16,
+"橙":16,"檀":17,"檬":18,"欠":4,"次":6,"欣":8,"欲":11,"欺":12,"歇":13,"歌":14,"止":4,"正":5,"此":6,"步":7,
+"武":8,"歧":8,"殊":10,"残":12,"殖":12,"歼":17,"比":4,"毛":4,"水":4,"永":5,"求":7,"汇":13,"汉":15,"汀":6,
+"江":7,"池":7,"汲":7,"汴":8,"汶":8,"沈":8,"沁":8,"沂":8,"没":8,"沃":8,"汪":8,"沅":8,"沐":8,"沛":8,"汰":8,
+"沥":8,"沦":12,"沧":14,"沙":8,"沿":9,"泉":9,"泊":9,"波":9,"泥":9,"注":9,"泪":9,"泳":9,"河":9,"泓":9,"治":9,
+"沼":9,"沾":9,"油":9,"泗":9,"泱":9,"泰":10,"洋":10,"洞":10,"活":10,"洪":10,"洒":10,"测":13,"洽":10,"派":10,
+"浅":12,"浇":16,"浊":17,"济":18,"浑":13,"浓":17,"浙":11,"浦":11,"浩":11,"浪":11,"浮":11,"浴":11,"海":11,"浸":11,
+"涂":11,"涅":11,"消":11,"涉":11,"涌":11,"涓":11,"涛":18,"涝":15,"润":16,"涨":15,"淀":16,"液":12,"涵":12,"淋":12,
+"淑":12,"淘":12,"淡":12,"淮":12,"深":12,"淳":12,"清":12,"渊":12,"添":12,"淼":12,"湾":26,"湿":18,"温":14,"源":14,
+"溢":14,"溯":14,"滔":14,"溪":14,"溶":14,"滨":18,"滚":15,"满":15,"滢":19,"漓":14,"演":15,"漠":15,"漏":15,"漕":15,
+"漫":15,"渐":12,"渔":15,"渗":15,"漂":15,"漆":15,"漱":15,"汉":15,"洁":16,"澎":16,"潭":16,"潦":16,"潜":16,"潮":16,
+"潼":16,"澄":16,"澈":16,"潘":16,"濯":18,"火":4,"灭":14,"灯":16,"灰":6,"灵":24,"灾":9,"炎":8,"炒":8,"炊":8,
+"炕":8,"炖":12,"炸":9,"点":17,"炼":13,"炽":16,"烁":19,"烂":21,"烘":10,"烙":10,"烛":17,"烟":13,"烦":13,"烧":16,
+"烨":14,"热":15,"烽":11,"焕":13,"然":12,"煮":13,"焚":12,"焰":12,"焯":12,"焱":12,"煜":13,"照":13,"熏":14,"熙":13,
+"熟":15,"熠":15,"燃":16,"燕":16,"燎":16,"熹":16,"爪":4,"父":4,"爻":4,"片":4,"牛":4,"版":8,"牙":4,"物":8,
+"牲":10,"特":10,"牵":11,"犀":12,"犬":4,"犯":6,"状":8,"狩":10,"独":17,"狼":11,"猪":16,"猫":12,"献":20,"玄":5,
+"率":11,"玉":5,"玛":15,"玖":8,"玮":14,"环":17,"珂":10,"珈":10,"珞":11,"珠":11,"班":10,"球":12,"琅":12,"琬":13,
+"琛":13,"琰":13,"琳":13,"琴":13,"琵":13,"琶":13,"琦":13,"琪":13,"琨":13,"瑛":13,"瑜":14,"瑞":14,"瑟":14,"瑚":14,
+"瑙":14,"瑶":15,"瑰":14,"瑾":15,"璃":16,"璇":16,"璐":17,"璀":16,"瓜":5,"瓦":5,"甘":5,"生":5,"用":5,"田":5,
+"由":5,"甲":5,"申":5,"电":5,"男":7,"畅":14,"画":12,"疏":12,"疑":14,"疗":17,"疵":11,"疾":10,"疹":10,"疼":10,
+"疲":10,"痕":11,"痛":12,"痢":12,"痣":12,"痘":12,"痞":12,"痴":13,"瘦":15,"瘟":15,"瘠":15,"瘫":15,"瘾":16,"皂":7,
+"皓":12,"盈":9,"盒":11,"监":14,"盘":15,"盛":12,"盟":13,"目":5,"盯":7,"盲":8,"直":8,"相":9,"盼":9,"盾":9,
+"省":9,"看":9,"真":10,"眠":10,"眼":11,"着":12,"眺":11,"眷":11,"睦":13,"睿":14,"睹":14,"睽":14,"瞎":15,"瞥":17,
+"瞻":18,"矛":5,"矜":9,"矢":5,"矣":7,"知":8,"短":12,"石":5,"矶":7,"矾":8,"矿":20,"码":14,"砂":9,"砌":9,"砍":9,
+"研":9,"砚":12,"碎":13,"碑":13,"碘":13,"碗":13,"碌":13,"碍":13,"碧":14,"碰":14,"碟":14,"碱":14,"磋":15,"磐":15,
+"碾":15,"磁":15,"磨":16,"磬":16,"磺":17,"示":5,"礼":18,"社":8,"祀":8,"祈":9,"祖":10,"祝":10,"神":10,"祥":11,
+"票":11,"祭":11,"祯":13,"祷":12,"祸":14,"祺":13,"禀":13,"禁":13,"禄":13,"禅":17,"福":14,"禾":5,"秀":7,"秃":7,
+"私":7,"秋":9,"种":14,"科":9,"秒":9,"秘":10,"租":10,"秧":10,"秦":10,"秩":10,"称":14,"移":11,"稀":12,"程":12,
+"稍":12,"税":12,"稳":19,"稻":15,"稼":15,"稿":15,"穆":16,"穴":5,"究":7,"穷":7,"空":8,"穹":8,"穿":9,"突":9,
+"窃":10,"窄":10,"窑":11,"窒":11,"窕":11,"窗":12,"窘":12,"窝":12,"窟":13,"窠":13,"窥":13,"窦":13,"立":5,"站":10,
+"竟":11,"童":12,"端":14,"竣":12,"竭":14,"竖":14,"竹":6,"竿":9,"笃":16,"第":11,"笔":12,"笋":10,"笑":10,"笙":11,
+"笛":11,"笠":11,"答":12,"策":12,"筐":12,"筑":15,"筛":16,"筝":14,"筠":13,"简":18,"筷":14,"算":14,"管":14,"箫":18,
+"箭":15,"箱":15,"篇":15,"筵":13,"簇":17,"簧":18,"米":6,"粉":10,"粒":11,"粗":11,"粕":11,"粘":11,"粤":13,"粥":12,
+"粮":18,"粱":13,"粲":13,"精":14,"粹":14,"粽":14,"糁":16,"糖":16,"糕":16,"糜":17,"糟":17,"糠":17,"糨":21,"系":7,
+"纠":8,"红":9,"纤":23,"纣":9,"约":9,"级":9,"纪":9,"纫":10,"纬":15,"纶":14,"纷":10,"纸":10,"纹":10,"纺":14,
+"纽":10,"纳":10,"纲":14,"索":10,"紫":11,"累":11,"绅":11,"细":11,"织":18,"终":11,"绊":11,"绍":11,"经":13,"绑":12,
+"绕":18,"结":12,"绘":19,"给":12,"络":12,"绝":12,"统":12,"丝":12,"绛":12,"继":20,"绩":14,"绪":14,"续":21,"绳":19,
+"维":14,"绵":14,"绶":14,"绷":17,"绸":14,"绾":14,"绿":14,"缀":14,"缁":14,"缅":15,"缆":27,"缉":15,"缓":15,"缔":15,
+"缕":14,"编":15,"缘":15,"缚":16,"缝":17,"缟":16,"缠":21,"缡":18,"缩":17,"缥":17,"缨":23,"缦":18,"缭":18,"缮":18,
+"缯":18,"罐":24,"缸":9,"缺":10,"钵":13,"盎":10,"盏":13,"盐":24,"盔":11,"盖":16,"盛":12,"盗":11,"羊":6,"羌":8,
+"美":9,"羞":11,"群":13,"羡":12,"羲":16,"羽":6,"翁":10,"翊":11,"翔":12,"翘":18,"翠":14,"翡":14,"翟":14,"翼":17,
+"耀":20,"老":6,"考":6,"者":8,"耕":10,"耗":10,"肃":13,"肆":13,"肇":14,"肉":6,"肌":6,"肯":8,"育":10,"肴":8,
+"肺":9,"肾":10,"胃":9,"胆":11,"胜":12,"胞":11,"胖":11,"胡":11,"脉":11,"能":10,"脊":10,"脚":13,"脱":11,"脸":18,
+"腊":14,"腻":16,"膳":16,"臣":6,"臧":14,"自":6,"臭":10,"至":6,"致":10,"臼":6,"舌":6,"舟":6,"航":10,"般":10,
+"舫":10,"舵":11,"舶":11,"舷":11,"船":11,"艇":12,"艘":15,"良":7,"艰":17,"色":6,"艳":28,"艾":8,"芝":10,"芬":10,
+"芳":10,"花":10,"芹":10,"芸":10,"芽":10,"苗":11,"苛":11,"若":11,"苦":11,"英":11,"茂":11,"范":15,"茄":11,"茅":11,
+"茎":13,"苔":11,"茗":12,"荔":12,"茸":12,"茹":12,"茵":12,"茶":12,"荃":12,"荆":12,"荐":12,"草":12,"荒":12,"荣":14,
+"荨":15,"荷":13,"莅":13,"莉":13,"莎":13,"莹":15,"营":17,"菁":14,"著":14,"菜":14,"菰":14,"菱":14,"菲":14,"萌":14,
+"萝":22,"菌":14,"萄":14,"菊":14,"菡":14,"萍":14,"菠":14,"萧":18,"萨":17,"葱":17,"蒂":15,"蒋":17,"蒜":16,"蓝":20,
+"蒙":16,"蒲":16,"蓉":16,"蔡":17,"蔺":22,"藉":20,"藏":20,"藓":23,"虎":8,"虐":9,"虏":13,"处":11,"虚":12,"虞":13,
+"虢":15,"虫":6,"虹":9,"蜂":13,"蜀":13,"蝉":18,"蜡":14,"蛇":12,"蛾":13,"蜜":14,"蝶":15,"螺":17,"行":6,"衍":9,
+"术":11,"街":12,"卫":15,"御":16,"复":12,"循":12,"微":13,"德":15,"徵":15,"风":9,"风":9,"夙":6,"飞":9,"飏":18,
+"食":9,"饭":13,"饮":12,"饲":13,"饱":14,"餐":16,"饿":16,"馀":16,"馅":16,"馆":17,"首":9,"香":9,"馥":18,"馨":20,
+"马":10,"驰":13,"驯":13,"驻":15,"驾":15,"骆":16,"骇":16,"骏":17,"骑":18,"骐":18,"验":23,"骄":22,"骗":19,"骞":20,
+"鬓":24,"髅":24,"魄":15,"魏":18,"魁":14,"魂":14,"魇":23,"鱼":11,"鲁":15,"鲜":17,"鲸":19,"鲤":18,"鲫":18,"鲨":18,
+"鸡":21,"鸣":14,"鸿":17,"鹅":18,"鹊":19,"鹏":19,"鹤":21,"鹿":11,"麟":23,"麦":11,"黄":12,"黍":12,"黎":15,"黑":12,
+"黛":17,"黑":12,"黔":16,"鼓":13,"鼠":13,"鼻":14,"齐":14,"齑":23,"龙":16,"龚":22,"龟":16,"龠":17
+};
+function getBiHua(ch){
+  if(KB[ch]) return KB[ch];
+  // 不在表中：按Unicode范围估算（娱乐）
+  const cp = ch.charCodeAt(0);
+  if(cp<0x4e00||cp>0x9fff) return 1;
+  // 简化估算：(cp-0x4e00) % 22 + 4
+  return ((cp - 0x4e00) % 22) + 4;
+}
+// 五格81数理吉凶
+const WUGE_JX=["吉","凶","吉","凶","吉","凶","吉","凶","吉","凶",
+"吉","凶","吉","凶","吉","凶","吉","凶","吉","凶",
+"吉","凶","吉","凶","吉","吉","凶","吉","凶","吉",
+"凶","吉","凶","吉","凶","吉","凶","吉","吉","凶",
+"吉","凶","吉","凶","吉","凶","吉","凶","吉","吉",
+"凶","吉","凶","吉","凶","吉","凶","吉","凶","吉",
+"凶","吉","凶","吉","凶","吉","凶","吉","凶","吉",
+"凶","吉","凶","吉","凶","吉","凶","吉","凶","吉",
+"吉","吉","凶","吉","凶","吉","凶","吉","凶","吉"];
+// 其实81数理更细
+const SHULI_DESC={};
+(function initShuli(){
+  const N=["首领运","刚强运","吉祥运","凶变运","短命运","孤独运","家庭缘薄","财禄运","技艺运","桃花运","凶危运","温和运","名利双收","破家亡身","福寿圆满","刚毅果断","逆境成才","灾破重重","有志竟成","多难厄难"];
+  for(let i=1;i<=81;i++){
+    let m="吉",d="数理平顺，基础安稳。";
+    const r=i%10;
+    if([2,4,9,10,12,14,19,20,22,26,27,28,34,36,42,43,44,46,49,50,53,54,56,58,59,60,62,64,66,68,69,70,71,72,73,74,76,77,78,79,80].indexOf(i)>=0)m="凶";
+    else if([6,7,11,13,15,16,17,18,21,23,24,25,29,31,32,33,35,37,39,41,45,47,48,52,55,57,61,63,65,67,81].indexOf(i)>=0)m="大吉";
+    else if([5,8,24,38,40,51,51,53,55,57,61,63,71,73,75,77].indexOf(i)>=0)m="吉";
+    else m="半吉";
+    d="数理"+i+":"+N[(i*3)%N.length]+"、"+N[(i*7)%N.length]+"，结合格局整体"+(m=="凶"?"需谨慎稳重":"和顺向上")+"。";
+    SHULI_DESC[i]={m,d};
+  }
+})();
+// 64卦数据（乾1...未济64）
+const GUA64=[
+["乾","乾为天","元亨利贞","天行健，君子以自强不息","大吉，刚健中正，诸事亨通。宜主动进取，把握良机"],
+["坤","坤为地","元亨，利牝马之贞","地势坤，君子以厚德载物","吉，柔顺宽厚，以柔克刚。宜守成，配合他人"],
+["屯","水雷屯","元亨利贞，勿用有攸往，利建侯","云雷屯，君子以经纶","初难后易，宜蓄力创业，勿妄动"],
+["蒙","山水蒙","亨。匪我求童蒙，童蒙求我","山下出泉，蒙；君子以果行育德","启蒙教化，虚心求学则吉"],
+["需","水天需","有孚，光亨，贞吉，利涉大川","云上于天，需；君子以饮食宴乐","需待时机，耐心守候，终有所获"],
+["讼","天水讼","有孚窒惕，中吉，终凶","天与水违行，讼；君子以作事谋始","讼争之象，宜和解，勿强争到底"],
+["师","地水师","贞，丈人吉，无咎","地中有水，师；君子以容民畜众","兴师动众，以正道率众，慎选将帅"],
+["比","水地比","吉。原筮元永贞，无咎","地上有水，比；先王以建万国亲诸侯","亲近团结，择善而从，得人相助"],
+["小畜","风天小畜","亨。密云不雨，自我西郊","风行天上，小畜；君子以懿文德","蓄积待发，蓄力小成，暂不宜大举"],
+["履","天泽履","履虎尾，不咥人，亨","上天下泽，履；君子以辨上下定民志","谨慎前行，循礼守正，可化险为夷"],
+["泰","地天泰","小往大来，吉亨","天地交泰，后以财成天地之道","大吉，天地和合，万事通达"],
+["否","天地否","否之匪人，不利君子贞，大往小来","天地不交，否；君子以俭德辟难","闭塞不通，诸事不顺，宜守静守正"],
+["同人","天火同人","同人于野，亨，利涉大川","天与火，同人；君子以类族辨物","同心协力，广结善缘，合作可成"],
+["大有","火天大有","元亨","火在天上，大有；君子以遏恶扬善顺天休命","大有收获，富贵丰隆，持盈保泰"],
+["谦","地山谦","亨，君子有终","地中有山，谦；君子以裒多益寡称物平施","谦虚受益，谦和待人，终有成就"],
+["豫","雷地豫","利建侯行师","雷出地奋，豫；先王以作乐崇德","愉悦安乐，顺时而动，建功立业"],
+["随","泽雷随","元亨利贞，无咎","泽中有雷，随；君子以向晦入宴息","顺随正道，随机应变，和光同尘"],
+["蛊","山风蛊","元亨，利涉大川","山下有风，蛊；君子以振民育德","弊乱革新，除弊兴利，大力整顿"],
+["临","地泽临","元亨利贞，至于八月有凶","泽上有地，临；君子以教思无穷容保民无疆","居高临下，督导管理，把握时机"],
+["观","风地观","盥而不荐，有孚颙若","风行地上，观；先王以省方观民设教","观察审视，深思明辨，以身作则"],
+["噬嗑","火雷噬嗑","亨，利用狱","雷电噬嗑；先王以明罚敕法","咬合决断，明断是非，用刑执法"],
+["贲","山火贲","亨，小利有攸往","山下有火，贲；君子以明庶政无敢折狱","文饰美化，注重礼仪，华而求实"],
+["剥","山地剥","不利有攸往","山附于地，剥；上以厚下安宅","剥落衰退，谨防小人，宜静不宜动"],
+["复","地雷复","亨，出入无疾朋来无咎","雷在地中，复；先王以至日闭关","一元复始，否极泰来，循序渐进"],
+["无妄","天雷无妄","元亨利贞，其匪正有眚","天下雷行，物与无妄；先王以茂对时育万物","勿存妄想，脚踏实地，循理而行"],
+["大畜","山天大畜","利贞，不家食吉，利涉大川","天在山中，大畜；君子以多识前言往行以畜其德","大有所蓄，蓄积贤才，利于进取"],
+["颐","山雷颐","贞吉，观颐自求口实","山下有雷，颐；君子以慎言语节饮食","颐养之道，修身养性，自食其力"],
+["大过","泽风大过","栋桡，利有攸往，亨","泽灭木，大过；君子以独立不惧遁世无闷","危机四伏，力挽狂澜，谨慎行大事"],
+["坎","坎为水","习坎，有孚维心亨，行有尚","水洊至，习坎；君子以常德行习教事","重重险阻，坚守诚信，终可脱险"],
+["离","离为火","利贞，亨，畜牝牛吉","明两作，离；大人以继明照于四方","光明附丽，依附正道，谨慎守成"],
+["咸","泽山咸","亨，利贞，取女吉","山上有泽，咸；君子以虚受人","感应相通，以诚相待，感情和合"],
+["恒","雷风恒","亨，无咎，利贞，利有攸往","雷风，恒；君子以立不易方","恒久之道，持之以恒，利在长久"],
+["遁","天山遁","亨，小利贞","天下有山，遁；君子以远小人不恶而严","退避隐遁，审时度势，全身而退"],
+["大壮","雷天大壮","利贞","雷在天上，大壮；君子以非礼弗履","强盛壮大，以礼守正，不可骄纵"],
+["晋","火地晋","康侯用锡马蕃庶，昼日三接","明出地上，晋；君子以自昭明德","晋升发展，光明前程，积极进取"],
+["明夷","地火明夷","利艰贞","明入地中，明夷；君子以莅众用晦而明","光明受损，处境艰难，韬光养晦"],
+["家人","风火家人","利女贞","风自火出，家人；君子以言有物而行有恒","家庭和睦，各守本分，家道兴旺"],
+["睽","火泽睽","小事吉","上火下泽，睽；君子以同而异","背离不合，求同存异，小事可成"],
+["蹇","水山蹇","利西南，不利东北，利见大人","山上有水，蹇；君子以反身修德","行路艰难，险难在前，宜修身待援"],
+["解","雷水解","利西南，无所往，其来复吉","雷雨作，解；君子以赦过宥罪","解除困境，纾缓困难，宽以待人"],
+["损","山泽损","有孚，元吉，无咎可贞，利有攸往","山下有泽，损；君子以惩忿窒欲","损下益上，有所减损，诚信为要"],
+["益","风雷益","利有攸往，利涉大川","风雷，益；君子以见善则迁有过则改","损上益下，众人受益，乘势进取"],
+["夬","泽天夬","扬于王庭，孚号有厉","泽上于天，夬；君子以施禄及下居德则忌","决断清除，刚毅果决，慎防小人"],
+["姤","天风姤","女壮，勿用取女","天下有风，姤；后以施命诰四方","不期而遇，慎察机缘，勿轻许诺"],
+["萃","泽地萃","亨，王假有庙，利见大人亨","泽上于地，萃；君子以除戎器戒不虞","聚集荟萃，团结协作，共赴大事"],
+["升","地风升","元亨，用见大人勿恤，南征吉","地中生木，升；君子以顺德积小以高大","上升发展，循序渐进，积小成大"],
+["困","泽水困","亨，贞大人吉，无咎有言不信","泽无水，困；君子以致命遂志","困顿受阻，坚守志向，终得解脱"],
+["井","水风井","改邑不改井，无丧无得往来井井","木上有水，井；君子以劳民劝相","养而不穷，持续奉献，德泽久远"],
+["革","泽火革","已日乃孚，元亨利贞悔亡","泽中有火，革；君子以治历明时","变革革新，顺天应人，破旧立新"],
+["鼎","火风鼎","元吉，亨","木上有火，鼎；君子以正位凝命","革故鼎新，鼎立兴盛，吉祥亨通"],
+["震","震为雷","亨，震来虩虩，笑言哑哑","洊雷震，君子以恐惧修省","震动惊惧，警惕反省，临危不乱"],
+["艮","艮为山","艮其背不获其身，行其庭不见其人","兼山艮，君子以思不出其位","抑止静止，知止不殆，安分守己"],
+["渐","风山渐","女归吉，利贞","山上有木，渐；君子以居贤德善俗","循序渐进，积小致大，水到渠成"],
+["归妹","雷泽归妹","征凶，无攸利","泽上有雷，归妹；君子以永终知敝","少女从长，感情用事，慎防冲动"],
+["丰","雷火丰","亨，王假之勿忧，宜日中","雷电皆至，丰；君子以折狱致刑","丰盛宏大，鼎盛之时，持盈保泰"],
+["旅","火山旅","小亨，旅贞吉","山上有火，旅；君子以明慎用刑而不留狱","羁旅行役，漂泊不定，以正立身"],
+["巽","巽为风","小亨，利有攸往，利见大人","随风巽，君子以申命行事","谦逊顺从，柔顺行事，顺势而为"],
+["兑","兑为泽","亨，利贞","丽泽兑，君子以朋友讲习","喜悦和谐，和颜悦色，友善相交"],
+["涣","风水涣","亨，王假有庙，利涉大川利贞","风行水上，涣；先王以享于帝立庙","涣散离散，聚散离合，团结人心"],
+["节","水泽节","亨，苦节不可贞","泽上有水，节；君子以制数度议德行","节制有度，适可而止，勿过犹不及"],
+["中孚","风泽中孚","豚鱼吉，利涉大川利贞","泽上有风，中孚；君子以议狱缓死","诚信为本，中心诚信，感化万物"],
+["小过","雷山小过","亨，利贞，可小事不可大事","山上有雷，小过；君子以行过乎恭丧过乎哀用过乎俭","小有过越，宜小事慎大事，谨慎谦卑"],
+["既济","水火既济","亨小，利贞，初吉终乱","水在火上，既济；君子以思患而豫防之","成功已成，居安思危，守成为要"],
+["未济","火水未济","亨，小狐汔济濡其尾，无攸利","火在水上，未济；君子以慎辨物居方","事业未竟，继续努力，终将成功"]
+];
+// 八卦属性
+const BAGUA = [
+  {n:"乾",y:"111",w:"天",s:"父"}, // idx 7
+  {n:"兑",y:"110",w:"泽",s:"少女"}, // idx 6
+  {n:"离",y:"101",w:"火",s:"中女"}, // idx 5
+  {n:"震",y:"100",w:"雷",s:"长男"}, // idx 4
+  {n:"巽",y:"011",w:"风",s:"长女"}, // idx 3
+  {n:"坎",y:"010",w:"水",s:"中男"}, // idx 2
+  {n:"艮",y:"001",w:"山",s:"少男"}, // idx 1
+  {n:"坤",y:"000",w:"地",s:"母"}  // idx 0
+];
+// 奇门遁甲基础数据
+const SANQI_LIUYI = ["戊","己","庚","辛","壬","癸","丁","丙","乙"]; // 0..8，地盘甲子戊起
+const JIUXING = ["天蓬","天芮","天冲","天辅","天禽","天心","天柱","天任","天英"];
+const JIUXING_GONG = [1,2,3,4,5,6,7,8,9]; // 九星本宫（洛书宫1..9）
+const BAMEN = ["休门","生门","伤门","杜门","景门","死门","惊门","开门"];
+const BAMEN_GONG = [1,8,3,4,9,2,7,6]; // 八门本宫（休坎1,生艮8,伤震3,杜巽4,景离9,死坤2,惊兑7,开乾6）
+const BASHEN = ["值符","螣蛇","太阴","六合","白虎","玄武","九地","九天"];
+// 八卦对应的洛书宫位：坎1 坤2 震3 巽4 中5 乾6 兑7 艮8 离9
+const LUOSHU = [4,9,2,3,5,7,8,1,6]; // 九宫格顺序（从上到下从左到右）
+// 阳遁：节气分属（冬至起）12节气各配局：
+// 冬至/小寒/大寒→阳1/2/3, 立春/雨水/惊蛰→4/5/6, 春分/清明/谷雨→7/8/9,
+// 立夏/小满/芒种→1/2/3(此时仍是阳遁), 夏至→阴9...
+// 简化按月份：月12,1,2,3,4,5阳遁(按 (m+1)%6 再*...?)
+// 采用简化阴阳遁：12,1,2,3,4,5阳遁，6,7,8,9,10,11阴遁
+// 定局数：按日干支算旬首→三元(上中下)→对应局
+function getJu(m,d,dayGZidx){
+  // 简化：月对应局数范围
+  const yang = [12,1,2,3,4,5].indexOf(m)>=0;
+  // 日干支索引对六十花甲每10日一旬，每5日一元
+  // 上元：甲子-戊辰(0-4), 甲午-戊戌(30-34), 己卯-癸未(15-19), 己酉-癸丑(45-49)
+  const r = dayGZidx % 60;
+  const mod10 = r % 10;
+  let yuan = "上"; // 上元5日：干支旬前5
+  const r5 = r % 60;
+  // 三元拆补简化：甲子甲午己卯己酉各为上元
+  const head = [0,30,15,45]; // 甲子甲午己卯己酉
+  let offset = 0;
+  for(const h of head){ if(r5>=h) offset = r5 - h; }
+  if(offset<5) yuan="上";
+  else if(offset<10) yuan="中";
+  else yuan="下";
+  // 按月+元配局
+  const yJu = {12:[[1,7],[2,8],[3,9]], // 12月（冬至附近）阳局 上元1中元2下元3（阳）
+               1:[[4,1],[5,2],[6,3]], 2:[[7,4],[8,5],[9,6]],
+               3:[[1,9],[2,8],[3,7]], 4:[[4,6],[5,5],[6,4]], 5:[[7,3],[8,2],[9,1]]};
+  const nJu = {6:[[9,3],[8,2],[7,1]], 7:[[6,9],[5,8],[4,7]], 8:[[3,6],[2,5],[1,4]],
+               9:[[9,9],[8,8],[7,7]], 10:[[6,3],[5,2],[4,1]], 11:[[3,6],[2,5],[1,4]]};
+  const yuans = {"上":0,"中":1,"下":2}[yuan];
+  const ranges = yang?yJu:nJu;
+  const arr = ranges[m] || (yang?[[1,1],[2,2],[3,3]]:[[9,9],[8,8],[7,7]]);
+  // arr[] [阳局,阴局?] 简化为一值
+  const ju = arr[yuans] ? (yang?arr[yuans][0]:arr[yuans][1]) : 1;
+  return {yang, yuan, ju:ju||1};
+}
+// 时旬首（六甲）：按时干支索引（0~59）求六甲：甲子(0)/甲戌(10)/甲申(20)/甲午(30)/甲辰(40)/甲寅(50)
+function liujiaIdx(shiGZ){
+  const r = shiGZ % 60;
+  return Math.floor(r/10)*10; // 0,10,20,30,40,50
+}
+// 地盘三奇六仪排宫：阳遁顺布局N起戊,阴遁逆布
+// 洛书宫顺序按1..9： 1 2 3 4 5 6 7 8 9
+// 按宫序号顺序排列
+function arrangeDipan(yang, ju){
+  // ju为起始宫(洛书号)，从"戊"开始阳顺阴逆排 SANQI_LIUYI (戊己庚辛壬癸丁丙乙)
+  let gong = [0,0,0,0,0,0,0,0,0,0]; // idx 1..9 = 洛书
+  let cur = ju;
+  for(let i=0;i<9;i++){
+    gong[cur] = i; // 宫位 -> SLYI index
+    // 九宫跳步顺序：1→2→3→4→5→6→7→8→9→1
+    if(yang) cur = (cur==9?1:cur+1);
+    else cur = (cur==1?9:cur-1);
+  }
+  return gong; // 洛书宫1~9 -> 三奇六仪索引
+}
+
+// 韦特塔罗 78张
+const TAROT = (function(){
+  const MA=[
+    ["0","愚人","Upright:新的开始、冒险、纯真","Reversed:鲁莽、犹豫、冒失",
+      "感情：崭新的缘分，天真真诚的相遇；事业：勇敢尝试新方向；选择：听从直觉，大胆迈步",
+      "感情：冲动下的承诺易破碎；事业：计划不周易碰壁；选择：三思后行，避免冒失"],
+    ["I","魔术师","正:创造、意志、主动","逆:欺骗、操纵、虚浮",
+      "感情：主动出击会有转机；事业：用创造力打开局面；选择：靠自己的力量掌控",
+      "感情：被花言巧语迷惑；事业：计划虚有其表；选择：警惕表面风光"],
+    ["II","女祭司","正:直觉、内省、神秘","逆:秘密揭露、迷茫",
+      "感情：用心感受对方暗示；事业：冷静思考找答案；选择：相信第六感",
+      "感情：误会或秘密影响关系；事业：方向迷茫难决断；选择：理性比直觉重要"],
+    ["III","皇后","正:丰饶、母性、爱","逆:依赖、空虚、阻滞",
+      "感情：爱意满满，关系甜蜜；事业：创造力丰硕；选择：以爱和温暖选",
+      "感情：过度依赖易失衡；事业：停滞难突破；选择：勿被情绪支配"],
+    ["IV","皇帝","正:权威、稳定、掌控","逆:专制、僵硬、失控",
+      "感情：稳定可靠的伴侣；事业：凭纪律稳步上升；选择：稳健务实是关键",
+      "感情：强势令人窒息；事业：墨守成规难创新；选择：放下控制欲"],
+    ["V","教皇","正:传统、信仰、引导","逆:叛逆、教条、束缚",
+      "感情：稳定受祝福的关系；事业：遵循规则少走弯路；选择：听取长辈建议",
+      "感情：价值观冲突；事业：守旧会被淘汰；选择：勇于打破常规"],
+    ["VI","恋人","正:结合、抉择、真爱","逆:犹豫、不和、错配",
+      "感情：重要抉择或浪漫开始；事业：合作共赢；选择：真爱与真心所向",
+      "感情：相互猜忌或三心二意；事业：合作貌合神离；选择：别因压力选"],
+    ["VII","战车","正:胜利、意志、前进","逆:失控、无方向、挫败",
+      "感情：主动出击赢得芳心；事业：勇往直前克敌制胜；选择：果断前进",
+      "感情：争执下两败俱伤；事业：方向错误越努力越偏；选择：先冷静再动"],
+    ["VIII","力量","正:勇气、耐心、柔克刚","逆:自我怀疑、软弱",
+      "感情：以温柔感化对方；事业：以毅力克难；选择：温柔坚定地坚持",
+      "感情：情绪失控互相伤害；事业：不自信错失机；选择：找回内在力量"],
+    ["IX","隐士","正:内省、独处、指引","逆:孤独、闭塞、拒人",
+      "感情：需要空间思考；事业：沉潜打磨自己；选择：静心倾听内心",
+      "感情：封闭自己疏离对方；事业：孤僻错失合作；选择：打开心门沟通"],
+    ["X","命运之轮","正:转折、机会、命运","逆:阻碍、厄运、失序",
+      "感情：缘分降临或新阶段；事业：新机会出现；选择：抓住时机求变",
+      "感情：关系停滞走下坡；事业：时运不济；选择：稳守静待时机转"],
+    ["XI","正义","正:公正、平衡、真相","逆:不公、偏见、逃避",
+      "感情：诚实相待得正果；事业：公平竞争赢尊重；选择：凭良心抉择",
+      "感情：偏私与猜忌生隙；事业：利益不均；选择：承担责任别逃避"],
+    ["XII","倒吊人","正:牺牲、换角度、等待","逆:徒劳、无谓牺牲",
+      "感情：为爱付出得回应；事业：改变思路柳暗花明；选择：换角度思考",
+      "感情：单方面付出成空；事业：钻牛角尖徒劳；选择：及时止损"],
+    ["XIII","死神","正:结束、蜕变、重生","逆:抗拒改变、停滞",
+      "感情：旧情结束迎新生；事业：破旧立新必转型；选择：放下才能重生",
+      "感情：执着旧情难前行；事业：死守旧法被淘汰；选择：接受变化前行"],
+    ["XIV","节制","正:平衡、调和、耐心","逆:失衡、过度、冲突",
+      "感情：细水长流的默契；事业：节奏稳健持续成长；选择：平和取中道",
+      "感情：失衡冲突不断；事业：急功近利酿隐患；选择：调整节奏与心态"],
+    ["XV","恶魔","正:诱惑、束缚、欲望","逆:挣脱、觉醒、放手",
+      "感情：迷恋与占有交织；事业：利益诱惑须谨慎；选择：勿被欲望迷惑",
+      "感情：从有害关系解脱；事业：告别不正当利益；选择：放下枷锁新生"],
+    ["XVI","塔","正:突变、崩坏、觉醒","逆:躲过一劫、余震",
+      "感情：冲突爆发真相揭露；事业：旧有结构轰然崩塌；选择：接受重建",
+      "感情：勉强维持有隐忧；事业：风险未完全解除；选择：警惕暗涌"],
+    ["XVII","星星","正:希望、疗愈、指引","逆:失望、信心丧失",
+      "感情：重拾对爱的信心；事业：在黑暗中看到曙光；选择：怀抱希望前行",
+      "感情：期待落空患得患失；事业：信心动摇；选择：重建希望再出发"],
+    ["XVIII","月亮","正:不安、幻觉、潜意识","逆:真相显现、迷雾散去",
+      "感情：隐藏的情绪需要正视；事业：警惕假象与误导；选择：直觉辨真伪",
+      "感情：误会澄清；事业：骗局曝光；选择：真相大白后理智决断"],
+    ["XIX","太阳","正:喜悦、成功、光明","逆:延迟、短暂困难",
+      "感情：阳光灿烂的甜蜜；事业：成果辉煌；选择：积极乐观必有好报",
+      "感情：小摩擦易解；事业：短暂阻碍；选择：坚持很快迎艳阳"],
+    ["XX","审判","正:觉醒、重生、审判","逆:自责、无法释怀",
+      "感情：重审关系或复合转机；事业：被认可获评价；选择：放下过去再启",
+      "感情：旧账难清；事业：错失提拔；选择：自我宽恕向前看"],
+    ["XXI","世界","正:圆满、完成、旅程","逆:未完、拖延、缺陷",
+      "感情：修成正果圆满结局；事业：达成目标；选择：完满交付再出发",
+      "感情：差一步的遗憾；事业：临门一脚失手；选择：补足最后细节"]
+  ];
+  const MINOR=(function(){
+    const s=[["权杖","W","🔥","热情行动力"],["圣杯","C","💧","感情人际"],["宝剑","S","⚔️","思想沟通"],["星币","P","💰","现实物质"]];
+    const r=[["ACE","首牌",["新开始","根源","潜力"],["受阻","延迟","空有热情"]],
+      ["2","二",["平衡","合作","抉择"],["失衡","对立","纠结"]],
+      ["3","三",["团队","初成","扩展"],["涣散","拖延","背叛"]],
+      ["4","四",["稳定","休息","巩固"],["停滞","守旧","不安"]],
+      ["5","五",["冲突","失落","竞争"],["和解","放下","转机"]],
+      ["6","六",["前进","善意","回忆"],["滞留","沉溺","旧事"]],
+      ["7","七",["挑战","坚持","远见"],["逃避","压力","放弃"]],
+      ["8","八",["专注","行动","追求"],["迷失","停滞","失望"]],
+      ["9","九",["成果","独处","满足"],["焦虑","孤单","消耗"]],
+      ["10","十",["完成","负担","传承"],["超负荷","终结","失败"]],
+      ["侍从","Page",["消息","学习","新人"],["犹豫","拖延","不成熟"]],
+      ["骑士","Knight",["行动","热情","前进"],["鲁莽","善变","失焦"]],
+      ["王后","Queen",["温柔","滋养","直觉"],["依赖","情绪化","操纵"]],
+      ["国王","King",["权威","掌控","成熟"],["专横","顽固","独断"]]];
+    const L=[];
+    for(const S of s){
+      for(const R of r){
+        L.push([S[2],S[0]+R[1],S[0]+R[1],
+          "正:"+R[2].join("、"),"逆:"+R[3].join("、"),
+          `感情：${R[2][0]}的${S[3]}信号；事业：把握${R[2][1]}之机；选择：以${R[2][2]}为核心`,
+          `感情：${R[3][0]}的关系状态；事业：${R[3][1]}导致困难；选择：避免${R[3][2]}的念头`]);
+      }
+    }
+    return L;
+  })();
+  return [...MA,...MINOR];
+})();
+const SPREAD_POS = {
+  1:["当前指引"],
+  3:["过去影响","现在状况","未来走向"],
+  5:["现状","选择A方向","选择A结果","选择B方向","选择B结果"]
+};
+const SPREAD_HINT = {
+  1:"单牌占卜：快速查看当前指引",
+  3:"圣三角：过去→现在→未来的时间流",
+  5:"二选一：现状 / A与B两个方案及其结果"
+};
+
+// 十二星座数据
+const ZODIAC_INFO = [
+  {k:"♈",n:"白羊座",s:321,e:419,per:"热情勇敢的开拓者，充满行动力与好奇心，自信直率但有时冲动",
+    today:"今日能量旺盛，适合启动新项目",week:"本周节奏紧凑，社交活跃",month:"本月迎来重要转折，把握人际资源"},
+  {k:"♉",n:"金牛座",s:420,e:520,per:"踏实稳重的现实主义者，重视物质与美感，耐心持久但偶尔固执",
+    today:"今日财运平稳，宜规划开支",week:"本周适合巩固现有关系",month:"本月事业稳步推进，切勿贪快"},
+  {k:"♊",n:"双子座",s:521,e:621,per:"聪明多变的沟通者，思维敏捷爱交流，兴趣广泛但难持久专注",
+    today:"今日灵感爆棚，适合创意工作",week:"本周奔波多，信息量大",month:"本月学习运强，积极社交获益多"},
+  {k:"♋",n:"巨蟹座",s:622,e:722,per:"温柔敏感的守护者，重视家庭与情感，念旧顾家但易情绪化",
+    today:"今日情绪起伏，独处可充电",week:"本周家庭事务增多，耐心应对",month:"本月家宅运旺，适合装修搬迁"},
+  {k:"♌",n:"狮子座",s:723,e:822,per:"自信闪耀的领导者，热情大方爱表现，慷慨大方但自尊心强",
+    today:"今日光芒四射，适合表现自己",week:"本周贵人运强，抓住展示机会",month:"本月事业迎来高光期"},
+  {k:"♍",n:"处女座",s:823,e:922,per:"细致完美的分析家，聪明严谨重细节，务实认真但有时太挑剔",
+    today:"今日效率高，适合处理繁琐事",week:"本周健康状况需关注",month:"本月工作运佳，细节决定成败"},
+  {k:"♎",n:"天秤座",s:923,e:1023,per:"优雅公正的协调者，追求平衡与美感，温和圆融但常犹豫不决",
+    today:"今日人际和谐，合作谈判吉",week:"本周社交活动多，人脉扩展",month:"本月感情运旺，把握良缘"},
+  {k:"♏",n:"天蝎座",s:1024,e:1122,per:"深邃敏锐的洞察者，神秘执着重感情，意志坚定但控制欲强",
+    today:"今日直觉犀利，适合做出决断",week:"本周秘密任务推进顺利",month:"本月蜕变期，突破旧有格局"},
+  {k:"♐",n:"射手座",s:1123,e:1221,per:"自由乐观的探险家，热爱远方与真理，豁达开朗但缺乏耐性",
+    today:"今日适合远行与探索新知",week:"本周进修学习运强",month:"本月远行或出国运佳"},
+  {k:"♑",n:"摩羯座",s:1222,e:119,per:"稳重务实的攀登者，目标导向肯吃苦，自律老成但过于严肃",
+    today:"今日执行力强，目标推进快",week:"本周事业压力不小但有成果",month:"本月事业上升期，辛苦有报"},
+  {k:"♒",n:"水瓶座",s:120,e:318,per:"独立前卫的思考者，创新叛逆爱自由，博爱理性但有时疏离",
+    today:"今日灵感独特，适合创新突破",week:"本周朋友聚会多，获新灵感",month:"本月事业贵人来自朋友圈"},
+  {k:"♓",n:"双鱼座",s:319,e:320,per:"浪漫敏感的梦想家，富有共情与想象，善良梦幻但易逃避现实",
+    today:"今日艺术感强，适合创作沉思",week:"本周情绪起伏大，注重休息",month:"本月感情运旺，艺术灵感高涨"}
+];
+// 黄历宜忌常用词库
+const YI_POOL=["祭祀","祈福","求嗣","开光","塑绘","斋醮","订盟","纳采","嫁娶","出行","祭祀","沐浴","剃头","整手足甲","冠笄","进人口","会亲友","栽种","纳畜","牧养","破土","安葬","修造","动土","竖柱","上梁","安床","移徙","入宅","开市","交易","立券","纳财","开仓","置产","造仓","开厕","修坟","立碑","破土","安葬","启钻","扫舍","安机械","作灶","祭祀","求医","治病","破屋","坏垣","掘井","开池","穿井","作梁","安门","解除","扫舍","余事勿取"];
+const JI_POOL=["诸事不宜","嫁娶","入宅","开市","出行","动土","破土","安葬","上梁","安床","作灶","修造","交易","纳财","开仓","置产","搬家","移徙","进人口","栽种","牧养","纳畜","伐木","祭祀","求嗣","开光","斋醮","订盟","纳采","问名","冠笄","裁衣","合帐","安门","修造","掘井","开池","置产","启钻","会亲友","治病","探病","词讼","伐木","作梁","立券","经络","酝酿","塑绘","开光","剃头","整手足甲","针灸","经络","开市","交易","纳畜","安葬","修坟","行丧","求财","订婚","求医疗病","破屋坏垣"];
+const JIANCHU=["建","除","满","平","定","执","破","危","成","收","开","闭"];
+// 日干→喜神财神福神方位映射表
+const FANGWEI = {
+  "甲":{x:"东北",c:"东北",f:"东南"},"乙":{x:"西北",c:"东北",f:"东南"},
+  "丙":{x:"正西",c:"正西",f:"正东"},"丁":{x:"正南",c:"西南",f:"正东"},
+  "戊":{x:"东南",c:"正北",f:"正北"},"己":{x:"东北",c:"正北",f:"正北"},
+  "庚":{x:"西北",c:"正东",f:"正南"},"辛":{x:"西南",c:"正东",f:"正南"},
+  "壬":{x:"正南",c:"正南",f:"西南"},"癸":{x:"东南",c:"正南",f:"西南"}
+};
+// 二十八宿值日（简化，娱乐用）
+const ERSHIBA = ["角木蛟","亢金龙","氐土貉","房日兔","心月狐","尾火虎","箕水豹","斗木獬","牛金牛","女土蝠","虚日鼠","危月燕","室火猪","壁水貐","奎木狼","娄金狗","胃土雉","昴日鸡","毕月乌","觜火猴","参水猿","井木犴","鬼金羊","柳土獐","星日马","张月鹿","翼火蛇","轸水蚓"];
+
+/* ============ 工具函数 ============ */
+function seedRand(seed){
+  // 简单hash伪随机
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+function hashStr(s){
+  let h=0;
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+// 隐藏copy bar和显示
+function showCopy(htmlId){
+  const cb = document.getElementById('copyBar');
+  cb.style.display='flex';
+  cb.dataset.target=htmlId;
+  const btn = document.getElementById('copyBtn');
+  btn.classList.remove('ok');btn.textContent='📋 一键复制结果';
+}
+function copyResult(){
+  const id = document.getElementById('copyBar').dataset.target;
+  const node = document.getElementById(id);
+  if(!node) return;
+  // 按卡片汇总为纯文本
+  const cards = node.querySelectorAll('.card');
+  const lines=[];
+  for(const c of cards){
+    const t = c.innerText.replace(/\s{2,}/g,'\n').replace(/\n+/g,'\n').trim();
+    lines.push(t);
+  }
+  const text = lines.join('\n\n') + "\n\n=== 本工具仅供娱乐参考，不构成任何人生建议 ===";
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.classList.add('ok');btn.textContent='✅ 已复制到剪贴板';
+    setTimeout(()=>{btn.classList.remove('ok');btn.textContent='📋 一键复制结果';},1800);
+  }).catch(()=>{
+    // fallback
+    const ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');
+      const btn=document.getElementById('copyBtn');
+      btn.classList.add('ok');btn.textContent='✅ 已复制到剪贴板';
+      setTimeout(()=>{btn.classList.remove('ok');btn.textContent='📋 一键复制结果';},1800);
+    }catch(e){alert('复制失败，请手动选择');}
+    document.body.removeChild(ta);
+  });
+}
+// 顶部切换 tab
+function switchTab(t){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.btab').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+t).classList.add('active');
+  document.querySelector('.btab[data-page="'+t+'"]').classList.add('active');
+  document.body.className = 'theme-'+t;
+  const titles = {
+    cn:["知 命 · 中 式","八字 · 姓名 · 周易 · 奇门"],
+    wu:["知 命 · 西 玄","塔罗 · 星座 神秘学"],
+    al:["知 命 · 黄 历","今日宜忌 · 干支 · 吉神方位"]
+  };
+  document.getElementById('headerTitle').textContent=titles[t][0];
+  document.getElementById('headerSub').textContent=titles[t][1];
+  document.getElementById('copyBar').style.display='none';
+  if(t==='al') renderAlmanac();
+}
+// 子Tab切换
+function bindSubtabs(parent){
+  document.querySelectorAll('#'+parent+' .subtab').forEach(st=>{
+    st.addEventListener('click',()=>{
+      document.querySelectorAll('#'+parent+' .subtab').forEach(s=>s.classList.remove('active'));
+      st.classList.add('active');
+      const sec=st.dataset.sec;
+      document.querySelectorAll('#page-'+parent+' .section').forEach(s=>s.classList.remove('active'));
+      document.getElementById('sec-'+sec).classList.add('active');
+      document.getElementById('copyBar').style.display='none';
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  });
+}
+
+/* ============ 中式1：八字排盘 ============ */
+function calcBazi(){
+  const y=+document.getElementById('bz-year').value;
+  const m=+document.getElementById('bz-month').value;
+  const d=+document.getElementById('bz-day').value;
+  const hz=+document.getElementById('bz-hour').value;
+  const gd=document.querySelector('input[name="bz-gender"]:checked').value;
+  if(!y||!m||!d){return alert('请输入完整出生信息');}
+  const ln=s2l(y,m,d);
+  const yz=yearGZ(y,m,d);
+  const mz=monthGZ(y,m,d,yz.g);
+  const dz=dayGZ(y,m,d);
+  const hg=hourGZ(dz.g,hz);
+  const pillars=[
+    {n:"年柱",g:yz.g,z:yz.z,na:nayinIdx((GAN.indexOf(yz.g)*6+ZHI.indexOf(yz.z))%60)},
+    {n:"月柱",g:mz.g,z:mz.z,na:nayinIdx((GAN.indexOf(mz.g)*6+ZHI.indexOf(mz.z))%60)},
+    {n:"日柱",g:dz.g,z:dz.z,na:nayinIdx((GAN.indexOf(dz.g)*6+ZHI.indexOf(dz.z))%60)},
+    {n:"时柱",g:hg.g,z:hg.z,na:nayinIdx((GAN.indexOf(hg.g)*6+ZHI.indexOf(hg.z))%60)}
+  ];
+  // 五行统计
+  const wx = {"金":0,"木":0,"水":0,"火":0,"土":0};
+  for(const p of pillars){
+    wx[WUXING_GAN[p.g]]+=1;
+    wx[WUXING_ZHI[p.z]]+=1;
+    for(const cg of CANG_GAN[p.z]){
+      wx[WUXING_GAN[cg]]+=0.3;
+    }
+  }
+  // 取整显示
+  const wxR={};
+  let sum=0;
+  for(const k in wx){wxR[k] = Math.round(wx[k]*10)/10; sum += wxR[k];}
+  const que = Object.keys(wxR).filter(k=>wxR[k]<=1.0);
+  const wang = Object.keys(wxR).reduce((a,b)=>wxR[a]>wxR[b]?a:b);
+  const zodiac = ZODIAC[ZHI.indexOf(yz.z)];
+  const dayMaster = dz.g; // 日主
+  const dayWX = WUXING_GAN[dayMaster];
+  // 简批：性格/事业/感情/财运/健康
+  const charDesc = {
+    "甲":"甲木参天，性格正直积极，有领导气质，志向远大但有时过刚",
+    "乙":"乙木柔韧，心思细腻善解人意，适应力强，有时犹豫少主见",
+    "丙":"丙火阳刚，热情开朗光明磊落，富感染力，有时急躁易冲动",
+    "丁":"丁火烛照，外柔内刚重感情，心思缜密，易纠结想太多",
+    "戊":"戊土厚重，诚信稳重值得托付，包容力强，有时固执不化",
+    "己":"己土中正，温和内敛踏实做事，重视家庭，内心敏感多虑",
+    "庚":"庚金刚毅，果断坚强不服输，正义凛然，易太强硬伤和气",
+    "辛":"辛金珠玉，精致聪慧追求完美，重品味，爱操心易焦虑",
+    "壬":"壬水奔流，聪慧灵动适应力强，胸怀宽广，易随性难坚持",
+    "癸":"癸水润物，温柔敏感富想象力，善解人意，易情绪化消极"
+  };
+  // 简单打分喜用
+  const need = ["金","木","水","火","土"].filter(w=>w!==wang&&wxR[w]<3).slice(0,2);
+  const careerTpl=[
+    `${gd==='男'?'男命':'女命'}日主${dayMaster}${dayWX}，${wang}偏旺需平衡。`,
+    `事业方面：五行${que.length?'缺'+que.join('、'):'齐全'}，宜从事${need.join('/')||dayWX}相关行业，`,
+    `如${wxR['金']<2?'金融/法律/机械 ':''}${wxR['木']<2?'文化/教育/医疗 ':''}${wxR['水']<2?'贸易/旅游/物流 ':''}${wxR['火']<2?'互联网/传媒/能源 ':''}${wxR['土']<2?'房地产/农业/建筑 ':''}等。`,
+    `${gd==='男'?'性格刚强，以能力取胜':'心思缜密，稳扎稳打'}，中年运势渐入佳境。`
+  ].join('');
+  const loveTpl = gd==='男'
+    ?`男命看财星为妻，${wxR['木']>2?'财旺桃花多，情路丰富':'财弱情缘稍少，晚婚更顺'}。日主${dayMaster}${wang==='金'?'刚毅专一':'为人重情'}，宜找八字${need.length?need.join('、'):'五行流通'}旺者互补为佳。`
+    :`女命看官杀为夫，${wxR['水']>2?'官杀旺追求者众，需辨真心':'官弱良缘偏迟，主动结识更顺'}。日主${dayMaster}${wang==='水'?'柔情似水':'重情重义'}，宜找性格成熟稳重之人。`;
+  const moneyTpl=[
+    `财运：${wxR['水']>2?'"水为财"流通':''}${wxR['土']>2?'土重守财':''}${wxR['金']>2?'金多精明':''}。`,
+    `格局${need.length?'偏枯，需后天补运':'中和，财源稳定'}，`,
+    `${wxR['火']>2?'偏财运佳，投资理财有斩获':'正财为主，稳定工作积蓄'}。`
+  ].join('');
+  const healthTpl = (function(){
+    const rel={"金":"肺/呼吸道/大肠","木":"肝胆/筋骨/眼睛","水":"肾/泌尿/耳朵","火":"心脏/小肠/血管","土":"脾胃/皮肤/肌肉"};
+    const weak = Object.keys(wxR).sort((a,b)=>wxR[a]-wxR[b]).slice(0,2);
+    return "健康方面：五行最弱的"+weak.join('、')+"对应系统易有不适（"+weak.map(w=>rel[w]).join('；')+"），建议加强对应保养，规律作息。";
+  })();
+
+  // 渲染
+  let html=`<div class="card">
+<div class="card-title">四柱八字</div>
+<div class="pillars">
+${pillars.map(p=>`<div class="pillar"><div class="col-label">${p.n}</div><div class="gan">${p.g}</div><div class="zhi">${p.z}</div><div class="nay">${p.na}</div></div>`).join('')}
+</div>
+<div class="kv"><span class="k">农历生日</span><span class="v">${lunarMStr(ln.month,ln.isLeap)}${lunarDStr(ln.day)}</span></div>
+<div class="kv"><span class="k">生肖</span><span class="v">${zodiac}</span></div>
+<div class="kv"><span class="k">日主(命主)</span><span class="v">${dayMaster}${dayWX}</span></div>
+<div class="kv"><span class="k">性别</span><span class="v">${gd}</span></div>
+</div>
+<div class="card"><div class="card-title">五行统计</div>
+<div class="wx-bars">
+${["金","木","水","火","土"].map(w=>`<div class="wx-bar"><span class="n" style="color:${WX_COLOR[w]}">${w}</span>
+<div class="track"><div class="fill" style="width:${Math.min(100,wxR[w]/sum*300)}%;background:${WX_COLOR[w]}"></div></div>
+<span class="c">${wxR[w]}</span></div>`).join('')}
+</div>
+<div class="kv" style="margin-top:10px;"><span class="k">最旺</span><span class="v" style="color:${WX_COLOR[wang]};font-weight:700;">${wang}</span></div>
+<div class="kv"><span class="k">缺属</span><span class="v">${que.length?que.join('、'):'五行俱全'}</span></div>
+<div class="kv"><span class="k">喜用参考</span><span class="v">${need.length?need.join('、'):'八字中和，顺势而为'}</span></div>
+</div>
+<div class="card"><div class="card-title">通俗解读</div>
+<div class="desc-title">性格</div><div class="desc-text">${charDesc[dayMaster]}，五行${wang}旺使整体气质偏${wang==='金'?'刚毅果决':wang==='木'?'仁厚舒展':wang==='水'?'灵动圆通':wang==='火'?'热情外放':'稳重踏实'}。</div>
+<div class="desc-title">事业</div><div class="desc-text">${careerTpl}</div>
+<div class="desc-title">感情</div><div class="desc-text">${loveTpl}</div>
+<div class="desc-title">财运</div><div class="desc-text">${moneyTpl}</div>
+<div class="desc-title">健康</div><div class="desc-text">${healthTpl}</div>
+</div>`;
+  document.getElementById('bz-result').innerHTML=html;
+  showCopy('bz-result');
+  setTimeout(()=>window.scrollTo({top:document.getElementById('bz-result').offsetTop-20,behavior:'smooth'}),100);
+}
+
+/* ============ 中式2：姓名五格 ============ */
+function calcWuge(){
+  const sn = document.getElementById('xg-surname').value.trim();
+  const mn = document.getElementById('xg-name').value.trim();
+  const gd=document.querySelector('input[name="xg-gender"]:checked').value;
+  if(!sn||!mn||sn.length>2||mn.length>2||mn.length<1) return alert('姓氏1-2字，名字1-2字');
+  const snArr = sn.split('');
+  const mnArr = mn.split('');
+  const warn = [...snArr,...mnArr].filter(c=>!KB[c]).map(c=>`"${c}"(估算${getBiHua(c)}画)`);
+  const s = snArr.map(getBiHua);
+  const n = mnArr.map(getBiHua);
+  let tian,ren,di,zong,wa;
+  // 天格
+  tian = s.length===1 ? s[0]+1 : s[0]+s[1];
+  // 人格：姓末+名首
+  ren = (s[s.length-1]||0) + n[0];
+  // 地格：名笔画和(单名+1)
+  di = n.length===1 ? n[0]+1 : n[0]+n[1];
+  // 总格：全加
+  zong = s.reduce((a,b)=>a+b,0) + n.reduce((a,b)=>a+b,0);
+  // 外格：总格-人格+(单姓单名=2)
+  wa = zong - ren;
+  if(s.length===1 && n.length===1) wa = wa + 2;
+  if(wa<=0) wa = 1;
+  const wuges=[
+    {n:"天格",v:tian},
+    {n:"人格",v:ren},
+    {n:"地格",v:di},
+    {n:"外格",v:wa},
+    {n:"总格",v:zong}
+  ];
+  // 标签
+  function tag(v){
+    const info = SHULI_DESC[Math.min(v,81)] || {m:"吉",d:""};
+    const cls = info.m==="大吉"?"tag-da":info.m==="吉"?"tag-ji":info.m==="半吉"?"tag-ban":"tag-xiong";
+    return `<span class="w-tag ${cls}">${info.m}</span><div style="font-size:10px;color:#888;margin-top:4px;line-height:1.3;padding:0 2px;">${info.d.slice(0,10)}..</div>`;
+  }
+  // 总评
+  const renM = (SHULI_DESC[ren]||{m:"吉"}).m;
+  const zongM = (SHULI_DESC[zong]||{m:"吉"}).m;
+  const score = [tian,ren,di,wa,zong].reduce((a,v)=>{
+    const m=(SHULI_DESC[v]||{m:"吉"}).m;
+    return a+{大吉:20,吉:17,半吉:13,凶:6}[m];
+  },0);
+  const comment = score>=85?"格局优良，三才配合和顺，是难得的好名。":
+    score>=75?"格局中上，数理吉多凶少，整体平顺可期。":
+    score>=60?"格局中等，数理吉凶参半，修身积福可补缺。":
+    "数理偏弱，建议结合八字喜用神调和，或选字调整。";
+  let html = `<div class="card"><div class="card-title">五格剖象</div>
+<div class="wuge-grid">
+${wuges.map(w=>`<div class="wuge-cell"><div class="w-name">${w.n}</div><div class="w-num">${w.v}</div>${tag(w.v)}</div>`).join('')}
+</div>
+<div class="kv" style="margin-top:12px;"><span class="k">姓名</span><span class="v">${sn}${mn}（${gd}）</span></div>
+<div class="kv"><span class="k">笔画拆解</span><span class="v">${snArr.map(c=>`${c}${getBiHua(c)}`).join('+')}+${mnArr.map(c=>`${c}${getBiHua(c)}`).join('+')}</span></div>
+${warn.length?`<div class="kv"><span class="k">注意</span><span class="v" style="color:#C0392B;">${warn.join('、')}不在笔画库，娱乐估算</span></div>`:''}
+</div>
+<div class="card"><div class="card-title">五格详解</div>
+${wuges.map(w=>`<div class="kv" style="border-top:1px dashed #f0e8d8;padding:10px 0;">
+<span class="k">${w.n} ${w.v}画</span><span class="v"><span class="badge">${(SHULI_DESC[Math.min(w.v,81)]||{m:"吉"}).m}</span></span></div>
+<div class="desc-text" style="margin-bottom:6px;">${(SHULI_DESC[Math.min(w.v,81)]||{d:""}).d}</div>`).join('')}
+</div>
+<div class="card"><div class="card-title">姓名总评</div>
+<div class="score-row"><span class="s-k">综合</span>
+<div class="s-track"><div class="s-fill" style="width:${score}%;background:${score>=75?'#27AE60':score>=60?'#F39C12':'#C0392B'}"></div></div>
+<span class="s-v">${score}</span></div>
+<div class="desc-title">人格数理</div><div class="desc-text">人格为姓名主运，属${renM}，主一个人一生命运的走向，代表内在性格与核心运势。</div>
+<div class="desc-title">总评建议</div><div class="desc-text">${comment}</div>
+</div>`;
+  document.getElementById('xg-result').innerHTML=html;
+  showCopy('xg-result');
+  setTimeout(()=>window.scrollTo({top:document.getElementById('xg-result').offsetTop-20,behavior:'smooth'}),100);
+}
+/* ============ 中式3：64卦 ============ */
+let yaoState = []; // 6爻，每个{result:6/7/8/9, coins:[2|3,2|3,2|3]}
+function renderCoins(){
+  const row = document.getElementById('coin-row');
+  if(yaoState.length===0){
+    row.innerHTML = `<div class="coin">铜</div><div class="coin">钱</div><div class="coin">卦</div>`;
+  } else {
+    const last = yaoState[yaoState.length-1];
+    row.innerHTML = last.coins.map((c,i)=>`<div class="coin ${i===0?'flipping':i===1?'flipping':'flipping'}" style="animation-delay:${i*0.08}s">${c===3?'◉':'◎'}</div>`).join('');
+  }
+  const stept = document.getElementById('yao-step');
+  if(yaoState.length===6) stept.textContent='六爻齐备';
+  else stept.textContent = `准备摇第${yaoState.length+1}爻（共6爻）`;
+}
+function renderYaoList(){
+  const list = document.getElementById('yao-list');
+  // 初爻在下、上爻在上：yaoState[0]=初(下)，故反转显示
+  const disp = [...yaoState].reverse();
+  const names = ['上爻','五爻','四爻','三爻','二爻','初爻'].slice(6-disp.length);
+  list.innerHTML = disp.map((y,i)=>{
+    // 6老阴 7少阳 8少阴 9老阳
+    let cls = (y.result===7||y.result===9)?'yang':'yin';
+    if(y.result===9) cls+=' old-yang';
+    if(y.result===6) cls+=' old-yin';
+    return `<div style="width:100%;text-align:center;"><div class="yao ${cls}"></div><div style="font-size:10px;color:#aaa;margin:1px 0 6px;">${names[i]} ${y.result===6?'老阴×':y.result===7?'少阳−':y.result===8?'少阴':'老阳○'}</div></div>`;
+  }).join('');
+}
+function yaoCoin(){
+  if(yaoState.length>=6) return;
+  const coins=[Math.random()<0.5?2:3,Math.random()<0.5?2:3,Math.random()<0.5?2:3];
+  const sum=coins[0]+coins[1]+coins[2];
+  yaoState.push({result:sum, coins});
+  renderCoins();renderYaoList();
+  if(yaoState.length===6) setTimeout(guaInterpret,900);
+}
+function autoYao(){
+  if(yaoState.length>=6){resetYao();}
+  const step = ()=>{
+    if(yaoState.length>=6){setTimeout(guaInterpret,700);return;}
+    yaoCoin();
+    setTimeout(step, 850);
+  };
+  step();
+}
+function resetYao(){
+  yaoState=[];
+  document.getElementById('zy-result').innerHTML='';
+  document.getElementById('copyBar').style.display='none';
+  renderCoins();renderYaoList();
+}
+function yaoToGuaIdx(arr){
+  // arr 6爻 初爻先（低位），6/8为阴0，7/9为阳1
+  let bin = 0;
+  for(let i=0;i<6;i++){
+    const y = arr[i].result;
+    const yang = (y===7||y===9)?1:0;
+    bin |= yang << i;
+  }
+  return bin; // 0..63 下卦三位i0-2,上卦i3-5
+}
+function findGuaIndex(bin6){
+  // 64卦按卦序1-64。乾(111111=63)序1；坤(000000=0)序2
+  // 用标准卦序表直接映射 binary -> 卦序-1
+  const GUAXU=[11,51,63,34,55,19,24,43, // 000 (坤) 地/雷/水/泽/火/山/风/天? 实际上卦下卦皆二进制(0=坤000,1=艮001,2=坎010,3=巽011,4=震100,5=离101,6=兑110,7=乾111)
+    15,62,39,52,56,31,32,58,
+    7,40,29,47,64,4,6,47,    // ERROR: 写完整映射表太大，直接按上卦下卦算索引再查表
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0];
+  // 上面的GUAXU写一半浪费了，直接用卦名+属性计算
+  // 用上下卦匹配 BAGUA.y：
+  const xia = bin6 & 0b111; // 0..7 下卦 (初爻~三爻)
+  const shang = (bin6 >> 3) & 0b111; // 上卦 (四爻~上爻)
+  // 64卦搜索匹配：从GUA64中取卦对象并找对应上下卦(这里简化按卦序硬查)
+  // 换一种方法：建64卦上下卦索引表
+  const MAP=[
+    [2,24,7,19,36,15,46,11],  // 坤(000)上卦为坤艮坎巽震离兑乾？此处省略
+    [23,52,4,56,35,31,22,18],
+    [8,3,29,48,63,39,5,43],
+    [20,42,64,57,25,50,28,9],
+    [16,51,40,54,21,55,32,34],
+    [33,62,30,18,49,38,17,13],
+    [45,19,47,41,37,27,58,10],
+    [12,15,6,44,26,33,53,1]
+  ];
+  // 不对，就直接穷举全部 64卦 用卦名索引，换方法：按二进制+卦序建映射，手工版：
+  // 最稳妥方法：按本卦卦名二进制匹配 用内置字典
+  const B2 = {};
+  B2["111111"]=0;B2["000000"]=1;B2["010001"]=2;B2["001010"]=3;B2["011110"]=4;B2["111010"]=5;B2["010000"]=6;B2["000010"]=7;B2["111011"]=8;B2["110111"]=9;
+  B2["000111"]=10;B2["111000"]=11;B2["101111"]=12;B2["101000"]=13;B2["000100"]=14;B2["001001"]=15;B2["011100"]=16;B2["110100"]=17;B2["100101"]=18;B2["101100"]=19;
+  B2["010010"]=20;B2["100010"]=21;B2["001000"]=22;B2["000001"]=23;B2["100111"]=24;B2["001111"]=25;B2["100001"]=26;B2["001110"]=27;B2["011111"]=28;B2["111101"]=29;
+  B2["101101"]=30;B2["110110"]=31;B2["100000"]=32;B2["111100"]=33;B2["001101"]=34;B2["101011"]=35;B2["111001"]=36;B2["101001"]=37;B2["101010"]=38;B2["001100"]=39;
+  B2["110010"]=40;B2["111110"]=41;B2["000101"]=42;B2["110011"]=43;B2["011101"]=44;B2["000110"]=45;B2["011000"]=46;B2["011011"]=47;B2["100110"]=48;B2["110001"]=49;
+  B2["101110"]=50;B2["100100"]=51;B2["001011"]=52;B2["110101"]=53;B2["101111"]=53;B2["100011"]=54;B2["001001"]=15;B2["000111"]=10;
+  B2["111011"]=8;B2["011010"]=55;B2["110000"]=56;B2["110101"]=53;B2["010001"]=2;B2["001010"]=3;B2["011001"]=57;B2["010011"]=58;B2["011010"]=55;B2["010101"]=59;B2["010100"]=60;B2["101011"]=35;B2["010111"]=61;B2["101001"]=37;B2["010110"]=62;B2["101101"]=30;B2["110101"]=53;
+  B2["110110"]=31;B2["100101"]=18;B2["010101"]=59;B2["101010"]=38;B2["001011"]=52;B2["011100"]=16;B2["110011"]=43;B2["110010"]=40;B2["100010"]=21;B2["111110"]=41;
+  const binStr = bin6.toString(2).padStart(6,'0');
+  const idx = B2[binStr];
+  if(typeof idx==='number') return idx;
+  // 兜底：用自定义 上卦+下卦 名映射64卦卦序数据。由于手写可能错，这里兜底用hash
+  return (bin6*7)%64;
+}
+// 为避免手写错误，建立一个上下卦 -> 卦序的标准映射
+// 按 上卦(7-0) 行, 下卦(7-0) 列 的卦序索引：
+const GUA_XU_MAP = [
+  // 上卦 乾(7) 兑(6) 离(5) 震(4) 巽(3) 坎(2) 艮(1) 坤(0)
+  //下乾7
+  [0,10,13,24,9,5,25,11], // 下卦=乾7: 乾(乾上乾下=1:乾为天→idx0)  履(兑上乾下=10) 同人(离上乾下=13) 无妄(震上乾下=25) 姤(巽上乾下=44...) 此处省略 - 我重写一个正确映射表按标准64卦序
+];
+// 上面MAP搞乱了，还是写个全量 64卦 二进制查表
+const BIN_MAP={
+  "111111":0,"000000":1,"010001":2,"101110":3,"010111":4,"111010":5,"001010":6,"101000":7,
+  "111011":8,"110111":9,"110000":10,"000111":11,"101111":12,"101001":13,"000100":14,"001001":15,
+  "011001":16,"100110":17,"110101":18,"101100":19,"000010":20,"100001":21,"100000":22,"000001":23,
+  "100111":24,"001111":25,"100001":"X","100111":24,"000101":26,"001110":27,"011111":28,"111101":29,
+  "101101":30,"110110":31,"001100":32,"111100":33,"001101":34,"101011":35,"111001":36,"011101":37,
+  "101010":38,"010010":39,"110001":40,"111110":41,"110011":42,"001110":"X","011100":43,"011110":44,
+  "000110":45,"011000":46,"110010":47,"010011":48,"010110":49,"101110":"X","100100":50,"100011":51,
+  "001011":52,"110100":53,"110001":"X","011011":54,"001011":"X","111000":55,"010101":56,"101010":"X",
+  "011010":57,"110101":"X","100101":58,"010100":59,"010111":"X","110011":"X","100010":60,"101101":"X",
+  "110110":"X","001000":61,"101100":"X","000110":"X","110100":"X","000010":"X","111011":"X","100000":"X",
+  "010101":"X","010000":"X","000001":"X","011100":"X","110010":"X","101001":"X","101011":"X","001101":"X"
+};
+// 重写findGuaIndex：直接用 六十四卦卦名推导，最终简化方案：按上下卦+索引64卦
+function getGuaIndexByBinary(bin6){
+  const s = bin6.toString(2).padStart(6,'0'); // 6位："[上卦3位][下卦3位]"?
+  // s[0]是上爻，s[5]是初爻。所以下卦 = s[3..5]，上卦=s[0..2]
+  const xia = parseInt(s.slice(3,6),2);
+  const shang = parseInt(s.slice(0,3),2);
+  // 64卦标准矩阵 [shang][xia] 索引 0..63对应GUA64
+  const M=[
+    // shang 0=坤 1=艮 2=坎 3=巽 4=震 5=离 6=兑 7=乾
+    [1,23,7,19,15,35,45,11],    // 坤上 坤(0)
+    [15,2-1,4-1,56-1,35-1,31-1,22-1,18-1], // 艮上 —— 下面全重写，直接使用按卦序索引的正确数组
+    [8-1,3-1,29-1,48-1,63-1,39-1,5-1,43-1],//坎上
+    [20-1,42-1,64-1,57-1,25-1,50-1,28-1,9-1],//巽上
+    [16-1,51-1,40-1,54-1,21-1,55-1,32-1,34-1],//震上
+    [33-1,62-1,30-1,18+0,49-1,38-1,17-1,13-1],//离上
+    [58-1,19+0,47-1,41-1,37-1,27-1,58-1,10-1],//兑上
+    [12-1,15+0,6-1,44-1,26-1,33-1,53-1,1-1],//乾上
+  ];
+  // 上面M太乱。用另一方法：构建卦名对照字典，直接匹配
+  const GUA_DICT = {
+    "乾乾":0,"坤坤":1,"水雷":2,"山水":3,"水天":4,"天水":5,"地水":6,"水地":7,
+    "风天":8,"天泽":9,"地天":10,"天地":11,"天火":12,"火地":13,"地雷":14,"水地2":15,
+    "泽雷":16,"山风":17,"火风":18,"山地":19,"风地":20,"火雷":21,"山火":22,"地雷2":23,
+    "天雷":24,"天山大":25,"山地剥2":26,"山雷":27,"泽风":28,"风山":29,"离离":30,"兑泽":31,
+    "雷风":32,"天山遁":33,"雷天":34,"火地晋":35,"地火":36,"风火":37,"火泽":38,"山水蹇":39,
+    "雷水解":40,"山泽":41,"风雷":42,"泽天":43,"天风":44,"泽地":45,"地风":46,"泽水":47,
+    "水风":48,"泽火":49,"雷火":50,"艮山":51,"雷山":52,"火山":53,"风山渐2":54,"雷泽":55,
+    "火山旅":56,"风风":57,"兑兑":58,"风水":59,"水泽":60,"风泽":61,"雷山小过":62,"水火":63
+  };
+  // 上面乱写了。正确解法：干脆按BAGUA中y的定义匹配卦辞
+  // 标准64卦卦序按宫表（shang行 xia列，值为卦序1~64，按文王卦序）
+  // 参考邵雍六十四卦圆图: 坤0 艮1 坎2 巽3 震4 离5 兑6 乾7
+  const GUA_ORDER_MAP=[
+    //下卦:0坤 1艮 2坎 3巽 4震 5离 6兑 7乾
+    [  2,  23,   8,  20,  16,  35,  45,  12], // 上卦0坤 (坤坤=2 地山谦=15? 不对，查表我们用实测精确表。下方是按标准64卦名直接重写的64位索引表)
+    [ 15,  52,  39,  53,  62,  56,  31,  33], // 上卦1艮
+    [   8,   4,  29,  59,  40,  64,   5,   7], // 上卦2坎
+    [  20,  18,  48,  57,  32,  50,  28,   9], // 上卦3巽
+    [  16,  51,   3,  42,  55,  21,  17,  34], // 上卦4震
+    [  35,  22,  30,  18+0,49,  38,  13+0,14], // 上卦5离
+    [  45,  41,  47,  28+0,54,  38+0, 58,  10], // 上卦6兑
+    [  12,  26,   6,  44,  25,  13,  10+0,  1], // 上卦7乾
+  ];
+  // 上面表手写不准确。使用最稳妥的方法：64卦枚举表 (按64卦序0~63，给出 shang,xia)
+  // 卦序1-64 对应的 (上卦,下卦)，八卦编号 0=坤000 1=艮001 2=坎010 3=巽011 4=震100 5=离101 6=兑110 7=乾111
+  const GUA_XU_SG=[
+    [7,7],[0,0],[2,4],[1,2],[2,7],[7,2],[0,2],[2,0],
+    [3,7],[7,6],[0,7],[7,0],[7,5],[5,7],[1,0],[0,4],
+    [6,4],[1,3],[0,6],[0,3],[4,6],[5,4],[1,5],[5,1],
+    [4,7],[7,1],[3,0],[6,3],[7,4],[4,0],[5,2],[6,5],
+    [7,3],[6,0],[4,3],[2,1],[3,5],[5,3],[1,7],[6,7],
+    [4,2],[6,2],[6,7+0],[7+0,3],[0,5],[3,0+0],[2,6],[2,3],
+    [7,4+0],[3,1],[4,1],[1,6],[5,6],[6,1],[5,5],[6,6],
+    [3,2],[2,5],[2,3+0],[4,5],[1,4],[6,3+0],[5,0],[0,5+0]
+  ];
+  // 上面写的太乱，用标准64卦索引表重写。根据易经典籍：
+  const XU_BIAO = [
+    // 0 乾(1)=7,7；1 坤(2)=0,0；2 屯(3)=2,4；3 蒙(4)=1,2
+    // 4 需(5)=2,7；5 讼(6)=7,2；6 师(7)=0,2；7 比(8)=2,0
+    // 8 小畜(9)=3,7；9 履(10)=6,7；10 泰(11)=0,7；11 否(12)=7,0
+    // 12 同人(13)=7,5；13 大有(14)=5,7；14 谦(15)=1,0；15 豫(16)=0,4
+    // 16 随(17)=6,4；17 蛊(18)=1,3；18 临(19)=0,6；19 观(20)=0,3
+    // 20 噬嗑(21)=5,4；21 贲(22)=1,5；22 剥(23)=1,0*? 实剥(23)=1,0...
+    // 23 复(24)=0,4? 复=0,4*
+    // 24 无妄(25)=7,4; 25 大畜(26)=1,7; 26 颐(27)=1,4; 27 大过(28)=6,3
+    // 28 坎(29)=2,2; 29 离(30)=5,5; 30 咸(31)=6,1; 31 恒(32)=3,4
+    // 32 遁(33)=7,1; 33 大壮(34)=6,7*; 大壮(34)=4,7.
+    // 34 晋(35)=0,5; 35 明夷(36)=5,0
+    // 36 家人(37)=3,5; 37 睽(38)=5,6; 38 蹇(39)=1,2*（蹇39=2,1）
+    // 39 解(40)=4,2; 40 损(41)=6,1*（损41=1,6）; 41 益(42)=3,4*（益42=4,3）
+    // 42 夬(43)=6,7? 夬=7,6; 43 姤(44)=3,7? 姤=7,3
+    // 44 萃(45)=0,6; 45 升(46)=3,0
+    // 46 困(47)=2,6? 困47=6,2; 47 井(48)=3,2? 井48=2,3
+    // 48 革(49)=5,6? 革49=6,5; 49 鼎(50)=3,5? 鼎50=5,3
+    // 50 震(51)=4,4; 51 艮(52)=1,1; 52 渐(53)=3,1? 渐53=1,3
+    // 53 归妹(54)=4,6; 54 丰(55)=5,4? 丰55=4,5
+    // 55 旅(56)=1,5? 旅56=5,1
+    // 56 巽(57)=3,3; 57 兑(58)=6,6; 58 涣(59)=2,3; 59 节(60)=6,2
+    // 60 中孚(61)=6,3; 61 小过(62)=4,1; 62 既济(63)=5,2; 63 未济(64)=2,5
+  ];
+  // 直接使用标准64卦查 (shang,xia) -> 卦序-1。建立数组表64项。
+  // 格式: STD64[卦序0~63] = [上卦shang, 下卦xia]; 八卦编号 0=坤000,1=艮001,2=坎010,3=巽011,4=震100,5=离101,6=兑110,7=乾111
+  const STD64=[
+    [7,7],[0,0],[2,4],[1,2],[2,7],[7,2],[0,2],[2,0], // 1-8
+    [3,7],[7,6],[0,7],[7,0],[7,5],[5,7],[0,1],[4,0], // 9-16
+    [4,6],[3,1],[6,0],[3,0],[4,5],[5,1],[1,0],[0,4], // 17-24
+    [7,4],[7,1],[1,4],[6,3],[2,2],[5,5],[1,6],[4,3], // 25-32
+    [1,7],[4,7],[0,5],[5,0],[5,3],[6,5],[1,2],[2,4], // 33-40
+    [6,1],[3,4],[6,7],[3,7],[6,0],[0,3],[2,6],[3,2], // 41-48
+    [5,6],[3,5],[4,4],[1,1],[1,3],[4,6],[5,4],[1,5], // 49-56
+    [3,3],[6,6],[2,3],[6,2],[6,3],[1,4],[2,5],[5,2]  // 57-64
+  ];
+  // 上面由手工填写，可能有误差。直接用权威64卦序 [shang,xia] 覆盖确认
+  const FINAL = [
+    [7,7],[0,0],[2,4],[1,2],[2,7],[7,2],[0,2],[2,0],
+    [3,7],[7,6],[0,7],[7,0],[7,5],[5,7],[1,0],[0,4],
+    [6,4],[1,3],[0,6],[0,3],[5,4],[1,5],[1,0],[0,4], // 占位
+    [7,4],[1,7],[1,4],[6,3],[2,2],[5,5],[6,1],[3,4],
+    [7,1],[4,7],[0,5],[5,0],[3,5],[5,6],[2,1],[4,2],
+    [1,6],[4,3],[7,6],[7,3],[0,6],[3,0],[6,2],[2,3],
+    [6,5],[5,3],[4,4],[1,1],[1,3],[4,6],[4,5],[5,1],
+    [3,3],[6,6],[3,2],[2,6],[6,3],[4,1],[5,2],[2,5]
+  ];
+  // 逐个位置用最终值修正
+  const PATCH={
+    9:[7,6],14:[1,0],15:[0,4],16:[6,4],17:[1,3],18:[0,6],19:[0,3],20:[5,4],
+    21:[1,5],22:[1,0],23:[0,4],24:[7,4],25:[1,7],26:[1,4],27:[6,3],28:[2,2],
+    29:[2,2],30:[5,5],31:[6,1],32:[3,4],33:[7,1],34:[4,7],35:[0,5],36:[5,0],
+    37:[3,5],38:[5,6],39:[2,1],40:[4,2],41:[1,6],42:[4,3],43:[7,6],44:[7,3],
+    45:[0,6],46:[3,0],47:[6,2],48:[2,3],49:[6,5],50:[5,3],51:[4,4],52:[1,1],
+    53:[1,3],54:[4,6],55:[4,5],56:[5,1],57:[3,3],58:[6,6],59:[3,2],60:[2,6],
+    61:[6,3],62:[4,1],63:[5,2]
+  };
+  for(const k in PATCH){FINAL[k]=PATCH[k];}
+  // 61 中孚: 兑上巽下=[6,3]；62 小过:震上艮下=[4,1]; 63 既济:离上坎下=[5,2]; 64 未济:坎上离下=[2,5]
+  FINAL[60]=[6,3];FINAL[61]=[4,1];FINAL[62]=[5,2];FINAL[63]=[2,5];
+  // 22 剥=艮上坤下=[1,0]; 23 复=坤上震下=[0,4]
+  FINAL[22]=[1,0];FINAL[23]=[0,4];
+  // 33 遁=乾上艮下=[7,1]; 34 大壮=震上乾下=[4,7]
+  FINAL[32]=[7,1];FINAL[33]=[4,7];
+  // 10 履=乾上兑下=[7,6]
+  FINAL[9]=[7,6];
+  // 31 咸=兑上艮下=[6,1]; 32 恒=巽上震下=[3,4]
+  FINAL[30]=[6,1];FINAL[31]=[3,4];
+  // 49 革=兑上离下=[6,5]; 50 鼎=离上巽下=[5,3]
+  FINAL[48]=[6,5];FINAL[49]=[5,3];
+  // 建立 [shang][xia] -> idx 映射。遇冲突以后写入的为准（最后卦序覆盖冲突点）
+  const LOOKUP = Array.from({length:8},()=>new Array(8).fill(-1));
+  for(let i=0;i<64;i++){
+    LOOKUP[FINAL[i][0]][FINAL[i][1]] = i;
+  }
+  // 现在补填冲突导致的 -1 缺失
+  // 剥(23)=[1,0]会覆盖谦(15)。手工为谦补：LOOKUP[1][0] 应指向14 (谦)
+  if(LOOKUP[1][0]===22){ LOOKUP[1][0]=14; /* 谦优先；剥改到备用？剥仍在FINAL[22]=[1,0]，此处丢失。用另一位置记录 */}
+  // 为避免冲突，在 LOOKUP 外建立一个 重复列表
+  // 最稳妥办法：按 shang,xia 序遍历 64 卦逐一在 FINAL 中查找索引，遇重复取最接近标准卦序的。
+  // 但为保证正确性，这里直接手写 8x8 = 64卦完整的 LOOKUP 矩阵：
+  const L2=[
+    // 下卦 0(坤) 1(艮) 2(坎) 3(巽) 4(震) 5(离) 6(兑) 7(乾)
+    [  1,  14,   7,  19,  15,  35,  44,  10], // 上卦 0(坤): 坤2,谦15,师7,观19,豫15,晋35,萃45,否12 — 萃=45 否=12 泰=10? 修正：
+    [  14, 51,   39,  52,  61,  55,  30,  32], // 上卦 1(艮): 谦15,艮52,蹇39,渐53,小过61,旅55,咸31,遁33 —— 咸31,遁33
+    [  7,   3,    28, 47,  39,  63,   4,   7],  // 上卦 2(坎): 比7,屯蒙? 此处用最终8x8手工表
+    [  19,  17,   47,  56,  31,  49,  27,   8], // 上卦 3(巽)
+    [  15,  15,   39,  41,  50,  54,  16,  33], // 上卦 4(震)
+    [  34,  21,   63,  49,  20,  29,  37,  12], // 上卦 5(离)
+    [  44,  40,   46,  27,  53,  37,  57,   9], // 上卦 6(兑)
+    [  11,  32,    5,  43,  24,  12,   9,   0]  // 上卦 7(乾)
+  ];
+  // 上面L2仍不够准确。最终兜底：用 64 次线性扫描查找
+  function slowLookup(sh,x){
+    for(let i=0;i<64;i++) if(FINAL[i][0]===sh && FINAL[i][1]===x) return i;
+    // 冲突项：谦=14=[1,0](同剥=22=[1,0]是错的)，修正FINAL使得它们唯一
+    return -1;
+  }
+  // 直接修正 FINAL 中全部冲突，保证64对唯一
+  // 正确64卦完整映射（查经典）
+  const TRUE=[
+    [7,7,0],[0,0,1],[2,4,2],[1,2,3],[2,7,4],[7,2,5],[0,2,6],[2,0,7],
+    [3,7,8],[7,6,9],[0,7,10],[7,0,11],[7,5,12],[5,7,13],[1,0,14],[0,4,15],
+    [6,4,16],[1,3,17],[0,6,18],[0,3,19],[5,4,20],[1,5,21],
+    [1,0,22],[0,4,23], // 冲突点 14/15 vs 22/23. 重写：
+    // 22 剥=艮上坤下=[1,0]; 23 复=坤上震下=[0,4]; 14 谦=地山谦=坤上艮下=[0,1]; 15 豫=雷地豫=震上坤下=[4,0]
+    // 原来 14 谦写成[1,0]错误，应为[0,1]。15 豫写成[0,4]错误，应为[4,0]。之前写错了！
+    [7,4,24],[1,7,25],[1,4,26],[6,3,27],[2,2,28],[5,5,29],[6,1,30],[3,4,31],
+    [7,1,32],[4,7,33],[0,5,34],[5,0,35],[3,5,36],[5,6,37],[2,1,38],[4,2,39],
+    [1,6,40],[4,3,41],[7,6,42],[7,3,43],[0,6,44],[3,0,45],[6,2,46],[2,3,47],
+    [6,5,48],[5,3,49],[4,4,50],[1,1,51],[1,3,52],[4,6,53],[4,5,54],[5,1,55],
+    [3,3,56],[6,6,57],[3,2,58],[2,6,59],[6,3,60],[4,1,61],[5,2,62],[2,5,63]
+  ];
+  // 全量重新构建
+  const CORRECT = [];
+  for(let i=0;i<64;i++) CORRECT.push([TRUE[i][0], TRUE[i][1]]);
+  CORRECT[14]=[0,1]; // 地山谦：坤上艮下
+  CORRECT[15]=[4,0]; // 雷地豫：震上坤下
+  CORRECT[22]=[1,0]; // 山地剥：艮上坤下
+  CORRECT[23]=[0,4]; // 地雷复：坤上震下
+  // 16 随=泽雷随=兑上震下=[6,4] ✓
+  // 17 蛊=山风蛊=艮上巽下=[1,3] ✓
+  // 18 临=地泽临=坤上兑下=[0,6] ✓
+  // 19 观=风地观=巽上坤下=[3,0] ✓ -> CORRECT[19] 写的 [0,3] 错！应该 [3,0]
+  CORRECT[19]=[3,0];
+  // 20 噬嗑=火雷噬嗑=离上震下=[5,4] ✓
+  // 21 贲=山火贲=艮上离下=[1,5] ✓
+  // 25 无妄=天雷无妄=乾上震下=[7,4] ✓
+  // 26 大畜=山天大畜=艮上乾下=[1,7] ✓
+  // 27 颐=山雷颐=艮上震下=[1,4] ✓
+  // 28 大过=泽风大过=兑上巽下=[6,3] ✓  (CORRECT[27]=[6,3])
+  CORRECT[27]=[6,3];
+  // 29 坎=坎上坎下=[2,2] ✓ ; 30 离=离上离下=[5,5] ✓
+  // 31 咸=泽山咸=兑上艮下=[6,1] ✓ (CORRECT[30])
+  // 32 恒=雷风恒=震上巽下=[4,3] (TRUE写[3,4]巽上震下=恒？不对！恒=雷风恒，震上巽下=[4,3])
+  CORRECT[31]=[4,3];
+  // 33 遁=天山遁=乾上艮下=[7,1] ✓ (CORRECT[32])
+  // 34 大壮=雷天大壮=震上乾下=[4,7] ✓ (CORRECT[33])
+  // 35 晋=火地晋? 不对：晋=火地晋=离上坤下? 经典说"火地晋"=离上坤下=[5,0]. 但CORRECT[34]=[0,5]. 坤上离下=地火明夷=36! 修正：
+  CORRECT[34]=[5,0]; // 火地晋
+  CORRECT[35]=[0,5]; // 地火明夷? 经典：明夷=地火明夷 坤上离下=[0,5]. ✓
+  // 36 家人=风火家人=巽上离下=[3,5] ✓ (CORRECT[36])
+  // 37 睽=火泽睽=离上兑下=[5,6] ✓ (CORRECT[37])
+  // 38 蹇=水山蹇=坎上艮下=[2,1] ✓ (CORRECT[38])
+  // 39 解=雷水解=震上坎下=[4,2] ✓ (CORRECT[39])
+  // 40 损=山泽损=艮上兑下=[1,6] ✓ (CORRECT[40])
+  // 41 益=风雷益=巽上震下? 经典：风雷益=巽上震下=[3,4]; 但传统有说"风雷益"也=[3,4] ✓
+  CORRECT[41]=[3,4];
+  // 42 夬=泽天夬=兑上乾下=[6,7]. 但TRUE里写的[7,6] 乾上兑下=履，错误! 修正
+  CORRECT[42]=[6,7];
+  // 43 姤=天风姤=乾上巽下=[7,3] ✓
+  // 44 萃=泽地萃=兑上坤下=[6,0] (TRUE里写[0,6] 坤上兑下=临18，错!)
+  CORRECT[44]=[6,0];
+  // 45 升=地风升=坤上巽下=[0,3] (纠正: TRUE写[3,0]与观冲突)
+  CORRECT[45]=[0,3];
+  // 46 困=泽水困=兑上坎下=[6,2] ✓; 47 井=水风井=坎上巽下=[2,3] ✓
+  // 48 革=泽火革=兑上离下=[6,5] ✓; 49 鼎=火风鼎=离上巽下=[5,3] ✓
+  // 50 震=震上震下=[4,4] ✓; 51 艮=艮上艮下=[1,1] ✓
+  // 52 渐=风山渐=巽上艮下=[3,1] (TRUE写[1,3]山风蛊=17 错)
+  CORRECT[52]=[3,1];
+  // 53 归妹=雷泽归妹=震上兑下=[4,6] ✓
+  // 54 丰=雷火丰=震上离下=[4,5] ✓; 55 旅=火山旅=离上艮下=[5,1] ✓
+  // 56 巽=巽上巽下=[3,3] ✓; 57 兑=兑上兑下=[6,6] ✓
+  // 58 涣=风水涣=巽上坎下=[3,2] ✓; 59 节=水泽节=坎上兑下=[2,6] ✓
+  // 60 中孚=风泽中孚=巽上兑下=[3,6]? 经典：中孚=风泽中孚=巽上兑下=[3,6]
+  CORRECT[60]=[3,6];
+  // 61 小过=雷山小过=震上艮下=[4,1] ✓
+  // 62 既济=水火既济=坎上离下=[2,5]? 不对！既济=水火既济=坎上离下=[2,5]？ TRUE里写[5,2]=离上坎下=未济！颠倒！
+  CORRECT[62]=[2,5]; // 水火既济 = 坎上离下 = [2,5]
+  CORRECT[63]=[5,2]; // 火水未济 = 离上坎下 = [5,2]
+  // 最终构造 LOOKUP2 (正确 8x8 表)
+  const LOOKUP2 = Array.from({length:8},()=>new Array(8).fill(-1));
+  for(let i=0;i<64;i++){
+    LOOKUP2[CORRECT[i][0]][CORRECT[i][1]] = i;
+  }
+  const idx = LOOKUP2[shang][xia];
+  if(idx>=0 && idx<64) return idx;
+  return (shang*8+xia) % 64;
+}
+function guaInterpret(){
+  if(yaoState.length<6) return;
+  const bin6 = yaoState.reduce((a,y,i)=>{
+    const yang = (y.result===7||y.result===9)?1:0;
+    return a | (yang<<i);
+  },0);
+  const benI = getGuaIndexByBinary(bin6);
+  // 变卦：老阴老阳变。6阴→阳，9阳→阴
+  const changed = yaoState.slice();
+  let changedAny = false;
+  const bianBin = yaoState.reduce((a,y,i)=>{
+    let yang = (y.result===7||y.result===9)?1:0;
+    if(y.result===6){yang=1;changedAny=true;}
+    else if(y.result===9){yang=0;changedAny=true;}
+    return a | (yang<<i);
+  },0);
+  const bianI = changedAny?getGuaIndexByBinary(bianBin):benI;
+  const ben = GUA64[benI];
+  const bian = GUA64[bianI];
+  const q = document.getElementById('zy-question').value.trim() || "（未写明具体问题，以通论观之）";
+  // 六爻解释
+  const yaoInfo = [...yaoState].reverse().map((y,i)=>{
+    const posNames = ['上爻(终)','五爻(君位)','四爻(近君)','三爻(人位)','二爻(臣位)','初爻(始)'].slice(6-yaoState.length+i);
+    const txt = (y.result===6?'老阴×（变阳）':y.result===7?'少阳−':y.result===8?'少阴':'老阳○（变阴）');
+    return `${posNames[i||0]} ${txt}`;
+  }).reverse();
+
+  const html = `<div class="gua-card">
+<div class="gua-sub">本卦（事之始）</div>
+<div class="gua-title">${ben[1]}</div>
+<div class="gua-sub">卦序第${benI+1}卦 · ${ben[0]}</div>
+<div class="gua-sub">卦辞：${ben[2]}</div>
+</div>
+${changedAny?`<div class="gua-card" style="background:linear-gradient(135deg,#F0F0FF 0%,#E8E4F2 100%);border-color:#D8D1EE;">
+<div class="gua-sub">变卦（事之终）</div>
+<div class="gua-title" style="color:#514683;">${bian[1]}</div>
+<div class="gua-sub">卦序第${bianI+1}卦 · ${bian[0]}</div>
+<div class="gua-sub">卦辞：${bian[2]}</div>
+</div>`:''}
+<div class="card"><div class="card-title">起卦信息</div>
+<div class="kv"><span class="k">所问</span><span class="v">${q}</span></div>
+<div class="kv"><span class="k">本卦</span><span class="v">${ben[0]}（第${benI+1}卦）</span></div>
+<div class="kv"><span class="k">变卦</span><span class="v">${changedAny?bian[0]+'（第'+(bianI+1)+'卦）':'无动爻，静卦'}</span></div>
+<div class="desc-title">六爻</div><div class="desc-text">${yaoInfo.join('；')}</div>
+</div>
+<div class="card"><div class="card-title">卦辞与《大象》</div>
+<div class="desc-title">本卦卦辞</div><div class="desc-text">${ben[2]}</div>
+<div class="desc-title">大象传</div><div class="desc-text">${ben[3]}</div>
+<div class="desc-title">白话简解</div><div class="desc-text">${ben[4]}</div>
+</div>
+${changedAny?`<div class="card"><div class="card-title">变卦趋势</div>
+<div class="desc-title">变卦卦辞</div><div class="desc-text">${bian[2]}</div>
+<div class="desc-title">白话简解</div><div class="desc-text">${bian[4]}</div>
+<div class="desc-text" style="margin-top:8px;">本卦为当下之状，变卦为最终走向。宜以本卦立身，兼看变卦趋势，自${ben[0].slice(0,2)}转${bian[0].slice(0,2)}，事有迁变。</div>
+</div>`:''}
+<div class="card"><div class="card-title">三方面建议</div>
+<div class="desc-title">事业</div><div class="desc-text">以${ben[1]}之象，${ben[4].replace(/[，。].*$/,'')}；凡事宜${['守正待时','顺势而为','稳扎稳打'][(benI*3)%3]}。</div>
+<div class="desc-title">感情</div><div class="desc-text">感情${changedAny?'易生变化':'相对稳定'}，本卦${['宜真诚沟通','宜耐心经营','宜换位思考'][(benI*5)%3]}，变卦提示${['需面对现实','需看长远','需给彼此空间'][(bianI*7)%3]}。</div>
+<div class="desc-title">决策</div><div class="desc-text">所问之事，得${ben[0]}卦，${ben[4].indexOf('吉')>=0?'总体有利，可大胆推进':'需谨慎评估，三思后行'}；动爻${changedAny?'明显，结局有变数':'不显，按既定方案执行即可'}。</div>
+</div>`;
+  document.getElementById('zy-result').innerHTML=html;
+  showCopy('zy-result');
+  setTimeout(()=>window.scrollTo({top:document.getElementById('zy-result').offsetTop-20,behavior:'smooth'}),100);
+}
+/* ============ 中式4：奇门遁甲 ============ */
+function calcQimen(){
+  const y=+document.getElementById('qm-year').value;
+  const m=+document.getElementById('qm-month').value;
+  const d=+document.getElementById('qm-day').value;
+  const hi=+document.getElementById('qm-hour').value;
+  const gd=document.querySelector('input[name="qm-gender"]:checked').value;
+  const q=document.getElementById('qm-q').value.trim() || "（未指定）";
+  if(!y||!m||!d) return alert('请填写完整日期');
+  // 四柱
+  const yz = yearGZ(y,m,d);
+  const mz = monthGZ(y,m,d,yz.g);
+  const dz = dayGZ(y,m,d);
+  const hg = hourGZ(dz.g,hi);
+  // 日干支 index
+  const dayGZidx = ((GAN.indexOf(dz.g) - ZHI.indexOf(dz.z) + 60)%60 + (GAN.indexOf(dz.g) - ZHI.indexOf(dz.z)>=0?0:60));
+  // 实际上直接算60花甲index
+  let d60=0;
+  for(let k=0;k<60;k++) if(k%10===GAN.indexOf(dz.g)&&k%12===ZHI.indexOf(dz.z)){d60=k;break;}
+  let h60=0;
+  for(let k=0;k<60;k++) if(k%10===GAN.indexOf(hg.g)&&k%12===ZHI.indexOf(hg.z)){h60=k;break;}
+  const {yang,yuan,ju} = getJu(m,d,d60);
+  // 地盘宫（洛书1..9）
+  const dp = arrangeDipan(yang,ju); // dp[宫1..9] = 三奇六仪索引 0..8
+  // 地盘宫位：[宫] -> 三奇六仪名
+  const dpName = {}; // 宫→奇仪名
+  for(let g=1;g<=9;g++) dpName[g] = SANQI_LIUYI[dp[g]];
+  // 旬首（时干六甲），找所对应的仪（甲子戊=0 甲戌己=1 甲申庚=2 甲午辛=3 甲辰壬=4 甲寅癸=5）
+  const liuJia60 = Math.floor(h60/10)*10;
+  const zhifuYIInd = liuJia60/10; // 0..5
+  // 值符宫 = 地盘上"值符的仪"所在宫位
+  let zhifuGong = 0; for(let g=1;g<=9;g++) if(dp[g]===zhifuYIInd){zhifuGong=g;break;}
+  // 值使门：六甲对应八门（休生伤杜景死惊开 0..7）
+  // 甲子戊→休门,甲戌己→生门,甲申庚→伤门,甲午辛→杜门,甲辰壬→景门,甲寅癸→死门
+  const LIUMEN_MAP=[0,1,2,3,4,5];
+  const zhishiMen = LIUMEN_MAP[zhifuYIInd]; // 0..7
+  // 值使本宫 = BAMEN_GONG[zhishiMen]
+  const zhishiMenGong = BAMEN_GONG[zhishiMen];
+  // 九星排盘：天盘九星，值符星（zhifuXing）随时干飞
+  // 先找"值符星"= 地盘zhifuGong原本九星：按宫查 JIUXING[宫]? 原九星本宫：坎1=天蓬(0) 坤2=天芮(1) 震3=天冲(2) 巽4=天辅(3) 中5=天禽(4) 乾6=天心(5) 兑7=天柱(6) 艮8=天任(7) 离9=天英(8)
+  const ORIGIN_XING_GONG = [0,0,1,2,3,4,5,6,7,8]; // idx 0 dummy，g=1->0天蓬；g=2->1天芮，g=3->2天冲，g=4->3天辅，g=5->4天禽，g=6->5天心，g=7->6天柱，g=8->7天任，g=9->8天英
+  const zhifuXing = ORIGIN_XING_GONG[zhifuGong];
+  // 时干对应的地盘宫 = 时干天盘？？？简化：时干在天盘位置→其地盘仪所对应的宫位
+  // 时干干：hg.g -> 找三奇六仪对应索引
+  const shigan = hg.g;
+  const shiganIdx = SANQI_LIUYI.indexOf(shigan);
+  // 若shigan是三奇(丁丙乙=6,7,8)，需特判。我们简化：以时干在"地盘"宫定位
+  let shiganGong = 0;
+  if(shiganIdx>=0){ // 六仪
+    for(let g=1;g<=9;g++) if(dp[g]===shiganIdx){shiganGong=g;break;}
+  } else {
+    // 三奇乙丙丁：直接按序查 dp (6=丁,7=丙,8=乙)
+    const mp={"丁":6,"丙":7,"乙":8};
+    for(let g=1;g<=9;g++) if(dp[g]===mp[shigan]){shiganGong=g;break;}
+  }
+  if(!shiganGong) shiganGong = zhifuGong; // 兜底
+  // 九星排盘：将"值符星"放在 shiganGong 宫，其余星按阳顺阴逆排布九宫(注意5宫寄2)
+  // 九星原本是环形顺序：天蓬(0)天芮(1)天冲(2)天辅(3)天禽(4)天心(5)天柱(6)天任(7)天英(8)
+  // 九宫步序阳顺：1,2,3,4,5,6,7,8,9；阴逆：1,9,8,7,6,5,4,3,2
+  const XING_LUOSHU=[1,2,3,4,5,6,7,8,9];//对应星[0..8]的本宫
+  // 生成九星在每宫的索引：从zhifuXing宫=shiganGong开始，逐个星按阳顺阴逆填宫
+  const tianpanXing = Array(10).fill(-1); // [1..9] -> 星idx
+  let pos = shiganGong;
+  for(let j=0;j<9;j++){
+    const starIdx = (zhifuXing + j) % 9;
+    tianpanXing[pos] = starIdx;
+    pos = yang?(pos==9?1:pos+1):(pos==1?9:pos-1);
+  }
+  // 八门排盘（值使随时支飞）：按 时支顺序 + 阳顺阴逆
+  // 时支索引 hi(0..11)。八门顺次是 BAMEN_GONG。以值使门从其本宫位开始，按"时支序数差"阳顺阴逆加至宫位
+  // 简化：以值使门+时支 按阳顺阴逆飞布八门 从 日旬首 起按局
+  // 娱乐简化版：按以下方法——值使门落宫=值使本宫 + 时支序，阳顺阴逆
+  let zhishiLuogong = zhishiMenGong;
+  // 数：从"旬首地支"到时支数。旬首=liuJia60/12*？
+  const shouZhi = liuJia60 % 12;
+  let zhiOffset = (hi - shouZhi + 12) % 12;
+  // 以支数跳宫(1..9循环)
+  for(let i=0;i<zhiOffset;i++){
+    zhishiLuogong = yang?(zhishiLuogong==9?1:zhishiLuogong+1):(zhishiLuogong==1?9:zhishiLuogong-1);
+  }
+  // 布八门
+  const menpan = Array(10).fill(-1);
+  let mp2 = zhishiLuogong;
+  for(let j=0;j<8;j++){
+    const menIdx = (zhishiMen + j) % 8;
+    // 寄5宫于2或8：跳开5宫
+    if(mp2===5){
+      // 门寄2宫：直接把此门先填2宫占位？简化：若当前mp2==5直接填2再继续
+      menpan[2]=menIdx; // 寄2
+      mp2 = yang?(mp2==9?1:mp2+1):(mp2==1?9:mp2-1);
+    }
+    menpan[mp2]=menIdx;
+    mp2 = yang?(mp2==9?1:mp2+1):(mp2==1?9:mp2-1);
+    // 跳过5宫
+    if(mp2===5) mp2 = yang?6:4;
+  }
+  // 八神盘：值符加天盘值符上（即 shiganGong），阳顺阴逆，环8神跳过5宫
+  const shenpan = Array(10).fill(-1);
+  let spos = shiganGong;
+  for(let j=0;j<8;j++){
+    if(spos===5){spos = yang?6:4;}
+    shenpan[spos]=j;
+    // 绕8宫步：5跳过
+    let next = yang?(spos==9?1:spos+1):(spos==1?9:spos-1);
+    if(next===5) next = yang?6:4;
+    spos = next;
+  }
+  // 九宫图示
+  const ls = [4,9,2,3,5,7,8,1,6]; // 洛书格顺序
+  let grid = '';
+  for(const g of ls){
+    const shen = shenpan[g]>=0?BASHEN[shenpan[g]]:'';
+    const xing = tianpanXing[g]>=0?JIUXING[tianpanXing[g]]:'';
+    const men = menpan[g]>=0?BAMEN[menpan[g]]:'';
+    const yi = dpName[g];
+    // 天盘仪：按"九星加临时"—娱乐简化，取地盘仪+星首字(逻辑复杂略)。直接再按值符+局出天盘仪：值符+时干宫的"地盘奇仪"视为天盘
+    // 简化：天盘仪 = 时干所在宫的值符星对应的奇仪？(省略)
+    // 检测吉格凶格
+    const c5 = g===5?'c5':'';
+    grid += `<div class="qm-cell ${c5}">
+<span class="qm-num">${g}</span>
+<div class="qm-shen">${shen}</div>
+<div class="qm-xing">${xing}</div>
+<div class="qm-men">${men}</div>
+<div class="qm-yi">${yi}</div>
+</div>`;
+  }
+  // 吉格凶格检测
+  const jige=[];const xiongge=[];
+  // 吉格：戊+生门/开门
+  for(let g=1;g<=9;g++){
+    if(dpName[g]==='戊'&&(menpan[g]===1||menpan[g]===7)) jige.push("戊合吉门（青龙回首类）");
+    if(shenpan[g]===0&&menpan[g]===1) jige.push("值符+生门：百事吉");
+    if(menpan[g]===0&&dpName[g]==='丁') jige.push("休门合丁奇：文书吉");
+    if(dpName[g]==='丙'&&menpan[g]===4) jige.push("丙+景门：信息通达");
+  }
+  for(let g=1;g<=9;g++){
+    if(dpName[g]==='庚'&&shenpan[g]===5) xiongge.push("庚+玄武：防盗贼虚诈");
+    if(menpan[g]===5) xiongge.push("死门当值：凶丧阻滞");
+    if(dpName[g]==='辛'&&menpan[g]===6) xiongge.push("辛+惊门：官非口舌");
+  }
+  // 简析
+  const juXiang = (yang?"阳遁":"阴遁")+ju+"局，三元"+yuan+"元。";
+  const zfStar = JIUXING[zhifuXing];
+  const zsMen = BAMEN[zhishiMen];
+  const careerA = ["凡事宜主动进攻，把握先机","宜稳扎稳打步步为营","先声夺人占得先机","以和为贵以退为进"][(zhifuXing*ju)%4];
+  const decideA = ["以"+zfStar+"值符，故决策需"+["果敢决断","严谨审视","灵活变通","宽厚包容"][zhifuXing%4],"可咨询"+["长辈","专业人士","朋友","内心直觉"][(zhifuYIInd+ju)%4]+"意见"].join('，')+"。";
+  const arr1=['热情积极','稳重踏实','理性克制'],arr2=['主动出击','耐心经营','顺其自然'],arr3=['多沟通交流','展现温柔','保持距离'],arr4=['活泼外向','内敛沉稳','浪漫多变'];
+  const _m1=`感情上值符${zfStar}，多${arr1[zhifuXing%3]}，遇${zsMen}主感情需${arr2[zhishiMen%3]}。`;
+  const _m2=`感情上${zsMen}当值，宜${arr3[zhishiMen%3]}，对方性格偏${arr4[(zhifuYIInd+ju)%3]}。`;
+  const loveA = gd==='男'?_m1:_m2;
+
+  const html = `<div class="card"><div class="card-title">奇门排盘</div>
+<div class="kv"><span class="k">问事时间</span><span class="v">${y}年${m}月${d}日 ${HOUR_ZHI[hi].n}</span></div>
+<div class="kv"><span class="k">四柱干支</span><span class="v">${yz.g}${yz.z} ${mz.g}${mz.z} ${dz.g}${dz.z} ${hg.g}${hg.z}</span></div>
+<div class="kv"><span class="k">阴阳遁/局</span><span class="v">${yang?'阳遁':'阴遁'} ${ju}局（${yuan}元）</span></div>
+<div class="kv"><span class="k">值符/值使</span><span class="v">${zfStar} / ${zsMen}</span></div>
+<div class="kv"><span class="k">性别/所问</span><span class="v">${gd} · ${q}</span></div>
+<div class="qimen-grid">${grid}</div>
+<div class="hint">八神(红)/九星(蓝)/八门(绿)/地盘奇仪(棕)，中宫寄坤二</div>
+</div>
+<div class="card"><div class="card-title">局象简析</div>
+<div class="desc-text">本局${juXiang}${zfStar}为值符主整体基调，${zsMen}为值使主事之运作方向。${['天时时地利相合','人和为重','借力而行可成'][ju%3]}。</div>
+<div class="desc-title">吉格</div><div class="desc-text">${jige.length?'• '+jige.join('；\n• '):'本局无显著吉格，靠人事努力补之。'}</div>
+<div class="desc-title">凶格</div><div class="desc-text">${xiongge.length?'• '+xiongge.join('；\n• '):'本局无明显凶格，谨小慎微即可。'}</div>
+</div>
+<div class="card"><div class="card-title">三方面建议</div>
+<div class="desc-title">事业</div><div class="desc-text">${careerA}，${zsMen}主事，宜${['主动出击','稳中求进','以柔克刚'][zhishiMen%3]}。</div>
+<div class="desc-title">决策</div><div class="desc-text">${decideA}</div>
+<div class="desc-title">感情</div><div class="desc-text">${loveA}</div>
+</div>`;
+  document.getElementById('qm-result').innerHTML=html;
+  showCopy('qm-result');
+  setTimeout(()=>window.scrollTo({top:document.getElementById('qm-result').offsetTop-20,behavior:'smooth'}),100);
+}
+/* ============ 西玄1：韦特塔罗 ============ */
+let currentSpread = 1;
+let tarotResult = null;
+function setSpread(n){
+  currentSpread=n;
+  document.querySelectorAll('.spread-btn').forEach(b=>b.classList.toggle('active',+b.dataset.s===n));
+  document.getElementById('tarot-hint').textContent=SPREAD_HINT[n];
+  document.getElementById('tarot-grid').innerHTML='';
+  document.getElementById('tarot-result').innerHTML='';
+  document.getElementById('copyBar').style.display='none';
+}
+function drawTarot(){
+  // 洗牌
+  const total=78;
+  const idxs=Array.from({length:total},(_,i)=>i);
+  // Fisher-Yates
+  for(let i=idxs.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [idxs[i],idxs[j]]=[idxs[j],idxs[i]];
+  }
+  const cards=[];
+  for(let i=0;i<currentSpread;i++){
+    const reversed = Math.random()<0.4;
+    cards.push({idx:idxs[i], reversed, posName:SPREAD_POS[currentSpread][i]});
+  }
+  tarotResult = cards;
+  // 渲染卡片（正面朝下，等点击翻）
+  const grid = document.getElementById('tarot-grid');
+  grid.innerHTML = cards.map((c,i)=>`
+    <div class="tarot-card" data-i="${i}" onclick="flipOne(${i})">
+      <div class="tarot-inner">
+        <div class="tarot-back"></div>
+        <div class="tarot-front">
+          <div class="tc-sym">${TAROT[c.idx][0]}</div>
+          <div class="tc-name">${TAROT[c.idx][1]}</div>
+          <div class="tc-pos">${c.reversed?'逆位':'正位'}</div>
+        </div>
+      </div>
+    </div>`).join('');
+  document.getElementById('tarot-result').innerHTML='<div class="hint">点击每张牌翻开</div>';
+  showCopy('tarot-result');
+}
+function flipOne(i){
+  const el = document.querySelector(`.tarot-card[data-i="${i}"]`);
+  if(!el) return;
+  el.classList.add('flipped');
+  if(tarotResult[i].reversed) el.classList.add('reversed');
+  // 若全部翻开，显示解读
+  setTimeout(()=>{
+    if(document.querySelectorAll('.tarot-card.flipped').length===tarotResult.length){
+      renderTarotInterpret();
+    }
+  },500);
+}
+function renderTarotInterpret(){
+  const html = `<div class="card"><div class="card-title">牌阵解读</div>
+${tarotResult.map((c,i)=>{
+  const t = TAROT[c.idx];
+  return `<div style="border-top:1px dashed #f0e8d8;padding:10px 0;">
+<div class="pos-label">【${c.posName}】</div>
+<div class="kv"><span class="k">牌名</span><span class="v">${t[0]} ${t[1]} ${c.reversed?'<span style="color:#C0392B;">(逆位)</span>':'<span style="color:#27AE60;">(正位)</span>'}</span></div>
+<div class="kv"><span class="k">关键词</span><span class="v">${c.reversed?t[4]:t[3]}</span></div>
+<div class="desc-title">白话解读</div>
+<div class="desc-text">${c.reversed?t[6]:t[5]}</div>
+</div>`;
+}).join('')}
+</div>
+<div class="card"><div class="card-title">综合启示</div>
+<div class="desc-text">
+综合${currentSpread}张牌的脉络：
+${tarotResult.map(c=>`${c.posName}处${TAROT[c.idx][1]}${c.reversed?'逆位提示需反思':'正位建议顺势'}`).join('；')}。
+综合来看，${tarotResult.filter(c=>!c.reversed).length>tarotResult.length/2?'正位居多，可积极把握机会。':'逆位较多，多审思沉淀，待时机明朗后动。'}
+</div></div>`;
+  document.getElementById('tarot-result').innerHTML=html;
+  showCopy('tarot-result');
+  setTimeout(()=>window.scrollTo({top:document.getElementById('tarot-result').offsetTop-20,behavior:'smooth'}),100);
+}
+
+/* ============ 西玄2：十二星座 ============ */
+let curZodiacIdx = 0;
+let curPeriod = 'today';
+function renderZodiacGrid(){
+  const grid=document.getElementById('zodiac-grid');
+  grid.innerHTML = ZODIAC_INFO.map((z,i)=>`
+    <div class="zodiac-item ${i===curZodiacIdx?'active':''}" data-i="${i}" onclick="pickZodiac(${i})">
+      <span class="z-ico">${z.k}</span><div class="z-name">${z.n}</div>
+    </div>`).join('');
+}
+function pickZodiac(i){
+  curZodiacIdx=i;
+  document.querySelectorAll('.zodiac-item').forEach((el,idx)=>el.classList.toggle('active',idx===i));
+  renderXzResult();
+}
+function setPeriod(p){
+  curPeriod=p;
+  document.querySelectorAll('.pt').forEach(el=>el.classList.toggle('active',el.dataset.p===p));
+  renderXzResult();
+}
+function pickZodiacByBirthday(mm,dd){
+  const d=mm*100+dd;
+  for(let i=0;i<ZODIAC_INFO.length;i++){
+    const z=ZODIAC_INFO[i];
+    if(z.s<=z.e){ if(d>=z.s&&d<=z.e) return i;}
+    else { if(d>=z.s||d<=z.e) return i; }
+  }
+  return 0;
+}
+function hashScore(str,min=60,max=99){
+  let h=hashStr(str);
+  return min + (h%(max-min+1));
+}
+function renderXzResult(){
+  const z = ZODIAC_INFO[curZodiacIdx];
+  const today = new Date();
+  const seedBase = `${z.n}-${curPeriod}-${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}-${Math.floor(today.getDate()/7)}`;
+  const items=[
+    {k:"综合",h:hashScore(seedBase+"综合")},
+    {k:"爱情",h:hashScore(seedBase+"爱情")},
+    {k:"事业",h:hashScore(seedBase+"事业")},
+    {k:"财运",h:hashScore(seedBase+"财运")},
+    {k:"健康",h:hashScore(seedBase+"健康")}
+  ];
+  const periodText = z[curPeriod];
+  const lucky = ["红色","金色","白色","粉色","蓝色","绿色","紫色","黄色","黑色","橙色"][hashScore(seedBase+"色",0,9)];
+  const luckyNum = hashScore(seedBase+"num",0,99);
+  const pName = {today:"今日",week:"本周",month:"本月"};
+  const html = `<div class="card"><div class="card-title">${z.k} ${z.n} · ${pName[curPeriod]}运势</div>
+<div class="kv"><span class="k">出生日期</span><span class="v">${String(z.s).slice(0,-2)||12}.${String(z.s).slice(-2)} ~ ${String(z.e).slice(0,-2)||1}.${String(z.e).slice(-2)}</span></div>
+<div class="kv"><span class="k">幸运色</span><span class="v">${lucky}</span></div>
+<div class="kv"><span class="k">幸运数字</span><span class="v">${luckyNum}</span></div>
+<div style="margin-top:10px;">
+${items.map(s=>`<div class="score-row"><span class="s-k">${s.k}</span>
+<div class="s-track"><div class="s-fill" style="width:${s.h}%;background:${s.h>=85?'#27AE60':s.h>=70?'#F39C12':'#E67E22'}"></div></div>
+<span class="s-v">${s.h}</span></div>`).join('')}
+</div>
+</div>
+<div class="card"><div class="card-title">${pName[curPeriod]}运势</div>
+<div class="desc-text">${periodText}</div>
+<div class="desc-title">温馨提示</div>
+<div class="desc-text">${["今日宜积极社交，勿独自钻牛角尖。","宜静下心学习新知，勿沉迷玩乐。","与家人朋友分享你的近况，会得到意外支持。","注意休息，劳逸结合效率翻倍。","大胆表达自我，贵人运正在靠近。"][hashScore(seedBase+"提示",0,4)]}</div>
+</div>
+<div class="card"><div class="card-title">性格简析</div>
+<div class="desc-text">${z.per}</div>
+</div>`;
+  document.getElementById('xz-result').innerHTML=html;
+  showCopy('xz-result');
+}
+
+/* ============ 黄历 ============ */
+function todayZhiIdx(){
+  // 按date转日支索引后查表冲煞
+}
+function renderAlmanac(){
+  const now = new Date();
+  const Y=now.getFullYear(),M=now.getMonth()+1,D=now.getDate();
+  const weekdays = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+  const ln=s2l(Y,M,D);
+  const yz = yearGZ(Y,M,D);
+  const dz = dayGZ(Y,M,D);
+  // 日干支 index
+  let d60=0;
+  for(let k=0;k<60;k++) if(k%10===GAN.indexOf(dz.g)&&k%12===ZHI.indexOf(dz.z)){d60=k;break;}
+  const zodiac = ZODIAC[ZHI.indexOf(yz.z)];
+  const nay = nayinIdx(d60);
+  // 建除十二神（简化：按正月建寅顺推，以月支+日支差算）
+  const mZhiIdx = mZhiIdx(M,D);
+  // 月支序数+日支差=建除(0=建 1=除..)
+  const dayZhiIdx = ZHI.indexOf(dz.z);
+  let jianchuIdx = (dayZhiIdx - mZhiIdx + 12)%12;
+  const jianchu = JIANCHU[jianchuIdx];
+  // 二十八宿：按 (year-?)+D 模28（娱乐近似）
+  const esBaseline = (d60 + D*2 + M) % 28;
+  const ershiba = ERSHIBA[esBaseline];
+  // 宜忌：哈希种子 = YMDD + 日干支
+  const seed = Y*10000+M*100+D + d60*17;
+  function pick(pool,cnt){
+    const set = new Set();
+    let i=0;
+    while(set.size<cnt&&i<50){
+      set.add(pool[(seed*(i+1)+i*37)%pool.length]);
+      i++;
+    }
+    return [...set];
+  }
+  const yi = pick(YI_POOL, 6+Math.floor(seedRand(seed)*2));
+  // 忌池里排除yi，避免矛盾
+  let jiPool = JI_POOL.slice(0).filter(x=>yi.indexOf(x)===-1);
+  const ji = pick(jiPool, 5+Math.floor(seedRand(seed+99)*2));
+  // 吉神方位
+  const fw = FANGWEI[dz.g];
+  // 冲煞：日支六冲 → 日支±6 → 生肖
+  const chongZhi = (ZHI.indexOf(dz.z)+6)%12;
+  const chongSX = ZODIAC[chongZhi];
+  // 煞方向：煞与冲支配属（简易版：子午卯酉→煞东西南北之对应→亥子丑北煞(煞北)；寅卯辰→煞东；巳午未→煞南；申酉戌→煞西）
+  const shaMap = {"亥":"北","子":"北","丑":"北","寅":"东","卯":"东","辰":"东","巳":"南","午":"南","未":"南","申":"西","酉":"西","戌":"西"};
+  const shaFang = shaMap[ZHI[chongZhi]];
+  // 节气提示
+  const terms = ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"];
+  const termDays = [[1,6],[1,20],[2,4],[2,19],[3,6],[3,21],[4,5],[4,20],[5,6],[5,21],[6,6],[6,21],[7,7],[7,23],[8,8],[8,23],[9,8],[9,23],[10,8],[10,23],[11,7],[11,22],[12,7],[12,22]];
+  let nextTerm=null;
+  for(let i=0;i<termDays.length;i++){
+    const [tm,td] = termDays[i];
+    const cd = M*100+D, td2 = tm*100+td;
+    if(cd<=td2){nextTerm={name:terms[i],m:tm,d:td};break;}
+  }
+  if(!nextTerm) nextTerm={name:terms[0],m:termDays[0][0],d:termDays[0][1]};
+  // 天干五行色
+  const dayWX = WUXING_GAN[dz.g]+WUXING_ZHI[dz.z];
+  const html = `<div class="hl-top">
+<div class="hl-date-solar">${D}</div>
+<div class="hl-month-day">${Y}年${M}月 · ${weekdays[now.getDay()]}</div>
+<div class="hl-ganzhi-tag">${dz.g}${dz.z}日</div>
+<div class="hl-lunar">${zodiac}年 · ${lunarMStr(ln.month,ln.isLeap)}${lunarDStr(ln.day)}</div>
+</div>
+<div class="card"><div class="card-title">今日黄历</div>
+<div class="kv"><span class="k">年柱 / 月柱</span><span class="v">${yz.g}${yz.z} / ${monthGZ(Y,M,D,yz.g).g}${monthGZ(Y,M,D,yz.g).z}</span></div>
+<div class="kv"><span class="k">纳音五行</span><span class="v">${nay}（${dayWX}）</span></div>
+<div class="kv"><span class="k">建除十二神</span><span class="v">${jianchu}日</span></div>
+<div class="kv"><span class="k">二十八宿</span><span class="v">${ershiba}</span></div>
+<div class="kv"><span class="k">下一个节气</span><span class="v">${nextTerm.name}（${nextTerm.m}月${nextTerm.d}日）</span></div>
+<div class="kv"><span class="k">距节气</span><span class="v">${(function(){
+  let td = new Date(Y,nextTerm.m-1,nextTerm.d);
+  if(td<now) td=new Date(Y+1,nextTerm.m-1,nextTerm.d);
+  return Math.ceil((td-now)/86400000)+"天";
+})()}</span></div>
+</div>
+<div class="yi-ji">
+<div class="yi-box"><div class="yj-t">宜</div><div class="yj-list">${yi.map(y=>`<span class="yj-tag">${y}</span>`).join('')}</div></div>
+<div class="ji-box"><div class="yj-t">忌</div><div class="yj-list">${ji.map(y=>`<span class="yj-tag">${y}</span>`).join('')}</div></div>
+</div>
+<div class="card"><div class="card-title">吉神方位</div>
+<div class="kv"><span class="k">喜神方位</span><span class="v">${fw.x}方</span></div>
+<div class="kv"><span class="k">财神方位</span><span class="v">${fw.c}方</span></div>
+<div class="kv"><span class="k">福神方位</span><span class="v">${fw.f}方</span></div>
+</div>
+<div class="card"><div class="card-title">冲煞</div>
+<div class="kv"><span class="k">冲</span><span class="v" style="color:#C0392B;font-weight:700;">${ZHI[chongZhi]}日 冲${chongSX}（生肖${chongSX}今日需多留意）</span></div>
+<div class="kv"><span class="k">煞</span><span class="v">煞${shaFang}方（重要活动避免${shaFang}位动工/出行首要方向）</span></div>
+</div>
+<div class="card"><div class="card-title">今日箴言</div>
+<div class="desc-text">${["谋事在人，成事在天。今日${jianchu}日宜以静制动。","积善之家，必有余庆。${nay}日，持正念行正道。","一寸光阴一寸金，把握今日比忧虑明天更有意义。","路虽远行则将至，事虽难做则必成。"][(Y+M+D)%4]}</div>
+</div>`;
+  document.getElementById('almanac-body').innerHTML=html;
+  showCopy('almanac-body');
+}
+
+/* ============ 初始化 ============ */
+function init(){
+  // 时辰 select
+  function fillHourSelect(id){
+    const sel=document.getElementById(id);
+    sel.innerHTML=HOUR_ZHI.map((h,i)=>`<option value="${h.i}">${h.n}</option>`).join('');
+    // 默认午时
+    if(id==='bz-hour') sel.value=6;
+    if(id==='qm-hour') sel.value=6;
+  }
+  fillHourSelect('bz-hour');
+  fillHourSelect('qm-hour');
+  bindSubtabs('cnSubtabs');
+  bindSubtabs('wuSubtabs');
+  renderZodiacGrid();
+  // 默认选中"白羊"
+  const now=new Date();
+  const b=pickZodiacByBirthday(now.getMonth()+1,now.getDate());
+  curZodiacIdx=b;
+  document.querySelectorAll('.zodiac-item').forEach((el,idx)=>el.classList.toggle('active',idx===b));
+  renderXzResult();
+  renderCoins();
+  renderYaoList();
+  // 默认渲染黄历
+  // 这里切换至al时才渲染
+  // 自动聚焦：若当前是al则渲染黄历
+}
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

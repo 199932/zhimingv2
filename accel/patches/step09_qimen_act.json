@@ -1,0 +1,12 @@
+[
+  {
+    "anchor": "  ${questionHtml}\n  <div class=\"hint\">*本结果依据「时家奇门·拆补法·转盘」简化实现，仅供娱乐参考</div>`;\n\n  document.getElementById(\"qm-result\").innerHTML = enhanceResultHtml(html);\n  document.getElementById(\"copyBar\").style.display=\"flex\";",
+    "inject_before": false,
+    "code": ""
+  },
+  {
+    "anchor": "  document.getElementById(\"qm-result\").innerHTML = enhanceResultHtml(html);\n  document.getElementById(\"copyBar\").style.display=\"flex\";\n  addHistory(\"qimen\", {y,m,d,h,minute:mn,gender:gd,cityLng:lng,question}, r, \"\");",
+    "inject_before": true,
+    "code": "  try{\n    var __qmr = document.getElementById(\"qm-result\");\n    if(__qmr && typeof renderActSuggestQimen==='function'){\n      var __qopts = {zhifu:r.zhiFuXing, zhishi:r.zhiShiMen, teShuGejuNames:r.goodGe, badGe:r.badGe, dun:r.dun, juInfo:(r.dun==='YANG'?'阳遁':'阴遁')+r.juNum+'局'};\n      var __qhtml = renderActSuggestQimen(__qopts);\n      __qmr.insertAdjacentHTML('beforeend', __qhtml);\n    }\n  }catch(__qm_e){}\n"
+  }
+]
