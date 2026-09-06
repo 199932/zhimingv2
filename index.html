@@ -396,6 +396,12 @@ body.theme-dark .tarot-rev-hint{background:rgba(224,106,122,0.14);color:#F0A0AC;
 body.theme-dark .hist-item{background:var(--input-bg);border-color:var(--card-border);}
 body.theme-dark .modal{background:var(--card);}
 body.theme-dark .modal-close{background:var(--track-bg);color:var(--text-sub);}
+
+/* 打赏弹窗 */
+.donate-modal-box{max-width:360px;}
+.donate-qr-wrap{display:flex;justify-content:center;margin:8px 0;}
+.donate-qr-img{width:200px;height:200px;border-radius:12px;background:#fff;padding:8px;box-shadow:0 2px 12px rgba(0,0,0,.08);object-fit:contain;}
+body.theme-dark .donate-qr-img{background:#f5f5f5;}
 .page .foot-disclaimer{text-align:center;font-size:10px;color:var(--text-hint);padding:20px 8px 80px;clear:both;}
 .today-card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:14px;border:1px solid var(--card-border);box-shadow:0 2px 10px var(--card-shadow);}
 .today-card-title{font-size:16px;color:var(--pri);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
@@ -1102,6 +1108,7 @@ body.banner-show{padding-top:40px;}
     <button class="icon-btn" id="installBtn" title="安装到桌面" onclick="window.onInstallBtnClick()" style="display:none;">⬇</button>
     <button class="icon-btn" id="diaryBtn" title="占卜日记" onclick="window.openDiaryModal()">📓</button>
     <button id="btn-liupai" class="icon-btn" onclick="window.openLiupaiModal()" title="🧩流派参数">🧩</button>
+    <button class="icon-btn" id="donateBtn" title="支持作者" onclick="window.openDonateModal()">❤️</button>
   </div>
 </div>
 
@@ -1519,6 +1526,26 @@ body.banner-show{padding-top:40px;}
       <button class="modal-close" onclick="window.closeProfileModal()">✕</button>
     </div>
     <div class="modal-body" id="profileModalBody"></div>
+  </div>
+</div>
+
+<!-- ===== 打赏支持弹窗 ===== -->
+<div class="modal-mask" id="donateModal" onclick="if(event.target===this)window.closeDonateModal()">
+  <div class="modal donate-modal-box">
+    <div class="modal-head">
+      <h3>☕ 支持作者</h3>
+      <button class="modal-close" onclick="window.closeDonateModal()">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:20px 16px 24px;">
+      <p style="font-size:14px;color:var(--text-sub);line-height:1.7;margin:0 0 16px;">
+        如果知命 V2 对你有帮助<br>欢迎请作者喝杯咖啡 ☕<br>你的支持是持续更新的动力 ❤️
+      </p>
+      <div class="donate-qr-wrap">
+        <img id="donateQrImg" class="donate-qr-img" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LXNpemU9IjE0Ij7nrqHnkIbnoa7lj5bkuI3mo4blj6LmiqXvvJrku6XmmK8vd29ya3NwYWNlL3d4cGF5LXFiLnBuZzwvdGV4dD48L3N2Zz4=" alt="微信收款码" />
+      </div>
+      <p style="font-size:13px;color:var(--text-hint);margin:12px 0 0;">💚 微信扫一扫，随意打赏</p>
+      <p style="font-size:11px;color:var(--text-hint);opacity:.6;margin:8px 0 0;">收款人：大大(**秀)</p>
+    </div>
   </div>
 </div>
 
@@ -13222,6 +13249,19 @@ function closeProfileModal(){
   window.__closeModalById("profileModal");  // [Chrome83] 暴力修复
 }
 
+/* ===== 打赏支持弹窗 ===== */
+function openDonateModal(){
+  try{
+    window.__openModalById("donateModal");
+  }catch(e){ try{ document.getElementById("donateModal").style.display="flex"; }catch(_){} }
+}
+function closeDonateModal(){
+  try{
+    window.__closeModalById("donateModal");
+  }catch(_){ try{ document.getElementById("donateModal").style.display="none"; }catch(_){} }
+}
+try{ window.openDonateModal = openDonateModal; window.closeDonateModal = closeDonateModal; }catch(_){}
+
 /* ----- 共振判定：城市选择初始化 ----- */
 function buildGongzhenCitySelect(){
   const sel = document.getElementById("gz-city");
@@ -17073,6 +17113,8 @@ window.loadFromHash = loadFromHash;
     try{ window.setActiveProfile = setActiveProfile; }catch(_){}
     try{ window.openProfileModal = openProfileModal; }catch(_){}
     try{ window.closeProfileModal = closeProfileModal; }catch(_){}
+    try{ window.openDonateModal = openDonateModal; }catch(_){}
+    try{ window.closeDonateModal = closeDonateModal; }catch(_){}
     try{ window.renderProfilesUI = renderProfilesUI; }catch(_){}
     try{ window.quickAddProfile = quickAddProfile; }catch(_){}
     try{ window.openProfileForm = openProfileForm; }catch(_){}
