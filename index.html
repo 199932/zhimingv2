@@ -1546,13 +1546,17 @@ body.banner-show{padding-top:40px;}
       </p>
       <div class="donate-qr-wrap">
         <img id="donateQrImg" class="donate-qr-img" src="" alt="微信收款码" />
+        <div id="donateQrPlaceholder" class="donate-qr-placeholder">
+          <span style="font-size:40px;">📷</span>
+          <span>还没有收款码<br>点下方按钮从相册选择</span>
+        </div>
       </div>
-      <p style="font-size:13px;color:var(--text-hint);margin:12px 0 0;">💚 微信扫一扫，随意打赏</p>
+      <p id="donateQrHint" style="font-size:13px;color:var(--text-hint);margin:12px 0 0;display:none;">💚 微信扫一扫，随意打赏</p>
       <p style="font-size:11px;color:var(--text-hint);opacity:.6;margin:8px 0 0;">收款人：大大(**秀)</p>
       <div style="margin-top:16px;">
         <input type="file" id="donateQrUpload" accept="image/*" style="display:none;" onchange="window.handleDonateQrUpload(event)" />
-        <button class="donate-upload-btn" onclick="document.getElementById('donateQrUpload').click()">📷 上传我的收款码</button>
-        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">图片仅保存在你本地设备，不会上传服务器</p>
+        <button class="donate-upload-btn" style="width:100%;padding:14px;font-size:16px;" onclick="document.getElementById('donateQrUpload').click()">📷 从相册选择收款码</button>
+        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">① 点按钮 → ② 选相册里的收款码 → ③ 自动保存，仅存本地不上传</p>
       </div>
     </div>
   </div>
@@ -13263,32 +13267,61 @@ const DONATE_QR_KEY = 'zhiming_donate_qr';
 function loadDonateQr(){
   try{
     const img = document.getElementById('donateQrImg');
+    const ph = document.getElementById('donateQrPlaceholder');
+    const hint = document.getElementById('donateQrHint');
     if(!img) return;
     const saved = localStorage.getItem(DONATE_QR_KEY);
     if(saved){
       img.src = saved;
       img.style.display = '';
+      if(ph) ph.style.display = 'none';
+      if(hint) hint.style.display = '';
     } else {
       img.src = '';
       img.style.display = 'none';
+      if(ph) ph.style.display = '';
+      if(hint) hint.style.display = 'none';
     }
   }catch(_){}
+}
+function _compressDonateImg(dataUrl, maxW, quality, cb){
+  try{
+    const im = new Image();
+    im.onload = function(){
+      let w = im.width, h = im.height;
+      if(w > maxW){ h = Math.round(h*maxW/w); w = maxW; }
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(im, 0, 0, w, h);
+      cb(cv.toDataURL('image/jpeg', quality));
+    };
+    im.onerror = function(){ cb(dataUrl); };
+    im.src = dataUrl;
+  }catch(_){ cb(dataUrl); }
 }
 function handleDonateQrUpload(e){
   try{
     const f = e.target.files && e.target.files[0];
     if(!f) return;
-    if(f.size > 5*1024*1024){ alert('图片太大（>5MB），请用小一点的图'); return; }
     const reader = new FileReader();
     reader.onload = function(ev){
-      const dataUrl = ev.target.result;
-      try{ localStorage.setItem(DONATE_QR_KEY, dataUrl); }catch(err){ alert('保存失败，可能图片太大'); return; }
-      const img = document.getElementById('donateQrImg');
-      if(img){ img.src = dataUrl; img.style.display = ''; }
-      if(typeof showToastBottom === 'function') showToastBottom('✅ 收款码已保存到本地');
+      _compressDonateImg(ev.target.result, 800, 0.82, function(dataUrl){
+        try{ localStorage.setItem(DONATE_QR_KEY, dataUrl); }
+        catch(err){ alert('保存失败，图片还是太大，请换张小一点的收款码'); return; }
+        const img = document.getElementById('donateQrImg');
+        const ph = document.getElementById('donateQrPlaceholder');
+        const hint = document.getElementById('donateQrHint');
+        if(img){ img.src = dataUrl; img.style.display = ''; }
+        if(ph) ph.style.display = 'none';
+        if(hint) hint.style.display = '';
+        try{ if(typeof showToastBottom === 'function') showToastBottom('✅ 收款码已保存到本地'); }catch(_){}
+        // 重置 input，允许重复选择同一张图
+        try{ e.target.value = ''; }catch(_){}
+      });
     };
     reader.readAsDataURL(f);
-  }catch(err){ alert('读取图片失败: '+err.message); }
+  }catch(err){ try{ alert('读取图片失败: '+err.message); }catch(_){} }
 }
 function openDonateModal(){
   try{
@@ -15018,7 +15051,7 @@ function onInstallBtnClick(){
 function initPWA(){
   try{
     const ai = document.getElementById('pwaAppleIcon');
-    if(ai) ai.href = 'data:image/svg+xml;base64,'+ICON192_SVG;
+    if(ai) ai.href = './icon-192.png';
   }catch(e){}
   // 【PWA 修复】用真实 sw.js 文件注册，不再用 blob URL（移动端 Chrome 不允许 blob SW）
   if ('serviceWorker' in navigator) {
