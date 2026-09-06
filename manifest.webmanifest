@@ -1,0 +1,25 @@
+{
+  "name": "知命 V2 - 个人命理工具",
+  "short_name": "知命V2",
+  "description": "纯本地、无联网的个人命理占卜工具（八字/奇门/塔罗/星座/共振/黄历）",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF8F5",
+  "theme_color": "#8B6F47",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48Y2lyY2xlIGN4PSI5NiIgY3k9Ijk2IiByPSI5NCIgZmlsbD0iI0ZBRjhGNSIgc3Ryb2tlPSIjOEI2RjQ3IiBzdHJva2Utd2lkdGg9IjMiLz48Y2lyY2xlIGN4PSI5NiIgY3k9Ijk2IiByPSI2MiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjOEI2RjQ3IiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNOTYgMzQgQTYyIDYyIDAgMCAxIDk2IDE1OCBBMzEgMzEgMCAwIDAgOTYgOTYgQTMxIDMxIDAgMCAxIDk2IDM0IFoiIGZpbGw9IiMyYjJiMmIiLz48Y2lyY2xlIGN4PSI5NiIgY3k9IjY1IiByPSIxMSIgZmlsbD0iI2ZmZmZmZiIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iMTI3IiByPSIxMSIgZmlsbD0iIzJiMmIyYiIvPjx0ZXh0IHg9Ijk2IiB5PSIxODgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSI4MCIgZmlsbD0iIzhCNkY0NyIgZm9udC1mYW1pbHk9IlBpbmdGYW5nIFNDLE1pY3Jvc29mdCBZYUhlaSxzYW5zLXNlcmlmIj7nnJ/lm7w8L3RleHQ+PC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48Y2lyY2xlIGN4PSI5NiIgY3k9Ijk2IiByPSI5NCIgZmlsbD0iI0ZBRjhGNSIgc3Ryb2tlPSIjOEI2RjQ3IiBzdHJva2Utd2lkdGg9IjMiLz48Y2lyY2xlIGN4PSI5NiIgY3k9Ijk2IiByPSI2MiIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjOEI2RjQ3IiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNOTYgMzQgQTYyIDYyIDAgMCAxIDk2IDE1OCBBMzEgMzEgMCAwIDAgOTYgOTYgQTMxIDMxIDAgMCAxIDk2IDM0IFoiIGZpbGw9IiMyYjJiMmIiLz48Y2lyY2xlIGN4PSI5NiIgY3k9IjY1IiByPSIxMSIgZmlsbD0iI2ZmZmZmZiIvPjxjaXJjbGUgY3g9Ijk2IiBjeT0iMTI3IiByPSIxMSIgZmlsbD0iIzJiMmIyYiIvPjx0ZXh0IHg9Ijk2IiB5PSIxODgiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjAiIGZvbnQtd2VpZ2h0PSI4MCIgZmlsbD0iIzhCNkY0NyIgZm9udC1mYW1pbHk9IlBpbmdGYW5nIFNDLE1pY3Jvc29mdCBZYUhhZWksc2Fucy1zZXJpZiI+55yf5Zu8PC90ZXh0Pjwvc3ZnPg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

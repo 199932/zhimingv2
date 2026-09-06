@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="知命V2">
-<link rel="manifest" id="pwaManifestHref">
+<link rel="manifest" id="pwaManifestHref" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" id="pwaAppleIcon">
 <style>
 /* ============================================================ */
@@ -14976,16 +14976,13 @@ function onInstallBtnClick(){
 
 function initPWA(){
   try{
-    const mh = document.getElementById('pwaManifestHref');
-    if(mh) mh.href = URL.createObjectURL(new Blob([PWA_MANIFEST_JSON], {type:'application/json'}));
     const ai = document.getElementById('pwaAppleIcon');
     if(ai) ai.href = 'data:image/svg+xml;base64,'+ICON192_SVG;
   }catch(e){}
+  // 【PWA 修复】用真实 sw.js 文件注册，不再用 blob URL（移动端 Chrome 不允许 blob SW）
   if ('serviceWorker' in navigator) {
     try{
-      const swBlob = new Blob([SW_CODE], {type:'application/javascript'});
-      const swUrl = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swUrl, {scope: './'}).then(()=>{}).catch(()=>{});
+      navigator.serviceWorker.register('./sw.js', {scope: './'}).then(()=>{}).catch(()=>{});
     }catch(e){}
   }
 }
