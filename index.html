@@ -1554,9 +1554,10 @@ body.banner-show{padding-top:40px;}
       <p id="donateQrHint" style="font-size:13px;color:var(--text-hint);margin:12px 0 0;display:none;">💚 微信扫一扫，随意打赏</p>
       <p style="font-size:11px;color:var(--text-hint);opacity:.6;margin:8px 0 0;">收款人：大大(**秀)</p>
       <div style="margin-top:16px;">
-        <input type="file" id="donateQrUpload" accept="image/*" style="display:none;" onchange="window.handleDonateQrUpload(event)" />
-        <button class="donate-upload-btn" style="width:100%;padding:14px;font-size:16px;" onclick="document.getElementById('donateQrUpload').click()">📷 从相册选择收款码</button>
-        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">① 点按钮 → ② 选相册里的收款码 → ③ 自动保存，仅存本地不上传</p>
+        <input type="file" id="donateQrUpload" accept="image/*" style="position:absolute;left:-9999px;opacity:0;" onchange="window.handleDonateQrUpload(event)" />
+        <label for="donateQrUpload" class="donate-upload-btn" style="display:block;width:100%;padding:14px;font-size:16px;box-sizing:border-box;">📷 从相册选择收款码</label>
+        <button id="donateCopyBtn" class="donate-upload-btn" style="display:none;width:100%;padding:12px;font-size:14px;margin-top:10px;box-sizing:border-box;" onclick="window.copyDonateQrData()">📋 复制收款码数据发给作者</button>
+        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">① 点按钮选图 → ② 自动保存本地 → ③ 点「复制数据」把内容发给作者，作者会内置到应用里</p>
       </div>
     </div>
   </div>
@@ -13269,6 +13270,7 @@ function loadDonateQr(){
     const img = document.getElementById('donateQrImg');
     const ph = document.getElementById('donateQrPlaceholder');
     const hint = document.getElementById('donateQrHint');
+    const cp = document.getElementById('donateCopyBtn');
     if(!img) return;
     const saved = localStorage.getItem(DONATE_QR_KEY);
     if(saved){
@@ -13276,11 +13278,13 @@ function loadDonateQr(){
       img.style.display = '';
       if(ph) ph.style.display = 'none';
       if(hint) hint.style.display = '';
+      if(cp) cp.style.display = 'block';
     } else {
       img.src = '';
       img.style.display = 'none';
       if(ph) ph.style.display = '';
       if(hint) hint.style.display = 'none';
+      if(cp) cp.style.display = 'none';
     }
   }catch(_){}
 }
@@ -13315,6 +13319,8 @@ function handleDonateQrUpload(e){
         if(img){ img.src = dataUrl; img.style.display = ''; }
         if(ph) ph.style.display = 'none';
         if(hint) hint.style.display = '';
+        const cp = document.getElementById('donateCopyBtn');
+        if(cp) cp.style.display = 'block';
         try{ if(typeof showToastBottom === 'function') showToastBottom('✅ 收款码已保存到本地'); }catch(_){}
         // 重置 input，允许重复选择同一张图
         try{ e.target.value = ''; }catch(_){}
@@ -13335,6 +13341,39 @@ function closeDonateModal(){
   }catch(_){ try{ document.getElementById("donateModal").style.display="none"; }catch(_){} }
 }
 try{ window.openDonateModal = openDonateModal; window.closeDonateModal = closeDonateModal; window.handleDonateQrUpload = handleDonateQrUpload; window.loadDonateQr = loadDonateQr; }catch(_){}
+
+function copyDonateQrData(){
+  try{
+    const data = localStorage.getItem(DONATE_QR_KEY);
+    if(!data){ alert('还没有收款码，请先上传'); return; }
+    const textarea = document.createElement('textarea');
+    textarea.value = data;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
+    document.body.removeChild(textarea);
+    if(ok){
+      alert('✅ 已复制！请把剪贴板里的内容粘贴发给作者\n\n（内容是一长串 base64 图片数据，直接粘贴发送即可）');
+    } else {
+      // fallback：用 navigator.clipboard
+      try{
+        navigator.clipboard.writeText(data).then(function(){
+          alert('✅ 已复制！请把剪贴板内容粘贴发给作者');
+        }).catch(function(){
+          alert('复制失败，请手动长按下面的文本框全选复制');
+        });
+      }catch(_){
+        alert('复制失败，请手动长按下面的文本框全选复制');
+      }
+    }
+  }catch(err){ alert('复制出错: '+err.message); }
+}
+try{ window.copyDonateQrData = copyDonateQrData; }catch(_){}
 
 /* ----- 共振判定：城市选择初始化 ----- */
 function buildGongzhenCitySelect(){
