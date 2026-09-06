@@ -399,9 +399,13 @@ body.theme-dark .modal-close{background:var(--track-bg);color:var(--text-sub);}
 
 /* 打赏弹窗 */
 .donate-modal-box{max-width:360px;}
-.donate-qr-wrap{display:flex;justify-content:center;margin:8px 0;}
+.donate-qr-wrap{display:flex;justify-content:center;margin:8px 0;min-height:200px;align-items:center;}
 .donate-qr-img{width:200px;height:200px;border-radius:12px;background:#fff;padding:8px;box-shadow:0 2px 12px rgba(0,0,0,.08);object-fit:contain;}
 body.theme-dark .donate-qr-img{background:#f5f5f5;}
+.donate-qr-img[src=""],.donate-qr-img:not([src]){display:none;}
+.donate-upload-btn{display:inline-block;padding:10px 20px;border-radius:24px;border:2px solid var(--pri);background:transparent;color:var(--pri);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;}
+.donate-upload-btn:active{background:var(--pri);color:#fff;}
+.donate-qr-placeholder{width:200px;height:200px;border-radius:12px;background:var(--input-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-hint);font-size:13px;gap:8px;border:2px dashed var(--line);}
 .page .foot-disclaimer{text-align:center;font-size:10px;color:var(--text-hint);padding:20px 8px 80px;clear:both;}
 .today-card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:14px;border:1px solid var(--card-border);box-shadow:0 2px 10px var(--card-shadow);}
 .today-card-title{font-size:16px;color:var(--pri);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
@@ -1541,10 +1545,15 @@ body.banner-show{padding-top:40px;}
         如果知命 V2 对你有帮助<br>欢迎请作者喝杯咖啡 ☕<br>你的支持是持续更新的动力 ❤️
       </p>
       <div class="donate-qr-wrap">
-        <img id="donateQrImg" class="donate-qr-img" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LXNpemU9IjE0Ij7nrqHnkIbnoa7lj5bkuI3mo4blj6LmiqXvvJrku6XmmK8vd29ya3NwYWNlL3d4cGF5LXFiLnBuZzwvdGV4dD48L3N2Zz4=" alt="微信收款码" />
+        <img id="donateQrImg" class="donate-qr-img" src="" alt="微信收款码" />
       </div>
       <p style="font-size:13px;color:var(--text-hint);margin:12px 0 0;">💚 微信扫一扫，随意打赏</p>
       <p style="font-size:11px;color:var(--text-hint);opacity:.6;margin:8px 0 0;">收款人：大大(**秀)</p>
+      <div style="margin-top:16px;">
+        <input type="file" id="donateQrUpload" accept="image/*" style="display:none;" onchange="window.handleDonateQrUpload(event)" />
+        <button class="donate-upload-btn" onclick="document.getElementById('donateQrUpload').click()">📷 上传我的收款码</button>
+        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">图片仅保存在你本地设备，不会上传服务器</p>
+      </div>
     </div>
   </div>
 </div>
@@ -13250,8 +13259,40 @@ function closeProfileModal(){
 }
 
 /* ===== 打赏支持弹窗 ===== */
+const DONATE_QR_KEY = 'zhiming_donate_qr';
+function loadDonateQr(){
+  try{
+    const img = document.getElementById('donateQrImg');
+    if(!img) return;
+    const saved = localStorage.getItem(DONATE_QR_KEY);
+    if(saved){
+      img.src = saved;
+      img.style.display = '';
+    } else {
+      img.src = '';
+      img.style.display = 'none';
+    }
+  }catch(_){}
+}
+function handleDonateQrUpload(e){
+  try{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    if(f.size > 5*1024*1024){ alert('图片太大（>5MB），请用小一点的图'); return; }
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const dataUrl = ev.target.result;
+      try{ localStorage.setItem(DONATE_QR_KEY, dataUrl); }catch(err){ alert('保存失败，可能图片太大'); return; }
+      const img = document.getElementById('donateQrImg');
+      if(img){ img.src = dataUrl; img.style.display = ''; }
+      if(typeof showToastBottom === 'function') showToastBottom('✅ 收款码已保存到本地');
+    };
+    reader.readAsDataURL(f);
+  }catch(err){ alert('读取图片失败: '+err.message); }
+}
 function openDonateModal(){
   try{
+    loadDonateQr();
     window.__openModalById("donateModal");
   }catch(e){ try{ document.getElementById("donateModal").style.display="flex"; }catch(_){} }
 }
@@ -13260,7 +13301,7 @@ function closeDonateModal(){
     window.__closeModalById("donateModal");
   }catch(_){ try{ document.getElementById("donateModal").style.display="none"; }catch(_){} }
 }
-try{ window.openDonateModal = openDonateModal; window.closeDonateModal = closeDonateModal; }catch(_){}
+try{ window.openDonateModal = openDonateModal; window.closeDonateModal = closeDonateModal; window.handleDonateQrUpload = handleDonateQrUpload; window.loadDonateQr = loadDonateQr; }catch(_){}
 
 /* ----- 共振判定：城市选择初始化 ----- */
 function buildGongzhenCitySelect(){
@@ -17112,6 +17153,8 @@ window.loadFromHash = loadFromHash;
     try{ window.closeProfileModal = closeProfileModal; }catch(_){}
     try{ window.openDonateModal = openDonateModal; }catch(_){}
     try{ window.closeDonateModal = closeDonateModal; }catch(_){}
+    try{ window.handleDonateQrUpload = handleDonateQrUpload; }catch(_){}
+    try{ window.loadDonateQr = loadDonateQr; }catch(_){}
     try{ window.renderProfilesUI = renderProfilesUI; }catch(_){}
     try{ window.quickAddProfile = quickAddProfile; }catch(_){}
     try{ window.openProfileForm = openProfileForm; }catch(_){}
