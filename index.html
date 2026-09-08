@@ -1554,12 +1554,10 @@ body.banner-show{padding-top:40px;}
       <p id="donateQrHint" style="font-size:13px;color:var(--text-hint);margin:12px 0 0;display:none;">💚 微信扫一扫，随意打赏</p>
       <p style="font-size:11px;color:var(--text-hint);opacity:.6;margin:8px 0 0;">收款人：大大(**秀)</p>
       <div style="margin-top:16px;">
-        <div style="position:relative;width:100%;">
-          <div class="donate-upload-btn" style="width:100%;padding:14px;font-size:16px;box-sizing:border-box;pointer-events:none;">📷 从相册选择收款码</div>
-          <input type="file" id="donateQrUpload" accept="image/*" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;" onchange="window.handleDonateQrUpload(event)" />
-        </div>
+        <div style="text-align:left;font-size:12px;color:var(--text-hint);margin-bottom:6px;">👇 点下面这行选收款码图片：</div>
+        <input type="file" id="donateQrUpload" accept="image/*" style="display:block;width:100%;padding:12px;font-size:15px;border:2px dashed var(--pri);border-radius:12px;background:#fff;box-sizing:border-box;" onchange="window.handleDonateQrUpload(event)" />
         <button id="donateCopyBtn" class="donate-upload-btn" style="display:none;width:100%;padding:12px;font-size:14px;margin-top:10px;box-sizing:border-box;" onclick="window.copyDonateQrData()">📋 复制收款码数据发给作者</button>
-        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">① 点按钮选图 → ② 自动保存本地 → ③ 点「复制数据」把内容发给作者</p>
+        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">① 点上面选图 → ② 自动保存 → ③ 点「复制数据」发给作者</p>
       </div>
     </div>
   </div>
