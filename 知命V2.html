@@ -1554,10 +1554,14 @@ body.banner-show{padding-top:40px;}
       <p id="donateQrHint" style="font-size:13px;color:var(--text-hint);margin:12px 0 0;display:none;">💚 微信扫一扫，随意打赏</p>
       <p style="font-size:11px;color:var(--text-hint);opacity:.6;margin:8px 0 0;">收款人：大大(**秀)</p>
       <div style="margin-top:16px;">
-        <div style="text-align:left;font-size:12px;color:var(--text-hint);margin-bottom:6px;">👇 点下面这行选收款码图片：</div>
+        <div style="text-align:left;font-size:12px;color:var(--text-hint);margin-bottom:6px;">方式一：长按下面虚线框，选「粘贴」</div>
+        <div id="donatePasteArea" contenteditable="true" style="width:100%;min-height:60px;border:2px dashed var(--pri);border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--text-hint);font-size:14px;box-sizing:border-box;padding:10px;" onpaste="window.handleDonatePaste(event)">👇 长按这里粘贴收款码图片</div>
+        <div style="text-align:left;font-size:12px;color:var(--text-hint);margin:12px 0 6px;">方式二：点下面按钮从剪贴板读取</div>
+        <button class="donate-upload-btn" style="width:100%;padding:12px;font-size:14px;box-sizing:border-box;" onclick="window.readDonateQrFromClipboard()">📋 从剪贴板读取收款码</button>
+        <div style="text-align:left;font-size:12px;color:var(--text-hint);margin:12px 0 6px;">方式三：选择文件</div>
         <input type="file" id="donateQrUpload" accept="image/*" style="display:block;width:100%;padding:12px;font-size:15px;border:2px dashed var(--pri);border-radius:12px;background:#fff;box-sizing:border-box;" onchange="window.handleDonateQrUpload(event)" />
         <button id="donateCopyBtn" class="donate-upload-btn" style="display:none;width:100%;padding:12px;font-size:14px;margin-top:10px;box-sizing:border-box;" onclick="window.copyDonateQrData()">📋 复制收款码数据发给作者</button>
-        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">① 点上面选图 → ② 自动保存 → ③ 点「复制数据」发给作者</p>
+        <p style="font-size:10px;color:var(--text-hint);opacity:.5;margin:6px 0 0;">上传成功后点「复制数据」把内容发给作者</p>
       </div>
     </div>
   </div>
@@ -13374,6 +13378,71 @@ function copyDonateQrData(){
   }catch(err){ alert('复制出错: '+err.message); }
 }
 try{ window.copyDonateQrData = copyDonateQrData; }catch(_){}
+
+function _saveDonateQrDataUrl(dataUrl){
+  _compressDonateImg(dataUrl, 800, 0.82, function(compressed){
+    try{ localStorage.setItem(DONATE_QR_KEY, compressed); }
+    catch(err){ alert('保存失败，图片太大'); return; }
+    const img = document.getElementById('donateQrImg');
+    const ph = document.getElementById('donateQrPlaceholder');
+    const hint = document.getElementById('donateQrHint');
+    const cp = document.getElementById('donateCopyBtn');
+    if(img){ img.src = compressed; img.style.display = ''; }
+    if(ph) ph.style.display = 'none';
+    if(hint) hint.style.display = '';
+    if(cp) cp.style.display = 'block';
+    try{ if(typeof showToastBottom === 'function') showToastBottom('✅ 收款码已保存'); }catch(_){}
+  });
+}
+
+function handleDonatePaste(e){
+  try{
+    const items = e.clipboardData && e.clipboardData.items;
+    if(!items){ return; }
+    for(let i=0;i<items.length;i++){
+      if(items[i].type.indexOf('image') !== -1){
+        e.preventDefault();
+        const blob = items[i].getAsFile();
+        const reader = new FileReader();
+        reader.onload = function(ev){ _saveDonateQrDataUrl(ev.target.result); };
+        reader.readAsDataURL(blob);
+        return;
+      }
+    }
+  }catch(err){ alert('粘贴失败: '+err.message); }
+}
+
+function readDonateQrFromClipboard(){
+  try{
+    if(!navigator.clipboard || !navigator.clipboard.read){
+      alert('此浏览器不支持读取剪贴板，请用「长按粘贴」方式');
+      return;
+    }
+    navigator.clipboard.read().then(function(items){
+      let found = false;
+      for(let i=0;i<items.length;i++){
+        const types = items[i].types;
+        for(let j=0;j<types.length;j++){
+          if(types[j].indexOf('image') !== -1){
+            found = true;
+            items[i].getType(types[j]).then(function(blob){
+              const reader = new FileReader();
+              reader.onload = function(ev){ _saveDonateQrDataUrl(ev.target.result); };
+              reader.readAsDataURL(blob);
+            });
+            break;
+          }
+        }
+        if(found) break;
+      }
+      if(!found) alert('剪贴板里没有图片，请先在相册里复制收款码图片');
+    }).catch(function(err){
+      alert('读取剪贴板失败，请用「长按粘贴」方式。错误: '+err.message);
+    });
+  }catch(err){ alert('读取失败: '+err.message); }
+}
+
+try{ window.handleDonatePaste = handleDonatePaste; window.readDonateQrFromClipboard = readDonateQrFromClipboard; window._saveDonateQrDataUrl = _saveDonateQrDataUrl; }catch(_){}
 
 /* ----- 共振判定：城市选择初始化 ----- */
 function buildGongzhenCitySelect(){
