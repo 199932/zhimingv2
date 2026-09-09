@@ -2,12 +2,14 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>知命 V2 · 占卜小工具</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="知命V2">
 <link rel="manifest" id="pwaManifestHref" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" id="pwaAppleIcon">
 <style>
 /* ============================================================ */
@@ -7862,13 +7864,9 @@ function initPWA(){
       const murl = 'data:application/manifest+json;utf8,'+encodeURIComponent(JSON.stringify(mf));
       const L=document.createElement('link'); L.id='pwa-manifest'; L.rel='manifest'; L.href=murl;
       (document.head||document.getElementsByTagName('head')[0]).appendChild(L);
-      // theme-color meta
+      // theme-color meta (静态 head 已含 apple-mobile-web-app-capable / status-bar-style，不再重复注入)
       const mc=document.createElement('meta'); mc.name='theme-color'; mc.content='#8B6F47';
-      const ms=document.createElement('meta'); ms.name='apple-mobile-web-app-capable'; ms.content='yes';
-      const ms2=document.createElement('meta'); ms2.name='apple-mobile-web-app-status-bar-style'; ms2.content='default';
       (document.head||document.getElementsByTagName('head')[0]).appendChild(mc);
-      (document.head||document.getElementsByTagName('head')[0]).appendChild(ms);
-      (document.head||document.getElementsByTagName('head')[0]).appendChild(ms2);
     }
     // 2) Service Worker via Blob+ObjectURL (cache-first，file:/// 下也可用 Blob URL 路径避免 404)
     if('serviceWorker' in navigator && window.isSecureContext){
