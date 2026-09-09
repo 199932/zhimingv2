@@ -1657,6 +1657,12 @@ body.banner-show{padding-top:40px;}
   // 注册 window.onerror + onunhandledrejection
   window.addEventListener('error', function(e){
     try{
+      var _emsg = e && e.message;
+      // 已知环境限制：无用户手势时浏览器拦截 navigator.vibrate，部分内核会产生空 message 的错误事件 -> 静默记录，不打扰用户
+      if(_emsg === undefined || _emsg === null || String(_emsg) === '' || /vibrate|Blocked call/i.test(String(_emsg))){
+        (window._errLog = window._errLog || []).push('IGNORED ' + String(_emsg) + ' @' + new Date().toLocaleTimeString());
+        return;
+      }
       window._lastErrInfo = {msg:e.message, line:e.lineno, col:e.colno, stack: (e.error&&e.error.stack)||''};
       _showBigErrBox(e.message, e.lineno, e.colno, (e.error&&e.error.stack)||'');
     }catch(_){}
@@ -1671,6 +1677,8 @@ body.banner-show{padding-top:40px;}
 })();
 
 const DEBUG=false;const _log=(...a)=>{if(DEBUG)_log(...a)};const _warn=(...a)=>{if(DEBUG)_warn(...a)};
+// 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
+window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
 const ZHIMING_BUILD = 'v2.9.0-20260829';
 
@@ -15031,7 +15039,7 @@ function showToast(text,type,duration){
   t.textContent=(icons[type]?icons[type]+' ':'')+text;
   box.appendChild(t);
   requestAnimationFrame(()=>{t.classList.add('show');});
-  if(type==='success'){try{if(navigator.vibrate)navigator.vibrate(60);}catch(_){}}
+  if(type==='success'){try{if(window.__userTapped&&navigator.vibrate)navigator.vibrate(60);}catch(_){}}
   clearTimeout(_toastTimer);
   _toastTimer=setTimeout(()=>{t.classList.remove('show');setTimeout(()=>{if(t.parentNode===box)box.removeChild(t);},220);},duration);
 }
