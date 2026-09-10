@@ -313,10 +313,12 @@ body.theme-wu .tarot-spread-tab.active{background:rgba(107,92,165,0.12);border-c
 .tarot-card.flipped{transform:rotateY(180deg);}
 .tarot-card.flipped.reversed-face{transform:rotateY(180deg) rotate(180deg);}
 .tarot-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(0,0,0,.12);}
-.tarot-face.back{transform:rotateY(0deg);}
+.tarot-face.back{transform:rotateY(0deg);background:linear-gradient(135deg,#1A1625 0%,#2D2654 100%);border:1px solid #D4AF37;box-shadow:inset 0 0 20px rgba(212,175,55,0.08),0 4px 12px rgba(0,0,0,.3);}
+body.theme-wu .tarot-face.back{background:linear-gradient(135deg,#12101A 0%,#1E1A35 100%);border:1px solid rgba(212,175,55,0.6);}
 .tarot-face.front{transform:rotateY(180deg);background:#FFF9F0;}
 body.theme-light .tarot-face.front{background:#FFF9F0;}
 body.theme-dark .tarot-face.front{background:#FFF9F0;}
+body.theme-wu .tarot-face.front{background:var(--card);border:1px solid rgba(107,92,165,0.3);}
 .tarot-face svg{width:100%;height:100%;display:block;}
 .tarot-pos-label{text-align:center;font-size:12px;color:var(--text-sub);margin-top:6px;font-weight:500;min-height:18px;opacity:0;transition:opacity .3s;}
 .tarot-pos-label.show{opacity:1;}
@@ -368,12 +370,12 @@ body.theme-dark .tarot-face.front{background:#FFF9F0;}
 .hi-tarot-thumbs{display:flex;gap:4px;margin-bottom:4px;}
 .hi-tarot-thumbs .hi-tt{width:28px;height:46px;border-radius:4px;overflow:hidden;border:1px solid var(--card-border);background:#FFF9F0;flex-shrink:0;}
 .hi-tarot-thumbs .hi-tt svg{width:100%;height:100%;display:block;}
-.zodiac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 14px;}
-.zodiac-cell{background:var(--input-bg);border:1px solid var(--input-border);border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s;user-select:none;}
+.zodiac-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 14px;}
+.zodiac-cell{background:var(--input-bg);border:1px solid var(--input-border);border-radius:50%;padding:6px 2px;text-align:center;cursor:pointer;transition:all .3s ease;user-select:none;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .zodiac-cell:active{transform:scale(0.97);}
-.zodiac-cell .zsym{font-size:26px;line-height:1.1;}
-.zodiac-cell .zname{font-size:13px;color:var(--text-sub);margin-top:3px;}
-.zodiac-cell.active{background:var(--pri);border-color:var(--pri);}
+.zodiac-cell .zsym{font-size:22px;line-height:1;}
+.zodiac-cell .zname{font-size:11px;color:var(--text-sub);margin-top:2px;}
+.zodiac-cell.active{background:var(--pri);border-color:var(--pri);box-shadow:0 0 0 3px rgba(78,205,196,0.12),0 0 12px rgba(78,205,196,0.18);}
 .zodiac-cell.active .zname,.zodiac-cell.active .zsym{color:#fff;}
 .period-tabs{display:flex;gap:8px;margin:4px 0 10px;}
 .period-tab{flex:1;height:40px;border-radius:10px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-sub);font-size:14px;cursor:pointer;}
@@ -387,8 +389,10 @@ body.theme-dark .tarot-face.front{background:#FFF9F0;}
 .zodiac-head .zh-en{font-size:13px;color:var(--text-hint);margin-top:2px;letter-spacing:2px;}
 .score-row{display:flex;align-items:center;gap:8px;margin:6px 0;}
 .score-row .sn{width:44px;font-size:13px;color:var(--text-sub);}
-.score-row .strack{flex:1;height:12px;background:var(--track-bg);border-radius:6px;overflow:hidden;}
-.score-row .sfill{height:100%;border-radius:6px;transition:width .5s;}
+.score-row .strack{flex:1;height:12px;background:var(--track-bg);border-radius:6px;overflow:hidden;position:relative;}
+.score-row .sfill{height:100%;border-radius:6px;transition:width .5s;position:relative;overflow:hidden;}
+.score-row .sfill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.22) 50%,transparent 100%);animation:shimmer 2.2s infinite;}
+body.theme-wu .score-row .sfill::after{background:linear-gradient(90deg,transparent 0%,rgba(212,175,55,0.18) 50%,transparent 100%);}
 .score-row .sc{width:40px;text-align:right;font-size:12px;font-weight:700;color:var(--text);}
 .sub-block{margin:6px 0;}
 .sub-block .sb-k{font-size:13px;font-weight:700;color:var(--pri-dark);}
@@ -789,6 +793,9 @@ body.theme-dark .term {
 .toast.info{background:rgba(30,30,30,0.88);color:#fff;}
 .result-loading{opacity:.3;filter:blur(1px);transition:opacity .25s,filter .25s;}
 .result-show{animation:resultFadeIn .45s ease-out both;}
+/* shimmer 流光用于运势条/进度条 */
+@keyframes shimmer{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+@keyframes scoreGrow{from{width:0;}}
 @keyframes resultFadeIn{from{opacity:0;transform:translateY(18px);filter:blur(4px);}to{opacity:1;transform:translateY(0);filter:blur(0);}}
 .diary-nav-btn{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-sub);cursor:pointer;font-size:14px;}
 .diary-nav-btn:active{transform:scale(0.96);}
@@ -993,27 +1000,32 @@ body.theme-dark .term {
 .rp-item button{margin-left:auto;padding:5px 10px;border-radius:8px;border:0;background:var(--pri);color:#fff;font-size:11px;cursor:pointer;}
 
   /* Phase 3: 灵数九宫 / 卢恩 / 六壬 互动 */
-  .lingshu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px auto;max-width:300px;}
-  .lingshu-cell{aspect-ratio:1;border-radius:10px;background:linear-gradient(135deg,#f0ece5,#e5ddce);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;position:relative;}
-  .lingshu-cell.empty{background:var(--bg);opacity:.45;}
-  .lingshu-cell.main{background:linear-gradient(135deg,#f5c134,#d9a21c);color:#5d4200;box-shadow:0 6px 14px rgba(245,193,52,.35);border:1px solid #e0b12c;}
-  .lingshu-cell .num{font-size:20px;font-weight:800;}
-  .lingshu-cell .kw{font-size:10px;text-align:center;margin-top:2px;line-height:1.15;}
+  .lingshu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px auto;max-width:320px;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--card-border);box-shadow:var(--wu-shadow-card);}
+  .lingshu-cell{aspect-ratio:1;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;position:relative;transition:all .35s ease;}
+  .lingshu-cell.empty{background:var(--bg);opacity:.45;border-style:dashed;}
+  .lingshu-cell.main{background:rgba(107,92,165,0.12);color:#F0E6FF;box-shadow:0 0 16px rgba(107,92,165,0.20);border:1px solid rgba(139,126,200,0.45);}
+  .lingshu-cell .num{font-size:22px;font-weight:800;color:var(--text);line-height:1;}
+  .lingshu-cell.main .num{font-size:36px;font-weight:900;color:#8B7EC8;text-shadow:0 0 16px rgba(139,126,200,0.40);}
+  .lingshu-cell .kw{font-size:10px;text-align:center;margin-top:2px;line-height:1.15;color:var(--text-sub);}
   .lingshu-cell .dots{position:absolute;bottom:4px;display:flex;gap:2px;}
   .lingshu-cell .dots i{width:6px;height:6px;border-radius:50%;background:var(--pri);}
   .lingshu-legend{font-size:12px;color:var(--text-hint);margin-top:8px;}
-  .lingshu-tip{background:linear-gradient(135deg,rgba(106,141,173,.12),rgba(74,125,214,.12));border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:12px;}
+  .lingshu-tip{background:rgba(107,92,165,0.06);border:1px dashed rgba(107,92,165,0.20);border-radius:12px;padding:8px 10px;margin:8px 0;font-size:12px;color:var(--text-sub);}
   /* Rune */
   .rune-layout{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:10px 0;}
-  .rune-card{width:130px;min-height:170px;border-radius:14px;background:linear-gradient(160deg,#2a2344,#46366f);color:#fff;padding:12px;box-shadow:0 10px 26px rgba(107,92,165,.4);position:relative;border:1px solid rgba(255,255,255,.08);}
-  .rune-card.rev{transform:rotate(180deg);}
-  .rune-card .name{font-size:14px;font-weight:700;margin-bottom:4px;}
+  .rune-card{width:130px;min-height:170px;border-radius:14px;background:linear-gradient(160deg,#2E2A24 0%,#1E1A16 100%);color:#F0E6FF;padding:12px;box-shadow:inset 0 1px 2px rgba(0,0,0,0.3),0 4px 24px rgba(0,0,0,0.35);position:relative;border:1px solid #4A4538;overflow:hidden;}
+  .rune-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 10%,#D4AF37 50%,transparent 90%);opacity:0.4;}
+  .rune-card.rev{border-color:#E0569A;transform:rotate(180deg);}
+  .rune-card.rev::before{background:linear-gradient(90deg,transparent 10%,#E0569A 50%,transparent 90%);}
+  .rune-card .name{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--text);}
   .rune-card .svg-slot{margin:6px auto;text-align:center;height:70px;}
-  .rune-card .kw{font-size:10px;opacity:.9;line-height:1.3;}
-  .rune-card .title{font-size:11px;opacity:.8;margin-top:6px;}
+  .rune-card .kw{font-size:10px;opacity:.9;line-height:1.3;color:var(--text-sub);}
+  .rune-card .title{font-size:11px;opacity:.8;margin-top:6px;color:var(--text-hint);}
   .rune-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
-  .rune-btns button{padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-size:12px;}
-  .rune-btns button.on{background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600;}
+  .rune-btns button{padding:10px 20px;border-radius:8px;border:1px solid #5A5548;background:linear-gradient(180deg,#3A3530 0%,#2A2520 100%);color:#B8A9D9;cursor:pointer;font-size:12px;font-weight:600;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06),0 2px 4px rgba(0,0,0,0.3);transition:all 0.15s ease;}
+  .rune-btns button:hover{border-color:#D4AF37;color:#F0E6FF;box-shadow:inset 0 1px 0 rgba(255,255,255,0.08),0 2px 8px rgba(0,0,0,0.4),0 0 8px rgba(212,175,55,0.25);}
+  .rune-btns button:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(0,0,0,0.4);}
+  .rune-btns button.on{background:linear-gradient(135deg,#6B5CA5,#8B7EC8);color:#fff;border-color:#6B5CA5;font-weight:600;box-shadow:0 4px 12px rgba(107,92,165,0.35);}
   /* Daliren / 梅花 手摇卦 */
   .shouyao-stage{border-radius:14px;padding:14px;background:linear-gradient(135deg,rgba(139,111,71,.09),rgba(74,107,138,.09));margin:8px 0;border:1px solid var(--line);}
   .shouyao-row{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);}
