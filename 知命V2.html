@@ -120,6 +120,7 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
 input[type="number"],input[type="text"],select,textarea{width:100%;height:44px;padding:0 14px;border:1px solid var(--input-border);border-radius:10px;background:var(--input-bg);font-size:15px;color:var(--text);outline:none;font-family:inherit;}
 textarea{height:90px;padding:12px 14px;resize:none;line-height:1.5;}
 input:focus,select:focus,textarea:focus{border-color:var(--pri);}
+button:focus-visible,a:focus-visible,[role="tab"]:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--pri);outline-offset:2px;border-radius:4px;}
 .inline-3 > *{flex:1 1 30%;}
 .inline-2 > *{flex:1 1 45%;}
 .radio-group{display:flex;gap:10px;}
@@ -3812,7 +3813,11 @@ function initTheme(){
  * =======================================================*/
 const HIST_KEY = "zhiming_v2_history";
 function getHistory(){
-  try{ return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); }catch(e){ return []; }
+  try{
+    const v = JSON.parse(localStorage.getItem(HIST_KEY)||"[]");
+    if(!Array.isArray(v)){ try{ localStorage.removeItem(HIST_KEY); }catch(_){} return []; }
+    return v;
+  }catch(e){ return []; }
 }
 function saveHistory(arr){ localStorage.setItem(HIST_KEY, JSON.stringify(arr)); }
 function addHistory(type, input, result, note){
@@ -4946,6 +4951,21 @@ function bindSubtabs(){
       if (!t) return;
       switchSec(page, t.dataset.sec);
     });
+    // 键盘可达：Tab 聚焦，Enter/Space 激活，方向键在 tab 间移动焦点
+    container.querySelectorAll(".subtab").forEach(t=>{ if(!t.hasAttribute("tabindex")) t.setAttribute("tabindex","0"); });
+    container.addEventListener("keydown", e=>{
+      const t = e.target.closest(".subtab");
+      if (!t) return;
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); switchSec(page, t.dataset.sec); return; }
+      const dir = (e.key==="ArrowRight"||e.key==="ArrowDown")?1:((e.key==="ArrowLeft"||e.key==="ArrowUp")?-1:0);
+      if (!dir) return;
+      e.preventDefault();
+      const tabs = [...container.querySelectorAll(".subtab")];
+      const idx = tabs.indexOf(t);
+      if (idx < 0) return;
+      const next = tabs[(idx+dir+tabs.length) % tabs.length];
+      if (next){ try{ next.focus(); }catch(_){} }
+    });
   });
 }
 function goBacktest(){
@@ -5963,13 +5983,45 @@ function initZodiacUI(){
   const grid = document.getElementById("zodiacGrid");
   grid.innerHTML = ZODIAC_12.map((z,i)=>`<div class="zodiac-cell ${i===_curZodiacIdx?'active':''}" data-i="${i}" onclick="window.selectZodiac(${i})"><div class="zsym">${z.sym}</div><div class="zname">${z.name}</div></div>`).join("");
   selectZodiac(0, true);
+  // 键盘可达：period-tab 与 zodiac-cell 支持 Tab 聚焦、Enter/Space 激活、方向键切换
+  const pt = document.querySelector(".period-tabs");
+  if (pt){
+    pt.querySelectorAll(".period-tab").forEach(t=>{ if(!t.hasAttribute("tabindex")) t.setAttribute("tabindex","0"); });
+    pt.addEventListener("keydown", e=>{
+      const t = e.target.closest(".period-tab");
+      if (!t) return;
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); t.click(); return; }
+      const dir = (e.key==="ArrowRight"||e.key==="ArrowLeft") ? ((e.key==="ArrowRight")?1:-1) : 0;
+      if (!dir) return;
+      e.preventDefault();
+      const arr = [...pt.querySelectorAll(".period-tab")];
+      const idx = arr.indexOf(t);
+      if (idx < 0) return;
+      const next = arr[(idx+dir+arr.length) % arr.length];
+      if (next){ try{ next.focus(); }catch(_){} }
+    });
+  }
+  grid.querySelectorAll(".zodiac-cell").forEach(c=>{ c.setAttribute("tabindex","0"); });
+  grid.addEventListener("keydown", e=>{
+    const c = e.target.closest(".zodiac-cell");
+    if (!c) return;
+    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); window.selectZodiac(+c.dataset.i, false); return; }
+    const dir = (e.key==="ArrowRight"||e.key==="ArrowDown")?1:((e.key==="ArrowLeft"||e.key==="ArrowUp")?-1:0);
+    if (!dir) return;
+    e.preventDefault();
+    const arr = [...grid.querySelectorAll(".zodiac-cell")];
+    const idx = arr.indexOf(c);
+    if (idx < 0) return;
+    const next = arr[(idx+dir+arr.length) % arr.length];
+    if (next){ try{ next.focus(); }catch(_){} }
+  });
 }
 function selectZodiac(idx, silentRender){
   _curZodiacIdx = idx;
   document.querySelectorAll("#zodiacGrid .zodiac-cell").forEach(el=>{
     el.classList.toggle("active", +el.dataset.i === idx);
   });
-  renderZodiac();
+  renderZodiac(silentRender);
 }
 function switchZodiacPeriod(p){
   _curZodiacPeriod = p;
@@ -6001,7 +6053,7 @@ function zodiacBuildSubHtml(zIdx, p, scores, date){
     <div class="sub-block"><span class="sb-k">${n}：</span><span class="sb-p">${(t && t[keys[i]])?t[keys[i]]:("总体"+(val>=90?"极佳":val>=80?"良好":val>=70?"尚可":"一般")+"，宜把握机会。")}</span></div>`;
   }).join("");
 }
-function renderZodiac(){
+function renderZodiac(silent){
   const z = ZODIAC_12[_curZodiacIdx];
   if (!z) return;
   const p = _curZodiacPeriod;
@@ -6037,7 +6089,10 @@ function renderZodiac(){
   document.getElementById("zodiac-result").innerHTML = enhanceResultHtml(html);
   document.getElementById("copyBar").style.display = "flex";
   _lastZodiacResult = {zodiacIdx:_curZodiacIdx, period:p, date:dateStr, scores, summary:summaryText, zName:z.name, periodName:periodNames[p]};
-  addHistory("zodiac", {zodiacIdx:_curZodiacIdx, period:p, date:dateStr}, _lastZodiacResult, `${z.name}${periodNames[p]}${overallScore}`);
+  // 静默渲染（初始化/回测等）不写历史，避免每次打开页面都生成一条 zodiac 记录
+  if(!silent){
+    addHistory("zodiac", {zodiacIdx:_curZodiacIdx, period:p, date:dateStr}, _lastZodiacResult, `${z.name}${periodNames[p]}${overallScore}`);
+  }
 }
 function buildZodiacCopyText(r){
   if (!r) return "";
@@ -8301,10 +8356,10 @@ function calcAndRenderLingshu(){
   const core = calcLingshuCore(Y,M,D);
   if(!core){ out.innerHTML = '<div class="lingshu-tip">⚠️ 请输入有效的出生年月日（年1900-2100，月1-12，日1-31）。</div>'; return; }
   let html = renderLingshuGrid(core);
-  // 记录历史（若存在通用保存函数）
+  // 记录历史（沿用 addHistory 标准存档）
   try{
-    if(typeof saveHistory === 'function'){
-      saveHistory({type:'lingshu', input:Y+'-'+M+'-'+D, result: {lifePath:core.lifePath, digits:core.digits}, ts: Date.now()});
+    if(typeof addHistory === 'function'){
+      addHistory('lingshu', Y+'-'+M+'-'+D, {lifePath:core.lifePath, digits:Array.from(core.digits)}, '数字能量九宫图');
     }
   }catch(_){}
   out.innerHTML = html;
@@ -8386,8 +8441,8 @@ function drawRunes(n, btn){
   });
   html += '</div>';
   try{
-    if(typeof saveHistory === 'function'){
-      saveHistory({type:'rune', input: '抽'+n, result: {n, drawn: drawn.map(d=>({name:d.r.name, reversed:d.reversed}))}, ts: Date.now()});
+    if(typeof addHistory === 'function'){
+      addHistory('rune', '抽'+n, {n, drawn: drawn.map(d=>({name:d.r.name, reversed:d.reversed}))}, '卢恩符文');
     }
   }catch(_){}
   document.getElementById('result-wu4').innerHTML = html;
@@ -8540,8 +8595,8 @@ function finishShouyao(){
       host.innerHTML = html;
     }
     // 尝试：把结果写入 hidden 字段然后触发原梅花计算按钮
-    if(typeof saveHistory === 'function'){
-      saveHistory({type:'meihua', input:'手摇卦', result: {yaos:st.yaos}, ts: Date.now()});
+    if(typeof addHistory === 'function'){
+      addHistory('meihua', '手摇卦', {yaos:st.yaos}, '梅花易数·手摇');
     }
     // 尝试模拟 fill Y/M/D/h + 点击梅花起卦按钮（如果有就自动调用 calcMeihua 类似函数）
     try{
@@ -8734,8 +8789,8 @@ function calcDaliuren(){
   html += '<div class="lingshu-tip" style="margin-top:10px;">🔔 <b>提示</b>：大六壬全课解挂实装中，当前输出为结构化排课（地盘/天盘/天将/四课/三传）用于探索对比。复杂克应、神将类象与九宗门精细判定将在下一阶段补上。</div>';
   // 保存历史
   try{
-    if(typeof saveHistory === 'function'){
-      saveHistory({type:'daliuren', input:Y+'-'+M+'-'+D+' '+h, result: {jiang:jiangName, shizhi:shiZhi, rigan:riGan, rizhi:riZhi, fourLessons, sanzhuan}, ts: Date.now()});
+    if(typeof addHistory === 'function'){
+      addHistory('daliuren', Y+'-'+M+'-'+D+' '+h, {jiang:jiangName, shizhi:shiZhi, rigan:riGan, rizhi:riZhi, fourLessons, sanzhuan}, '大六壬');
     }
   }catch(_){}
   out.innerHTML = html;
@@ -12174,6 +12229,21 @@ function initTarotUI(){
       document.getElementById("tarot-result").innerHTML = "";
       document.getElementById("tarotDrawBtn").textContent = "🎴 抽 牌";
     });
+    // 键盘可达：Tab 聚焦，Enter/Space 激活，方向键移动焦点
+    tabs.querySelectorAll(".tarot-spread-tab").forEach(t=>{ if(!t.hasAttribute("tabindex")) t.setAttribute("tabindex","0"); });
+    tabs.addEventListener("keydown", e=>{
+      const t = e.target.closest(".tarot-spread-tab");
+      if (!t) return;
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); t.click(); return; }
+      const dir = (e.key==="ArrowRight"||e.key==="ArrowDown")?1:((e.key==="ArrowLeft"||e.key==="ArrowUp")?-1:0);
+      if (!dir) return;
+      e.preventDefault();
+      const arr = [...tabs.querySelectorAll(".tarot-spread-tab")];
+      const idx = arr.indexOf(t);
+      if (idx < 0) return;
+      const next = arr[(idx+dir+arr.length) % arr.length];
+      if (next){ try{ next.focus(); }catch(_){} }
+    });
   }
   renderTarotBacks();
   renderTarotDaily();
@@ -12980,7 +13050,6 @@ function fillFormWithProfile(p){
   if (typeof detectZodiacIdx === "function" && p.month && p.day){
     const zIdx = detectZodiacIdx(+p.month, +p.day);
     if (typeof selectZodiac === "function") selectZodiac(zIdx, false);
-    if (typeof renderZodiac === "function") renderZodiac();
     const bdm = document.getElementById("bd-month");
     const bdd = document.getElementById("bd-day");
     if (bdm) bdm.value = p.month;
