@@ -79,6 +79,23 @@ body.theme-dark {
   --warn: #d4a040;
   --modal-mask: rgba(0,0,0,0.7);
 }
+/* ===== 西玄视觉系统 v2 · 星夜秘仪 ===== */
+body.theme-wu{
+  --bg: #12101A;
+  --card: #242030;
+  --card-border: rgba(107,92,165,0.25);
+  --card-shadow: rgba(0,0,0,0.35);
+  --text: #F0E6FF;
+  --text-sub: #B8A9D9;
+  --text-hint: #7A6B99;
+  --line: rgba(107,92,165,0.20);
+  --header-bg: rgba(18,16,26,0.92);
+  --input-bg: #1A1625;
+  --input-border: rgba(107,92,165,0.25);
+  --track-bg: #1A1625;
+  --btab-bg: #1A1625;
+  --btab-border: rgba(107,92,165,0.20);
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;}
 body{background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;padding-bottom:150px;overflow-x:hidden;transition:background .25s,color .25s;--kb-offset:0px;}
@@ -109,6 +126,8 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
 .subtabs::-webkit-scrollbar{display:none;}
 .subtab{flex-shrink:0;padding:10px 16px;height:44px;border-radius:22px;background:var(--input-bg);border:1px solid var(--input-border);font-size:14px;color:var(--text-sub);white-space:nowrap;transition:all .2s;cursor:pointer;}
 .subtab.active{background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600;}
+body.theme-wu .subtab{background:#1A1625;border-color:rgba(107,92,165,0.25);color:#B8A9D9;}
+body.theme-wu .subtab.active{background:linear-gradient(135deg,#6B5CA5,#8B7EC8);color:#fff;border-color:#6B5CA5;box-shadow:0 0 16px rgba(107,92,165,0.25);}
 .page{display:none;padding:8px 16px calc(70px + var(--kb-offset) + env(safe-area-inset-bottom));}
 .page.active{display:block;}
 .section{display:none;}
@@ -128,12 +147,14 @@ button:focus-visible,a:focus-visible,[role="tab"]:focus-visible,[role="button"]:
 .radio-group input{display:none;}
 .radio-group input:checked + span{color:var(--pri);font-weight:600;}
 .radio-group label:has(input:checked){border-color:var(--pri);background:var(--pri-light);}
-.btn-primary{width:100%;height:48px;border:none;border-radius:12px;background:var(--pri);color:#fff;font-size:16px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-top:4px;}
-.btn-primary:active{transform:scale(0.98);opacity:0.9;}
+.btn-primary{width:100%;height:48px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--pri-wu) 0%,var(--pri-wu-light,#8B7EC8) 100%);color:#fff;font-size:16px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-top:4px;box-shadow:0 4px 14px rgba(107,92,165,0.35);transition:transform .15s ease,box-shadow .25s ease,background .25s ease;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(107,92,165,0.45),0 0 12px rgba(139,126,200,0.20);}
+.btn-primary:active{transform:translateY(0) scale(0.98);opacity:0.9;box-shadow:0 2px 8px rgba(107,92,165,0.25);}
 .btn-secondary{height:44px;padding:0 16px;border:1px solid var(--pri);background:var(--input-bg);color:var(--pri);border-radius:10px;font-size:14px;cursor:pointer;}
 .btn-secondary.small{height:34px;padding:0 12px;font-size:12px;}
 .result{margin-top:18px;}
 .card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--card-border);box-shadow:0 2px 10px var(--card-shadow);}
+body.theme-wu .card{background:#242030;border:1px solid rgba(107,92,165,0.25);box-shadow:0 4px 24px rgba(0,0,0,0.35);}
 .card-title{font-size:14px;color:var(--pri);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 .card-title::before{content:"";width:4px;height:16px;background:var(--pri);border-radius:2px;}
 .kv{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;gap:10px;}
@@ -273,7 +294,9 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .qm-cells-info{font-size:11px;color:var(--text-hint);text-align:center;margin-top:4px;}
 .tarot-spread-tabs{display:flex;gap:6px;margin:4px 0 10px;flex-wrap:wrap;}
 .tarot-spread-tab{flex:1;min-width:90px;padding:10px 8px;height:44px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);font-size:13px;color:var(--text-sub);text-align:center;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;}
-.tarot-spread-tab.active{background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600;}
+.tarot-spread-tab.active{background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600;box-shadow:0 0 12px rgba(107,92,165,0.25);}
+body.theme-wu .tarot-spread-tab{background:#242030;border-color:rgba(107,92,165,0.25);color:#B8A9D9;border-radius:12px;height:auto;min-height:56px;padding:8px;flex-direction:column;gap:2px;}
+body.theme-wu .tarot-spread-tab.active{background:rgba(107,92,165,0.12);border-color:#D4AF37;color:#F0E6FF;box-shadow:0 0 12px rgba(212,175,55,0.25),inset 0 0 0 1px rgba(212,175,55,0.15);}
 @media (max-width:640px){
   .tarot-spread-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
   .tarot-spread-tabs::-webkit-scrollbar{display:none;}
