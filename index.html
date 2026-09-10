@@ -1105,17 +1105,17 @@ body.banner-show{padding-top:40px;}
   <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.10.7</span></div>
   <div class="today" id="topToday">加载中...</div>
   <div class="actions">
-    <button class="icon-btn" id="themeBtn" title="深浅模式切换" onclick="window.toggleTheme()">☀️</button>
-    <button class="icon-btn" id="profileBtn" title="人物档案" onclick="window.openProfileModal()" style="position:relative;">
+    <button class="icon-btn" id="themeBtn" aria-label="深浅模式切换" title="深浅模式切换" onclick="window.toggleTheme()">☀️</button>
+    <button class="icon-btn" id="profileBtn" aria-label="人物档案" title="人物档案" onclick="window.openProfileModal()" style="position:relative;">
       👤<span id="profileBadge" style="position:absolute;bottom:-2px;right:-2px;font-size:10px;background:var(--pri);color:#fff;border-radius:8px;padding:0 4px;line-height:1.2;display:none;"></span>
     </button>
-    <button class="icon-btn" id="glossBtn" title="命理词典" onclick="window.openGlossary()">📖</button>
-    <button class="icon-btn" id="histBtn" title="历史记录" onclick="window.openHistory()">📚</button>
-    <button class="icon-btn" id="btBtn" title="回测" onclick="window.goBacktest()">⚖</button>
-    <button class="icon-btn" id="installBtn" title="安装到桌面" onclick="window.onInstallBtnClick()" style="display:none;">⬇</button>
-    <button class="icon-btn" id="diaryBtn" title="占卜日记" onclick="window.openDiaryModal()">📓</button>
-    <button id="btn-liupai" class="icon-btn" onclick="window.openLiupaiModal()" title="🧩流派参数">🧩</button>
-    <button class="icon-btn" id="donateBtn" title="支持作者" onclick="window.openDonateModal()">❤️</button>
+    <button class="icon-btn" id="glossBtn" aria-label="命理词典" title="命理词典" onclick="window.openGlossary()">📖</button>
+    <button class="icon-btn" id="histBtn" aria-label="历史记录" title="历史记录" onclick="window.openHistory()">📚</button>
+    <button class="icon-btn" id="btBtn" aria-label="回测" title="回测" onclick="window.goBacktest()">⚖</button>
+    <button class="icon-btn" id="installBtn" aria-label="安装到桌面" title="安装到桌面" onclick="window.onInstallBtnClick()" style="display:none;">⬇</button>
+    <button class="icon-btn" id="diaryBtn" aria-label="占卜日记" title="占卜日记" onclick="window.openDiaryModal()">📓</button>
+    <button id="btn-liupai" class="icon-btn" aria-label="流派参数" onclick="window.openLiupaiModal()" title="🧩流派参数">🧩</button>
+    <button class="icon-btn" id="donateBtn" aria-label="支持作者" title="支持作者" onclick="window.openDonateModal()">❤️</button>
   </div>
 </div>
 
@@ -1678,7 +1678,7 @@ body.banner-show{padding-top:40px;}
   // 见下方 __zhimingMountAll() 调用
 })();
 
-const DEBUG=false;const _log=(...a)=>{if(DEBUG)_log(...a)};const _warn=(...a)=>{if(DEBUG)_warn(...a)};
+const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(...a)=>{if(DEBUG)console.warn(...a)};
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
@@ -7892,7 +7892,7 @@ SELF.addEventListener('message',(e)=>{ if(e.data==='SKIP') SELF.skipWaiting(); }
         `;
         const blob = new Blob([swCode], {type:'application/javascript'});
         const swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).then(()=>{ try{ console && console.log('[PWA] SW registered (Blob URL, cache-first)'); }catch(_){} }).catch(()=>{/*SW fail is non-fatal*/});
+        navigator.serviceWorker.register(swUrl).then(()=>{ try{ _log('[PWA] SW registered (Blob URL, cache-first)'); }catch(_){} }).catch(()=>{/*SW fail is non-fatal*/});
       }catch(_){ /* blob or register fail => ignore */ }
     }
   }catch(_){}
@@ -10645,20 +10645,20 @@ function renderNextSteps(r, type){
 }
 try{ window.renderNextSteps = renderNextSteps; }catch(_){}
 function init(){
-  try{ console.log('[init] step0 start'); }catch(_){}
-  try{ runInlineSelfCheck(); console.log('[init] step1 runInlineSelfCheck ok'); }catch(e){ console.error('[init] step1 runInlineSelfCheck ERR:', e.message); }
-  try{ initKeyboardFix(); console.log('[init] step2 initKeyboardFix ok'); }catch(e){ console.error('[init] step2 initKeyboardFix ERR:', e.message); }
-  try{ initTheme(); console.log('[init] step3 initTheme ok'); }catch(e){ console.error('[init] step3 initTheme ERR:', e.message); }
-  try{ buildCitySelect(); console.log('[init] step4 buildCitySelect ok'); }catch(e){ console.error('[init] step4 buildCitySelect ERR:', e.message); }
-  try{ buildQimenCitySelect(); console.log('[init] step5 buildQimenCitySelect ok'); }catch(e){ console.error('[init] step5 buildQimenCitySelect ERR:', e.message); }
-  try{ buildGongzhenCitySelect(); console.log('[init] step6 buildGongzhenCitySelect ok'); }catch(e){ console.error('[init] step6 buildGongzhenCitySelect ERR:', e.message); }
+  try{ _log('[init] step0 start'); }catch(_){}
+  try{ runInlineSelfCheck(); _log('[init] step1 runInlineSelfCheck ok'); }catch(e){ console.error('[init] step1 runInlineSelfCheck ERR:', e.message); }
+  try{ initKeyboardFix(); _log('[init] step2 initKeyboardFix ok'); }catch(e){ console.error('[init] step2 initKeyboardFix ERR:', e.message); }
+  try{ initTheme(); _log('[init] step3 initTheme ok'); }catch(e){ console.error('[init] step3 initTheme ERR:', e.message); }
+  try{ buildCitySelect(); _log('[init] step4 buildCitySelect ok'); }catch(e){ console.error('[init] step4 buildCitySelect ERR:', e.message); }
+  try{ buildQimenCitySelect(); _log('[init] step5 buildQimenCitySelect ok'); }catch(e){ console.error('[init] step5 buildQimenCitySelect ERR:', e.message); }
+  try{ buildGongzhenCitySelect(); _log('[init] step6 buildGongzhenCitySelect ok'); }catch(e){ console.error('[init] step6 buildGongzhenCitySelect ERR:', e.message); }
   try{upgradeCityPickers()}catch(e){}
   try{
     const gzSel = document.getElementById("gz-city");
     if (gzSel && !gzSel.onchange) gzSel.addEventListener("change", onGzCityChange);
   }catch(e){}
-  try{ bindSubtabs(); console.log('[init] step7 bindSubtabs ok'); }catch(e){ console.error('[init] step7 bindSubtabs ERR:', e.message); }
-  try{ bootstrapUXBindings(); console.log('[init] step8 bootstrapUXBindings ok'); }catch(e){ console.error('[init] step8 bootstrapUXBindings ERR:', e.message); }
+  try{ bindSubtabs(); _log('[init] step7 bindSubtabs ok'); }catch(e){ console.error('[init] step7 bindSubtabs ERR:', e.message); }
+  try{ bootstrapUXBindings(); _log('[init] step8 bootstrapUXBindings ok'); }catch(e){ console.error('[init] step8 bootstrapUXBindings ERR:', e.message); }
 
   bindAllDrafts();
   updateTopToday();
@@ -10676,6 +10676,7 @@ function init(){
       if(location.hash && location.hash.includes('?')) try{ setTimeout(loadFromHash, 200); }catch(_){}
     });
   });
+  if(DEBUG){
   _log("%c===== 知命V2 启动自测 ===== ","color:#8B6F47;font-weight:bold;");
   _log('共振:', typeof gongzhenCalc === 'function', !!TYPE_LABEL.gongzhen);
   _log('档案:', typeof loadProfiles === 'function', typeof setActiveProfile === 'function');
@@ -10728,6 +10729,7 @@ function init(){
     try{ (window.runChunked||function(ts){ try{ (ts[0]||function(){})(); }catch(_){} })(__uxTestTasks); }catch(_){}
 
   }, 30);
+  }
   try{initPWA();}catch(_){}
   try{initSwipeTabs();}catch(_){}
   try{initPullRefresh();}catch(_){}
@@ -10784,13 +10786,13 @@ function init(){
         b.onclick=function(){ try{ window.switchSub? window.switchSub('wu',k) : (()=>{ document.querySelectorAll('#page-wu .sub-sec').forEach(s=>s.classList.add('hidden')); const t=document.getElementById(secid); if(t)t.classList.remove('hidden'); document.querySelectorAll('#wu-subtabs .sub-tab, [data-subtabs=wu] .sub-tab').forEach(x=>x.classList.remove('on')); b.classList.add('on'); })(); }catch(_){} };
         wuTabs.appendChild(b);
       };
-      add('🔢灵数','wu3','sec-wu3'); add('ᚠ卢恩','wu4','sec-wu4');
+      add('🔢灵数','wu3','sec-wu3-phase3'); add('ᚠ卢恩','wu4','sec-wu4');
     }
     // 中式 subtab 追加「📐六壬」(sec-cn7)
     const cnTabs = document.querySelector('[data-subtabs="cn"], .cn-subtabs, #cn-subtabs');
     if(cnTabs){
       const b=document.createElement('button'); b.className='sub-tab'; b.textContent='📐六壬';
-      b.onclick=function(){ try{ window.switchSub? window.switchSub('cn','cn7') : (()=>{ document.querySelectorAll('#page-cn .sub-sec').forEach(s=>s.classList.add('hidden')); const t=document.getElementById('sec-cn7'); if(t)t.classList.remove('hidden'); document.querySelectorAll('#cn-subtabs .sub-tab, [data-subtabs=cn] .sub-tab').forEach(x=>x.classList.remove('on')); b.classList.add('on'); })(); }catch(_){} };
+      b.onclick=function(){ try{ window.switchSub? window.switchSub('cn','cn7') : (()=>{ document.querySelectorAll('#page-cn .sub-sec').forEach(s=>s.classList.add('hidden')); const t=document.getElementById('sec-cn7-phase3'); if(t)t.classList.remove('hidden'); document.querySelectorAll('#cn-subtabs .sub-tab, [data-subtabs=cn] .sub-tab').forEach(x=>x.classList.remove('on')); b.classList.add('on'); })(); }catch(_){} };
       cnTabs.appendChild(b);
     }
     // 输入框默认值：灵数
@@ -13839,6 +13841,7 @@ window.buildGongzhenCitySelect = buildGongzhenCitySelect;
 window.ZHOUYI_SCORE_MAP = ZHOUYI_SCORE_MAP;
 
 /* Phase 5 自测(加载时跑) */
+  if(DEBUG){
 (function tarotSelfTest(){
   const total = TAROT_DATA.length;
   const major = TAROT_DATA.filter(t=>t.type==="major").length;
@@ -13857,8 +13860,10 @@ window.ZHOUYI_SCORE_MAP = ZHOUYI_SCORE_MAP;
   _log(`renderTarotFaceSVG(77)含<svg>: ${hasSVG(77)?"✅":"❌"}`);
   _log(`牌背renderTarotBackSVG含<svg>: ${renderTarotBackSVG().indexOf("<svg")>=0?"✅":"❌"}`);
 })();
+  }
 
 /* Phase 6.5.7 加载期自检 (8项) */
+  if(DEBUG){
 (function phase6SelfCheck(){
   try { _log('节气5锚点:', validateJieqi()); }catch(e){_log('节气5锚点: ❌err', e);}
   try { _log('八字回测:', Array.isArray(runBacktest()) ? "✅Array" : runBacktest()); }catch(e){_log('八字回测: ❌err',e);}
@@ -13877,8 +13882,10 @@ window.ZHOUYI_SCORE_MAP = ZHOUYI_SCORE_MAP;
   try { _log('深色模式:', typeof toggleDark === 'function' ? "✅function" : "❌"+typeof toggleDark); }catch(e){_log('深色模式: ❌err',e);}
   try { _log('历史API:', typeof saveHistory === 'function' ? "✅function" : "❌"+typeof saveHistory); }catch(e){_log('历史API: ❌err',e);}
 })();
+  }
 
 /* 批次1 自测：今日首页 + 准确率复盘系统 + 每日塔罗哈希 */
+  if(DEBUG){
 (function batch1SelfTest(){
   _log("%c===== 批次1 自测：今日首页 & 准确率复盘 =====","color:#4A6B8A;font-weight:bold;");
   try { _log('今日首页:', typeof renderToday === 'function' ? "✅function" : "❌"+typeof renderToday); }catch(e){_log('今日首页: ❌err',e);}
@@ -13900,8 +13907,10 @@ window.ZHOUYI_SCORE_MAP = ZHOUYI_SCORE_MAP;
     _log('复盘UI:', okSearch?"✅setHistSearch":"❌setHistSearch", okDetail?"✅saveHistoryDetail":"❌saveHistoryDetail", okExpand?"✅toggleHistExpand":"❌toggleHistExpand", okRing?"✅renderAccuracyRingSVG":"❌renderAccuracyRingSVG");
   }catch(e){_log('复盘UI: ❌err',e);}
 })();
+  }
 
 /* 批次2 自测：趋势图 + 术语库 + 色标 + 时间轴 */
+  if(DEBUG){
 (function batch2SelfTest(){
   _log("%c===== 批次2 自测：趋势图 & 术语 & 色标 & 时间轴 =====","color:#6B5CA5;font-weight:bold;");
   try { _log('趋势图:', typeof renderTrendCharts === 'function' ? "✅function" : "❌"+typeof renderTrendCharts); }catch(e){_log('趋势图: ❌err',e);}
@@ -13932,8 +13941,10 @@ window.ZHOUYI_SCORE_MAP = ZHOUYI_SCORE_MAP;
     _log('星座折线:', hasSvg?"✅含svg+polyline":"❌");
   }catch(e){_log('星座折线: ❌err',e);}
 })();
+  }
 
 /* 批次B 自测：规律报告 + 命理词典 */
+  if(DEBUG){
 (function batchBSelfTest(){
   _log("%c===== 批次B 自测：规律报告 & 命理词典 =====","color:#8B6F47;font-weight:bold;");
   try { _log('规律报告:', typeof analyzeMyPatterns === 'function' ? "✅function" : "❌"+typeof analyzeMyPatterns); }catch(e){_log('规律报告: ❌err',e);}
@@ -13972,6 +13983,7 @@ window.ZHOUYI_SCORE_MAP = ZHOUYI_SCORE_MAP;
     _log('分类抽样:', catOk?"✅5类都命中":"❌分类缺失");
   }catch(e){_log('分类抽样: ❌err',e);}
 })();
+  }
 
 /* =========================================================
  *  批次C 优化⑤ 今日首页 8 个小组件渲染函数
@@ -15000,6 +15012,7 @@ function upgradeCityPickers(){['bz-city','qm-city','gz-city'].forEach(id=>{const
 const _HS='h5,.desc-title,.desc-sub-title,.card-title,.bz-five-title,.bz-wuxing-title,.bz-wx-result,.aspect-title';
 function makeLongResultCollapsible(I,R){const E=document.getElementById(I);if(!E)return;const H=Array.from(E.querySelectorAll(_HS)).filter(h=>h.closest('#'+I));if(!H.length)return;const T=h=>{const t=h.textContent.trim();return t.length>20?t.slice(0,20):t};H.forEach(h=>{const B=[];let n=h.nextSibling;while(n){if(n.nodeType===1&&n.matches(_HS))break;B.push(n);n=n.nextSibling}if(!B.length)return;const W=document.createElement('div');W.className='result-block collapsible';W.dataset.title=T(h);const d=document.createElement('div');d.className='rb-header';d.innerHTML=`<span class="rb-title">${T(h)}</span><span class="rb-arrow">\u25BE</span>`;d.onclick=()=>W.classList.toggle('collapsed');const b=document.createElement('div');b.className='rb-body';h.parentNode.insertBefore(W,h);W.appendChild(d);W.appendChild(b);b.appendChild(h);B.forEach(s=>b.appendChild(s));if(R&&R.defaultCollapsed&&R.defaultCollapsed(T(h)))W.classList.add('collapsed')})}
 /* 批次C 自测 */
+  if(DEBUG){
 (function batchCSelfTest(){
   _log("%c===== 批次C 自测：分享卡 & 今日小组件 =====","color:#A0522D;font-weight:bold;");
   try { _log('分享卡函数:', typeof generateShareCardImage === 'function', typeof buildShareCardHTML === 'function', typeof onShareCardClick === 'function'); }catch(e){_log('分享卡函数: ❌err',e);}
@@ -15014,6 +15027,7 @@ function makeLongResultCollapsible(I,R){const E=document.getElementById(I);if(!E
     _log('术语库:', n, '≥286?', n>=286 ? `✅${n}条` : `❌${n}条不足`);
   }catch(e){_log('术语库: ❌err',e);}
 })();
+  }
 
 window._selfTest = function(){
     validateJieqi();
@@ -15518,6 +15532,7 @@ function renderDiaryMonthlyStats(y, m){
 }
 
 /* ===== 批次X1 自测 ===== */
+  if(DEBUG){
 (function batchX1SelfTest(){
   setTimeout(()=>{
     _log("%c===== 批次X1 自测：PWA & 占卜日记 =====","color:#8B6F47;font-weight:bold;");
@@ -15527,6 +15542,7 @@ function renderDiaryMonthlyStats(y, m){
     _log('HIST_TYPE_COLOR数量:', Object.keys(HIST_TYPE_COLOR).length, '(应为11)');
   }, 60);
 })();
+  }
 
 window.openDiaryModal = openDiaryModal;
 window.closeDiaryModal = closeDiaryModal;
@@ -17377,7 +17393,7 @@ window.loadFromHash = loadFromHash;
     try{ window.fillFormWithProfile = fillFormWithProfile; }catch(_){}
     try{ window.addProfile = addProfile; }catch(_){}
     try{ window.saveProfiles = saveProfiles; }catch(_){}
-    try{ console.log('[LayerB-v3] 字面量挂载完成'); }catch(_){}
+    try{ _log('[LayerB-v3] 字面量挂载完成'); }catch(_){}
   }catch(eTop){ try{ console.error('[LayerB-v3 ERR]: '+eTop.message); }catch(_){} }
 })();
 
@@ -17425,9 +17441,9 @@ window.onShareCardClick = window.onShareCardClick || function(){};
     <div style="margin-top:10px;font-size:11px;color:var(--text-hint);line-height:1.5;">💡 置闰法 / 飞盘算法为实验性功能，结果仅供探索对比。</div>
   </div>
 </div><!-- 占卜日记 Modal (Phase 2) -->
-<div id="diaryModal" class="diary-modal-mask" style="display:none;" onclick="if(event.target===this)closeDiaryModal()">
+<div id="diaryModal-phase3" class="diary-modal-mask" style="display:none;" onclick="if(event.target===this)closeDiaryModal()">
   <div class="diary-card">
-    <div class="diary-title"><span>📝 占卜日记</span><button class="icon-btn" onclick="window.closeDiaryModal()">×</button></div>
+    <div class="diary-title"><span>📝 占卜日记</span><button class="icon-btn" aria-label="关闭占卜日记" onclick="window.closeDiaryModal()">×</button></div>
     <div class="diary-streak-card">
       <div class="row"><div class="sub">🔥 连续打卡</div><div class="sub">🧘 本月热力</div></div>
       <div class="row"><div class="big" id="diary-streak-days">0</div><div class="big" id="diary-monthly-heat">0%</div></div>
@@ -17507,7 +17523,7 @@ window.onShareCardClick = window.onShareCardClick || function(){};
   </div>
   <!-- ============== UX Smooth Skeleton END ============== -->
   <!-- Phase 3: 西方灵数画像 -->
-  <section id="sec-wu3" class="sub-sec hidden">
+  <section id="sec-wu3-phase3" class="sub-sec hidden">
     <div class="form-row"><label>出生年月日</label>
       <div style="display:flex;gap:4px;"><input id="ls-Y" type="number" min="1900" max="2100" placeholder="1990">
       <input id="ls-M" type="number" min="1" max="12" placeholder="8">
@@ -17526,7 +17542,7 @@ window.onShareCardClick = window.onShareCardClick || function(){};
     <div id="result-wu4"></div>
   </section>
   <!-- Phase 3: 大六壬 -->
-  <section id="sec-cn7" class="sub-sec hidden">
+  <section id="sec-cn7-phase3" class="sub-sec hidden">
     <div class="form-row"><label>占问时间</label>
       <div style="display:flex;gap:4px;">
         <input id="dlr-Y" type="number" placeholder="年">
