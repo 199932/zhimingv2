@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="知命V2">
 <link rel="manifest" id="pwaManifestHref" href="./manifest.webmanifest">
+<meta name="theme-color" content="#8B6F47">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" id="pwaAppleIcon">
 <style>
@@ -7844,59 +7845,7 @@ function __delFav(key){
 }
 try{ window.__delFav=__delFav; }catch(_){}
 
-/* ========== Phase 4 · Step 13: PWA manifest + Service Worker ========== */
-function initPWA(){
-  try{
-    // 1) Manifest (data URL inline SVG icons)
-    if(!document.getElementById('pwa-manifest')){
-      const icons192='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#8B6F47"/><stop offset="100%" stop-color="#d49a5c"/></linearGradient></defs><rect width="192" height="192" rx="42" fill="url(#g)"/><text x="96" y="120" font-family="serif" font-size="110" text-anchor="middle" fill="#fff" font-weight="700">命</text></svg>');
-      const icons512='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="g2" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#8B6F47"/><stop offset="100%" stop-color="#d49a5c"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="url(#g2)"/><text x="256" y="320" font-family="serif" font-size="300" text-anchor="middle" fill="#fff" font-weight="700">命</text></svg>');
-      const mf={
-        name:'知命V2',short_name:'知命V2',description:'纯本地命理占卜，八字奇门塔罗黄历',start_url:'./',display:'standalone',
-        orientation:'portrait',background_color:'#FAF8F5',theme_color:'#8B6F47',
-        icons:[
-          {src:icons192,sizes:'192x192',type:'image/svg+xml',purpose:'any maskable'},
-          {src:icons512,sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}
-        ],
-        categories:['lifestyle','productivity','utilities','personalization'],
-        prefer_related_applications:false
-      };
-      const murl = 'data:application/manifest+json;utf8,'+encodeURIComponent(JSON.stringify(mf));
-      const L=document.createElement('link'); L.id='pwa-manifest'; L.rel='manifest'; L.href=murl;
-      (document.head||document.getElementsByTagName('head')[0]).appendChild(L);
-      // theme-color meta (静态 head 已含 apple-mobile-web-app-capable / status-bar-style，不再重复注入)
-      const mc=document.createElement('meta'); mc.name='theme-color'; mc.content='#8B6F47';
-      (document.head||document.getElementsByTagName('head')[0]).appendChild(mc);
-    }
-    // 2) Service Worker via Blob+ObjectURL (cache-first，file:/// 下也可用 Blob URL 路径避免 404)
-    if('serviceWorker' in navigator && window.isSecureContext){
-      try{
-        const swCode = `
-const CACHE = 'zhimingv2-'+Date.now();
-const SELF = self;
-SELF.addEventListener('install', (e)=>{ SELF.skipWaiting(); });
-SELF.addEventListener('activate',(e)=>{ e.waitUntil(SELF.clients.claim().then(()=>caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))))); });
-SELF.addEventListener('fetch',(event)=>{
-  const req = event.request;
-  if(req.method !== 'GET') return;
-  event.respondWith(
-    caches.open(CACHE).then((cache)=>
-      cache.match(req).then((cached)=>{
-        if(cached) return cached;
-        return fetch(req).then((resp)=>{ try{ if(resp && resp.ok && resp.type==='basic') cache.put(req, resp.clone()); }catch(_){} return resp; }).catch(()=>cached);
-      })
-    )
-  );
-});
-SELF.addEventListener('message',(e)=>{ if(e.data==='SKIP') SELF.skipWaiting(); });
-        `;
-        const blob = new Blob([swCode], {type:'application/javascript'});
-        const swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).then(()=>{ try{ _log('[PWA] SW registered (Blob URL, cache-first)'); }catch(_){} }).catch(()=>{/*SW fail is non-fatal*/});
-      }catch(_){ /* blob or register fail => ignore */ }
-    }
-  }catch(_){}
-}
+/* ========== PWA：manifest 由静态 head 提供，SW 统一注册真实 sw.js（见 initPWA） ========== */
 try{window.initPWA=initPWA;}catch(_){}
 
 /* ========== Phase 4 · Step 14: 本地通知（宜忌 + 复盘到期） ========== */
@@ -15141,26 +15090,11 @@ const PWA_MANIFEST_JSON = JSON.stringify({
   ]
 });
 
-const SW_CODE = `const CACHE='zhiming_v2_sw_v1';
-self.addEventListener('install',e=>{self.skipWaiting();});
-self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});
-self.addEventListener('fetch',e=>{
-  const req=e.request;
-  if(req.method!=='GET') return;
-  const url=new URL(req.url);
-  if(!url.pathname.endsWith('.html')) return;
-  e.respondWith(
-    fetch(req).then(res=>{
-      const clone=res.clone();
-      caches.open(CACHE).then(c=>c.put(req,clone)).catch(()=>{});
-      return res;
-    }).catch(()=>caches.match(req).then(m=>m||caches.match('./知命V2.html')))
-  );
-});`;
+/* SW 注册统一使用仓库真实 sw.js（见下方 initPWA），不再保留内嵌 SW 模板代码 */
 
 let installPromptEvent=null;
 window.addEventListener('beforeinstallprompt', e=>{
-  e.preventDefault();
+  // 不再 preventDefault：允许浏览器显示原生安装提示
   installPromptEvent = e;
   const btn = document.getElementById('installBtn');
   if(btn) btn.style.display='inline-flex';
@@ -15536,7 +15470,7 @@ function renderDiaryMonthlyStats(y, m){
 (function batchX1SelfTest(){
   setTimeout(()=>{
     _log("%c===== 批次X1 自测：PWA & 占卜日记 =====","color:#8B6F47;font-weight:bold;");
-    _log('PWA:', typeof PWA_MANIFEST_JSON === 'string', typeof SW_CODE === 'string', typeof ICON192_SVG === 'string');
+    _log('PWA:', typeof PWA_MANIFEST_JSON === 'string', typeof ICON192_SVG === 'string');
     _log('日记:', typeof openDiaryModal === 'function', typeof saveDiaryEntry === 'function');
     _log('TYPE_LABEL数量:', Object.keys(TYPE_LABEL).length, '(应为11)');
     _log('HIST_TYPE_COLOR数量:', Object.keys(HIST_TYPE_COLOR).length, '(应为11)');
@@ -15558,7 +15492,6 @@ window.onDiaryNoteInput = onDiaryNoteInput;
 window.onInstallBtnClick = onInstallBtnClick;
 window.initPWA = initPWA;
 window.PWA_MANIFEST_JSON = PWA_MANIFEST_JSON;
-window.SW_CODE = SW_CODE;
 window.ICON192_SVG = ICON192_SVG;
 
 /* ===== Collapsible-Wrapper: 只操作 window.calcX，不直接写 script-scope 的 calcX 标识符（兼容 Chrome 83 WebView老版本取不到script-scope声明的bug） ===== */
