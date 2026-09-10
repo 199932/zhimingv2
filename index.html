@@ -1464,6 +1464,19 @@ body.banner-show{padding-top:40px;}
     </div>
     <div class="foot-disclaimer">※ 生命灵数为毕达哥拉斯数字神秘学，仅供娱乐与自我觉察</div>
   </div>
+  <div class="section" id="sec-wu4">
+    <div class="card">
+      <div class="card-title">ᚠ 卢恩符文 · 北欧古文字占卜</div>
+      <p class="hint">源自北欧神话的古文字体系：单抽获取当下指引；三抽回望过去·现在·未来；六抽展开诺伦三女神的命运之网。</p>
+      <div class="rune-btns" role="group" aria-label="选择卢恩抽取方式">
+        <button onclick="window.drawRunes(1,this)">单抽</button>
+        <button onclick="window.drawRunes(3,this)">三抽（过去·现在·未来）</button>
+        <button onclick="window.drawRunes(6,this)">六抽（诺伦三女神之网）</button>
+      </div>
+    </div>
+    <div class="result" id="result-wu4" aria-live="polite"></div>
+    <div class="foot-disclaimer">※ 卢恩符文占卜源自北欧传统，仅供娱乐参考与自我觉察</div>
+  </div>
 </div>
 
 <!-- ===== 黄历主Tab ===== -->
@@ -17481,20 +17494,6 @@ window.onShareCardClick = window.onShareCardClick || function(){};
     </div>
   </div>
   <!-- ============== UX Smooth Skeleton END ============== -->
-  <!-- Phase 3: 卢恩符文（已并入西玄主 subtab 体系，见 #wuSubtabs data-sec="wu4"） -->
-  <div class="section" id="sec-wu4">
-    <div class="card">
-      <div class="card-title">ᚠ 卢恩符文 · 北欧古文字占卜</div>
-      <p class="hint">源自北欧神话的古文字体系：单抽获取当下指引；三抽回望过去·现在·未来；六抽展开诺伦三女神的命运之网。</p>
-      <div class="rune-btns" role="group" aria-label="选择卢恩抽取方式">
-        <button onclick="window.drawRunes(1,this)">单抽</button>
-        <button onclick="window.drawRunes(3,this)">三抽（过去·现在·未来）</button>
-        <button onclick="window.drawRunes(6,this)">六抽（诺伦三女神之网）</button>
-      </div>
-    </div>
-    <div class="result" id="result-wu4" aria-live="polite"></div>
-    <div class="foot-disclaimer">※ 卢恩符文占卜源自北欧传统，仅供娱乐参考与自我觉察</div>
-  </div>
   <!-- Phase 3: 大六壬 -->
   <section id="sec-cn7-phase3" class="sub-sec hidden">
     <div class="form-row"><label>占问时间</label>
