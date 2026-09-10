@@ -273,6 +273,15 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .tarot-spread-tabs{display:flex;gap:6px;margin:4px 0 10px;flex-wrap:wrap;}
 .tarot-spread-tab{flex:1;min-width:90px;padding:10px 8px;height:44px;border-radius:10px;background:var(--input-bg);border:1px solid var(--input-border);font-size:13px;color:var(--text-sub);text-align:center;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;}
 .tarot-spread-tab.active{background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600;}
+@media (max-width:640px){
+  .tarot-spread-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .tarot-spread-tabs::-webkit-scrollbar{display:none;}
+  .tarot-spread-tab{flex:0 0 auto;min-width:94px;}
+}
+@media (prefers-reduced-motion:reduce){
+  .section.active{animation:none;}
+  .tarot-card{transition:none;}
+}
 .tarot-cards-area{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;perspective:1200px;padding:16px 0 10px;}
 .tarot-card-wrap{width:88px;height:145px;position:relative;flex-shrink:0;}
 @media (max-width:340px){.tarot-card-wrap{width:72px;height:120px;}}
@@ -1380,10 +1389,11 @@ body.banner-show{padding-top:40px;}
 
 <!-- ===== 西玄主Tab ===== -->
 <div class="page" id="page-wu">
-  <div class="subtabs" id="wuSubtabs">
-    <div class="subtab active" data-sec="wu1">✦ 韦特塔罗</div>
-    <div class="subtab" data-sec="wu2">♈ 十二星座</div>
-    <div class="subtab" data-sec="wu3">🔢 生命灵数</div>
+  <div class="subtabs" id="wuSubtabs" role="tablist" aria-label="西玄版块功能页">
+    <div class="subtab active" data-sec="wu1" role="tab" aria-selected="true">✦ 韦特塔罗</div>
+    <div class="subtab" data-sec="wu2" role="tab" aria-selected="false">♈ 十二星座</div>
+    <div class="subtab" data-sec="wu3" role="tab" aria-selected="false">🔢 生命灵数</div>
+    <div class="subtab" data-sec="wu4" role="tab" aria-selected="false">ᚠ 卢恩符文</div>
   </div>
   <div class="section active" id="sec-wu1">
     <div class="card" id="tarotDailyCard" style="display:none;">
@@ -1391,13 +1401,13 @@ body.banner-show{padding-top:40px;}
       <div id="tarotDailyContent" style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;"></div>
     </div>
     <div class="card"><div class="card-title">✦ 韦特塔罗 · 选牌阵</div>
-      <div class="tarot-spread-tabs" id="tarotSpreadTabs">
-        <div class="tarot-spread-tab active" data-spread="single">📌 单牌</div>
-        <div class="tarot-spread-tab" data-spread="triangle">🔺 圣三角</div>
-        <div class="tarot-spread-tab" data-spread="choice">⚖ 二选一</div>
-        <div class="tarot-spread-tab" data-spread="element">🔥 四元素</div>
-        <div class="tarot-spread-tab" data-spread="hexa">⬡ 六芒星</div>
-        <div class="tarot-spread-tab" data-spread="celtic">✚ 凯尔特十字</div>
+      <div class="tarot-spread-tabs" id="tarotSpreadTabs" role="tablist" aria-label="选择塔罗牌阵">
+        <div class="tarot-spread-tab active" data-spread="single" role="tab" aria-selected="true">📌 单牌</div>
+        <div class="tarot-spread-tab" data-spread="triangle" role="tab" aria-selected="false">🔺 圣三角</div>
+        <div class="tarot-spread-tab" data-spread="choice" role="tab" aria-selected="false">⚖ 二选一</div>
+        <div class="tarot-spread-tab" data-spread="element" role="tab" aria-selected="false">🔥 四元素</div>
+        <div class="tarot-spread-tab" data-spread="hexa" role="tab" aria-selected="false">⬡ 六芒星</div>
+        <div class="tarot-spread-tab" data-spread="celtic" role="tab" aria-selected="false">✚ 凯尔特十字</div>
       </div>
       <div class="form-row"><label>想问的问题(可选)</label>
         <textarea id="tarotQuestion" placeholder="例如：我和TA的感情会如何发展？这份offer要不要接？"></textarea>
@@ -1405,7 +1415,7 @@ body.banner-show{padding-top:40px;}
       <div class="tarot-cards-area" id="tarotCardsArea"></div>
       <button class="btn-primary" id="tarotDrawBtn" onclick="window.drawTarot()">🎴 抽 牌</button>
     </div>
-    <div class="result" id="tarot-result"></div>
+    <div class="result" id="tarot-result" aria-live="polite"></div>
     <div class="foot-disclaimer">※ 塔罗占卜仅供娱乐参考与自我觉察之用</div>
   </div>
   <div class="section" id="sec-wu2">
@@ -1425,7 +1435,7 @@ body.banner-show{padding-top:40px;}
         <div class="period-tab" data-p="2" onclick="window.switchZodiacPeriod(2)">本月</div>
       </div>
     </div>
-    <div class="result" id="zodiac-result"></div>
+    <div class="result" id="zodiac-result" aria-live="polite"></div>
     <div class="foot-disclaimer">※ 星座运势仅供娱乐参考，评分由当日哈希算法自动生成</div>
   </div>
   <!-- 生命灵数 -->
@@ -1439,7 +1449,19 @@ body.banner-show{padding-top:40px;}
       </div></div>
       <button class="btn-primary" onclick="window.calcLingshu()">解　读</button>
     </div>
-    <div class="result" id="ls-result"></div>
+    <div class="result" id="ls-result" aria-live="polite"></div>
+    <div class="card" style="margin-top:12px;"><div class="card-title">🧮 数字能量九宫图</div>
+      <p class="hint">以毕达哥拉斯九宫格呈现生日数字的能量分布：主命数高亮、宫点表示能量强弱，并给出缺数提示。</p>
+      <div class="form-row"><label>🎂 出生年月日</label>
+        <div style="display:flex;gap:4px;">
+          <input id="ls-Y" type="number" min="1900" max="2100" placeholder="1990">
+          <input id="ls-M" type="number" min="1" max="12" placeholder="8">
+          <input id="ls-D" type="number" min="1" max="31" placeholder="8">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="window.calcAndRenderLingshu()">🔢 生成九宫图</button>
+      <div id="result-wu3" aria-live="polite"></div>
+    </div>
     <div class="foot-disclaimer">※ 生命灵数为毕达哥拉斯数字神秘学，仅供娱乐与自我觉察</div>
   </div>
 </div>
@@ -3802,7 +3824,8 @@ const QC_CMDS = [
   {cmd:"小六壬", label:"小六壬起课",    sub:"中式命理 / 小六壬Tab", k:"🔯", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn5'); }catch(_){} }},
   {cmd:"测字",   label:"测字占卜",      sub:"中式命理 / 测字Tab", k:"✍", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn6'); }catch(_){} }},
   {cmd:"梅花",   label:"梅花易数（互动起卦）", sub:"中式命理 / 梅花Tab", k:"🌸", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn7-2'); if(!window.switchSec) window.switchTab&&window.switchTab('cn'); }catch(_){ if(typeof window.switchSec !== 'function'){ try{ document.getElementById('sec-cn7-2')&&window.switchSec&&window.switchSec('cn7-2'); }catch(_x){ document.getElementById('page-cn')&&document.getElementById('page-cn').scrollIntoView({block:'start'}); } } } }},
-  {cmd:"灵数",   label:"西方九宫灵数画像", sub:"西玄 / 灵数Tab", k:"🔢", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu3'); }catch(_){} }},
+  {cmd:"灵数",   label:"西方九宫灵数画像", sub:"西玄 / 灵数·九宫", k:"🔢", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu3'); setTimeout(function(){var el=document.getElementById('ls-Y'); if(el){el.scrollIntoView({behavior:'smooth',block:'center'});} },60); }catch(_){} }},
+  {cmd:"卢恩",   label:"卢恩符文占卜", sub:"西玄 / 卢恩Tab", k:"ᚠ", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu4'); }catch(_){} }},
   {cmd:"大六壬", label:"排大六壬课",    sub:"中式命理 / 大六壬Tab", k:"📐", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn7'); }catch(_){} }},
   {cmd:"塔罗",   label:"塔罗圣三角（过去·现在·未来）", sub:"西玄 / 塔罗Tab", k:"🃏", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu1'); window.__qcTarotPending=3; setTimeout(function(){var f=window.drawTarot||window.fnDrawTarot; if(f) try{f(3);}catch(_x){} },50); }catch(_){} }},
   {cmd:"每日塔罗", label:"每日塔罗单抽", sub:"西玄 / 塔罗Tab", k:"🎴", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu1'); window.__qcTarotPending=1; setTimeout(function(){var f=window.drawTarotDaily; if(f) try{f();}catch(_x){var f2=window.drawTarot; if(f2) f2(1);} },80); }catch(_){} }},
@@ -4885,7 +4908,9 @@ function switchSec(page, sec){
   const st = document.getElementById(page+"Subtabs");
   if (st){
     st.querySelectorAll(".subtab").forEach(s=>{
-      s.classList.toggle("active", s.dataset.sec===sec);
+      const on = (s.dataset.sec===sec);
+      s.classList.toggle("active", on);
+      if(s.hasAttribute("aria-selected")) s.setAttribute("aria-selected", on?"true":"false");
     });
   }
   const pg = document.getElementById("page-"+page);
@@ -10727,16 +10752,7 @@ function init(){
 
   // Phase 3 init：把新 subtab 按钮加进各自的 tab-bar，加 switchSec/switchSub 识别；初始化输入框默认值
   try{
-    // 西玄 subtab 追加「🔢灵数」(sec-wu3) 与「ᚠ卢恩」(sec-wu4)
-    const wuTabs = document.querySelector('[data-subtabs="wu"], .wu-subtabs, #wu-subtabs');
-    if(wuTabs){
-      const add = (label, k, secid)=>{
-        const b=document.createElement('button'); b.className='sub-tab'; b.textContent=label;
-        b.onclick=function(){ try{ window.switchSub? window.switchSub('wu',k) : (()=>{ document.querySelectorAll('#page-wu .sub-sec').forEach(s=>s.classList.add('hidden')); const t=document.getElementById(secid); if(t)t.classList.remove('hidden'); document.querySelectorAll('#wu-subtabs .sub-tab, [data-subtabs=wu] .sub-tab').forEach(x=>x.classList.remove('on')); b.classList.add('on'); })(); }catch(_){} };
-        wuTabs.appendChild(b);
-      };
-      add('🔢灵数','wu3','sec-wu3-phase3'); add('ᚠ卢恩','wu4','sec-wu4');
-    }
+    // 西玄 subtab 已在 HTML #wuSubtabs 固化（塔罗/星座/灵数/卢恩），不再动态追加
     // 中式 subtab 追加「📐六壬」(sec-cn7)
     const cnTabs = document.querySelector('[data-subtabs="cn"], .cn-subtabs, #cn-subtabs');
     if(cnTabs){
@@ -12135,7 +12151,11 @@ function initTarotUI(){
     tabs.addEventListener("click", e=>{
       const t = e.target.closest(".tarot-spread-tab");
       if (!t) return;
-      tabs.querySelectorAll(".tarot-spread-tab").forEach(x=>x.classList.toggle("active", x===t));
+      tabs.querySelectorAll(".tarot-spread-tab").forEach(x=>{
+        const on = (x===t);
+        x.classList.toggle("active", on);
+        if(x.hasAttribute("aria-selected")) x.setAttribute("aria-selected", on?"true":"false");
+      });
       _tarotSpread = t.dataset.spread;
       renderTarotBacks();
       document.getElementById("tarot-result").innerHTML = "";
@@ -12298,6 +12318,10 @@ function renderTarotSpreadDiagram(spread, cards){
   };
   const pts = layouts[spread.layout] || layouts.row1;
   let svg = `<svg viewBox="0 0 100 100" class="tarot-spread-svg" preserveAspectRatio="xMidYMid meet">`;
+  svg += `<defs>
+    <linearGradient id="tgUp" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C6CC7"/><stop offset="100%" stop-color="#514683"/></linearGradient>
+    <linearGradient id="tgRev" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F0A05A"/><stop offset="100%" stop-color="#C2571B"/></linearGradient>
+  </defs>`;
   // 连线
   if (n>=2){
     for (let i=0;i<n-1;i++){
@@ -12308,12 +12332,14 @@ function renderTarotSpreadDiagram(spread, cards){
   pts.forEach((p,i)=>{
     const c = cards[i];
     const t = c ? TAROT_DATA[c.id] : null;
-    const name = t ? (t.type==="major" ? t.num : t.num) : "?";
-    const fill = c ? (c.reversed ? "#E67E22" : "#6B5CA5") : "var(--line)";
+    const name = t ? t.num : "?";
+    const isRev = c ? c.reversed : false;
+    const fill = isRev ? "url(#tgRev)" : (c ? "url(#tgUp)" : "var(--line)");
     svg += `<g transform="translate(${p[0]},${p[1]})">`;
-    svg += `<rect x="-4" y="-6.5" width="8" height="13" rx="1" fill="${fill}" opacity="0.85" stroke="#fff" stroke-width="0.3"/>`;
-    svg += `<text x="0" y="0.5" font-size="3.2" font-family="sans-serif" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="middle">${name}</text>`;
-    svg += `<text x="0" y="9" font-size="2.2" font-family="sans-serif" fill="var(--text-hint)" text-anchor="middle">${i+1}</text>`;
+    svg += `<rect x="-4.5" y="-7" width="9" height="14" rx="1.6" fill="${fill}" opacity="0.92" stroke="#fff" stroke-width="0.35"/>`;
+    svg += `<rect x="-4.5" y="-7" width="9" height="14" rx="1.6" fill="none" stroke="rgba(0,0,0,0.14)" stroke-width="0.55" transform="translate(0.7,1)"/>`;
+    svg += `<text x="0" y="0.6" font-size="3.4" font-family="sans-serif" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">${name}</text>`;
+    svg += `<text x="0" y="9.4" font-size="2.3" font-family="sans-serif" font-weight="700" fill="var(--text-sub)" text-anchor="middle">${isRev?'逆 ':''}${i+1}</text>`;
     svg += `</g>`;
   });
   svg += `</svg>`;
@@ -17455,25 +17481,20 @@ window.onShareCardClick = window.onShareCardClick || function(){};
     </div>
   </div>
   <!-- ============== UX Smooth Skeleton END ============== -->
-  <!-- Phase 3: 西方灵数画像 -->
-  <section id="sec-wu3-phase3" class="sub-sec hidden">
-    <div class="form-row"><label>出生年月日</label>
-      <div style="display:flex;gap:4px;"><input id="ls-Y" type="number" min="1900" max="2100" placeholder="1990">
-      <input id="ls-M" type="number" min="1" max="12" placeholder="8">
-      <input id="ls-D" type="number" min="1" max="31" placeholder="8"></div>
+  <!-- Phase 3: 卢恩符文（已并入西玄主 subtab 体系，见 #wuSubtabs data-sec="wu4"） -->
+  <div class="section" id="sec-wu4">
+    <div class="card">
+      <div class="card-title">ᚠ 卢恩符文 · 北欧古文字占卜</div>
+      <p class="hint">源自北欧神话的古文字体系：单抽获取当下指引；三抽回望过去·现在·未来；六抽展开诺伦三女神的命运之网。</p>
+      <div class="rune-btns" role="group" aria-label="选择卢恩抽取方式">
+        <button onclick="window.drawRunes(1,this)">单抽</button>
+        <button onclick="window.drawRunes(3,this)">三抽（过去·现在·未来）</button>
+        <button onclick="window.drawRunes(6,this)">六抽（诺伦三女神之网）</button>
+      </div>
     </div>
-    <button class="btn-primary" onclick="window.calcAndRenderLingshu()">🔢 计算九宫灵数画像</button>
-    <div id="result-wu3"></div>
-  </section>
-  <!-- Phase 3: 卢恩符文 -->
-  <section id="sec-wu4" class="sub-sec hidden">
-    <div class="rune-btns" style="margin-bottom:10px;">
-      <button onclick="window.drawRunes(1,this)">单抽</button>
-      <button onclick="window.drawRunes(3,this)">三抽（过去·现在·未来）</button>
-      <button onclick="window.drawRunes(6,this)">六抽（诺伦三女神之网）</button>
-    </div>
-    <div id="result-wu4"></div>
-  </section>
+    <div class="result" id="result-wu4" aria-live="polite"></div>
+    <div class="foot-disclaimer">※ 卢恩符文占卜源自北欧传统，仅供娱乐参考与自我觉察</div>
+  </div>
   <!-- Phase 3: 大六壬 -->
   <section id="sec-cn7-phase3" class="sub-sec hidden">
     <div class="form-row"><label>占问时间</label>
