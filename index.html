@@ -96,6 +96,69 @@ body.theme-wu{
   --btab-bg: #1A1625;
   --btab-border: rgba(107,92,165,0.20);
 }
+/* 星空粒子背景（纯 CSS，pointer-events:none 不干扰交互） */
+body.theme-wu::before{
+  content:'';position:fixed;top:0;left:0;right:0;bottom:0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.10), transparent),
+    radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.06), transparent),
+    radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,0.08), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.05), transparent),
+    radial-gradient(2px 2px at 160px 20px, rgba(255,255,255,0.10), transparent),
+    radial-gradient(1px 1px at 200px 60px, rgba(255,255,255,0.07), transparent),
+    radial-gradient(2px 2px at 250px 110px, rgba(255,255,255,0.09), transparent),
+    radial-gradient(1px 1px at 300px 30px, rgba(255,255,255,0.06), transparent),
+    radial-gradient(2px 2px at 340px 90px, rgba(255,255,255,0.08), transparent),
+    radial-gradient(1px 1px at 380px 50px, rgba(255,255,255,0.05), transparent),
+    radial-gradient(2px 2px at 420px 120px, rgba(255,255,255,0.10), transparent),
+    radial-gradient(1px 1px at 460px 70px, rgba(255,255,255,0.07), transparent),
+    radial-gradient(2px 2px at 500px 20px, rgba(255,255,255,0.09), transparent),
+    radial-gradient(1px 1px at 540px 100px, rgba(255,255,255,0.06), transparent),
+    radial-gradient(2px 2px at 580px 40px, rgba(255,255,255,0.08), transparent),
+    radial-gradient(1px 1px at 620px 80px, rgba(255,255,255,0.05), transparent),
+    radial-gradient(2px 2px at 660px 110px, rgba(255,255,255,0.10), transparent),
+    radial-gradient(1px 1px at 700px 30px, rgba(255,255,255,0.07), transparent),
+    radial-gradient(2px 2px at 740px 60px, rgba(255,255,255,0.09), transparent),
+    radial-gradient(1px 1px at 780px 90px, rgba(255,255,255,0.06), transparent),
+    radial-gradient(2px 2px at 820px 20px, rgba(255,255,255,0.08), transparent),
+    radial-gradient(1px 1px at 860px 120px, rgba(255,255,255,0.05), transparent),
+    radial-gradient(2px 2px at 900px 50px, rgba(255,255,255,0.10), transparent),
+    radial-gradient(1px 1px at 940px 70px, rgba(255,255,255,0.07), transparent),
+    radial-gradient(2px 2px at 980px 100px, rgba(255,255,255,0.09), transparent);
+  background-size:1000px 150px;
+  opacity:0.5;pointer-events:none;z-index:0;
+  animation:starfieldDrift 60s linear infinite;
+}
+@keyframes starfieldDrift{from{background-position:0 0;}to{background-position:1000px 0;}}
+@media (prefers-reduced-motion:reduce){body.theme-wu::before{animation:none;}}
+/* 中式命理视觉系统 · 古铜墨韵 */
+body.theme-cn{
+  --bg: #1A1714;
+  --card: #2A2620;
+  --card-border: rgba(139,111,71,0.25);
+  --card-shadow: rgba(0,0,0,0.35);
+  --text: #E8DDD0;
+  --text-sub: #B8A088;
+  --text-hint: #7A6A58;
+  --line: rgba(139,111,71,0.20);
+  --header-bg: rgba(26,23,20,0.92);
+  --input-bg: #231F1A;
+  --input-border: rgba(139,111,71,0.25);
+  --track-bg: #231F1A;
+  --btab-bg: #231F1A;
+  --btab-border: rgba(139,111,71,0.20);
+}
+body.theme-cn .card{background:#2A2620;border:1px solid rgba(139,111,71,0.25);box-shadow:0 4px 24px rgba(0,0,0,0.35);}
+body.theme-cn .btn-primary{background:linear-gradient(135deg,#8B6F47,#A89170);box-shadow:0 4px 14px rgba(139,111,71,0.35);}
+body.theme-cn .subtab{background:#231F1A;border-color:rgba(139,111,71,0.25);color:#B8A088;}
+body.theme-cn .subtab.active{background:linear-gradient(135deg,#8B6F47,#A89170);color:#E8DDD0;border-color:#8B6F47;box-shadow:0 0 16px rgba(139,111,71,0.25);}
+body.theme-cn .tarot-spread-tab{background:#2A2620;border-color:rgba(139,111,71,0.25);color:#B8A088;}
+body.theme-cn .tarot-spread-tab.active{background:rgba(139,111,71,0.12);border-color:#D4AF37;color:#E8DDD0;box-shadow:0 0 12px rgba(212,175,55,0.25),inset 0 0 0 1px rgba(212,175,55,0.15);}
+/* 塔罗牌背神秘符号 */
+body.theme-wu .tarot-face.back::before{
+  content:'✦';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:48px;color:rgba(212,175,55,0.12);
+}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;}
 body{background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;padding-bottom:150px;overflow-x:hidden;transition:background .25s,color .25s;--kb-offset:0px;}
@@ -3867,6 +3930,29 @@ function deleteHistory(id){
   saveHistory(arr);
   renderHistory();
 }
+function exportHistoryJSON(){
+  const arr = getHistory();
+  const blob = new Blob([JSON.stringify(arr,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='zhiming_history_'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+  URL.revokeObjectURL(url); showToast('📤 已导出 JSON','success',1200);
+}
+function exportHistoryCSV(){
+  const arr = getHistory();
+  if(!arr.length){ showToast('暂无记录可导出','warn',1000); return; }
+  const headers = ['id','ts','type','input','result','note'];
+  const rows = arr.map(h=>{
+    const safe = (v)=>{ try{ return JSON.stringify(v).replace(/"/g,'""'); }catch(_){ return ''; } };
+    return [h.id||'', h.ts||'', TYPE_LABEL[h.type]||h.type||'', safe(h.input), safe(h.result), (h.note||'').replace(/"/g,'""')];
+  });
+  const csv = [headers.join(','), ...rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(','))].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='zhiming_history_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  URL.revokeObjectURL(url); showToast('📊 已导出 CSV','success',1200);
+}
+try{ window.exportHistoryJSON = exportHistoryJSON; }catch(_){}
+try{ window.exportHistoryCSV = exportHistoryCSV; }catch(_){}
 const TYPE_LABEL = {bazi:"八字排盘",wuge:"姓名五格",zhouyi:"周易起卦",qimen:"奇门遁甲",xiaoliuren:"小六壬",cezi:"测字",meihua:"梅花易数",tarot:"韦特塔罗",tarot_daily:"每日塔罗",zodiac:"十二星座",lingshu:"生命灵数",almanac:"黄历",gongzhen:"共振判定"};
 /* ===== UX Smooth: 常量 & 新 key 命名（集中声明，不硬编码散点） ===== */
 const QC_CMDS = [
@@ -3965,6 +4051,8 @@ function renderHistory(){
       }
       bar.innerHTML = chip('7天','7d',all7) + chip('30天','30d',all30) + chip('全部','all',arr.length) +
         '<span style="flex:1"></span>' +
+        '<button class="chip-btn" onclick="window.exportHistoryJSON()">📤 导出JSON</button>' +
+        '<button class="chip-btn" onclick="window.exportHistoryCSV()">📊 导出CSV</button>' +
         '<button class="chip-btn" id="btnToggleCompare" onclick="window.toggleCompareMode()">🪄 对比模式</button>' +
         '<button class="chip-btn" id="btnBatchDel" onclick="window.batchDeleteSelected()">🗑 批量删除</button>';
       hf.parentNode.insertBefore(bar, hf.nextSibling);
