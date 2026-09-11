@@ -1247,6 +1247,7 @@ body.banner-show{padding-top:40px;}
     <div class="subtab" data-sec="cn5">🎴 小六壬</div>
     <div class="subtab" data-sec="cn6">✎ 测字</div>
     <div class="subtab" data-sec="cn7">🌸 梅花易数</div>
+    <div class="subtab" data-sec="cn7d">📐 大六壬</div>
   </div>
   <!-- 八字 -->
   <div class="section active" id="sec-cn1">
@@ -1467,6 +1468,27 @@ body.banner-show{padding-top:40px;}
     </div>
     <div class="result" id="mh-result"></div>
     <div class="foot-disclaimer">※ 梅花易数为邵雍先天易学，体用生克是核心，仅供娱乐参考</div>
+  </div>
+  <!-- 大六壬 -->
+  <div class="section" id="sec-cn7d">
+    <div class="card"><div class="card-title">📐 大六壬 · 占课排盘</div>
+      <p class="hint">大六壬以月将加时取天地盘，立四课三传，判吉凶悔吝。</p>
+      <div class="form-row"><label>占问时间</label>
+        <div class="inputs inline-3">
+          <input id="dlr-Y" type="number" placeholder="年" min="1900" max="2100" value="2024">
+          <input id="dlr-M" type="number" placeholder="月" min="1" max="12" value="9">
+          <input id="dlr-D" type="number" placeholder="日" min="1" max="31" value="11">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="inputs inline-2">
+          <input id="dlr-h" type="number" placeholder="时 (0-23)" min="0" max="23" value="13">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="window.calcDaliuren()">📐 排大六壬课</button>
+    </div>
+    <div class="result" id="result-cn7" aria-live="polite"></div>
+    <div class="foot-disclaimer">※ 大六壬全课解挂实装中，当前输出为结构化排课，仅供娱乐参考</div>
   </div>
 </div>
 
@@ -9460,7 +9482,7 @@ try{ window.applySmartDefaultsToForms = applySmartDefaultsToForms; }catch(_){}
 /* （内部）周易/梅花/大六壬 → 「现在 / 选时间」两个快捷按钮 */
 function _ensureGuaQuickButtons(){
   // 对三个 section：cn3（周易）、cn6（梅花）、cn7（大六壬）
-  var secIds = ['sec-cn3','sec-cn6','sec-cn7'];
+    var secIds = ['sec-cn3','sec-cn6','sec-cn7','sec-cn7d'];
   for(var i=0;i<secIds.length;i++){
     try{
       var sec = document.getElementById(secIds[i]);
@@ -10928,11 +10950,11 @@ function init(){
   // Phase 3 init：把新 subtab 按钮加进各自的 tab-bar，加 switchSec/switchSub 识别；初始化输入框默认值
   try{
     // 西玄 subtab 已在 HTML #wuSubtabs 固化（塔罗/星座/灵数/卢恩），不再动态追加
-    // 中式 subtab 追加「📐六壬」(sec-cn7)
+    // 中式 subtab 追加「📐六壬」(sec-cn7d)
     const cnTabs = document.querySelector('[data-subtabs="cn"], .cn-subtabs, #cn-subtabs');
     if(cnTabs){
       const b=document.createElement('button'); b.className='sub-tab'; b.textContent='📐六壬';
-      b.onclick=function(){ try{ window.switchSub? window.switchSub('cn','cn7') : (()=>{ document.querySelectorAll('#page-cn .sub-sec').forEach(s=>s.classList.add('hidden')); const t=document.getElementById('sec-cn7-phase3'); if(t)t.classList.remove('hidden'); document.querySelectorAll('#cn-subtabs .sub-tab, [data-subtabs=cn] .sub-tab').forEach(x=>x.classList.remove('on')); b.classList.add('on'); })(); }catch(_){} };
+      b.onclick=function(){ try{ window.switchSub? window.switchSub('cn','cn7d') : (()=>{ document.querySelectorAll('#page-cn .sub-sec, #page-cn .section').forEach(s=>s.classList.remove('active')); const t=document.getElementById('sec-cn7d'); if(t)t.classList.add('active'); document.querySelectorAll('#cn-subtabs .sub-tab, [data-subtabs=cn] .sub-tab').forEach(x=>x.classList.remove('on')); b.classList.add('on'); })(); }catch(_){} };
       cnTabs.appendChild(b);
     }
     // 输入框默认值：灵数
@@ -17670,18 +17692,6 @@ window.onShareCardClick = window.onShareCardClick || function(){};
     </div>
   </div>
   <!-- ============== UX Smooth Skeleton END ============== -->
-  <!-- Phase 3: 大六壬 -->
-  <section id="sec-cn7-phase3" class="sub-sec hidden">
-    <div class="form-row"><label>占问时间</label>
-      <div style="display:flex;gap:4px;">
-        <input id="dlr-Y" type="number" placeholder="年">
-        <input id="dlr-M" type="number" placeholder="月">
-        <input id="dlr-D" type="number" placeholder="日">
-        <input id="dlr-h" type="number" placeholder="时"></div>
-    </div>
-    <button class="btn-primary" onclick="window.calcDaliuren()">📐 排大六壬课</button>
-    <div id="result-cn7"></div>
-  </section>
 
   <script>
   // Phase3: 手摇卦按钮注入（sec-cn6 梅花易数区末尾追加）
