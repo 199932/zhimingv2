@@ -96,40 +96,24 @@ body.theme-wu{
   --btab-bg: #1A1625;
   --btab-border: rgba(107,92,165,0.20);
 }
-/* 星空粒子背景（纯 CSS，pointer-events:none 不干扰交互） */
+/* 星空粒子背景（纯 CSS，GPU 加速，pointer-events:none） */
 body.theme-wu::before{
   content:'';position:fixed;top:0;left:0;right:0;bottom:0;
   background-image:
-    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.10), transparent),
-    radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.06), transparent),
-    radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,0.08), transparent),
-    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.05), transparent),
-    radial-gradient(2px 2px at 160px 20px, rgba(255,255,255,0.10), transparent),
-    radial-gradient(1px 1px at 200px 60px, rgba(255,255,255,0.07), transparent),
-    radial-gradient(2px 2px at 250px 110px, rgba(255,255,255,0.09), transparent),
-    radial-gradient(1px 1px at 300px 30px, rgba(255,255,255,0.06), transparent),
-    radial-gradient(2px 2px at 340px 90px, rgba(255,255,255,0.08), transparent),
-    radial-gradient(1px 1px at 380px 50px, rgba(255,255,255,0.05), transparent),
-    radial-gradient(2px 2px at 420px 120px, rgba(255,255,255,0.10), transparent),
-    radial-gradient(1px 1px at 460px 70px, rgba(255,255,255,0.07), transparent),
-    radial-gradient(2px 2px at 500px 20px, rgba(255,255,255,0.09), transparent),
-    radial-gradient(1px 1px at 540px 100px, rgba(255,255,255,0.06), transparent),
-    radial-gradient(2px 2px at 580px 40px, rgba(255,255,255,0.08), transparent),
-    radial-gradient(1px 1px at 620px 80px, rgba(255,255,255,0.05), transparent),
-    radial-gradient(2px 2px at 660px 110px, rgba(255,255,255,0.10), transparent),
-    radial-gradient(1px 1px at 700px 30px, rgba(255,255,255,0.07), transparent),
-    radial-gradient(2px 2px at 740px 60px, rgba(255,255,255,0.09), transparent),
-    radial-gradient(1px 1px at 780px 90px, rgba(255,255,255,0.06), transparent),
-    radial-gradient(2px 2px at 820px 20px, rgba(255,255,255,0.08), transparent),
-    radial-gradient(1px 1px at 860px 120px, rgba(255,255,255,0.05), transparent),
-    radial-gradient(2px 2px at 900px 50px, rgba(255,255,255,0.10), transparent),
-    radial-gradient(1px 1px at 940px 70px, rgba(255,255,255,0.07), transparent),
-    radial-gradient(2px 2px at 980px 100px, rgba(255,255,255,0.09), transparent);
-  background-size:1000px 150px;
-  opacity:0.5;pointer-events:none;z-index:0;
-  animation:starfieldDrift 60s linear infinite;
+    radial-gradient(2px 2px at 12% 18%, rgba(255,255,255,0.10), transparent),
+    radial-gradient(1px 1px at 38% 62%, rgba(255,255,255,0.06), transparent),
+    radial-gradient(2px 2px at 52% 12%, rgba(255,255,255,0.09), transparent),
+    radial-gradient(1px 1px at 72% 42%, rgba(255,255,255,0.07), transparent),
+    radial-gradient(2px 2px at 88% 78%, rgba(255,255,255,0.10), transparent),
+    radial-gradient(1px 1px at 28% 82%, rgba(255,255,255,0.05), transparent),
+    radial-gradient(2px 2px at 62% 32%, rgba(255,255,255,0.08), transparent),
+    radial-gradient(1px 1px at 82% 58%, rgba(255,255,255,0.06), transparent);
+  background-size:200% 200%;
+  opacity:0.5;pointer-events:none;z-index:0;will-change:transform;
+  transform:translate3d(0,0,0);
+  animation:starfieldDrift 80s linear infinite;
 }
-@keyframes starfieldDrift{from{background-position:0 0;}to{background-position:1000px 0;}}
+@keyframes starfieldDrift{from{transform:translate3d(0,0,0);}to{transform:translate3d(-50%,-25%,0);}}
 @media (prefers-reduced-motion:reduce){body.theme-wu::before{animation:none;}}
 /* 中式命理视觉系统 · 古铜墨韵 */
 body.theme-cn{
@@ -151,7 +135,7 @@ body.theme-cn{
 body.theme-cn .card{background:#2A2620;border:1px solid rgba(139,111,71,0.25);box-shadow:0 4px 24px rgba(0,0,0,0.35);}
 body.theme-cn .btn-primary{background:linear-gradient(135deg,#8B6F47,#A89170);box-shadow:0 4px 14px rgba(139,111,71,0.35);}
 body.theme-cn .subtab{background:#231F1A;border-color:rgba(139,111,71,0.25);color:#B8A088;}
-body.theme-cn .subtab.active{background:linear-gradient(135deg,#8B6F47,#A89170);color:#E8DDD0;border-color:#8B6F47;box-shadow:0 0 16px rgba(139,111,71,0.25);}
+body.theme-cn .subtab.active{background:linear-gradient(135deg,#8B6F47,#A89170);color:#E8DDD0;border-color:#8B6F47;box-shadow:0 0 8px rgba(139,111,71,0.15);}
 body.theme-cn .tarot-spread-tab{background:#2A2620;border-color:rgba(139,111,71,0.25);color:#B8A088;}
 body.theme-cn .tarot-spread-tab.active{background:rgba(139,111,71,0.12);border-color:#D4AF37;color:#E8DDD0;box-shadow:0 0 12px rgba(212,175,55,0.25),inset 0 0 0 1px rgba(212,175,55,0.15);}
 /* 塔罗牌背神秘符号 */
@@ -170,7 +154,7 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
 /* Section CSS-02 通用组件 (card/form/input/button/modal)       */
 /* ============================================================ */
 /* 顶栏：两行结构 —— 第一行 品牌+操作图标，第二行 今日信息（窄屏不再被挤压） */
-.topbar{position:sticky;top:0;z-index:50;background:var(--header-bg);backdrop-filter:blur(8px);border-bottom:1px solid var(--card-border);padding:8px 12px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--header-bg);background:rgba(0,0,0,0.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--card-border);padding:8px 12px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;}
 .topbar .brand{font-size:17px;font-weight:800;color:var(--pri);letter-spacing:1px;flex-shrink:0;order:1;display:inline-flex;align-items:baseline;}
 .topbar .today{order:3;flex:1 1 100%;width:100%;text-align:center;font-size:11.5px;color:var(--text-sub);font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}
 .topbar .actions{order:2;display:flex;gap:4px;align-items:center;flex:1;min-width:0;justify-content:flex-end;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
@@ -190,7 +174,7 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
 .subtab{flex-shrink:0;padding:10px 16px;height:44px;border-radius:22px;background:var(--input-bg);border:1px solid var(--input-border);font-size:14px;color:var(--text-sub);white-space:nowrap;transition:all .2s;cursor:pointer;}
 .subtab.active{background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600;}
 body.theme-wu .subtab{background:#1A1625;border-color:rgba(107,92,165,0.25);color:#B8A9D9;}
-body.theme-wu .subtab.active{background:linear-gradient(135deg,#6B5CA5,#8B7EC8);color:#fff;border-color:#6B5CA5;box-shadow:0 0 16px rgba(107,92,165,0.25);}
+body.theme-wu .subtab.active{background:linear-gradient(135deg,#6B5CA5,#8B7EC8);color:#fff;border-color:#6B5CA5;box-shadow:0 0 8px rgba(107,92,165,0.15);}
 .page{display:none;padding:8px 16px calc(70px + var(--kb-offset) + env(safe-area-inset-bottom));}
 .page.active{display:block;}
 .section{display:none;}
@@ -293,7 +277,7 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 /* ============================================================ */
 /* Section CSS-05 塔罗/星座/灵数 + 复制栏/说明                 */
 /* ============================================================ */
-.copy-bar{position:sticky;bottom:72px;z-index:40;display:flex;gap:8px;padding:8px 16px;background:var(--header-bg);backdrop-filter:blur(6px);}
+.copy-bar{position:sticky;bottom:72px;z-index:40;display:flex;gap:8px;padding:8px 16px;background:var(--header-bg);background:rgba(0,0,0,0.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
 .copy-btn{flex:1;height:40px;background:var(--pri);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;}
 .copy-btn.ok{background:var(--good);}
 .disclaimer{position:fixed;bottom:68px;left:0;right:0;z-index:30;text-align:center;font-size:10px;color:var(--text-hint);padding:4px 12px;background:var(--header-bg);pointer-events:none;}
@@ -1066,7 +1050,7 @@ body.theme-dark .term {
   .lingshu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px auto;max-width:320px;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--card-border);box-shadow:var(--wu-shadow-card);}
   .lingshu-cell{aspect-ratio:1;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;position:relative;transition:all .35s ease;}
   .lingshu-cell.empty{background:var(--bg);opacity:.45;border-style:dashed;}
-  .lingshu-cell.main{background:rgba(107,92,165,0.12);color:#F0E6FF;box-shadow:0 0 16px rgba(107,92,165,0.20);border:1px solid rgba(139,126,200,0.45);}
+  .lingshu-cell.main{background:rgba(107,92,165,0.12);color:#F0E6FF;box-shadow:0 0 8px rgba(107,92,165,0.12);border:1px solid rgba(139,126,200,0.45);}
   .lingshu-cell .num{font-size:22px;font-weight:800;color:var(--text);line-height:1;}
   .lingshu-cell.main .num{font-size:36px;font-weight:900;color:#8B7EC8;text-shadow:0 0 16px rgba(139,126,200,0.40);}
   .lingshu-cell .kw{font-size:10px;text-align:center;margin-top:2px;line-height:1.15;color:var(--text-sub);}
