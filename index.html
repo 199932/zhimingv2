@@ -1281,6 +1281,17 @@ body.banner-show{padding-top:40px;}
     <div id="bz-tst" class="tst-info" style="display:none;"></div>
     <button class="btn-primary" onclick="window.calcBazi()">开 始 排 盘</button></div>
     <div class="result" id="bz-result"></div>
+    <div class="card" id="cn-western-view" style="display:none;margin-top:12px;">
+      <div class="card-title">🌐 西方视角 · 星座与灵数</div>
+      <div style="display:flex;gap:12px;align-items:center;padding:8px 0;">
+        <div id="cn-zodiac-sym" style="font-size:36px;">♈</div>
+        <div>
+          <div id="cn-zodiac-name" style="font-size:16px;font-weight:700;">白羊座</div>
+          <div id="cn-lingshu-num" style="font-size:14px;color:var(--text-sub);">生命灵数：<b style="color:var(--pri);">9</b></div>
+        </div>
+        <button class="btn-primary" style="margin-left:auto;flex:0 0 auto;width:auto;padding:0 16px;" onclick="window.switchTab('wu');window.switchSec('wu','wu2');">查看星座运势</button>
+      </div>
+    </div>
     <div class="foot-disclaimer">※ 八字排盘结果仅供娱乐参考，不构成人生决策建议</div>
   </div>
   <!-- 回测 -->
@@ -1507,6 +1518,17 @@ body.banner-show{padding-top:40px;}
     <div class="subtab" data-sec="wu5" role="tab" aria-selected="false">📖 答案之书</div>
   </div>
   <div class="section active" id="sec-wu1">
+    <div class="profile-badge-mini" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(107,92,165,0.08);border:1px solid rgba(107,92,165,0.15);border-radius:10px;margin-bottom:12px;font-size:12px;color:var(--text-sub);">
+      <span style="font-size:14px;">👤</span>
+      <span class="wu-pf-name">未选择档案</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-birth">--</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-zodiac">♈ --</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-lingshu">🔢 --</span>
+      <button style="margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid rgba(107,92,165,0.25);background:rgba(107,92,165,0.10);color:var(--text-sub);font-size:11px;cursor:pointer;" onclick="window.switchTab('cn');window.switchSec('cn','cn1');">切换档案</button>
+    </div>
     <div class="card" id="tarotDailyCard" style="display:none;">
       <div class="card-title">🌅 今日塔罗日签</div>
       <div id="tarotDailyContent" style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;"></div>
@@ -1531,6 +1553,17 @@ body.banner-show{padding-top:40px;}
     <div class="foot-disclaimer">※ 塔罗占卜仅供娱乐参考与自我觉察之用</div>
   </div>
   <div class="section" id="sec-wu2">
+    <div class="profile-badge-mini" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(107,92,165,0.08);border:1px solid rgba(107,92,165,0.15);border-radius:10px;margin-bottom:12px;font-size:12px;color:var(--text-sub);">
+      <span style="font-size:14px;">👤</span>
+      <span class="wu-pf-name">未选择档案</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-birth">--</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-zodiac">♈ --</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-lingshu">🔢 --</span>
+      <button style="margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid rgba(107,92,165,0.25);background:rgba(107,92,165,0.10);color:var(--text-sub);font-size:11px;cursor:pointer;" onclick="window.switchTab('cn');window.switchSec('cn','cn1');">切换档案</button>
+    </div>
     <div class="card">
       <div class="card-title">♈ 十二星座 · 运势速查</div>
       <div class="zodiac-grid" id="zodiacGrid"></div>
@@ -1553,6 +1586,17 @@ body.banner-show{padding-top:40px;}
   </div>
   <!-- 生命灵数 -->
   <div class="section" id="sec-wu3">
+    <div class="profile-badge-mini" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(107,92,165,0.08);border:1px solid rgba(107,92,165,0.15);border-radius:10px;margin-bottom:12px;font-size:12px;color:var(--text-sub);">
+      <span style="font-size:14px;">👤</span>
+      <span class="wu-pf-name">未选择档案</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-birth">--</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-zodiac">♈ --</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-lingshu">🔢 --</span>
+      <button style="margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid rgba(107,92,165,0.25);background:rgba(107,92,165,0.10);color:var(--text-sub);font-size:11px;cursor:pointer;" onclick="window.switchTab('cn');window.switchSec('cn','cn1');">切换档案</button>
+    </div>
     <div class="card"><div class="card-title">🔢 生命灵数 · 能量密码</div>
       <p class="hint">古希腊毕达哥拉斯流派：从出生日期解析命数、天赋数、生日数、个人年能量。</p>
       <div class="form-row"><label>🎂 公历出生日期</label><div class="inputs inline-3">
@@ -1579,6 +1623,17 @@ body.banner-show{padding-top:40px;}
     <div class="foot-disclaimer">※ 生命灵数为毕达哥拉斯数字神秘学，仅供娱乐与自我觉察</div>
   </div>
   <div class="section" id="sec-wu4">
+    <div class="profile-badge-mini" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(107,92,165,0.08);border:1px solid rgba(107,92,165,0.15);border-radius:10px;margin-bottom:12px;font-size:12px;color:var(--text-sub);">
+      <span style="font-size:14px;">👤</span>
+      <span class="wu-pf-name">未选择档案</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-birth">--</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-zodiac">♈ --</span>
+      <span style="color:var(--text-hint);">｜</span>
+      <span class="wu-pf-lingshu">🔢 --</span>
+      <button style="margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid rgba(107,92,165,0.25);background:rgba(107,92,165,0.10);color:var(--text-sub);font-size:11px;cursor:pointer;" onclick="window.switchTab('cn');window.switchSec('cn','cn1');">切换档案</button>
+    </div>
     <div class="card">
       <div class="card-title">ᚠ 卢恩符文 · 北欧古文字占卜</div>
       <p class="hint">源自北欧神话的古文字体系：单抽获取当下指引；三抽回望过去·现在·未来；六抽展开诺伦三女神的命运之网。</p>
@@ -5040,7 +5095,10 @@ function switchTab(page){
     if (typeof renderToday === "function") renderToday();
   }
   else if (page==="cn") document.body.classList.add("theme-cn");
-  else if (page==="wu") document.body.classList.add("theme-wu");
+  else if (page==="wu") {
+    document.body.classList.add("theme-wu");
+    try{ syncProfileToWuTabs(); }catch(_){}
+  }
   else if (page==="al") {
     document.body.classList.add("theme-al");
     if (!document.getElementById("almanac-body").innerHTML || _almanacOffset===0){
@@ -5450,6 +5508,7 @@ function calcBazi(){
   <div class="hint">提示：本结果基于简化版命理模型，仅供娱乐参考</div>
   `;
   document.getElementById("bz-result").innerHTML = enhanceResultHtml(html);
+  try{ updateWesternViewPanel(); }catch(_){}
   try{
     var __bzr = document.getElementById("bz-result");
     if(__bzr && typeof renderActSuggestBazi==='function'){
@@ -6128,6 +6187,86 @@ function detectZodiacIdx(month, day){
   if (md >= 1123 && md < 1222) return 8;
   return 9; // >= 1222 摩羯
 }
+
+/* =========================================================
+ *  P2: 八字 ⇄ 星座/灵数 跨体系联动
+ * =======================================================*/
+const LINGSHU_NUM_NAMES = {1:"领导者",2:"协调者",3:"表达者",4:"建设者",5:"自由者",6:"养育者",7:"探索者",8:"成就者",9:"博爱者"};
+function getWesternViewFromBirthday(y, m, d){
+  const zIdx = detectZodiacIdx(m, d);
+  const zodiac = ZODIAC_12[zIdx];
+  const ls = calcLingshuCore(y, m, d);
+  if(!ls || !zodiac) return null;
+  const numNames = LINGSHU_NUM_NAMES;
+  return {
+    zodiacSym: zodiac.sym,
+    zodiacName: zodiac.name + '座',
+    lifeNum: ls.lifePath,
+    lifeNumName: numNames[String(ls.lifePath)] || '未知'
+  };
+}
+try{ window.getWesternViewFromBirthday = getWesternViewFromBirthday; }catch(_){}
+
+/* 西玄各 subtab 顶部速览面板刷新 */
+function syncProfileToWuTabs(){
+  const p = (typeof getActiveProfile === 'function') ? getActiveProfile() : null;
+  document.querySelectorAll('.profile-badge-mini').forEach(function(el){
+    if(!p){
+      var nameEl = el.querySelector('.wu-pf-name');
+      if(nameEl) nameEl.textContent = '未选择档案';
+      var birthEl = el.querySelector('.wu-pf-birth');
+      if(birthEl) birthEl.textContent = '--';
+      var zodiacEl = el.querySelector('.wu-pf-zodiac');
+      if(zodiacEl) zodiacEl.textContent = '\u2648 --';
+      var lsEl = el.querySelector('.wu-pf-lingshu');
+      if(lsEl) lsEl.textContent = '\uD83D\uDD22 --';
+      return;
+    }
+    var y = p.year, m = p.month, d = p.day;
+    var nameEl2 = el.querySelector('.wu-pf-name');
+    if(nameEl2) nameEl2.textContent = (p.emoji || '\uD83D\uDC64') + ' ' + (p.name || '未命名');
+    var birthEl2 = el.querySelector('.wu-pf-birth');
+    if(birthEl2) birthEl2.textContent = (y && m && d) ? (y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0')) : '--';
+    var zEl = el.querySelector('.wu-pf-zodiac');
+    var lsEl2 = el.querySelector('.wu-pf-lingshu');
+    if(y && m && d){
+      var wv = getWesternViewFromBirthday(+y, +m, +d);
+      if(wv){
+        if(zEl) zEl.textContent = wv.zodiacSym + ' ' + wv.zodiacName;
+        if(lsEl2) lsEl2.textContent = '\uD83D\uDD22 ' + wv.lifeNum + ' · ' + wv.lifeNumName;
+      } else {
+        if(zEl) zEl.textContent = '\u2648 --';
+        if(lsEl2) lsEl2.textContent = '\uD83D\uDD22 --';
+      }
+    } else {
+      if(zEl) zEl.textContent = '\u2648 --';
+      if(lsEl2) lsEl2.textContent = '\uD83D\uDD22 --';
+    }
+  });
+}
+try{ window.syncProfileToWuTabs = syncProfileToWuTabs; }catch(_){}
+
+/* 八字页西方视角卡片刷新 */
+function updateWesternViewPanel(){
+  var p = (typeof getActiveProfile === 'function') ? getActiveProfile() : null;
+  var card = document.getElementById('cn-western-view');
+  if(!card) return;
+  if(!p || !p.year || !p.month || !p.day){
+    card.style.display = 'none';
+    return;
+  }
+  var wv = getWesternViewFromBirthday(+p.year, +p.month, +p.day);
+  if(!wv){ card.style.display = 'none'; return; }
+  var symEl = document.getElementById('cn-zodiac-sym');
+  var nameEl = document.getElementById('cn-zodiac-name');
+  var lsEl = document.getElementById('cn-lingshu-num');
+  if(symEl) symEl.textContent = wv.zodiacSym;
+  if(nameEl) nameEl.textContent = wv.zodiacName;
+  if(lsEl) lsEl.innerHTML = '生命灵数：<b style="color:var(--pri);">' + wv.lifeNum + '</b> · ' + wv.lifeNumName;
+  card.style.display = '';
+}
+try{ window.updateWesternViewPanel = updateWesternViewPanel; }catch(_){}
+
 let _curZodiacIdx = 0, _curZodiacPeriod = 0, _lastZodiacResult = null;
 function initZodiacUI(){
   const grid = document.getElementById("zodiacGrid");
@@ -13245,6 +13384,20 @@ function fillFormWithProfile(p){
     if (bdd) bdd.value = p.day;
     try{ localStorage.setItem("zhiming_zodiac_idx", String(zIdx)); }catch(e){}
   }
+  // 西玄联动：填入灵数 / 九宫日期
+  const lsy = document.getElementById("ls-year");
+  const lsm = document.getElementById("ls-month");
+  const lsd = document.getElementById("ls-day");
+  if (lsy) lsy.value = p.year || "";
+  if (lsm) lsm.value = p.month || "";
+  if (lsd) lsd.value = p.day || "";
+  const lsY = document.getElementById("ls-Y");
+  const lsM = document.getElementById("ls-M");
+  const lsD = document.getElementById("ls-D");
+  if (lsY) lsY.value = p.year || "";
+  if (lsM) lsM.value = p.month || "";
+  if (lsD) lsD.value = p.day || "";
+  if (typeof syncProfileToWuTabs === "function") syncProfileToWuTabs();
 }
 function setActiveProfile(id){
   window._activeProfileId = id || null;
@@ -13257,6 +13410,8 @@ function setActiveProfile(id){
   if (p) fillFormWithProfile(p);
   if (typeof renderToday === "function") renderToday();
   renderProfilesUI();
+  try{ syncProfileToWuTabs(); }catch(_){}
+  try{ updateWesternViewPanel(); }catch(_){}
 }
 function addProfile(data){
   const p = Object.assign({
