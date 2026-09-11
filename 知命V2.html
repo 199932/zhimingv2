@@ -6613,6 +6613,11 @@ function renderZodiac(silent){
     </div>
     <div class="hint">※ 评分由日期哈希算法自动生成，每日/每周/每月自动刷新，仅供娱乐</div>
   `;
+  // AI增强：添加文学化诗意解读层
+  try {
+    var zAi = _zodiacAIEnhance(_curZodiacIdx, p, scores, summaryText);
+    if(zAi) html += zAi;
+  } catch(_){}
   document.getElementById("zodiac-result").innerHTML = enhanceResultHtml(html);
   document.getElementById("copyBar").style.display = "flex";
   _lastZodiacResult = {zodiacIdx:_curZodiacIdx, period:p, date:dateStr, scores, summary:summaryText, zName:z.name, periodName:periodNames[p]};
@@ -9031,6 +9036,15 @@ function drawRunes(n, btn){
     }
   }catch(_){}
   document.getElementById('result-wu4').innerHTML = html;
+  // AI增强：添加文学化诗意解读层
+  try {
+    var mode = n===1 ? 'single' : 'three';
+    var rAi = _runeAIEnhance(cards, mode);
+    if(rAi) {
+      var rOut = document.getElementById('result-wu4');
+      if(rOut) rOut.insertAdjacentHTML('beforeend', rAi);
+    }
+  } catch(_){}
 }
 try{ window.drawRunes = drawRunes; }catch(_){}
 
@@ -13268,6 +13282,11 @@ function renderTarotInterpretation(cards, question, spread){
     </div>`;
   }
   _tarotCopyBuf = buildTarotCopyText(cards, question, spread);
+  // AI增强：添加文学化诗意解读层
+  try {
+    var aiHtml = _tarotAIPrelude(cards, question, spread);
+    if(aiHtml) html = aiHtml + html;
+  } catch(_){}
   return html;
 }
 let _tarotCopyBuf = "";
@@ -16873,6 +16892,14 @@ function calcLingshu(){
     </div>
   `;
   document.getElementById("ls-result").innerHTML = enhanceResultHtml(html);
+  // AI增强：添加文学化诗意解读层
+  try {
+    var lAi = _lingshuAIEnhance(r);
+    if(lAi) {
+      var lOut = document.getElementById("ls-result");
+      if(lOut) lOut.insertAdjacentHTML("beforeend", lAi);
+    }
+  } catch(_){}
   document.getElementById("copyBar").style.display = "flex";
   addHistory("lingshu", {year:Y,month:M,day:D}, r, `灵数${lifeNum}${isMaster?'(卓越数)':''} · ${thisYear}流年${personalYear}`);
   try{showToast('✅ 解读完成','success',1200);}catch(_){}
@@ -19167,6 +19194,11 @@ function _renderLenormandResult(cards){
             '<div class="lenormand-combo-title">🔮 组合指引</div>'+
             '<div class="lenormand-combo-text">'+_lenormandComboReading(cards)+'</div></div>';
   }
+  // AI增强：添加文学化诗意解读层
+  try {
+    var lenAi = _lenormandAIEnhance(cards, _lenormandCurrentSpread);
+    if(lenAi) html += lenAi;
+  } catch(_){}
   result.innerHTML = html;
   result.style.display = 'block';
 }
@@ -19218,6 +19250,211 @@ window.speakLenormand = function(){
     window.speakText && window.speakText(text);
   }catch(e){}
 };
+
+
+/* ===== AI 风格解读增强层 ===== */
+/* 为塔罗、星座、灵数等占卜模块添加文学化、情感化的诗意解读 */
+
+// 1. 塔罗 AI 增强
+function _tarotAIPrelude(cards, question, spread){
+  const spreadNames = {single:"单牌启示",triangle:"圣三角",choice:"二选一"};
+  const cardNames = cards.map(c => TAROT_DATA[c.id].name + (c.reversed?"(逆)":""));
+  
+  // 文学化开场白模板库
+  const openers = [
+    "宇宙的能量在牌阵中悄然流动，每一张牌都是一个微缩的世界，诉说着属于你的独特故事。",
+    "当牌面在星夜中缓缓展开，时间的褶皱里藏着命运的私语。让我们聆听这些古老符号的启示。",
+    "星辰之下，牌阵如一幅神秘的画卷徐徐展开。每一道纹路都在诉说着关于你内心深处的回响。",
+    "在这片由78张牌编织的迷宫中，你抽到的每一张都是宇宙对你当下的温柔回应。"
+  ];
+  const closer = [
+    "塔罗从不预言绝对的未来，它只是映照你内心深处的光与影。愿这些启示成为你前行路上的温柔灯塔。",
+    "牌面的故事已经讲述完毕，但属于你的篇章还在继续书写。带着这份觉知，勇敢地走出下一步。",
+    "记住，塔罗是镜子而非判决书。你看到的每一张牌，都是你灵魂深处的投射与回响。",
+    "当牌阵归于宁静，真正的解读才刚刚开始——那就是你如何将这份觉知融入生活的每一个当下。"
+  ];
+  
+  // 根据牌阵类型选择情境联想
+  let scenario = "";
+  if(spread.count === 1){
+    const c = cards[0];
+    const t = TAROT_DATA[c.id];
+    scenario = `「${t.name}」作为今日的唯一信使，携带着${c.reversed?'被遮蔽的':'清晰的'}讯息来到你面前。这张牌${c.reversed?'提醒你注意那些尚未被正视的内在卡点':'为你指明当前最需关注的能量方向'}。`;
+  } else if(spread.count === 3){
+    const past = cards[0], present = cards[1], future = cards[2];
+    scenario = `三张牌串联起时间的河流：「${TAROT_DATA[past.id].name}」映照来时的足迹，「${TAROT_DATA[present.id].name}」锚定当下的坐标，而「${TAROT_DATA[future.id].name}」在远方隐约勾勒出前路的方向。它们共同编织的叙事，正在为你揭示一段${question ? '关于「'+question+'」' : ''}的深层真相。`;
+  } else if(spread.count >= 5){
+    scenario = `五张牌如五颗星辰，在牌阵的宇宙中有序排列。它们各自守护着不同的维度——现状、选择、阻碍、助力与最终走向。当这些碎片拼接在一起，一幅关于${question ? '「'+question+'」' : '你当前处境'}的完整图景正在缓缓浮现。`;
+  }
+  
+  // 元素能量分析诗意化
+  const elementCounts = {fire:0,water:0,air:0,earth:0};
+  cards.forEach(c => {
+    const suit = TAROT_DATA[c.id].suit;
+    if(suit==='wands') elementCounts.fire++;
+    else if(suit==='cups') elementCounts.water++;
+    else if(suit==='swords') elementCounts.air++;
+    else if(suit==='pentacles') elementCounts.earth++;
+  });
+  let elementText = "";
+  const maxE = Math.max(...Object.values(elementCounts));
+  if(maxE > 0){
+    const dominant = Object.entries(elementCounts).filter(([k,v])=>v===maxE).map(([k])=>k);
+    const elNames = {fire:"火焰",water:"流水",air:"清风",earth:"大地"};
+    const elDesc = {
+      fire:"燃烧着行动的热情与创造的渴望",
+      water:"流淌着情感的深度与直觉的涌动", 
+      air:"吹拂着思维的风暴与沟通的轻盈",
+      earth:"沉淀着物质的稳固与务实的根基"
+    };
+    if(dominant.length === 1){
+      elementText = `牌阵中${elNames[dominant[0]]}的能量最为充沛，${elDesc[dominant[0]]}。这股力量正指引你在当下${dominant[0]==='fire'?'勇往直前':dominant[0]==='water'?'倾听内心':dominant[0]==='air'?'理性分析':'脚踏实地'}。`;
+    }
+  }
+  
+  // 逆位诗意提示
+  let reversedText = "";
+  const revCards = cards.filter(c => c.reversed);
+  if(revCards.length > 0){
+    const revNames = revCards.map(c => "「"+TAROT_DATA[c.id].name+"」").join("、");
+    reversedText = `值得注意的是，${revNames}以逆位现身——这并非厄运的预告，而是宇宙在温柔地提醒你：那些被忽略的能量、未被消化的课题，正在等待你的正视与转化。`;
+  }
+  
+  const opener = openers[Math.floor(Math.random()*openers.length)];
+  const close = closer[Math.floor(Math.random()*closer.length)];
+  
+  return `<div class="card" style="padding:14px;border-left:3px solid var(--pri-wu);">
+    <div style="font-size:13px;font-weight:700;color:var(--pri-wu);margin-bottom:8px;">🌙 AI 深度解读</div>
+    <div style="font-size:12px;color:var(--text-sub);line-height:1.8;margin-bottom:10px;">${opener}</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.8;margin-bottom:10px;font-style:italic;">${scenario}</div>
+    ${elementText ? '<div style="font-size:12px;color:var(--text);line-height:1.8;margin-bottom:10px;">'+elementText+'</div>' : ''}
+    ${reversedText ? '<div style="font-size:12px;color:var(--warn);line-height:1.8;margin-bottom:10px;">'+reversedText+'</div>' : ''}
+    <div style="font-size:12px;color:var(--text-hint);line-height:1.8;border-top:1px dashed var(--line);padding-top:10px;margin-top:10px;">${close}</div>
+  </div>`;
+}
+
+// 2. 星座 AI 增强
+function _zodiacAIEnhance(zodiacIdx, period, scores, summaryText){
+  const z = ZODIAC_12[zodiacIdx];
+  const periodNames = ["今日","本周","本月"];
+  
+  // 运势等级诗意化
+  const overall = scores[0];
+  let fortunePoem = "";
+  if(overall >= 90) fortunePoem = "星辰为你点亮整片夜空，这是一个被宇宙特别眷顾的时刻。你的每一步都踩在幸运的节拍上，大胆去拥抱那些让你心动的可能性吧。";
+  else if(overall >= 80) fortunePoem = "阳光穿过云层洒落在你身上，温暖的能量正在悄悄汇聚。保持开放的心态，美好的事物正在向你靠近。";
+  else if(overall >= 70) fortunePoem = "潮汐有涨落，星辰有明暗。此刻的你正处于一个平稳的波段，不疾不徐地前行，反而能看到别人忽略的风景。";
+  else if(overall >= 60) fortunePoem = "夜色虽深，但黎明从未缺席。这段低能量的时期，是宇宙留给你沉淀与反思的礼物。耐心守候，转机已在路上。";
+  else fortunePoem = "暴风雨是天空的洗礼，低谷是重生的前奏。请相信，最黑暗的时刻往往孕育着最璀璨的光芒。给自己多一些温柔与等待。";
+  
+  // 分项运势诗意解读
+  const aspects = [
+    {name:"爱情",score:scores[1],high:"心动如春风拂面，适合主动表达心意或与伴侣共度浪漫时光。",mid:"感情需要用心经营，真诚的沟通比华丽的承诺更有力量。",low:"给彼此一些空间，过度的紧逼只会让心更远。静待花开，自有佳期。"},
+    {name:"事业",score:scores[2],high:"你的才华正在被看见，重要的机会已经敲响门扉。准备好迎接属于你的舞台。",mid:"稳扎稳打是当下的最佳策略，默默积累终将在某个时刻厚积薄发。",low:"暂时的阻滞是为了更好的出发。利用这段时间充电学习，等待风来的那一刻。"},
+    {name:"财运",score:scores[3],high:"财富之门向你敞开，但记住：慷慨分享的人，才能留住真正的富足。",mid:"收支平稳，适合制定长期的理财规划。积沙成塔，时间会给你答案。",low:"保守为上，避免冲动消费和高风险投资。有时候，不亏就是赢。"},
+    {name:"健康",score:scores[4],high:"身心轻盈如羽，是开启新运动计划或调整作息的最佳时机。",mid:"注意劳逸结合，身体的微小信号值得被认真对待。一杯温水、一段散步，都是对自己的温柔。",low:"身体在呼唤你的关注。放下忙碌，给自己一段真正的休息时间。健康是一切的基础。"}
+  ];
+  
+  let aspectHtml = aspects.map(a => {
+    let text = a.score >= 80 ? a.high : a.score >= 70 ? a.mid : a.low;
+    let color = a.score >= 80 ? 'var(--good)' : a.score >= 70 ? 'var(--warn)' : 'var(--bad)';
+    return `<div style="margin:6px 0;padding:8px;border-radius:8px;background:var(--input-bg);">
+      <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:3px;">${a.name} · ${a.score}分</div>
+      <div style="font-size:11px;color:var(--text-sub);line-height:1.6;">${text}</div>
+    </div>`;
+  }).join("");
+  
+  return `<div class="card" style="padding:14px;border-left:3px solid var(--pri-wu);margin-top:10px;">
+    <div style="font-size:13px;font-weight:700;color:var(--pri-wu);margin-bottom:8px;">✨ ${z.name}座的${periodNames[period]}星语</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.8;margin-bottom:10px;font-style:italic;">${fortunePoem}</div>
+    <div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-bottom:10px;">${summaryText}</div>
+    <div style="border-top:1px dashed var(--line);padding-top:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">各领域星象指引</div>
+      ${aspectHtml}
+    </div>
+    <div style="font-size:11px;color:var(--text-hint);margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);line-height:1.6;">
+      🌟 小贴士：${z.en}的守护星正在${period===0?'今天':period===1?'本周':'本月'}散发着独特的频率。${z.name}座的你天生${z.traits ? z.traits[0] : '独特'}，善用这份天赋，${periodNames[period]}的每一刻都可以成为生命的礼物。
+    </div>
+  </div>`;
+}
+
+// 3. 灵数 AI 增强
+function _lingshuAIEnhance(core){
+  if(!core || !core.lifePath) return "";
+  
+  const lifePath = core.lifePath;
+  const pathPoems = {
+    1:"你是天生的开拓者，命运赋予你领导者的灵魂。像一颗孤独的北极星，你的光芒不需要太多的陪伴，却能照亮整片夜空。记住：真正的力量来自内心，而非外界的认可。",
+    2:"你是宇宙的调和者，敏感的触角能捕捉到最细微的情感波动。像一阵温柔的风，你轻轻拂过每个人的心田，带来慰藉与平衡。学会在给予与自我保护之间找到边界。",
+    3:"你是生命的诗人，创意的火花在你眼中永远闪烁。像一团永不熄灭的火焰，你用热情点燃周围的世界。但请记住，真正的艺术源于内心的宁静，而非外在的喧嚣。",
+    4:"你是大地的守护者，坚实的步伐踩出最可靠的轨迹。像一棵百年古树，你的根系深扎于现实的土壤。但别忘了，偶尔也要让枝叶随风起舞，拥抱生命的变化与惊喜。",
+    5:"你是自由的旅者，灵魂的翅膀渴望触碰每一片未知的天空。像一阵不羁的风，你无法被定义，也不愿被束缚。学会在自由与责任之间找到属于你的平衡点。",
+    6:"你是爱的园丁，用心血浇灌着每一段关系的花园。像一轮温暖的满月，你的光芒照亮了周围人的归途。但请记得，只有先爱护好自己，才能给予他人真正的温暖。",
+    7:"你是真理的探索者，深邃的目光穿透表象直达本质。像一位孤独的哲学家，你在沉默中寻找智慧的宝藏。偶尔走出思考的密室，让阳光照进你的世界。",
+    8:"你是命运的舵手，宏大的格局让你看到常人忽略的全景。像一位睿智的船长，你驾驭着生命的巨轮穿越风浪。但请记住，真正的成功不只是物质的丰裕，更是内心的圆满。",
+    9:"你是慈悲的使者，生命的终极课题在你身上浓缩成深沉的智慧。像一位历尽沧桑的智者，你携带着前世的记忆与今生的使命。学会在给予中保持边界，在慈悲中保持清醒。"
+  };
+  
+  const poem = pathPoems[lifePath] || `你的生命灵数是 ${lifePath}，这是宇宙赋予你的独特频率。在这组数字的振动中，藏着属于你的生命蓝图。深入探索它的含义，你会发现命运的密码正在你手中缓缓展开。`;
+  
+  return `<div class="card" style="padding:14px;border-left:3px solid var(--pri-wu);margin-top:10px;">
+    <div style="font-size:13px;font-weight:700;color:var(--pri-wu);margin-bottom:8px;">🔮 生命灵数 · 灵魂诗篇</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.8;margin-bottom:10px;font-style:italic;">${poem}</div>
+    <div style="font-size:11px;color:var(--text-hint);line-height:1.6;border-top:1px dashed var(--line);padding-top:8px;">
+      💡 觉知：你的生命路径数字 ${lifePath} 不仅是数学的组合，更是宇宙在你出生时写下的第一封信。每一次重要的抉择，都是与这封来信对话的时刻。
+    </div>
+  </div>`;
+}
+
+// 4. 卢恩 AI 增强
+function _runeAIEnhance(runes, mode){
+  if(!runes || runes.length === 0) return "";
+  
+  const runeNames = runes.map(r => r.name).join("、");
+  const runeMeanings = runes.map(r => r.meaning).join(" → ");
+  
+  let guidance = "";
+  if(mode === 'single'){
+    guidance = `「${runes[0].name}」如同一块古老的石碑，静静伫立在你的面前。它的纹路中刻着北欧先民的智慧，也在映照着你此刻内心的真实状态。`;
+  } else if(mode === 'three'){
+    guidance = `三块符石在命运之布上排列成神秘的阵列：「${runes[0].name}」揭示根源，「${runes[1].name}」锚定当下，「${runes[2].name}」指向远方。它们共同编织的故事，正在为你揭开一层被时间掩埋的真相。`;
+  }
+  
+  return `<div class="card" style="padding:14px;border-left:3px solid var(--pri-wu);margin-top:10px;">
+    <div style="font-size:13px;font-weight:700;color:var(--pri-wu);margin-bottom:8px;">ᚠ 卢恩符文 · 远古低语</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.8;margin-bottom:10px;font-style:italic;">${guidance}</div>
+    <div style="font-size:11px;color:var(--text-sub);line-height:1.6;margin-bottom:8px;">符文序列：${runeMeanings}</div>
+    <div style="font-size:11px;color:var(--text-hint);line-height:1.6;border-top:1px dashed var(--line);padding-top:8px;">
+      🌲 这些来自北欧远古的符号，每一块都承载着自然的力量。它们在提醒着你：答案不在远方，而在你内心深处那片未被开发的森林。
+    </div>
+  </div>`;
+}
+
+// 5. 雷诺曼 AI 增强
+function _lenormandAIEnhance(cards, spreadType){
+  if(!cards || cards.length === 0) return "";
+  
+  const cardNames = cards.map(c => "「"+c.name+"」").join(" → ");
+  const spreadNames = {'3card':'三张牌','9house':'九宫格','relation':'关系牌阵'};
+  
+  let prelude = "";
+  if(spreadType === '3card'){
+    prelude = `三张卡牌如同三扇窗户，分别朝向时间的三个维度。${cardNames}依次揭示了来时的足迹、当下的真相与前路的微光。在雷诺曼的世界里，符号从不撒谎，它们只是用沉默的语言讲述着你需要知道的一切。`;
+  } else if(spreadType === '9house'){
+    prelude = `九张卡牌在九宫格中织就一张精密的命运地图。每一格都守护着人生的一个面向，而核心位置的「${cards[4].name}」如同一面镜子，映照出此刻你最需要关注的生命议题。周围的八张牌是这道题的上下文，共同编织出属于你的完整叙事。`;
+  } else if(spreadType === 'relation'){
+    prelude = `五张卡牌如五位沉默的见证者，凝视着你与那个人之间的能量场。${cardNames}分别诉说着你的状态、对方的视角、关系的本质、横亘的障碍与最终的走向。雷诺曼从不判断对错，它只是温柔地揭示：这段关系的真实模样。`;
+  }
+  
+  return `<div class="card" style="padding:14px;border-left:3px solid var(--pri-wu);margin-top:10px;">
+    <div style="font-size:13px;font-weight:700;color:var(--pri-wu);margin-bottom:8px;">🃏 雷诺曼 · 符号密语</div>
+    <div style="font-size:12px;color:var(--text);line-height:1.8;margin-bottom:10px;font-style:italic;">${prelude}</div>
+    <div style="font-size:11px;color:var(--text-hint);line-height:1.6;border-top:1px dashed var(--line);padding-top:8px;">
+      🔮 在18世纪的欧洲沙龙里，雷诺曼卡牌曾是贵族与平民共享的秘密语言。今天，这些古老的符号依然在用它们的方式与你对话——只要你愿意倾听。
+    </div>
+  </div>`;
+}
+
 
   window.speakResult = function(resultId){
     if(!hasTTS){
