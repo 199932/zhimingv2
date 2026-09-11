@@ -1182,7 +1182,45 @@ body.banner-show{padding-top:40px;}
 .sk{background:linear-gradient(90deg,var(--bg) 0%,var(--card) 50%,var(--bg) 100%);background-size:200% 100%;animation:sk 1.2s linear infinite;border-radius:6px;}
 @keyframes sk{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 .daliuren-pan{margin:10px auto;max-width:320px;position:relative;aspect-ratio:1/1;}
-</style>
+/* ========== P0-P1 新增组件样式 ========== */
+/* 决策币 */
+.coin-flip-wrap{text-align:center;padding:20px 0;}
+.coin-flip-container{width:160px;height:160px;margin:0 auto 12px;perspective:600px;cursor:pointer;}
+.coin-flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1.2s ease-in-out;}
+.coin-flip-inner.flipping{transform:rotateY(1080deg);}
+.coin-face{position:absolute;inset:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;backface-visibility:hidden;border:3px solid #D4AF37;}
+.coin-face.front{background:linear-gradient(135deg,#6B5CA5,#8B7EC8);color:#fff;}
+.coin-face.back{background:linear-gradient(135deg,#8B7EC8,#B8A9D9);color:#fff;transform:rotateY(180deg);}
+.coin-result{font-size:18px;font-weight:700;margin-top:8px;min-height:28px;}
+/* 决策转盘 */
+.wheel-wrap{text-align:center;padding:10px 0;}
+.wheel-svg-wrap{position:relative;width:280px;height:280px;margin:0 auto 12px;}
+.wheel-svg{width:100%;height:100%;transition:transform 3.5s cubic-bezier(0.25,0.1,0.25,1);}
+.wheel-pointer{position:absolute;top:50%;left:50%;width:0;height:0;margin-left:-12px;margin-top:-24px;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:24px solid #D4AF37;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));z-index:2;}
+.wheel-result-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:14px;margin-top:10px;text-align:center;font-size:16px;font-weight:700;color:var(--text);}
+/* 今日推送 */
+.notify-toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;margin-top:14px;cursor:pointer;}
+.notify-toggle-row .nt-left{display:flex;align-items:center;gap:10px;}
+.notify-toggle-row .nt-icon{font-size:20px;}
+.notify-toggle-row .nt-text{font-size:14px;font-weight:600;color:var(--text);}
+.notify-toggle-row .nt-sub{font-size:11px;color:var(--text-hint);margin-top:2px;}
+.notify-toggle-row .nt-switch{width:44px;height:24px;border-radius:12px;background:var(--track-bg);position:relative;transition:background .2s;flex-shrink:0;}
+.notify-toggle-row .nt-switch.on{background:var(--good);}
+.notify-toggle-row .nt-switch::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.notify-toggle-row .nt-switch.on::after{left:22px;}
+/* 找合适的日子卡片 */
+.find-day-card{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:14px;margin:14px 0;}
+.find-day-card .fdc-title{font-size:14px;font-weight:700;color:var(--pri);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.find-day-card .fdc-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.find-day-card .fdc-btn{flex:1;min-width:80px;height:38px;border-radius:10px;border:1px solid var(--pri);background:var(--pri-light);color:var(--pri-dark);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.find-day-card .fdc-btn:active{transform:scale(.96);}
+.find-day-card .fdc-link{font-size:12px;color:var(--text-hint);text-decoration:underline;cursor:pointer;}
+/* 雷达图 */
+.radar-wrap{display:flex;justify-content:center;margin:14px 0;}
+.radar-wrap svg{width:100%;max-width:320px;height:auto;}
+/* 准确率看板 */
+.acc-board{padding:10px 0;}
+  </style>
 </head>
 <body class="theme-light">
 <div id="errBox" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#D32F2F;color:#fff;padding:10px 14px;font:13px/1.5 -apple-system,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.35);">
@@ -1516,6 +1554,8 @@ body.banner-show{padding-top:40px;}
     <div class="subtab" data-sec="wu3" role="tab" aria-selected="false">🔢 生命灵数</div>
     <div class="subtab" data-sec="wu4" role="tab" aria-selected="false">ᚠ 卢恩符文</div>
     <div class="subtab" data-sec="wu5" role="tab" aria-selected="false">📖 答案之书</div>
+    <div class="subtab" data-sec="wu6" role="tab" aria-selected="false">🪙 决策币</div>
+    <div class="subtab" data-sec="wu7" role="tab" aria-selected="false">🎡 转盘</div>
   </div>
   <div class="section active" id="sec-wu1">
     <div class="profile-badge-mini" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(107,92,165,0.08);border:1px solid rgba(107,92,165,0.15);border-radius:10px;margin-bottom:12px;font-size:12px;color:var(--text-sub);">
@@ -1658,6 +1698,42 @@ body.banner-show{padding-top:40px;}
     <div class="result" id="result-wu5" aria-live="polite"></div>
     <div class="foot-disclaimer">※ 答案之书仅为随机启示，请理性看待，人生决策请结合实际情况</div>
   </div>
+  <!-- 决策币 -->
+  <div class="section" id="sec-wu6">
+    <div class="card">
+      <div class="card-title">🪙 决策币 · Coin Flip</div>
+      <p class="hint">有件事犹豫不决？让命运帮你抛个硬币。</p>
+      <div class="coin-flip-wrap" role="button" tabindex="0" aria-label="点击抛硬币" onclick="window.flipCoin()" onkeydown="if(event.key==='Enter'||event.key===' ')window.flipCoin()">
+        <div class="coin-flip-container">
+          <div class="coin-flip-inner" id="coinFlipInner">
+            <div class="coin-face front" aria-hidden="true">✅<br>正面</div>
+            <div class="coin-face back" aria-hidden="true">❌<br>反面</div>
+          </div>
+        </div>
+        <div class="coin-result" id="coinFlipResult" aria-live="polite">点击硬币开始</div>
+      </div>
+    </div>
+    <div class="foot-disclaimer">※ 决策币仅供娱乐，重大决策请结合实际情况</div>
+  </div>
+  <!-- 小决定转盘 -->
+  <div class="section" id="sec-wu7">
+    <div class="card">
+      <div class="card-title">🎡 小决定转盘 · Decision Wheel</div>
+      <p class="hint">输入2-8个选项（用逗号分隔），让转盘帮你做选择。</p>
+      <div class="form-row"><label>选项列表</label>
+        <textarea id="wheelOptions" placeholder="例如：是,否,再想想,听天由命" style="height:60px;">是,否,再想想,听天由命</textarea>
+      </div>
+      <button class="btn-primary" onclick="window.spinWheel()">🎯 开始转动</button>
+      <div class="wheel-wrap">
+        <div class="wheel-svg-wrap">
+          <svg class="wheel-svg" id="wheelSvg" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="wheel-pointer"></div>
+        </div>
+        <div class="wheel-result-card" id="wheelResult" aria-live="polite" style="display:none;"></div>
+      </div>
+    </div>
+    <div class="foot-disclaimer">※ 转盘结果仅供娱乐，重要决定请理性思考</div>
+  </div>
 </div>
 
 <!-- ===== 黄历主Tab ===== -->
@@ -1765,7 +1841,7 @@ body.banner-show{padding-top:40px;}
         如果知命 V2 对你有帮助<br>欢迎请作者喝杯咖啡 ☕<br>你的支持是持续更新的动力 ❤️
       </p>
       <div class="donate-qr-wrap">
-        <img id="donateQrImg" class="donate-qr-img" src="" alt="微信收款码" />
+        <img id="donateQrImg" class="donate-qr-img" src="qrcode.png" alt="微信收款码" />
         <div id="donateQrPlaceholder" class="donate-qr-placeholder">
           <span style="font-size:40px;">📷</span>
           <span>还没有收款码<br>点下方按钮从相册选择</span>
@@ -7030,6 +7106,15 @@ function renderToday(){
         <div class="tmc-ji"><div class="yj-t">❌ 忌</div><div class="yj-list">${jiList||'<span class="yj-tag">无</span>'}</div></div>
       </div>
     </div>
+    <div class="find-day-card" id="todayFindDayCard">
+      <div class="fdc-title">🔍 找合适的日子</div>
+      <div class="fdc-btns">
+        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();document.getElementById('dayPickerYi').value='嫁娶';document.getElementById('dayPickerSearch').click();}catch(_){}},120);">宜嫁娶</button>
+        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();document.getElementById('dayPickerYi').value='出行';document.getElementById('dayPickerSearch').click();}catch(_){}},120);">宜出行</button>
+        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();document.getElementById('dayPickerYi').value='签约';document.getElementById('dayPickerSearch').click();}catch(_){}},120);">宜签约</button>
+      </div>
+      <div class="fdc-link" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();}catch(_){}},80);">自定义筛选 →</div>
+    </div>
     <div id="fortuneBigBlock">
       ${(typeof window.renderWidget_fortuneGrid==='function'?window.renderWidget_fortuneGrid(r):'<div style="color:var(--text-hint);padding:20px;text-align:center;font-size:12px;">运势组件加载中…</div>')}
     </div>
@@ -7042,6 +7127,16 @@ function renderToday(){
       ${(typeof window['renderWidget_festivalCountdown']==='function'?window['renderWidget_festivalCountdown'](r):'<div class="widget"><div class="widget-title">⏳ 下一节日</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_yijiRadar']==='function'?window['renderWidget_yijiRadar'](r):'<div class="widget"><div class="widget-title">📈 本月宜忌雷达</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_peopleShortcut']==='function'?window['renderWidget_peopleShortcut'](r):'<div class="widget"><div class="widget-title">⭐ 人物快捷</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
+    </div>
+    <div class="notify-toggle-row" id="notifyToggleRow" onclick="window.toggleDailyNotify()" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')window.toggleDailyNotify()" aria-live="polite">
+      <div class="nt-left">
+        <div class="nt-icon">🔔</div>
+        <div>
+          <div class="nt-text">开启每日推送</div>
+          <div class="nt-sub">每天首次打开时提醒今日运势</div>
+        </div>
+      </div>
+      <div class="nt-switch" id="notifySwitch"></div>
     </div>
   `;
   archiveDailyTarot(td, dateStr);
@@ -18068,6 +18163,343 @@ if(typeof window.toast !== 'function'){
     document.body.appendChild(t);
     setTimeout(()=>{try{ t.style.opacity='0';t.style.transition='opacity .4s';}catch(_){}}, ms-400);
     setTimeout(()=>{try{ document.body.removeChild(t);}catch(_){}}, ms);
+  };
+}
+window.saveShareCardPNG = saveShareCardPNG;
+
+/* =========================================================
+ *  P0-P1 新增功能函数
+ * =======================================================*/
+/* ---- 1. 决策币 ---- */
+window.flipCoin = function(){
+  const inner = document.getElementById('coinFlipInner');
+  const result = document.getElementById('coinFlipResult');
+  if(!inner || !result) return;
+  inner.classList.add('flipping');
+  result.textContent = '抛掷中…';
+  setTimeout(function(){
+    const isFront = Math.random() > 0.5;
+    inner.classList.remove('flipping');
+    inner.style.transform = isFront ? 'rotateY(0deg)' : 'rotateY(180deg)';
+    result.textContent = isFront ? '✅ 正面' : '❌ 反面';
+    try{ if(window.__userTapped && typeof navigator !== 'undefined' && navigator.vibrate){ navigator.vibrate(80); } }catch(_){}
+  }, 1200);
+};
+/* ---- 2. 决策转盘 ---- */
+window.spinWheel = function(){
+  const input = document.getElementById('wheelOptions');
+  const svg = document.getElementById('wheelSvg');
+  const result = document.getElementById('wheelResult');
+  if(!input || !svg || !result) return;
+  let opts = input.value.split(/[,，]/).map(function(s){return s.trim();}).filter(Boolean);
+  if(opts.length < 2){ opts = ['是','否','再想想','听天由命']; input.value = opts.join(','); }
+  if(opts.length > 8) opts = opts.slice(0,8);
+  const n = opts.length;
+  const colors = ['#6B5CA5','#8B7EC8','#D4AF37','#9B8ED6','#5A4A8A','#B8A9D9','#E8E4F2','#4A3A7C'];
+  let paths = '';
+  const cx=140, cy=140, r=130;
+  for(let i=0;i<n;i++){
+    const a1 = (i/n)*Math.PI*2 - Math.PI/2;
+    const a2 = ((i+1)/n)*Math.PI*2 - Math.PI/2;
+    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+    const x2=cx+r*Math.cos(a2), y2=cy+r*Math.sin(a2);
+    const la = n<=4?0:1;
+    paths += '<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+la+' 1 '+x2+','+y2+' Z" fill="'+colors[i%colors.length]+'" stroke="#242030" stroke-width="1.5"/>';
+    const ma = (a1+a2)/2;
+    const tx=cx+(r*0.6)*Math.cos(ma), ty=cy+(r*0.6)*Math.sin(ma);
+    paths += '<text x="'+tx+'" y="'+ty+'" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="13" font-weight="700">'+opts[i].replace(/</g,'&lt;')+'</text>';
+  }
+  svg.innerHTML = paths;
+  result.style.display = 'none';
+  const extra = Math.floor(Math.random()*2 + 3);
+  const stopAngle = Math.random()*360;
+  const totalRot = extra*360 + stopAngle;
+  svg.style.transform = 'rotate('+totalRot+'deg)';
+  setTimeout(function(){
+    const finalAngle = ((stopAngle % 360) + 360) % 360;
+    const idx = Math.floor(((360 - finalAngle + 90) % 360) / (360/n)) % n;
+    result.textContent = '🎯 命运选中：' + opts[idx];
+    result.style.display = '';
+    try{ if(window.__userTapped && typeof navigator !== 'undefined' && navigator.vibrate){ navigator.vibrate([60,40,60]); } }catch(_){}
+  }, 3500);
+};
+/* ---- 3. 今日运势推送 ---- */
+window.toggleDailyNotify = function(){
+  try{
+    const KEY='zhiming_v2_notify_perm';
+    const KEY_LAST='zhiming_v2_notify_last_day';
+    const saved = localStorage.getItem(KEY);
+    if(saved==='granted'){
+      localStorage.removeItem(KEY);
+      localStorage.removeItem(KEY_LAST);
+      _updateNotifyToggleUI(false);
+      try{ showToast('已关闭每日推送','info',1000); }catch(_){}
+      return;
+    }
+    if(typeof Notification !== 'undefined' && Notification.requestPermission){
+      Notification.requestPermission().then(function(p){
+        try{ localStorage.setItem(KEY, p); }catch(_){}
+        _updateNotifyToggleUI(p==='granted');
+        if(p==='granted'){
+          localStorage.setItem(KEY_LAST, new Date().toDateString());
+          try{ showToast('已开启每日推送 ✅','success',1200); }catch(_){}
+        }else{
+          try{ showToast('通知权限被拒绝','warn',1200); }catch(_){}
+        }
+      });
+    }
+  }catch(_){}
+};
+function _updateNotifyToggleUI(on){
+  const sw = document.getElementById('notifySwitch');
+  if(sw) sw.classList.toggle('on', !!on);
+}
+function _checkDailyNotifyOnInit(){
+  try{
+    const KEY='zhiming_v2_notify_perm';
+    const KEY_LAST='zhiming_v2_notify_last_day';
+    const saved = localStorage.getItem(KEY);
+    const isGranted = saved==='granted' || (typeof Notification !== 'undefined' && Notification.permission==='granted');
+    _updateNotifyToggleUI(isGranted);
+    if(!isGranted) return;
+    const today = new Date().toDateString();
+    const last = localStorage.getItem(KEY_LAST);
+    if(last !== today){
+      localStorage.setItem(KEY_LAST, today);
+      try{
+        new Notification('知命V2 · 今日运势', { body: '点击查看今日综合运势与塔罗指引', icon: './icon-192.png' });
+      }catch(_){}
+    }
+  }catch(_){}
+}
+/* ---- 4. 历史准确率看板增强 ---- */
+window.renderHistoryWithAccuracyBoard = function(){
+  try{ renderHistory(); }catch(_){}
+  try{ _injectAccuracyBoardIntoHistModal(); }catch(_){}
+};
+function _injectAccuracyBoardIntoHistModal(){
+  const list = document.getElementById('histList');
+  if(!list) return;
+  let board = document.getElementById('histAccBoard');
+  if(!board){
+    board = document.createElement('div');
+    board.id = 'histAccBoard';
+    board.className = 'acc-board';
+    list.parentNode.insertBefore(board, list);
+  }
+  board.innerHTML = _buildAccuracyBoardHTML();
+}
+function _buildAccuracyBoardHTML(){
+  const arr = getHistory();
+  const byType = {};
+  arr.forEach(function(h){
+    const t = h.type || 'other';
+    if(!byType[t]) byType[t] = {total:0, hit:0, miss:0, pending:0};
+    byType[t].total++;
+    if(h.userFeedback === true) byType[t].hit++;
+    else if(h.userFeedback === false) byType[t].miss++;
+    else byType[t].pending++;
+  });
+  let html = '<div class="card" style="margin-bottom:10px;"><div class="card-title">📊 准确率统计</div>';
+  const types = Object.keys(byType);
+  if(types.length===0){
+    html += '<div class="acc-empty">暂无历史记录</div>';
+  }else{
+    types.forEach(function(t){
+      const v = byType[t];
+      const marked = v.hit + v.miss;
+      const rate = marked>0 ? Math.round(v.hit*100/marked) : 0;
+      const label = (TYPE_LABEL && TYPE_LABEL[t]) || t;
+      html += '<div class="score-row"><span class="sn">'+label+'</span><div class="strack"><div class="sfill" style="width:'+rate+'%;background:linear-gradient(90deg,var(--good),#5cb85c);"></div></div><span class="sc">'+v.hit+'/'+marked+'</span></div>';
+      if(v.pending>0) html += '<div style="font-size:11px;color:var(--text-hint);margin-left:52px;">待反馈 '+v.pending+' 条</div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+/* 在 renderHistory 中追加 userFeedback 微型按钮 */
+(function enhanceHistListWithFeedback(){
+  const orig = renderHistory;
+  renderHistory = function(){
+    orig.apply(this, arguments);
+    try{ _injectAccuracyBoardIntoHistModal(); }catch(_){}
+  };
+})();
+window.setHistFeedback = function(id, val){
+  const arr = getHistory();
+  const idx = arr.findIndex(function(x){ return x.id === id; });
+  if(idx < 0) return;
+  arr[idx].userFeedback = val;
+  saveHistory(arr);
+  try{ renderHistory(); }catch(_){}
+};
+/* ---- 5. 西玄 subtab 支持 wu6/wu7 ---- */
+(function extendWuSubtabs(){
+  try{
+    const st = document.getElementById('wuSubtabs');
+    if(!st) return;
+    const need = ['wu6','wu7'];
+    const have = Array.from(st.querySelectorAll('.subtab')).map(function(t){ return t.dataset.sec; });
+    need.forEach(function(sec){
+      if(have.indexOf(sec) < 0){
+        const b = document.createElement('div');
+        b.className = 'subtab';
+        b.dataset.sec = sec;
+        b.setAttribute('role','tab');
+        b.setAttribute('aria-selected','false');
+        b.setAttribute('tabindex','0');
+        b.textContent = sec==='wu6' ? '🪙 决策币' : '🎡 转盘';
+        st.appendChild(b);
+      }
+    });
+  }catch(_){}
+})();
+/* ---- 7. 占卜日记关联历史记录 ---- */
+function _diaryHistSelectHTML(dateStr){
+  const all = getHistory().slice(0,20);
+  if(all.length===0) return '';
+  let opts = '<option value="">— 关联历史记录 —</option>';
+  all.forEach(function(h){
+    const d = new Date(h.ts);
+    const tstr = (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    const label = (TYPE_LABEL && TYPE_LABEL[h.type]) || h.type || '占卜';
+    const sum = (function(){
+      try{ return summarizeHist(h).replace(/<[^>]+>/g,'').slice(0,24); }catch(_){ return ''; }
+    })();
+    opts += '<option value="'+h.id+'">['+label+'] '+tstr+' · '+sum+'</option>';
+  });
+  return '<div class="dd-label" style="margin-top:10px;">🔗 关联历史记录</div><select id="diaryHistSel-'+dateStr+'" onchange="window.linkDiaryToHist(\''+dateStr+'\',this.value)" style="width:100%;height:40px;">'+opts+'</select><div id="diaryLinked-'+dateStr+'" style="margin-top:6px;"></div>';
+}
+window.linkDiaryToHist = function(dateStr, histId){
+  const entry = loadDiaryEntry(dateStr) || {};
+  if(!histId){ delete entry.linkedHistId; }else{ entry.linkedHistId = histId; }
+  saveDiaryEntry(dateStr, entry);
+  _renderDiaryLinked(dateStr);
+};
+function _renderDiaryLinked(dateStr){
+  const host = document.getElementById('diaryLinked-'+dateStr);
+  if(!host) return;
+  const entry = loadDiaryEntry(dateStr) || {};
+  const hid = entry.linkedHistId;
+  if(!hid){ host.innerHTML = ''; return; }
+  const h = getHistory().find(function(x){ return x.id === hid; });
+  if(!h){ host.innerHTML = ''; return; }
+  const label = (TYPE_LABEL && TYPE_LABEL[h.type]) || h.type || '占卜';
+  const sum = (function(){ try{ return summarizeHist(h).replace(/<[^>]+>/g,'').slice(0,40); }catch(_){ return ''; } })();
+  host.innerHTML = '<div style="font-size:12px;color:var(--pri);cursor:pointer;text-decoration:underline;" onclick="window.restoreHistory(\''+hid+'\')">🔗 ['+label+'] '+sum+'</div>';
+}
+/* hook renderDiaryDayDetail 追加关联选择器 */
+(function hookDiaryDayDetail(){
+  const orig = renderDiaryDayDetail;
+  renderDiaryDayDetail = function(dateStr){
+    orig.apply(this, arguments);
+    try{
+      const host = document.getElementById('diaryDayDetail');
+      if(!host) return;
+      const safeDateStr = String(dateStr).replace(/'/g,"&#39;");
+      const sel = _diaryHistSelectHTML(safeDateStr);
+      if(!sel) return;
+      const note = host.querySelector('.diary-note');
+      if(note && !host.querySelector('#diaryHistSel-'+safeDateStr)){
+        const div = document.createElement('div');
+        div.innerHTML = sel;
+        note.parentNode.insertBefore(div, note.nextSibling);
+        _renderDiaryLinked(safeDateStr);
+        const entry = loadDiaryEntry(safeDateStr) || {};
+        const s = document.getElementById('diaryHistSel-'+safeDateStr);
+        if(s && entry.linkedHistId) s.value = entry.linkedHistId;
+      }
+    }catch(_){}
+  };
+})();
+/* ---- 8. 共振判定雷达图 ---- */
+window.renderGongzhenRadar = function(r){
+  if(!r || !r.methods) return '';
+  const dims = [
+    {name:'八字', key:'八字', color:'rgba(139,111,71,0.45)', stroke:'#8B6F47'},
+    {name:'奇门', key:'奇门', color:'rgba(107,92,165,0.45)', stroke:'#6B5CA5'},
+    {name:'周易', key:'周易', color:'rgba(74,134,200,0.45)', stroke:'#4A86C8'},
+    {name:'塔罗', key:'塔罗', color:'rgba(212,175,55,0.45)', stroke:'#D4AF37'}
+  ];
+  const scores = dims.map(function(d){
+    const m = r.methods.find(function(x){ return x.name && x.name.indexOf(d.key)>=0; });
+    const sc = m ? Math.max(0, Math.min(100, (m.score + 7)/14*100)) : 50;
+    return sc;
+  });
+  const W=320, H=240, cx=W/2, cy=H/2, maxR=90;
+  const points = scores.map(function(sc,i){
+    const a = (i/4)*Math.PI*2 - Math.PI/2;
+    const rr = (sc/100)*maxR;
+    return [cx+rr*Math.cos(a), cy+rr*Math.sin(a)];
+  });
+  const axis = dims.map(function(d,i){
+    const a = (i/4)*Math.PI*2 - Math.PI/2;
+    const x=cx+maxR*Math.cos(a), y=cy+maxR*Math.sin(a);
+    return '<line x1="'+cx+'" y1="'+cy+'" x2="'+x+'" y2="'+y+'" stroke="rgba(255,255,255,0.15)" stroke-width="1"/><text x="'+x+'" y="'+y+'" text-anchor="middle" dominant-baseline="middle" fill="var(--text-sub)" font-size="12">'+d.name+'</text>';
+  }).join('');
+  const poly = points.map(function(p,i){ return (i===0?'M':'L')+p[0]+','+p[1]; }).join(' ') + 'Z';
+  const fill = 'url(#radarGrad)';
+  const defs = '<defs><linearGradient id="radarGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(139,111,71,0.35)"/><stop offset="50%" stop-color="rgba(107,92,165,0.35)"/><stop offset="100%" stop-color="rgba(212,175,55,0.35)"/></linearGradient></defs>';
+  const levelText = r.level || '平';
+  const levelColor = r.levelColor || 'var(--text-sub)';
+  return '<div class="radar-wrap">'+defs+'<svg viewBox="0 0 '+W+' '+H+'" style="background:var(--card);border-radius:12px;border:1px solid var(--card-border);">'+axis+'<path d="'+poly+'" fill="'+fill+'" stroke="rgba(212,175,55,0.6)" stroke-width="2"/><circle cx="'+cx+'" cy="'+cy+'" r="3" fill="#D4AF37"/><text x="'+cx+'" y="'+cy+'" text-anchor="middle" dominant-baseline="middle" fill="'+levelColor+'" font-size="18" font-weight="800" dy="-2">'+levelText+'</text></svg></div>';
+};
+/* hook calcGongzhen 在 gz-result 追加雷达图 */
+(function hookGongzhenResult(){
+  const orig = calcGongzhen;
+  calcGongzhen = function(){
+    orig.apply(this, arguments);
+    try{
+      const r = window._lastGongzhenResult;
+      if(!r) return;
+      const host = document.getElementById('gz-result');
+      if(!host) return;
+      let radar = document.getElementById('gz-radar');
+      if(!radar){
+        radar = document.createElement('div');
+        radar.id = 'gz-radar';
+        host.appendChild(radar);
+      }
+      radar.innerHTML = window.renderGongzhenRadar(r);
+    }catch(_){}
+  };
+})();
+/* 在 switchSec('cn','cn1c') 时若已有结果也补雷达图 */
+(function hookSwitchSecRadar(){
+  const orig = switchSec;
+  switchSec = function(page, sec){
+    orig.apply(this, arguments);
+    try{
+      if(page==='cn' && sec==='cn1c' && window._lastGongzhenResult){
+        const host = document.getElementById('gz-result');
+        if(host && !document.getElementById('gz-radar')){
+          const d = document.createElement('div'); d.id='gz-radar'; host.appendChild(d);
+        }
+        const radar = document.getElementById('gz-radar');
+        if(radar) radar.innerHTML = window.renderGongzhenRadar(window._lastGongzhenResult);
+      }
+    }catch(_){}
+  };
+})();
+/* 页面初始化时检查推送 */
+(function checkNotifyOnInit(){
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _checkDailyNotifyOnInit);
+  }else{
+    _checkDailyNotifyOnInit();
+  }
+})();
+
+/* toast fallback (若已有就复用) */
+if(typeof window.toast !== 'function'){
+  window.toast = function(msg, ms){
+    ms = ms || 2200;
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;left:50%;top:60px;transform:translateX(-50%);padding:10px 18px;background:rgba(20,20,20,.86);color:#fff;border-radius:10px;z-index:99999;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25);';
+    document.body.appendChild(t);
+    setTimeout(function(){try{ t.style.opacity='0';t.style.transition='opacity .4s';}catch(_){}}, ms-400);
+    setTimeout(function(){try{ document.body.removeChild(t);}catch(_){}}, ms);
   };
 }
   </script>
