@@ -1274,6 +1274,34 @@ body.banner-show{padding-top:40px;}
 .tts-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;border:1px solid var(--pri);background:var(--pri-light);color:var(--pri-dark);font-size:12px;font-weight:600;cursor:pointer;margin-top:8px;transition:all .15s;}
 .tts-btn:hover{background:var(--pri);color:#fff;}
 .tts-btn:disabled{opacity:.5;cursor:not-allowed;}
+/* ===== 雷诺曼卡牌 ===== */
+.lenormand-spread-selector{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0;}
+.lenormand-spread-selector .spread-btn{padding:8px 16px;border-radius:20px;border:1px solid var(--card-border);background:var(--card);color:var(--text-sub);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.lenormand-spread-selector .spread-btn.active{border-color:var(--pri-wu);background:var(--pri-wu-light);color:var(--pri-wu);}
+.lenormand-table{display:grid;gap:10px;justify-content:center;margin:14px 0;min-height:120px;}
+.lenormand-table.spread-3card{grid-template-columns:repeat(3,100px);}
+.lenormand-table.spread-9house{grid-template-columns:repeat(3,1fr);max-width:340px;margin:14px auto;}
+.lenormand-table.spread-relation{grid-template-columns:repeat(2,100px) 1fr;}
+.lenormand-card{width:100px;height:140px;border-radius:12px;background:var(--card);border:1px solid var(--card-border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:transform .3s,box-shadow .3s;box-shadow:var(--wu-shadow-card);}
+.lenormand-card:hover{transform:translateY(-4px);box-shadow:0 6px 20px rgba(107,92,165,.25);}
+.lenormand-card .card-icon{font-size:36px;line-height:1;margin-bottom:4px;}
+.lenormand-card .card-name{font-size:11px;font-weight:700;color:var(--text);text-align:center;padding:0 4px;}
+.lenormand-card .card-num{position:absolute;top:4px;left:6px;font-size:10px;color:var(--text-hint);font-weight:600;}
+.lenormand-card.revealed{background:linear-gradient(135deg,var(--pri-wu-light) 0%,var(--card) 100%);border-color:var(--pri-wu);}
+.lenormand-card.revealed .card-name{color:var(--pri-wu);}
+.lenormand-result{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:14px;margin-top:10px;text-align:left;}
+.lenormand-result-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center;}
+.lenormand-result-item{margin:8px 0;padding:10px;border-radius:10px;background:var(--input-bg);border-left:3px solid var(--pri-wu);}
+.lenormand-result-item .card-title{font-size:13px;font-weight:700;color:var(--pri-wu);margin-bottom:4px;}
+.lenormand-result-item .card-meaning{font-size:12px;color:var(--text-sub);line-height:1.6;}
+.lenormand-combo{margin-top:12px;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--pri-wu-light) 0%,transparent 100%);border:1px solid var(--pri-wu);}
+.lenormand-combo-title{font-size:13px;font-weight:700;color:var(--pri-wu);margin-bottom:6px;}
+.lenormand-combo-text{font-size:12px;color:var(--text);line-height:1.7;}
+@media(max-width:390px){
+  .lenormand-table.spread-3card{grid-template-columns:repeat(3,88px);gap:6px;}
+  .lenormand-card{width:88px;height:122px;}
+  .lenormand-table.spread-9house{max-width:300px;}
+}
 
   </style>
 </head>
@@ -1622,6 +1650,7 @@ body.banner-show{padding-top:40px;}
     <div class="subtab" data-sec="wu6" role="tab" aria-selected="false">🪙 决策币</div>
     <div class="subtab" data-sec="wu7" role="tab" aria-selected="false">🎡 转盘</div>
     <div class="subtab" data-sec="wu8" role="tab" aria-selected="false">🎲 占星骰子</div>
+    <div class="subtab" data-sec="wu9" role="tab" aria-selected="false">🃏 雷诺曼</div>
   </div>
   <div class="section active" id="sec-wu1">
     <div class="profile-badge-mini" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(107,92,165,0.08);border:1px solid rgba(107,92,165,0.15);border-radius:10px;margin-bottom:12px;font-size:12px;color:var(--text-sub);">
@@ -1846,6 +1875,25 @@ body.banner-show{padding-top:40px;}
       <div class="dice-result-card" id="diceResult" style="display:none;" aria-live="polite"></div>
     </div>
     <div class="foot-disclaimer">※ 占星骰子仅供娱乐参考，解读为预设组合库生成</div>
+  </div>
+  <div class="section" id="sec-wu9">
+    <div class="card">
+      <div class="card-title">🃏 雷诺曼卡牌 · Lenormand</div>
+      <p class="hint">源自 18 世纪欧洲的占卜体系，36 张卡牌各有固定象征。选择牌阵，抽取卡牌，聆听符号的私语。</p>
+      <div class="lenormand-spread-selector" id="lenormandSpread" role="tablist" aria-label="牌阵选择">
+        <button class="spread-btn active" data-spread="3card" onclick="window.setLenormandSpread('3card')" role="tab" aria-selected="true" tabindex="0">三张牌</button>
+        <button class="spread-btn" data-spread="9house" onclick="window.setLenormandSpread('9house')" role="tab" aria-selected="false" tabindex="0">九宫格</button>
+        <button class="spread-btn" data-spread="relation" onclick="window.setLenormandSpread('relation')" role="tab" aria-selected="false" tabindex="0">关系牌阵</button>
+      </div>
+      <div class="lenormand-table" id="lenormandTable" aria-live="polite"></div>
+      <button class="btn-primary" id="lenormandDrawBtn" onclick="window.drawLenormand()" tabindex="0">🃏 抽 牌</button>
+      <div class="lenormand-result" id="lenormandResult" style="display:none;" aria-live="polite"></div>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn-secondary" onclick="window.shareLenormand()" tabindex="0">📤 分享</button>
+        <button class="btn-secondary speak-btn" id="lenormandSpeakBtn" onclick="window.speakLenormand()" tabindex="0" aria-label="语音播报">🔊</button>
+      </div>
+    </div>
+    <div class="foot-disclaimer">※ 雷诺曼卡牌仅供娱乐参考，解读为预设组合库生成</div>
   </div>
 </div>
 
@@ -4240,6 +4288,7 @@ const QC_CMDS = [
   {cmd:"塔罗",   label:"塔罗圣三角（过去·现在·未来）", sub:"西玄 / 塔罗Tab", k:"🃏", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu1'); window.__qcTarotPending=3; setTimeout(function(){var f=window.drawTarot||window.fnDrawTarot; if(f) try{f(3);}catch(_x){} },50); }catch(_){} }},
   {cmd:"每日塔罗", label:"每日塔罗单抽", sub:"西玄 / 塔罗Tab", k:"🎴", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu1'); window.__qcTarotPending=1; setTimeout(function(){var f=window.drawTarotDaily; if(f) try{f();}catch(_x){var f2=window.drawTarot; if(f2) f2(1);} },80); }catch(_){} }},
   {cmd:"星座",   label:"十二星座运势",  sub:"西玄 / 星座Tab", k:"⭐", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu2'); }catch(_){} }},
+  {cmd:"雷诺曼", label:"雷诺曼卡牌占卜", sub:"西玄 / 雷诺曼Tab", k:"🃏", run(){ try{ window.switchTab&&window.switchTab('wu'); window.switchSec&&window.switchSec('wu9'); }catch(_){} }},
   {cmd:"黄历",   label:"看今日黄历宜忌", sub:"黄历Tab", k:"❖", run(){ try{ window.switchTab&&window.switchTab('al'); }catch(_){} }},
   {cmd:"词典",   label:"打开命理词典",  sub:"顶栏 → 词典", k:"📖", run(){ try{ window.openGlossary&&window.openGlossary(); }catch(_){} }},
   {cmd:"历史",   label:"打开占卜历史",  sub:"顶栏 → 历史", k:"📚", run(){ try{ window.openHistory&&window.openHistory(); }catch(_){} }},
@@ -18948,6 +18997,227 @@ if(typeof window.toast !== 'function'){
     }
     return voices[0] || null;
   }
+
+
+/* ===== 雷诺曼卡牌系统 ===== */
+const LENORMAND_CARDS = [
+  {num:1,name:"骑士",icon:"🐎",keywords:"消息·来访者·动态·新闻",upright:"新的消息即将到达，可能是一位访客、一通电话或一封邮件。也代表运动与变化，是时候行动了。",reversed:"延迟的消息，来访者推迟，或消息内容不如预期。行动受阻，需要耐心。"},
+  {num:2,name:"幸运草",icon:"🍀",keywords:"好运·机会·短暂·轻松",upright:"短暂的好运与小确幸，机会来得快去得也快。保持乐观，享受当下的轻松时刻。",reversed:"错失小机会，运气稍有阻滞。不要过度期待，脚踏实地更重要。"},
+  {num:3,name:"船",icon:"⛵",keywords:"旅行·贸易·远方·探索",upright:"远方来客或即将启程的旅程，也可能是国际贸易、远距离合作。新视野正在打开。",reversed:"行程延误，远方的计划受阻。也可能代表思乡或归属感缺失。"},
+  {num:4,name:"房子",icon:"🏠",keywords:"家庭·根基·稳定·传统",upright:"家庭事务成为焦点，安稳的根基带来安全感。也可能是房产相关的好消息。",reversed:"家庭内部的紧张或不和谐，根基动摇。需要关注家人之间的关系。"},
+  {num:5,name:"树",icon:"🌳",keywords:"健康·成长·时间·生命力",upright:"健康状况良好，生命力旺盛。也象征需要时间来成长，耐心等待。",reversed:"健康需要关注，可能是慢性问题。成长受阻，需要调整生活方式。"},
+  {num:6,name:"云",icon:"☁️",keywords:"困惑·模糊·不确定性·情绪",upright:"事情尚不明朗，困惑与不确定性是暂时的。迷雾终会散去，不要急于做决定。",reversed:"困惑加剧，情绪低迷。真相被掩盖，需要等待时机或寻求外部帮助。"},
+  {num:7,name:"蛇",icon:"🐍",keywords:"欺骗·智慧·诱惑·复杂",upright:"需要运用智慧处理复杂局面，蛇也代表疗愈与蜕变。警惕周围的不诚实。",reversed:"欺骗被揭穿，复杂局面有望简化。健康问题可能浮出水面。"},
+  {num:8,name:"棺材",icon:"⚰️",keywords:"结束·转变·悲伤·终结",upright:"某段关系或某种状态的终结，虽然悲伤但也意味着新的开始。转化与重生的契机。",reversed:"难以放下过去，结束的过程被拖延。沉溺于悲伤中无法自拔。"},
+  {num:9,name:"花束",icon:"💐",keywords:"礼物·快乐·美好·社交",upright:"收到礼物或好消息，社交生活愉快。美好的事物正在靠近，享受生活之美。",reversed:"礼物带有条件，社交场合中暗藏心机。表面的美好下有不和谐。"},
+  {num:10,name:"镰刀",icon:"🔪",keywords:"突然·决断·切割·危险",upright:"需要迅速做出决断，切断不再适合的人事物。果断行动带来清理与释放。",reversed:"决断带来遗憾，切割过于仓促。也可能遭遇意外的小伤害。"},
+  {num:11,name:"鞭子",icon:"🪶",keywords:"重复·冲突·激情·运动",upright:"反复出现的话题或模式，冲突需要面对。也代表运动、训练和身体锻炼。",reversed:"冲突升级，反复纠缠难以解决。避免陷入无意义的争论。"},
+  {num:12,name:"鸟",icon:"🐦",keywords:"沟通·流言·紧张·社交",upright:"沟通频繁，电话、会议、网络交流活跃。也代表一对情侣或伙伴关系。",reversed:"流言蜚语，沟通中产生误解。社交焦虑，紧张关系需要化解。"},
+  {num:13,name:"孩子",icon:"👶",keywords:"新的开始·纯真·小·创意",upright:"一个全新的开始，像婴儿般纯真。也代表孩子、创意项目或某个小小的机会。",reversed:"新的开始遭遇阻碍，幼稚的行为带来问题。需要成熟面对。"},
+  {num:14,name:"狐狸",icon:"🦊",keywords:"工作·狡诈·技巧·警惕",upright:"工作中需要运用技巧和策略，狐狸代表职场智慧和灵活应变。",reversed:"职场中的欺骗或被利用，警惕周围的伪善。工作陷入瓶颈。"},
+  {num:15,name:"熊",icon:"🐻",keywords:"力量·权威·母亲·财富",upright:"强大的保护力量，可能是母亲形象或权威人物。财富与资源充裕，感到安全。",reversed:"权威过度，控制欲强。财务上的损失或被强势人物压制。"},
+  {num:16,name:"星星",icon:"⭐",keywords:"希望·指引·梦想·网络",upright:"希望之光照亮前路，梦想正在实现。也代表网络、线上社交和远程连接。",reversed:"希望渺茫，梦想与现实差距较大。网络问题或远程合作受阻。"},
+  {num:17,name:"鹳",icon:"🐦",keywords:"改变·迁移·进步·提升",upright:"积极的改变正在发生，搬家、升职或生活环境的改善。进步与提升的能量。",reversed:"改变被推迟，迁移计划受阻。进步缓慢，需要更多耐心。"},
+  {num:18,name:"狗",icon:"🐕",keywords:"忠诚·友谊·信任·保护",upright:"忠诚的朋友在身边，友谊深厚。值得信赖的伙伴给予支持与保护。",reversed:"友谊面临考验，信任被背叛。或者朋友正在经历困难需要你的帮助。"},
+  {num:19,name:"塔",icon:"🏛️",keywords:"孤独·权威·独立·机构",upright:"独立自主，依靠自己的力量。也可能是官方机构、大公司或政府相关事务。",reversed:"孤立无援，权威带来的压迫。与机构打交道遇到官僚障碍。"},
+  {num:20,name:"花园",icon:"🌸",keywords:"社交·公众·团体·聚会",upright:"社交活动丰富，公众场合带来机会。也代表网站、论坛等线上社区。",reversed:"社交焦虑，公众场合的压力。线上社区的负面氛围。"},
+  {num:21,name:"山",icon:"⛰️",keywords:"障碍·挑战·延迟·艰难",upright:"面前有障碍需要克服，虽然艰难但攀登之后风景独好。延迟与考验并存。",reversed:"障碍逐渐消除，困难时期即将过去。但仍需警惕残余的挑战。"},
+  {num:22,name:"路口",icon:"🔀",keywords:"选择·交叉·决策·多元",upright:"面临重要选择，多条道路摆在面前。需要权衡利弊，做出最适合的决定。",reversed:"选择困难，犹豫不决导致错失时机。或者做出的选择带来后悔。"},
+  {num:23,name:"老鼠",icon:"🐭",keywords:"消耗·损失·焦虑·细节",upright:"资源在悄然流失，需要关注细节。焦虑情绪滋生，小问题正在积累。",reversed:"损失加剧，焦虑感蔓延。需要立即止损，处理积压的问题。"},
+  {num:24,name:"心",icon:"❤️",keywords:"爱情·感情·热情·核心",upright:"爱情与感情成为主题，心与心的连接。热情高涨，关系中的核心问题。",reversed:"感情受伤，心碎的滋味。关系中的冷漠或热情消退。"},
+  {num:25,name:"戒指",icon:"💍",keywords:"承诺·合约·循环·绑定",upright:"承诺与合约，婚姻或重要合作关系的缔结。也代表循环往复的模式。",reversed:"承诺被打破，合约出现问题。绑定的关系带来束缚感。"},
+  {num:26,name:"书",icon:"📖",keywords:"知识·秘密·教育·未知",upright:"学习与研究的好时机，隐藏的知识即将显现。教育、考试、未知领域探索。",reversed:"秘密被隐藏得更深，学习遇到瓶颈。考试不顺利或知识运用不当。"},
+  {num:27,name:"信",icon:"✉️",keywords:"文件·信息·证书·记录",upright:"重要文件或消息，证书、合同、邮件。信息的传递带来明确的结果。",reversed:"文件延误，信息传递出错。证书或合同出现纰漏，需要仔细核对。"},
+  {num:28,name:"男人",icon:"👨",keywords:"男性·主动·阳性能量",upright:"代表生命中的重要男性，或你自己的阳性能量。主动、理性、行动导向。",reversed:"男性形象带来困扰，或阳性能量失衡。父亲、伴侣、男性上司的问题。"},
+  {num:29,name:"女人",icon:"👩",keywords:"女性·被动·阴性能量",upright:"代表生命中的重要女性，或你自己的阴性能量。直觉、接纳、滋养。",reversed:"女性形象带来困扰，或阴性能量失衡。母亲、伴侣、女性上司的问题。"},
+  {num:30,name:"百合",icon:"🌺",keywords:"纯洁·平静·成熟·长寿",upright:"内心的平静与纯洁，成熟的智慧。长辈的关怀，或长期稳定的关系。",reversed:"平静被打破，成熟变成固执。与长辈的矛盾，长期关系出现裂痕。"},
+  {num:31,name:"太阳",icon:"☀️",keywords:"成功·光明·活力·成就",upright:"成功与光明普照，一切都在向好的方向发展。活力充沛，成就感满满。",reversed:"成功延迟，光明被遮蔽。活力下降，需要休息调整再出发。"},
+  {num:32,name:"月亮",icon:"🌙",keywords:"名声·情绪·直觉·周期",upright:"名声与认可，你的努力正在被看见。情绪波动但直觉敏锐，相信内在声音。",reversed:"名声受损，情绪陷入低谷。直觉被蒙蔽，周期性的低落期。"},
+  {num:33,name:"钥匙",icon:"🔑",keywords:"解决·开启·重要·命运",upright:"找到关键的解决方案，重要之门正在开启。命运的转折点，把握机遇。",reversed:"关键的时机尚未成熟，解决方案复杂化。重要的门还打不开。"},
+  {num:34,name:"鱼",icon:"🐟",keywords:"财富·流动·生意·丰饶",upright:"财富流动顺畅，生意兴旺。资源丰饶，投资有回报。商业合作顺利。",reversed:"财务流动性问题，生意受阻。投资需谨慎，避免资金链断裂。"},
+  {num:35,name:"锚",icon:"⚓",keywords:"稳定·安全·坚持·职业",upright:"找到稳定的港湾，安全感充足。事业上的坚持即将看到成果，长期目标稳固。",reversed:"稳定被打破，安全感缺失。职业方向动摇，坚持变成固执。"},
+  {num:36,name:"十字",icon:"✝️",keywords:"命运·负担·信仰·苦难",upright:"命运的考验，承担必要的负担。信仰给予力量，苦难中蕴含成长的种子。",reversed:"负担过重，信仰动摇。苦难加剧，需要寻求帮助或放下执念。"}
+];
+
+const LENORMAND_SPREADS = {
+  '3card': {name:'三张牌',slots:3,layout:'3card'},
+  '9house': {name:'九宫格',slots:9,layout:'9house'},
+  'relation': {name:'关系牌阵',slots:5,layout:'relation'}
+};
+
+let _lenormandCurrentSpread = '3card';
+let _lenormandLastDraw = null;
+
+window.setLenormandSpread = function(name){
+  _lenormandCurrentSpread = name;
+  var btns = document.querySelectorAll('#lenormandSpread .spread-btn');
+  btns.forEach(function(b){
+    var on = b.dataset.spread === name;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on?'true':'false');
+  });
+  var table = document.getElementById('lenormandTable');
+  if(table){
+    table.className = 'lenormand-table spread-' + name;
+    table.innerHTML = '';
+  }
+  var result = document.getElementById('lenormandResult');
+  if(result) result.style.display = 'none';
+};
+
+function _drawLenormandCards(count){
+  var deck = LENORMAND_CARDS.slice();
+  var drawn = [];
+  for(var i=0;i<count;i++){
+    var idx = Math.floor(Math.random()*deck.length);
+    drawn.push(deck.splice(idx,1)[0]);
+  }
+  return drawn;
+}
+
+function _buildLenormandCardHTML(card, index, total, revealed){
+  var posLabels = {3:['过去','现在','未来'],9:['根因','阻碍','助力','现状','核心','建议','环境','希望','结果'],5:['你','对方','关系','障碍','走向']};
+  var label = '';
+  if(_lenormandCurrentSpread==='3card' && total===3) label = posLabels[3][index] || '';
+  else if(_lenormandCurrentSpread==='9house' && total===9) label = posLabels[9][index] || '';
+  else if(_lenormandCurrentSpread==='relation' && total===5) label = posLabels[5][index] || '';
+  if(label) label = '<div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;text-align:center;">'+label+'</div>';
+  if(!revealed){
+    return '<div class="lenormand-card" tabindex="0" aria-label="卡牌 '+(index+1)+' 背面" data-index="'+index+'" onclick="window.revealLenormandCard('+index+')">'+
+           '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pri-wu) 0%,var(--pri-wu-dark) 100%);border-radius:12px;">'+
+           '<span style="font-size:28px;opacity:.5;">🃏</span></div></div>';
+  }
+  return '<div class="lenormand-card revealed" tabindex="0" aria-label="'+card.name+'：'+card.keywords+'" data-index="'+index+'">'+
+         label+
+         '<div class="card-icon">'+card.icon+'</div>'+
+         '<div class="card-name">'+card.num+'. '+card.name+'</div>'+
+         '<div style="font-size:9px;color:var(--text-hint);margin-top:2px;padding:0 2px;text-align:center;">'+card.keywords+'</div></div>';
+}
+
+window.drawLenormand = function(){
+  var table = document.getElementById('lenormandTable');
+  var result = document.getElementById('lenormandResult');
+  var btn = document.getElementById('lenormandDrawBtn');
+  if(!table) return;
+  var spread = LENORMAND_SPREADS[_lenormandCurrentSpread];
+  if(!spread) return;
+  if(btn) btn.disabled = true;
+  var cards = _drawLenormandCards(spread.slots);
+  _lenormandLastDraw = cards;
+  table.innerHTML = '';
+  table.className = 'lenormand-table spread-'+_lenormandCurrentSpread;
+  for(var i=0;i<cards.length;i++){
+    table.innerHTML += _buildLenormandCardHTML(cards[i], i, cards.length, false);
+  }
+  if(result) result.style.display = 'none';
+  // 依次翻开动画
+  var delay = 0;
+  for(var j=0;j<cards.length;j++){
+    (function(idx){
+      setTimeout(function(){
+        var el = table.querySelector('[data-index="'+idx+'"]');
+        if(el){
+          el.style.transform = 'scale(0.8) rotateY(90deg)';
+          el.style.transition = 'transform .3s';
+          setTimeout(function(){
+            var c = cards[idx];
+            var posLabels = {3:['过去','现在','未来'],9:['根因','阻碍','助力','现状','核心','建议','环境','希望','结果'],5:['你','对方','关系','障碍','走向']};
+            var label = '';
+            if(_lenormandCurrentSpread==='3card' && cards.length===3) label = '<div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;text-align:center;">'+posLabels[3][idx]+'</div>';
+            else if(_lenormandCurrentSpread==='9house' && cards.length===9) label = '<div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;text-align:center;">'+posLabels[9][idx]+'</div>';
+            else if(_lenormandCurrentSpread==='relation' && cards.length===5) label = '<div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;text-align:center;">'+posLabels[5][idx]+'</div>';
+            el.className = 'lenormand-card revealed';
+            el.innerHTML = label + '<div class="card-icon">'+c.icon+'</div><div class="card-name">'+c.num+'. '+c.name+'</div><div style="font-size:9px;color:var(--text-hint);margin-top:2px;padding:0 2px;text-align:center;">'+c.keywords+'</div>';
+            el.style.transform = 'scale(1) rotateY(0deg)';
+          }, 300);
+        }
+      }, delay);
+      delay += 400;
+    })(j);
+  }
+  // 全部翻开后显示解读
+  setTimeout(function(){
+    _renderLenormandResult(cards);
+    if(btn) btn.disabled = false;
+  }, delay + 300);
+  // 存档
+  try{
+    addHistory('lenormand', _lenormandCurrentSpread, cards.map(function(c){return c.num+'.'+c.name;}).join(' / '), '');
+  }catch(_){}
+};
+
+function _renderLenormandResult(cards){
+  var result = document.getElementById('lenormandResult');
+  if(!result) return;
+  var posLabels = {3:['过去','现在','未来'],9:['根因','阻碍','助力','现状','核心','建议','环境','希望','结果'],5:['你','对方','关系','障碍','走向']};
+  var html = '<div class="lenormand-result-title">🃏 解读</div>';
+  for(var i=0;i<cards.length;i++){
+    var c = cards[i];
+    var label = '';
+    if(_lenormandCurrentSpread==='3card') label = posLabels[3][i];
+    else if(_lenormandCurrentSpread==='9house') label = posLabels[9][i];
+    else if(_lenormandCurrentSpread==='relation') label = posLabels[5][i];
+    html += '<div class="lenormand-result-item">'+
+            '<div class="card-title">'+label+' · '+c.icon+' '+c.num+'. '+c.name+'</div>'+
+            '<div class="card-meaning">'+c.upright+'</div></div>';
+  }
+  // 组合解读
+  if(cards.length >= 2){
+    html += '<div class="lenormand-combo">'+
+            '<div class="lenormand-combo-title">🔮 组合指引</div>'+
+            '<div class="lenormand-combo-text">'+_lenormandComboReading(cards)+'</div></div>';
+  }
+  result.innerHTML = html;
+  result.style.display = 'block';
+}
+
+function _lenormandComboReading(cards){
+  if(_lenormandCurrentSpread==='3card'){
+    return '「'+cards[0].name+'」揭示了问题的根源与过去的影响，「'+cards[1].name+'」展现了当下的核心状态，而「'+cards[2].name+'」指向未来的发展方向。三张卡牌共同描绘了一条从过去到未来的能量路径。';
+  }else if(_lenormandCurrentSpread==='9house'){
+    var core = cards[4];
+    return '九宫格以「'+core.name+'」为核心，周围八张卡牌编织出完整的人生图景。根因、阻碍、助力、现状、建议、环境、希望、结果——这九个维度为你提供了360度的洞察。';
+  }else if(_lenormandCurrentSpread==='relation'){
+    return '「'+cards[0].name+'」代表你在这段关系中的状态，「'+cards[1].name+'」揭示对方的视角，「'+cards[2].name+'」展现关系的本质。障碍「'+cards[3].name+'」需要正视，而走向「'+cards[4].name+'」指明了进化的方向。';
+  }
+  return '卡牌组合的能量正在交织，建议结合每张牌的独立含义进行综合理解。';
+}
+
+window.shareLenormand = function(){
+  if(!_lenormandLastDraw || !_lenormandLastDraw.length){
+    try{ showToast('先抽牌再分享','warn'); }catch(_){}
+    return;
+  }
+  try{
+    var cards = _lenormandLastDraw;
+    var lines = ['🃏 雷诺曼卡牌 · '+LENORMAND_SPREADS[_lenormandCurrentSpread].name, ''];
+    for(var i=0;i<cards.length;i++){
+      lines.push((i+1)+'. '+cards[i].icon+' '+cards[i].name+' — '+cards[i].keywords);
+    }
+    if(navigator.share){
+      navigator.share({title:'雷诺曼卡牌结果', text:lines.join('\n')});
+    }else{
+      _copyToClipboard(lines.join('\n'));
+      try{ showToast('结果已复制到剪贴板','ok'); }catch(_){}
+    }
+  }catch(e){ try{ showToast('分享失败','error'); }catch(_){} }
+};
+
+window.speakLenormand = function(){
+  if(!_lenormandLastDraw || !_lenormandLastDraw.length){
+    try{ showToast('先抽牌再播报','warn'); }catch(_){}
+    return;
+  }
+  try{
+    var cards = _lenormandLastDraw;
+    var text = '雷诺曼卡牌，'+LENORMAND_SPREADS[_lenormandCurrentSpread].name+'。';
+    for(var i=0;i<cards.length;i++){
+      text += '第'+(i+1)+'张，'+cards[i].name+'。'+cards[i].upright+' ';
+    }
+    text += _lenormandComboReading(cards);
+    window.speakText && window.speakText(text);
+  }catch(e){}
+};
 
   window.speakResult = function(resultId){
     if(!hasTTS){
