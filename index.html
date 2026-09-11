@@ -1074,6 +1074,11 @@ body.theme-dark .term {
   .rune-btns button:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(0,0,0,0.4);}
   .rune-btns button.on{background:linear-gradient(135deg,#6B5CA5,#8B7EC8);color:#fff;border-color:#6B5CA5;font-weight:600;box-shadow:0 4px 12px rgba(107,92,165,0.35);}
   /* Daliren / 梅花 手摇卦 */
+  .answer-card{width:100%;max-width:420px;margin:0 auto;border-radius:16px;background:linear-gradient(160deg,#1E1A35 0%,#2D2654 100%);border:1px solid rgba(107,92,165,0.30);box-shadow:0 8px 32px rgba(0,0,0,0.35),inset 0 0 20px rgba(107,92,165,0.06);padding:28px 20px;text-align:center;position:relative;overflow:hidden;animation:resultReveal 0.6s ease-out both;}
+  .answer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent 10%,#D4AF37 50%,transparent 90%);opacity:0.5;}
+  .answer-card .q{font-size:13px;color:var(--text-hint);margin-bottom:12px;font-style:italic;}
+  .answer-card .a{font-size:22px;font-weight:700;color:#F0E6FF;line-height:1.4;margin:8px 0;}
+  .answer-card .sub{font-size:12px;color:var(--text-sub);margin-top:10px;line-height:1.5;}
   .shouyao-stage{border-radius:14px;padding:14px;background:linear-gradient(135deg,rgba(139,111,71,.09),rgba(74,107,138,.09));margin:8px 0;border:1px solid var(--line);}
   .shouyao-row{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);}
   .shouyao-row:last-child{border-bottom:0;}
@@ -1499,6 +1504,7 @@ body.banner-show{padding-top:40px;}
     <div class="subtab" data-sec="wu2" role="tab" aria-selected="false">♈ 十二星座</div>
     <div class="subtab" data-sec="wu3" role="tab" aria-selected="false">🔢 生命灵数</div>
     <div class="subtab" data-sec="wu4" role="tab" aria-selected="false">ᚠ 卢恩符文</div>
+    <div class="subtab" data-sec="wu5" role="tab" aria-selected="false">📖 答案之书</div>
   </div>
   <div class="section active" id="sec-wu1">
     <div class="card" id="tarotDailyCard" style="display:none;">
@@ -1521,6 +1527,7 @@ body.banner-show{padding-top:40px;}
       <button class="btn-primary" id="tarotDrawBtn" onclick="window.drawTarot()">🎴 抽 牌</button>
     </div>
     <div class="result" id="tarot-result" aria-live="polite"></div>
+    <button class="btn-secondary" style="margin-top:8px;width:100%;" onclick="window.generateShareCardImage('tarot')">📤 生成分享卡</button>
     <div class="foot-disclaimer">※ 塔罗占卜仅供娱乐参考与自我觉察之用</div>
   </div>
   <div class="section" id="sec-wu2">
@@ -1541,6 +1548,7 @@ body.banner-show{padding-top:40px;}
       </div>
     </div>
     <div class="result" id="zodiac-result" aria-live="polite"></div>
+    <button class="btn-secondary" style="margin-top:8px;width:100%;" onclick="window.generateShareCardImage('zodiac')">📤 生成分享卡</button>
     <div class="foot-disclaimer">※ 星座运势仅供娱乐参考，评分由当日哈希算法自动生成</div>
   </div>
   <!-- 生命灵数 -->
@@ -1567,6 +1575,7 @@ body.banner-show{padding-top:40px;}
       <button class="btn-primary" onclick="window.calcAndRenderLingshu()">🔢 生成九宫图</button>
       <div id="result-wu3" aria-live="polite"></div>
     </div>
+    <button class="btn-secondary" style="margin-top:8px;width:100%;" onclick="window.generateShareCardImage('lingshu')">📤 生成分享卡</button>
     <div class="foot-disclaimer">※ 生命灵数为毕达哥拉斯数字神秘学，仅供娱乐与自我觉察</div>
   </div>
   <div class="section" id="sec-wu4">
@@ -1580,7 +1589,19 @@ body.banner-show{padding-top:40px;}
       </div>
     </div>
     <div class="result" id="result-wu4" aria-live="polite"></div>
+    <button class="btn-secondary" style="margin-top:8px;width:100%;" onclick="window.generateShareCardImage('rune')">📤 生成分享卡</button>
     <div class="foot-disclaimer">※ 卢恩符文占卜源自北欧传统，仅供娱乐参考与自我觉察</div>
+  </div>
+  <!-- 答案之书 -->
+  <div class="section" id="sec-wu5">
+    <div class="card">
+      <div class="card-title">📖 答案之书 · The Book of Answers</div>
+      <p class="hint">心中默念一个问题，翻开书页，答案自会浮现。源自上世纪经典的 pocket oracle。</p>
+      <div class="form-row"><label>💭 心中默念的问题（可选）</label><input type="text" id="answerBookQuestion" placeholder="例如：我该接受这份offer吗？" style="width:100%;height:44px;padding:0 14px;border:1px solid var(--input-border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:15px;"></div>
+      <button class="btn-primary" id="answerBookBtn" onclick="window.drawAnswerBook()">📖 翻开答案</button>
+    </div>
+    <div class="result" id="result-wu5" aria-live="polite"></div>
+    <div class="foot-disclaimer">※ 答案之书仅为随机启示，请理性看待，人生决策请结合实际情况</div>
   </div>
 </div>
 
@@ -8541,6 +8562,45 @@ function runeSVG(r, isReversed){
     + '</svg>';
 }
 try{ window.runeSVG = runeSVG; }catch(_){}
+
+const ANSWER_BOOK = [
+  {a:'是的，毫无疑问。',sub:'时机已成熟，放手去做。'},
+  {a:'不要犹豫，立刻行动。',sub:'犹豫是最大的敌人。'},
+  {a:'结果会比你预期的好。',sub:'保持信心，静待花开。'},
+  {a:'暂时放手，静观其变。',sub:'不是所有事都需要此刻决定。'},
+  {a:'换个角度，会有新发现。',sub:'跳出框架，答案自现。'},
+  {a:'这不是最好的时机。',sub:'等待有时也是一种智慧。'},
+  {a:'相信你的直觉。',sub:'你内心早已有答案。'},
+  {a:'需要更多准备。',sub:'磨刀不误砍柴工。'},
+  {a:'结果取决于你的坚持。',sub:'半途而废是最大的遗憾。'},
+  {a:'不妨听听他人的建议。',sub:'旁观者清，兼听则明。'},
+  {a:'答案是肯定的。',sub:'天时地利人和皆备。'},
+  {a:'现在还不是时候。',sub:'韬光养晦，静待天时。'},
+  {a:'大胆去做吧。',sub:'勇气本身就是一种答案。'},
+  {a:'重新思考你的问题。',sub:'问题的提出往往比答案更重要。'},
+  {a:'机会正在靠近。',sub:'做好准备，抓住它。'},
+  {a:'答案是否定的。',sub:'及时止损也是一种智慧。'},
+  {a:'需要耐心等待。',sub:'好事多磨，静待佳音。'},
+  {a:'顺势而为。',sub:'不争不抢，水到渠成。'},
+  {a:'答案就在你心中。',sub:'向内求索，终有所得。'},
+  {a:'不妨再试一次。',sub:'失败只是成功的前奏。'},
+];
+function drawAnswerBook(){
+  const q = document.getElementById('answerBookQuestion');
+  const question = q ? q.value.trim() : '';
+  const seed = Date.now() + (question ? question.split('').reduce((a,c)=>a+c.charCodeAt(0),0) : 0);
+  const idx = seed % ANSWER_BOOK.length;
+  const item = ANSWER_BOOK[idx];
+  const html = '<div class="answer-card">'+
+    '<div class="q">'+(question ? '问：'+question.replace(/</g,'&lt;') : '心中默念你的问题…')+'</div>'+
+    '<div class="a">'+item.a+'</div>'+
+    '<div class="sub">'+item.sub+'</div>'+
+  '</div>';
+  const el = document.getElementById('result-wu5');
+  if(el){ el.innerHTML = html; el.classList.remove('result-show'); void el.offsetWidth; el.classList.add('result-show'); }
+  try{ addHistory('answer_book', {question:question||''}, {answer:item.a, sub:item.sub}, item.a); }catch(_){}
+}
+try{ window.drawAnswerBook = drawAnswerBook; }catch(_){}
 
 function drawRunes(n, btn){
   // 按钮高亮状态
