@@ -1333,6 +1333,109 @@ body.banner-show{padding-top:40px;}
   .lenormand-table.spread-9house{max-width:300px;}
 }
 
+  /* ============================================================
+ * 秩序优化层 v2.1 · 知命V2 首页
+ * 保留全部内容与功能，仅重组版式层级、色彩纪律与视觉节奏。
+ * 全部使用既有 token 变量，三套主题（亮/暗/中/西）自适应。
+ * ============================================================ */
+:root{ --line:#ece3d6; } /* 亮色主题补全 --line（入口按钮边框依赖） */
+
+/* ---- 1. 桌面居中窄栏：集中焦点，根治全宽平铺 ---- */
+@media (min-width:720px){
+  .topbar{ max-width:704px; margin:0 auto; }
+  .subtabs{ max-width:704px; margin:0 auto; }
+  .primary-action{ max-width:680px; margin:0 auto; }
+  .page{ max-width:680px; margin:0 auto; padding-left:24px; padding-right:24px; }
+  .copy-bar{ max-width:680px; margin:0 auto; }
+  .bottom-tabs{ max-width:680px; margin:0 auto; border-left:1px solid var(--btab-border); border-right:1px solid var(--btab-border); border-radius:18px 18px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.06); }
+  .today-widget-grid{ grid-template-columns:repeat(3,1fr); }
+}
+
+/* ---- 2. 入口区：功能按钮降噪，命令面板降级为整行轻入口 ---- */
+.primary-action{ gap:10px; padding:16px 16px 10px; }
+.primary-action .pab{ height:50px; border-radius:14px; gap:10px; }
+.primary-action .pab .emj{ width:24px; text-align:center; }
+.primary-action .pab.pab-qc{ grid-column:1/-1; height:38px; justify-content:center; background:transparent; border:1px dashed var(--card-border); color:var(--text-hint); font-size:12.5px; font-weight:500; box-shadow:none; }
+.primary-action .pab.pab-qc .emj{ width:auto; font-size:14px; opacity:.8; }
+
+/* ---- 3. 黄历主卡：今日唯一视觉焦点 ---- */
+.today-main-card{ padding:22px 20px 20px; border-radius:20px; gap:14px; border:1px solid var(--pri-light); box-shadow:0 4px 28px var(--card-shadow); }
+.today-main-card .tmc-date{ font-size:56px; }
+.today-main-card .tmc-md{ font-size:13.5px; }
+.today-main-card .tmc-gz{ padding:4px 14px; border-radius:13px; font-size:13.5px; }
+.today-main-card .tmc-right{ padding-top:2px; }
+.today-main-card .tmc-lunar{ font-size:15.5px; }
+.today-main-card .switch-btn{ height:30px; font-size:11.5px; padding:0 12px; background:var(--card); border:1px solid var(--card-border); color:var(--text-hint); border-radius:15px; }
+.today-main-card .switch-btn.active{ background:var(--pri-light); border-color:var(--pri); color:var(--pri-dark); font-weight:600; }
+.today-main-card .tmc-yiji{ gap:10px; margin-top:10px; }
+.today-main-card .tmc-yi, .today-main-card .tmc-ji{ border-radius:12px; padding:10px 12px; }
+.today-main-card .tmc-yi .yj-t, .today-main-card .tmc-ji .yj-t{ font-size:12.5px; letter-spacing:.5px; }
+.today-main-card .tmc-yi .yj-tag, .today-main-card .tmc-ji .yj-tag{ padding:3px 9px; font-size:11.5px; border-radius:8px; }
+
+/* ---- 4. 找日子：降为紧凑次级操作 ---- */
+.find-day-card{ padding:12px 16px; margin:14px 0; border-radius:16px; }
+.find-day-card .fdc-title{ font-size:13px; margin-bottom:8px; }
+.find-day-card .fdc-btn{ height:36px; border-radius:10px; background:transparent; border:1px solid var(--card-border); color:var(--pri-dark); box-shadow:none; font-size:12.5px; }
+.find-day-card .fdc-btn:hover{ border-color:var(--pri); background:var(--pri-light); }
+.find-day-card .fdc-link{ font-size:11.5px; }
+
+/* ---- 5. 运势三卡：统一形态，保留分数语义色 ---- */
+.fortune-grid{ gap:12px; margin:16px 0; }
+.ft-card{ border-radius:16px; padding:14px; border:1.5px solid var(--card-border); box-shadow:0 1px 2px rgba(0,0,0,.03), 0 8px 24px var(--card-shadow); }
+.ft-head{ margin-bottom:10px; }
+.ft-emoji{ font-size:22px; }
+.ft-badge{ font-size:10.5px; padding:3px 9px; border-radius:11px; letter-spacing:.3px; }
+.ft-ring{ width:60px; height:60px; }
+.ft-ring-num .num{ font-size:19px; }
+.ft-tagline{ font-size:12.5px; }
+.ft-summary{ font-size:11px; }
+@media (max-width:420px){
+  .ft-ring{ width:54px; height:54px; }
+  .ft-ring-num .num{ font-size:17px; }
+  .ft-tagline{ font-size:11.5px; }
+  .ft-summary{ font-size:10.5px; }
+}
+
+/* ---- 6. 小部件网格：统一容器与标题节奏 ---- */
+.today-widget-grid{ gap:12px; }
+.widget{ border-radius:16px; padding:14px; min-height:128px; border:1px solid var(--card-border); box-shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 20px var(--card-shadow); }
+.widget-title{ font-size:13px; letter-spacing:.2px; gap:5px; }
+.widget-body{ line-height:1.5; }
+
+/* ---- 7. 分区分隔标题：卦签 / 生肖 ---- */
+.sec-divider{ display:flex; align-items:center; gap:12px; margin:24px 4px 14px; color:var(--text-sub); font-size:13px; font-weight:600; letter-spacing:1.5px; }
+.sec-divider::before, .sec-divider::after{ content:""; height:1px; flex:1; background:var(--card-border); }
+.sec-divider span{ white-space:nowrap; }
+
+/* ---- 8. 卦签区 ---- */
+#qian-result .card{ border-radius:16px; padding:18px; }
+#qian-result .card-title{ font-size:15px; }
+#qian-result .badge{ font-size:11px; vertical-align:1px; }
+#qian-result .hint{ font-size:12.5px; line-height:1.7; }
+
+/* ---- 9. 生肖区：卡片统一 ---- */
+.sx-grid{ gap:10px; }
+.sx-item{ border-radius:12px; padding:12px 14px; box-shadow:0 1px 2px rgba(0,0,0,.02), 0 3px 10px var(--card-shadow); }
+.sx-lv{ font-size:10px; padding:2px 8px; letter-spacing:.3px; }
+.sx-tag{ font-size:11.5px; }
+
+/* ---- 10. 推送行 ---- */
+.notify-toggle-row{ border-radius:14px; padding:13px 16px; margin-top:16px; }
+.notify-toggle-row .nt-icon{ font-size:18px; }
+
+/* ---- 11. 顶栏：图标分组，去连排感 ---- */
+.topbar{ padding:10px 14px 7px; }
+.topbar .actions{ gap:5px; }
+.topbar .actions .icon-btn{ width:31px; height:31px; font-size:14px; }
+.topbar .actions .icon-btn:nth-child(5){ position:relative; margin-left:9px; }
+.topbar .actions .icon-btn:nth-child(5)::before{ content:""; position:absolute; left:-7px; top:50%; transform:translateY(-50%); width:1px; height:18px; background:var(--input-border); }
+
+/* ---- 12. 免责声明：提升可读性 ---- */
+.page .foot-disclaimer{ font-size:11px; color:var(--text-sub); letter-spacing:.3px; line-height:1.7; padding:18px 8px 40px; }
+
+/* ---- 13. 底栏安全区 ---- */
+body{ padding-bottom:160px; }
+
   </style>
 </head>
 <body class="theme-light">
@@ -1399,10 +1502,12 @@ body.banner-show{padding-top:40px;}
     <div id="today-body"></div>
     <div class="foot-disclaimer">※ 今日综合参考整合黄历/星座/塔罗三模块，仅供娱乐与自我觉察</div>
   </div>
+  <div class="sec-divider"><span>今日卦签</span></div>
   <div class="section active" id="sec-today2">
     <div id="qian-result"></div>
     <div class="foot-disclaimer">※ 每日卦签按自然日确定性抽取、次日自动更换，仅供娱乐与自我觉察</div>
   </div>
+  <div class="sec-divider"><span>十二生肖今日运势</span></div>
   <div class="section active" id="sec-today3">
     <div id="sx-result"></div>
     <div class="foot-disclaimer">※ 生肖运势按当日地支与各生肖地支的冲合害刑及五行生克推算，仅供娱乐参考</div>
