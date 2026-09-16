@@ -308,6 +308,19 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .hint{font-size:12px;color:var(--text-hint);text-align:center;padding:6px;}
 .desc-title{font-size:14px;font-weight:700;color:var(--pri-dark);margin:8px 0 4px;}
 .desc-text{font-size:13px;color:var(--text-sub);line-height:1.65;}
+.sx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:4px;}
+.sx-item{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;}
+.sx-head{display:flex;align-items:center;gap:6px;font-size:13px;}
+.sx-head b{font-size:14px;color:var(--pri-dark);}
+.sx-lv{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700;}
+.sx-2{background:rgba(200,80,80,.12);color:#C85050;}
+.sx-1{background:rgba(220,140,60,.14);color:#C87A2C;}
+.sx-0{background:rgba(120,150,200,.12);color:#5B6FA8;}
+.sx-m1{background:rgba(150,150,170,.12);color:#8A8AA0;}
+.sx-m2{background:rgba(90,90,110,.15);color:#6E6E86;}
+.sx-score{font-size:11px;color:var(--text-hint);margin-left:auto;}
+.sx-tag{font-size:11px;color:var(--text-sub);margin:4px 0 6px;}
+.sx-luck{font-size:11px;color:var(--text-sub);display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .tst-info{background:var(--pri-light);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--pri-dark);margin-top:8px;line-height:1.7;}
 .bt-row{background:var(--card);border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid var(--card-border);}
 .bt-name{font-weight:700;color:var(--pri-dark);margin-bottom:6px;font-size:14px;}
@@ -1385,6 +1398,14 @@ body.banner-show{padding-top:40px;}
   <div class="section active" id="sec-today1">
     <div id="today-body"></div>
     <div class="foot-disclaimer">※ 今日综合参考整合黄历/星座/塔罗三模块，仅供娱乐与自我觉察</div>
+  </div>
+  <div class="section active" id="sec-today2">
+    <div id="qian-result"></div>
+    <div class="foot-disclaimer">※ 每日卦签按自然日确定性抽取、次日自动更换，仅供娱乐与自我觉察</div>
+  </div>
+  <div class="section active" id="sec-today3">
+    <div id="sx-result"></div>
+    <div class="foot-disclaimer">※ 生肖运势按当日地支与各生肖地支的冲合害刑及五行生克推算，仅供娱乐参考</div>
   </div>
 </div>
 
@@ -4674,9 +4695,169 @@ function lySave(){
 try{ TYPE_LABEL["liuyao"] = "六爻纳甲"; }catch(_){}
 try{ window.lyFlip = lyFlip; window.lyCast = lyCast; window.lyAuto = lyAuto; window.lyReset = lyReset; window.lyCopy = lyCopy; window.lySave = lySave; }catch(_){}
 
+/* =========================================================
+ * Section LY-02 每日卦签 + 十二生肖今日运势（新增模块）
+ * 纯本地计算：每日卦签按日期确定性取卦（复用 TEXT.zhouyi.hex），
+ * 生肖运势按「今日地支 × 生肖地支」的六冲/六合/三合/相害/相刑 + 五行生克推算。
+ * ========================================================= */
+/* ---- 每日卦签 ---- */
+function qianDateHash(s){
+  let h = 7;
+  for (let i = 0; i < s.length; i++){ h = ((h * 31) + s.charCodeAt(i)) >>> 0; }
+  return h;
+}
+function qianTodayIdx(){
+  const now = new Date();
+  const ds = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  return qianDateHash("qian:" + ds) % 64;
+}
+function qianDraw(byDate){
+  const idx = byDate ? qianTodayIdx() : Math.floor(Math.random() * 64);
+  const hexInfo = (TEXT.zhouyi.hex || [])[idx];
+  const name = hexNameByIndex(idx) || "未知卦";
+  const gong = LY_GONG[idx] ? LY_GONG[idx][0] + "宫" : "";
+  const html = '<div class="card"><div class="card-title">' + (byDate ? "🍀 今日卦签" : "🎋 重新抽取") + ' · ' + name + (gong ? ' <span class="badge" style="font-size:11px;opacity:.75;">' + gong + '</span>' : '') + '</div>' +
+    (hexInfo && hexInfo[1] ? '<div class="kv"><span class="k">卦辞</span><span class="v">' + hexInfo[1] + '</span></div>' : '') +
+    (hexInfo && hexInfo[2] ? '<div class="hint" style="margin-top:6px;">' + hexInfo[2] + '</div>' : '') +
+    '<div class="hint" style="margin-top:8px;">心法：卦为万象之喻，吉卦不狂喜、凶卦不气馁，观其启示、修正言行。</div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
+    '<button class="btn-secondary" onclick="window.qianReDraw()">🎋 重新抽取</button>' +
+    '<button class="btn-primary" onclick="window.qianSave()">💾 存入历史</button></div></div>';
+  _qianLast = { idx: idx, name: name, byDate: byDate || false };
+  const box = document.getElementById("qian-result");
+  if (box) box.innerHTML = html;
+  return html;
+}
+let _qianLast = null;
+function qianInit(){ return qianDraw(true); }
+function qianReDraw(){ return qianDraw(false); }
+function qianSave(){
+  if (!_qianLast) return;
+  const now = new Date();
+  const ds = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  const hexInfo = (TEXT.zhouyi.hex || [])[_qianLast.idx];
+  const input = { date: ds, way: _qianLast.byDate ? "今日签" : "重抽", gua: _qianLast.name };
+  const result = '<div class="card"><div class="card-title">' + _qianLast.name + '</div>' +
+    (hexInfo && hexInfo[1] ? '<div class="kv"><span class="k">卦辞</span><span class="v">' + hexInfo[1] + '</span></div>' : '') +
+    (hexInfo && hexInfo[2] ? '<div class="hint">' + hexInfo[2] + '</div>' : '') + '</div>';
+  addHistory("liqian", input, result, "");
+}
+/* ---- 十二生肖今日运势 ---- */
+const SX_ZHI = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const SX_NAME = ["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+const SX_ZHI_WX = {"子":"水","丑":"土","寅":"木","卯":"木","辰":"土","巳":"火","午":"火","未":"土","申":"金","酉":"金","戌":"土","亥":"水"};
+const SX_COLOR = {"木":["青绿","#2E7D4F"],"火":["红紫","#B5482A"],"土":["黄棕","#8B6F47"],"金":["白金银","#7A7A8A"],"水":["黑蓝","#2C4A6E"]};
+const SX_NUM = {"木":[3,8],"火":[2,7],"土":[5,10],"金":[4,9],"水":[1,6]};
+const SX_DIR = {"木":"东","火":"南","土":"中/西南","金":"西","水":"北"};
+const SX_SHENG = {"木":"火","火":"土","土":"金","金":"水","水":"木"};
+const SX_KE = {"木":"土","土":"水","水":"火","火":"金","金":"木"};
+/* 标准关系表：六冲 / 六合 / 相害（地支索引 0-11） */
+const SX_CHONG = {0:6,6:0, 1:7,7:1, 2:8,8:2, 3:9,9:3, 4:10,10:4, 5:11,11:5};
+const SX_HE = {0:1,1:0, 2:11,11:2, 3:10,10:3, 4:9,9:4, 5:8,8:5, 6:7,7:6};
+const SX_HAI = {0:7,7:0, 1:6,6:1, 2:5,5:2, 3:4,4:3, 8:11,11:8, 9:10,10:9};
+/* 三合：三组关系（同组互为三合） */
+const SX_SANHE = [[0,4,8],[2,6,10],[5,9,1],[3,7,11]];
+/* 相刑（简化标准刑）：寅巳、巳申、申寅（互为）；丑未、未戌、戌丑；子卯；辰午酉亥自刑 */
+const SX_XING = {2:[5,8],5:[2,8],8:[2,5], 1:[7,10],7:[1,10],10:[1,7], 0:[3],3:[0], 4:[4],6:[6],9:[9],11:[11]};
+function sxScore(dayZhi, sxZhi){
+  let s = 0; const tags = [];
+  if (SX_CHONG[dayZhi] === sxZhi){ s -= 2; tags.push("六冲"); }
+  if (SX_HE[dayZhi] === sxZhi){ s += 2; tags.push("六合"); }
+  if (SX_HAI[dayZhi] === sxZhi){ s -= 1.5; tags.push("相害"); }
+  SX_SANHE.forEach(grp => { if (grp.indexOf(dayZhi) >= 0 && grp.indexOf(sxZhi) >= 0 && dayZhi !== sxZhi){ s += 1.5; tags.push("三合"); } });
+  const xs = SX_XING[dayZhi] || [];
+  if (xs.indexOf(sxZhi) >= 0){ s -= 1; tags.push("相刑"); }
+  if (dayZhi === sxZhi){ s += 1; tags.push("本命日"); }
+  /* 五行生克 */
+  const dw = SX_ZHI_WX[SX_ZHI[dayZhi]], sw = SX_ZHI_WX[SX_ZHI[sxZhi]];
+  if (SX_SHENG[dw] === sw){ s += 1; tags.push("日辰生我"); }
+  else if (SX_SHENG[sw] === dw){ s += 0.5; tags.push("我生日辰稍泄气"); }
+  else if (SX_KE[sw] === dw){ s += 0.5; tags.push("我克日辰占主动"); }
+  else if (SX_KE[dw] === sw){ s -= 1; tags.push("日辰克我"); }
+  return { score: s, tags: tags };
+}
+function sxLevel(s){
+  if (s >= 3) return { lv: "大吉", cls: "sx-2" };
+  if (s >= 2) return { lv: "吉", cls: "sx-1" };
+  if (s >= 0.5) return { lv: "平偏吉", cls: "sx-0" };
+  if (s > -0.5) return { lv: "平", cls: "sx-0" };
+  if (s > -2) return { lv: "平偏慎", cls: "sx-m1" };
+  return { lv: "谨慎", cls: "sx-m2" };
+}
+function sxBuild(dayGzIdx){
+  const dayZhi = dayGzIdx % 12;
+  const gz = LY_GAN[dayGzIdx % 10] + LY_ZHI[dayZhi];   // 依赖六爻模块的 LY_GAN/LY_ZHI（同文件已定义）
+  const rows = [];
+  let best = -99, worst = 99, bIdx = -1, wIdx = -1;
+  SX_NAME.forEach((nm, i) => {
+    const r = sxScore(dayZhi, i);
+    const lv = sxLevel(r.score);
+    const wxC = SX_ZHI_WX[SX_ZHI[i]];
+    rows.push({ name: nm, zhi: SX_ZHI[i], score: r.score, lv: lv, tags: r.tags, color: SX_COLOR[wxC], num: SX_NUM[wxC], dir: SX_DIR[wxC] });
+    if (r.score > best){ best = r.score; bIdx = i; }
+    if (r.score < worst){ worst = r.score; wIdx = i; }
+  });
+  return { gz: gz, dayZhi: dayZhi, rows: rows, best: bIdx, worst: wIdx, bestScore: best, worstScore: worst };
+}
+function sxRenderTips(dayZhi){
+  const zh = SX_ZHI[dayZhi];
+  const chong = SX_ZHI[SX_CHONG[dayZhi]];
+  const he = SX_ZHI[SX_HE[dayZhi]];
+  const hai = SX_ZHI[SX_HAI[dayZhi]];
+  let tips = "今日地支 " + zh + "：";
+  tips += "与" + chong + "生肖相冲（大事缓办），与" + he + "生肖六合（合作顺利），与" + hai + "生肖相害（多留个心眼）";
+  return tips;
+}
+function sxRender(dayGzIdx){
+  const d = sxBuild(dayGzIdx);
+  let html = '<div class="card"><div class="card-title">🐅 十二生肖今日运势 <span class="badge" style="font-size:11px;opacity:.75;">日柱 ' + d.gz + '</span></div>';
+  html += '<div class="hint" style="margin-bottom:6px;">' + sxRenderTips(d.dayZhi) + '</div>';
+  html += '<div class="sx-grid">';
+  d.rows.forEach(r => {
+    const tags = r.tags.length ? r.tags.join("·") : "平稳";
+    html += '<div class="sx-item"><div class="sx-head"><b>' + r.name + '</b><span class="sx-lv ' + r.lv.cls + '">' + r.lv.lv + '</span><span class="sx-score">' + (r.score > 0 ? "+" : "") + r.score + '</span></div>' +
+      '<div class="sx-tag">' + tags + '</div>' +
+      '<div class="sx-luck"><span style="color:' + r.color[1] + ';">●</span> ' + r.color[0] + ' · 数 ' + r.num.join("/") + ' · 方' + r.dir + '</div></div>';
+  });
+  html += '</div>';
+  html += '<div class="hint" style="margin-top:8px;">规则：按当日地支与生肖地支的六冲/六合/三合/相害/相刑及五行生克综合计分，仅供参考。</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn-primary" onclick="window.sxSave()">💾 存入历史</button></div></div>';
+  _sxLast = d;
+  const box = document.getElementById("sx-result");
+  if (box) box.innerHTML = html;
+  return html;
+}
+let _sxLast = null;
+function sxInit(){
+  let gz = 0;
+  try{
+    const now = new Date();
+    gz = dayGanZhiIdxFromDate(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours());
+  }catch(_){}
+  return sxRender(gz);
+}
+function sxSave(){
+  if (!_sxLast) return;
+  const now = new Date();
+  const ds = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+  const input = { date: ds, gz: _sxLast.gz };
+  let txt = [];
+  _sxLast.rows.forEach(r => { txt.push(r.name + "(" + r.lv.lv + " " + (r.score>0?"+":"") + r.score + " " + (r.tags.length?r.tags.join("/"):"平稳") + ")"); });
+  const result = '<div class="card"><div class="card-title">🐅 十二生肖今日运势 · 日柱 ' + _sxLast.gz + '</div><div class="desc-text">' + txt.join("；") + '</div></div>';
+  addHistory("shengxiao", input, result, "");
+}
+try{ TYPE_LABEL["liqian"] = "每日卦签"; TYPE_LABEL["shengxiao"] = "生肖今日运势"; }catch(_){}
+try{
+  window.qianInit = qianInit; window.qianReDraw = qianReDraw; window.qianSave = qianSave;
+  window.sxInit = sxInit; window.sxSave = sxSave;
+}catch(_){}
+
+
 
 /* ===== UX Smooth: 常量 & 新 key 命名（集中声明，不硬编码散点） ===== */
 const QC_CMDS = [
+  {cmd:"卦签",   label:"今日卦签",        sub:"今日Tab → 每日卦签", k:"🎋", run(){ try{ window.switchTab&&window.switchTab('today'); setTimeout(function(){var e=document.getElementById('sec-today2'); if(e) e.scrollIntoView({behavior:'smooth',block:'start'});},80); }catch(_){} }},
+  {cmd:"生肖",   label:"十二生肖今日运势", sub:"今日Tab → 生肖运势", k:"🐅", run(){ try{ window.switchTab&&window.switchTab('today'); setTimeout(function(){var e=document.getElementById('sec-today3'); if(e) e.scrollIntoView({behavior:'smooth',block:'start'});},80); }catch(_){} }},
   {cmd:"六爻",   label:"六爻纳甲起卦",     sub:"中式命理 / 六爻Tab", k:"🔮", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn','cn8'); }catch(_){} }},
   {cmd:"八字",   label:"算八字排盘",    sub:"中式命理 / 八字Tab", k:"☯", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn1'); }catch(_){} }},
   {cmd:"奇门",   label:"排奇门遁甲盘",  sub:"中式命理 / 奇门Tab", k:"🧭", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn4'); }catch(_){} }},
@@ -7710,6 +7891,8 @@ function renderToday(){
     </div>
   `;
   archiveDailyTarot(td, dateStr);
+  try{ if(typeof window.qianInit==='function') window.qianInit(); }catch(_){}
+  try{ if(typeof window.sxInit==='function') window.sxInit(); }catch(_){}
 }
 function archiveDailyTarot(td, dateStr){
   if(typeof TAROT_DATA==='undefined') return;
@@ -20010,7 +20193,7 @@ function _lenormandAIEnhance(cards, spreadType){
       + '.widget{background:var(--card);border-radius:12px;padding:12px;border:1px solid rgba(139,111,71,.15);box-shadow:0 2px 8px rgba(0,0,0,.06);}\n'
       + '.w-date{font-size:11px;color:var(--text-sub);margin-bottom:6px;text-align:center;}\n'
       + '.w-title{font-size:13px;font-weight:700;color:var(--pri);text-align:center;margin-bottom:8px;}\n'
-      + '
+      + `
 /* ===== 六爻纳甲样式 ===== */
 .ly-table{width:100%;}
 .ly-row{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:13px;border-bottom:1px solid var(--card-border);background:var(--card);}
@@ -20030,7 +20213,7 @@ function _lenormandAIEnhance(cards, spreadType){
 .ly-level-0{background:#8a8a7a;}
 .ly-level-1{background:#5e8a5e;}
 .ly-level-2,.ly-level-3{background:#2e7d4f;}
-</style>\n</head>\n<body>\n'
+</style>\n</head>\n<body>\n`
       + '<div class="widget">\n<div class="w-date">'+dateStr+'</div>\n<div class="w-title">✦ 知命V2 今日运势</div>\n'
       + widgetContent
       + '</div>\n</body>\n</html>';
