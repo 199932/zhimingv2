@@ -1348,7 +1348,7 @@ body.banner-show{padding-top:40px;}
   .page{ max-width:680px; margin:0 auto; padding-left:24px; padding-right:24px; }
   .copy-bar{ max-width:680px; margin:0 auto; }
   .bottom-tabs{ max-width:680px; margin:0 auto; border-left:1px solid var(--btab-border); border-right:1px solid var(--btab-border); border-radius:18px 18px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.06); }
-  .today-widget-grid{ grid-template-columns:repeat(3,1fr); }
+  .today-widget-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 
 /* ---- 2. 入口区：功能按钮降噪，命令面板降级为整行轻入口 ---- */
@@ -1396,9 +1396,9 @@ body.banner-show{padding-top:40px;}
   .ft-summary{ font-size:10.5px; }
 }
 
-/* ---- 6. 小部件网格：统一容器与标题节奏 ---- */
-.today-widget-grid{ gap:12px; }
-.widget{ border-radius:16px; padding:14px; min-height:128px; border:1px solid var(--card-border); box-shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 20px var(--card-shadow); }
+/* ---- 6. 小部件网格：统一容器与标题节奏（minmax 防内容撑破轨道） ---- */
+.today-widget-grid{ gap:12px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.widget{ border-radius:16px; padding:14px; min-height:128px; min-width:0; border:1px solid var(--card-border); box-shadow:0 1px 2px rgba(0,0,0,.03), 0 6px 20px var(--card-shadow); }
 .widget-title{ font-size:13px; letter-spacing:.2px; gap:5px; }
 .widget-body{ line-height:1.5; }
 
