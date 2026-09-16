@@ -4856,8 +4856,8 @@ try{
 
 /* ===== UX Smooth: 常量 & 新 key 命名（集中声明，不硬编码散点） ===== */
 const QC_CMDS = [
-  {cmd:"卦签",   label:"今日卦签",        sub:"今日Tab → 每日卦签", k:"🎋", run(){ try{ window.switchTab&&window.switchTab('today'); setTimeout(function(){var e=document.getElementById('sec-today2'); if(e) e.scrollIntoView({behavior:'smooth',block:'start'});},80); }catch(_){} }},
-  {cmd:"生肖",   label:"十二生肖今日运势", sub:"今日Tab → 生肖运势", k:"🐅", run(){ try{ window.switchTab&&window.switchTab('today'); setTimeout(function(){var e=document.getElementById('sec-today3'); if(e) e.scrollIntoView({behavior:'smooth',block:'start'});},80); }catch(_){} }},
+  {cmd:"卦签",   label:"今日卦签",        sub:"今日Tab → 每日卦签", k:"🎋", run(){ try{ window.switchTab&&window.switchTab('today'); setTimeout(function(){var e=document.getElementById('sec-today2'); if(e){var y=e.getBoundingClientRect().top+window.scrollY-12; window.scrollTo({top:y,behavior:'smooth'});} },400); }catch(_){} }},
+  {cmd:"生肖",   label:"十二生肖今日运势", sub:"今日Tab → 生肖运势", k:"🐅", run(){ try{ window.switchTab&&window.switchTab('today'); setTimeout(function(){var e=document.getElementById('sec-today3'); if(e){var y=e.getBoundingClientRect().top+window.scrollY-12; window.scrollTo({top:y,behavior:'smooth'});} },400); }catch(_){} }},
   {cmd:"六爻",   label:"六爻纳甲起卦",     sub:"中式命理 / 六爻Tab", k:"🔮", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn','cn8'); }catch(_){} }},
   {cmd:"八字",   label:"算八字排盘",    sub:"中式命理 / 八字Tab", k:"☯", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn1'); }catch(_){} }},
   {cmd:"奇门",   label:"排奇门遁甲盘",  sub:"中式命理 / 奇门Tab", k:"🧭", run(){ try{ window.switchTab&&window.switchTab('cn'); window.switchSec&&window.switchSec('cn4'); }catch(_){} }},
