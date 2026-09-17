@@ -1418,6 +1418,11 @@ body.banner-show{padding-top:40px;}
 .sx-item{ border-radius:12px; padding:12px 14px; box-shadow:0 1px 2px rgba(0,0,0,.02), 0 3px 10px var(--card-shadow); }
 .sx-lv{ font-size:10px; padding:2px 8px; letter-spacing:.3px; }
 .sx-tag{ font-size:11.5px; }
+.sx-item.sx-mine{ box-shadow:0 0 0 2px var(--pri), 0 3px 12px rgba(107,92,165,.35); transform:translateY(-1px); }
+.sx-item.sx-mine .sx-head{ color:var(--pri); font-weight:700; }
+.sx-mine-note{ margin-top:10px; padding:10px 12px; border-radius:12px; background:linear-gradient(135deg,rgba(107,92,165,.12),rgba(107,92,165,.04)); border:1px solid rgba(107,92,165,.25); font-size:12.5px; line-height:1.8; color:var(--text); }
+.profile-link-strip{ margin:0 0 10px; padding:10px 12px; border-radius:12px; background:rgba(107,92,165,.08); border:1px dashed rgba(107,92,165,.4); font-size:12px; color:var(--text-sub); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.profile-link-strip button{ padding:3px 10px; border-radius:6px; border:1px solid rgba(107,92,165,.35); background:var(--card); color:var(--pri); font-size:11px; cursor:pointer; }
 
 /* ---- 10. 推送行 ---- */
 .notify-toggle-row{ border-radius:14px; padding:13px 16px; margin-top:16px; }
@@ -1454,7 +1459,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.10.8</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.10.9</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -4811,26 +4816,58 @@ function qianDateHash(s){
   for (let i = 0; i < s.length; i++){ h = ((h * 31) + s.charCodeAt(i)) >>> 0; }
   return h;
 }
+/* 与个人档案联动：同一自然日不同档案（生日/性别不同）得到不同但稳定的卦签；无档案时退化为按日期哈希 */
 function qianTodayIdx(){
   const now = new Date();
   const ds = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
-  return qianDateHash("qian:" + ds) % 64;
+  let salt = "";
+  try{
+    const p = (typeof window.getActiveProfile === 'function') ? window.getActiveProfile() : null;
+    if (p){
+      /* 优先用命理核心参数（生日+性别）参与哈希：改生日/性别即换今日卦 */
+      const bdSalt = [p.year, p.month, p.day, p.gender].join("-");
+      salt = (bdSalt.replace(/\-/g, "").length >= 3) ? (":p:" + bdSalt) : (":pid:" + (p.id || "anon"));
+    }
+  }catch(_){}
+  return qianDateHash("qian:" + ds + salt) % 64;
+}
+function profileStripHTML(){
+  try{
+    const p = (typeof window.getActiveProfile === 'function') ? window.getActiveProfile() : null;
+    if (p) return "";
+    return '<div class="profile-link-strip">👤 当前未关联人物档案，每人生日不同、今日卦签与生肖宜忌也不同。<button onclick="window.openProfileModal&&window.openProfileModal()">去设置档案</button></div>';
+  }catch(_){ return ""; }
+}
+function escProfileName(n){
+  return String(n == null ? "" : n).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
 }
 function qianDraw(byDate){
   const idx = byDate ? qianTodayIdx() : Math.floor(Math.random() * 64);
   const hexInfo = (TEXT.zhouyi.hex || [])[idx];
   const name = hexNameByIndex(idx) || "未知卦";
   const gong = LY_GONG[idx] ? LY_GONG[idx][0] + "宫" : "";
+  let profileLine = "";
+  try{
+    const p = (typeof window.getActiveProfile === 'function') ? window.getActiveProfile() : null;
+    if (p){
+      const nm = escProfileName(p.name || "此人");
+      const bd = [p.year, p.month, p.day].filter(v=>v).join("-");
+      profileLine = '<div class="hint" style="margin-top:6px;">🔗 本次卦签依「' + nm + '」' + (bd ? '（生日 ' + bd + '）' : '') + '的档案抽取：同一日期不同命主，卦象亦不相同。</div>';
+    }
+  }catch(_){}
   const html = '<div class="card"><div class="card-title">' + (byDate ? "🍀 今日卦签" : "🎋 重新抽取") + ' · ' + name + (gong ? ' <span class="badge" style="font-size:11px;opacity:.75;">' + gong + '</span>' : '') + '</div>' +
     (hexInfo && hexInfo[1] ? '<div class="kv"><span class="k">卦辞</span><span class="v">' + hexInfo[1] + '</span></div>' : '') +
     (hexInfo && hexInfo[2] ? '<div class="hint" style="margin-top:6px;">' + hexInfo[2] + '</div>' : '') +
+    profileLine +
     '<div class="hint" style="margin-top:8px;">心法：卦为万象之喻，吉卦不狂喜、凶卦不气馁，观其启示、修正言行。</div>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
     '<button class="btn-secondary" onclick="window.qianReDraw()">🎋 重新抽取</button>' +
     '<button class="btn-primary" onclick="window.qianSave()">💾 存入历史</button></div></div>';
   _qianLast = { idx: idx, name: name, byDate: byDate || false };
   const box = document.getElementById("qian-result");
-  if (box) box.innerHTML = html;
+  if (box) box.innerHTML = profileStripHTML() + html;
   return html;
 }
 let _qianLast = null;
@@ -4841,7 +4878,12 @@ function qianSave(){
   const now = new Date();
   const ds = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
   const hexInfo = (TEXT.zhouyi.hex || [])[_qianLast.idx];
-  const input = { date: ds, way: _qianLast.byDate ? "今日签" : "重抽", gua: _qianLast.name };
+  let who = "";
+  try{
+    const p = (typeof window.getActiveProfile === 'function') ? window.getActiveProfile() : null;
+    if (p && p.name) who = String(p.name).slice(0, 8);
+  }catch(_){}
+  const input = { date: ds, way: _qianLast.byDate ? "今日签" : "重抽", gua: _qianLast.name, profile: who };
   const result = '<div class="card"><div class="card-title">' + _qianLast.name + '</div>' +
     (hexInfo && hexInfo[1] ? '<div class="kv"><span class="k">卦辞</span><span class="v">' + hexInfo[1] + '</span></div>' : '') +
     (hexInfo && hexInfo[2] ? '<div class="hint">' + hexInfo[2] + '</div>' : '') + '</div>';
@@ -4913,19 +4955,51 @@ function sxRenderTips(dayZhi){
   tips += "与" + chong + "生肖相冲（大事缓办），与" + he + "生肖六合（合作顺利），与" + hai + "生肖相害（多留个心眼）";
   return tips;
 }
+/* 档案联动：由档案出生年推算其生肖地支索引（子=0…亥=11），与年支算法 ((y-4)%12+12)%12 同源 */
+function sxOfProfile(p){
+  if (!p || !p.year) return -1;
+  const y = +p.year;
+  if (!(y >= 1900 && y <= 2100)) return -1;
+  return (((y - 4) % 12) + 12) % 12;
+}
 function sxRender(dayGzIdx){
   const d = sxBuild(dayGzIdx);
-  let html = '<div class="card"><div class="card-title">🐅 十二生肖今日运势 <span class="badge" style="font-size:11px;opacity:.75;">日柱 ' + d.gz + '</span></div>';
+  let profile = null, mySxIdx = -1;
+  try{
+    profile = (typeof window.getActiveProfile === 'function') ? window.getActiveProfile() : null;
+    mySxIdx = sxOfProfile(profile);
+  }catch(_){}
+  const myName = profile ? (profile.name ? escProfileName(profile.name) : "当前档案") : "";
+  const titleTxt = profile
+    ? '🐅 十二生肖今日运势 · ' + myName + (mySxIdx >= 0 ? '（' + SX_NAME[mySxIdx] + '）' : '')
+    : '🐅 十二生肖今日运势';
+  let html = '<div class="card"><div class="card-title">' + titleTxt + ' <span class="badge" style="font-size:11px;opacity:.75;">日柱 ' + d.gz + '</span></div>';
   html += '<div class="hint" style="margin-bottom:6px;">' + sxRenderTips(d.dayZhi) + '</div>';
+  /* 档案专属运势：置顶第一张卡片并高亮 */
+  if (profile && mySxIdx >= 0){
+    const r = sxScore(d.dayZhi, mySxIdx);
+    const lv = sxLevel(r.score);
+    const wxC = SX_ZHI_WX[SX_ZHI[mySxIdx]];
+    const tags = r.tags.length ? r.tags.join("·") : "平稳";
+    html += '<div class="sx-mine-note">⭐ <b>' + myName + '（' + SX_NAME[mySxIdx] + '生肖）</b> 今日专属：' +
+      '<b style="color:var(--pri);">' + lv.lv + '</b>（' + (r.score > 0 ? "+" : "") + r.score + ' 分）· ' + tags +
+      '<br>开运：<span style="color:' + SX_COLOR[wxC][1] + ';">●</span>' + SX_COLOR[wxC][0] + ' · 幸运数字 ' + SX_NUM[wxC].join("/") + ' · 吉利方位 ' + SX_DIR[wxC] + '</div>';
+  }
   html += '<div class="sx-grid">';
   d.rows.forEach(r => {
+    const isMine = (mySxIdx >= 0 && r.zhi === SX_ZHI[mySxIdx]);
     const tags = r.tags.length ? r.tags.join("·") : "平稳";
-    html += '<div class="sx-item"><div class="sx-head"><b>' + r.name + '</b><span class="sx-lv ' + r.lv.cls + '">' + r.lv.lv + '</span><span class="sx-score">' + (r.score > 0 ? "+" : "") + r.score + '</span></div>' +
+    html += '<div class="sx-item' + (isMine ? " sx-mine" : "") + '"><div class="sx-head">' + (isMine ? "⭐ " : "") + '<b>' + r.name + '</b>' + (isMine ? ' <span style="font-size:10px;color:var(--pri);">我的</span>' : '') + '<span class="sx-lv ' + r.lv.cls + '">' + r.lv.lv + '</span><span class="sx-score">' + (r.score > 0 ? "+" : "") + r.score + '</span></div>' +
       '<div class="sx-tag">' + tags + '</div>' +
       '<div class="sx-luck"><span style="color:' + r.color[1] + ';">●</span> ' + r.color[0] + ' · 数 ' + r.num.join("/") + ' · 方' + r.dir + '</div></div>';
   });
   html += '</div>';
-  html += '<div class="hint" style="margin-top:8px;">规则：按当日地支与生肖地支的六冲/六合/三合/相害/相刑及五行生克综合计分，仅供参考。</div>';
+  html += '<div class="hint" style="margin-top:8px;">' + (profile
+    ? '规则：按当日地支与各生肖地支的六冲/六合/三合/相害/相刑及五行生克综合计分；⭐为「' + myName + '」档案生肖。仅供参考。'
+    : '规则：按当日地支与各生肖地支的六冲/六合/三合/相害/相刑及五行生克综合计分，仅供参考。') + '</div>';
+  if (!profile){
+    html += '<div class="profile-link-strip" style="margin-top:10px;">👤 设置人物档案后，可高亮你的生肖并给出专属开运运势。<button onclick="window.openProfileModal&&window.openProfileModal()">去设置档案</button></div>';
+  }
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn-primary" onclick="window.sxSave()">💾 存入历史</button></div></div>';
   _sxLast = d;
   const box = document.getElementById("sx-result");
@@ -4945,10 +5019,21 @@ function sxSave(){
   if (!_sxLast) return;
   const now = new Date();
   const ds = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
-  const input = { date: ds, gz: _sxLast.gz };
+  let who = "";
+  let myIdx = -1;
+  try{
+    const p = (typeof window.getActiveProfile === 'function') ? window.getActiveProfile() : null;
+    if (p && p.name) who = String(p.name).slice(0, 8);
+    myIdx = sxOfProfile(p);
+  }catch(_){}
+  const input = { date: ds, gz: _sxLast.gz, profile: who };
   let txt = [];
-  _sxLast.rows.forEach(r => { txt.push(r.name + "(" + r.lv.lv + " " + (r.score>0?"+":"") + r.score + " " + (r.tags.length?r.tags.join("/"):"平稳") + ")"); });
-  const result = '<div class="card"><div class="card-title">🐅 十二生肖今日运势 · 日柱 ' + _sxLast.gz + '</div><div class="desc-text">' + txt.join("；") + '</div></div>';
+  _sxLast.rows.forEach(r => {
+    const mineTag = (myIdx >= 0 && r.zhi === SX_ZHI[myIdx]) ? "⭐我的 " : "";
+    txt.push(mineTag + r.name + "(" + r.lv.lv + " " + (r.score>0?"+":"") + r.score + " " + (r.tags.length?r.tags.join("/"):"平稳") + ")");
+  });
+  const whoTxt = who ? " · " + who : "";
+  const result = '<div class="card"><div class="card-title">🐅 十二生肖今日运势' + whoTxt + ' · 日柱 ' + _sxLast.gz + '</div><div class="desc-text">' + txt.join("；") + '</div></div>';
   addHistory("shengxiao", input, result, "");
 }
 try{ TYPE_LABEL["liqian"] = "每日卦签"; TYPE_LABEL["shengxiao"] = "生肖今日运势"; }catch(_){}
@@ -14469,6 +14554,14 @@ function updateProfile(id, patch){
   if (i < 0) return;
   window._profiles[i] = Object.assign({}, window._profiles[i], patch || {});
   saveProfiles();
+  /* 档案联动：编辑的是当前激活档案（改名/生日/性别等）时，刷新今日卦签与生肖运势 */
+  try{
+    if (id && id === window._activeProfileId){
+      if (typeof renderToday === 'function'){ setTimeout(function(){ try{ renderToday(); }catch(_){} }, 30); }
+      try{ syncProfileToWuTabs(); }catch(_){}
+      try{ updateTopProfileBadge(); }catch(_){}
+    }
+  }catch(_){}
 }
 function deleteProfile(id){
   window._profiles = window._profiles.filter(x=>x.id!==id);
