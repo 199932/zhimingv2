@@ -1454,7 +1454,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.10.7</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.10.8</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -1484,7 +1484,7 @@ body{ padding-bottom:160px; }
 <!-- ===== 今日主Tab ===== -->
 <!-- ===== 顶部 Primary Action Zone（新手第一眼入口） ===== -->
 <div class="primary-action" id="primaryActionZone" aria-label="今日我想算">
-  <button class="pab pab-cn" type="button" onclick="window.switchTab && window.switchTab('cn'); window.switchSec && window.switchSec('cn1'); if(document.getElementById('bazi_year') && !document.getElementById('bazi_year').value) window.applySmartDefaultsToForms && window.applySmartDefaultsToForms('bazi'); var e1=document.getElementById('sec-cn1'); if(e1) try{e1.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}">
+  <button class="pab pab-cn" type="button" onclick="window.switchTab && window.switchTab('cn'); window.switchSec && window.switchSec('cn1'); if(document.getElementById('bz-year') && !document.getElementById('bz-year').value) window.applySmartDefaultsToForms && window.applySmartDefaultsToForms('bazi'); var e1=document.getElementById('sec-cn1'); if(e1) try{e1.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}">
     <span class="emj">☯️</span><span>八字排盘</span>
   </button>
   <button class="pab pab-wu" type="button" onclick="window.switchTab && window.switchTab('wu'); window.switchSec && window.switchSec('wu1'); var f=window.drawTarotDaily || function(){}; try{f('single', document.getElementById('result-wu1'));}catch(_){} var e1=document.getElementById('sec-wu1'); if(e1) try{e1.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}">
@@ -7965,9 +7965,9 @@ function renderToday(){
     <div class="find-day-card" id="todayFindDayCard">
       <div class="fdc-title">🔍 找合适的日子</div>
       <div class="fdc-btns">
-        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();document.getElementById('dayPickerYi').value='嫁娶';document.getElementById('dayPickerSearch').click();}catch(_){}},120);">宜嫁娶</button>
-        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();document.getElementById('dayPickerYi').value='出行';document.getElementById('dayPickerSearch').click();}catch(_){}},120);">宜出行</button>
-        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();document.getElementById('dayPickerYi').value='签约';document.getElementById('dayPickerSearch').click();}catch(_){}},120);">宜签约</button>
+        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();window.dayPickerRun('嫁娶');}catch(_){}},120);">宜嫁娶</button>
+        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();window.dayPickerRun('出行');}catch(_){}},120);">宜出行</button>
+        <button class="fdc-btn" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();window.dayPickerRun('签约');}catch(_){}},120);">宜签约</button>
       </div>
       <div class="fdc-link" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();}catch(_){}},80);">自定义筛选 →</div>
     </div>
@@ -9800,8 +9800,8 @@ try{ window.renderShouyaoStage = renderShouyaoStage; }catch(_){}
 
 function openShouyaoMeihua(){
   _shouyaoState = { idx:0, yaos:[0,0,0,0,0,0] };
-  // 尝试注入到结果区或梅花主结果区
-  let host = document.getElementById('result-cn6');
+  // 注入到梅花易数结果区前（手摇卦属于梅花模块 sec-cn7）
+  let host = document.getElementById('sec-cn7');
   if(!host) host = document.getElementById('sec-cn6');
   if(!host) return;
   // 新建 div
@@ -9809,7 +9809,8 @@ function openShouyaoMeihua(){
   if(!stageDiv){
     stageDiv = document.createElement('div');
     stageDiv.id = 'shouyao-stage-div';
-    host.insertBefore(stageDiv, host.firstChild);
+    const anchor = document.getElementById('mh-result') || host.firstChild;
+    host.insertBefore(stageDiv, anchor);
   }
   stageDiv.innerHTML = renderShouyaoStage();
   stageDiv.scrollIntoView && stageDiv.scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -9893,29 +9894,97 @@ function finishShouyao(){
       // 自动填日期到梅花输入框（如果存在）
       const now = new Date();
       const tryFill = (id,val)=>{ try{ const el=document.getElementById(id); if(el) el.value=String(val); }catch(_){} };
-      tryFill('mh-Y' , now.getFullYear());
-      tryFill('mh-M' , now.getMonth()+1);
-      tryFill('mh-D' , now.getDate());
-      tryFill('mh-h' , now.getHours());
+      tryFill('mh-year' , now.getFullYear());
+      tryFill('mh-month' , now.getMonth()+1);
+      tryFill('mh-day' , now.getDate());
+      tryFill('mh-hour' , now.getHours());
     }catch(_){}
-    // 如果存在 setYaos 接口就调用
+    // 手摇卦闭环：6 爻 → 本卦/变卦/体用断（见 setYaosFromShouyao）
     try{
       if(typeof window.setYaosFromShouyao === 'function'){
         window.setYaosFromShouyao(st.yaos.slice());
       }
     }catch(_){}
+    // 尝试滚动到梅花结果区
+    try{
+      const res = document.getElementById('mh-result');
+      if(res) res.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }catch(_){}
     // 尝试触发梅花计算按钮
     try{
-      const btns = document.querySelectorAll('#sec-cn6 button.btn-primary');
+      const btns = document.querySelectorAll('#sec-cn7 button.btn-primary');
       if(btns && btns.length){
         // 不直接触发，保留用户确认；仅提示
         let host2 = document.getElementById('shouyao-stage-div');
-        if(host2) host2.innerHTML += '<div class="lingshu-tip">👉 请点击上方「起卦」按钮（或直接以手动输入方式）完成计算。</div>';
+        if(host2) host2.innerHTML += '<div class="lingshu-tip">👉 手摇卦结果已写入下方梅花结果区，可继续调整。</div>';
       }
     }catch(_){}
   }catch(_){}
 }
 try{ window.finishShouyao = finishShouyao; }catch(_){}
+
+/* Phase 3 · C2: 手摇卦闭环 —— 6 爻 → 本卦/变卦/动爻/体用断（梅花易数断法） */
+try{
+  window.setYaosFromShouyao = function(yaos){
+    if(!yaos || yaos.length !== 6) return;
+    // 6/8=阴，7/9=阳；6/9 为动爻（yaos[0]=初爻 … yaos[5]=上爻）
+    const yv = yaos.map(function(v){ return (v===6||v===8) ? 0 : 1; });
+    function shouyaoFindNum(lines){
+      // lines 与 MEIHUA_BAGUA_NUM.line 一致：上爻在前
+      for(let i=1;i<=8;i++){
+        const b = MEIHUA_BAGUA_NUM[i];
+        if(b.line[0]===lines[0]&&b.line[1]===lines[1]&&b.line[2]===lines[2]) return i;
+      }
+      return 1;
+    }
+    // 上卦=爻4,5,6（上爻在前），下卦=爻1,2,3（上爻在前）
+    const topTri = [yv[5], yv[4], yv[3]];
+    const botTri = [yv[2], yv[1], yv[0]];
+    const ben = buildGua6from3(shouyaoFindNum(topTri), shouyaoFindNum(botTri));
+    // 动爻列表
+    const dongIdx = [];
+    yaos.forEach(function(v,i){ if(v===6||v===9) dongIdx.push(i); });
+    // 变卦：所有动爻翻转，再按上爻在前的约定重排上下卦
+    const nv = yv.slice();
+    dongIdx.forEach(function(i){ nv[i] = nv[i]===1?0:1; });
+    const newTopTri = [nv[5], nv[4], nv[3]];
+    const newBotTri = [nv[2], nv[1], nv[0]];
+    const bian = buildGua6from3(shouyaoFindNum(newTopTri), shouyaoFindNum(newBotTri));
+    // 体用：动爻所在之卦为用、另一卦为体（梅花定例；静卦以本卦初爻所在下卦为体）
+    let tiGua, yongGua;
+    if(dongIdx.length===0){ tiGua = ben.bot; yongGua = ben.top; }
+    else {
+      const firstDong = dongIdx[0];
+      if(firstDong<=2){ tiGua = ben.top; yongGua = ben.bot; }
+      else { tiGua = ben.bot; yongGua = ben.top; }
+    }
+    const rel = (typeof tiYongRelation === 'function') ? tiYongRelation(tiGua.wx, yongGua.wx) : {type:'bihe', label:'体用比和', desc:''};
+    const relName = ({bihe:'比和', tikeyong:'体克用', yongketi:'用克体', tishengyong:'体生用', yongshengti:'用生体'}[rel.type]) || rel.label || rel.type;
+    let tip = {career:'', love:'', decision:''};
+    try{ if(typeof meihuaSimpleTip === 'function') tip = meihuaSimpleTip(rel.type, (dongIdx[0]||0)+1, tiGua.wx, yongGua.wx) || tip; }catch(_){}
+    const yaoLabels = ['初','二','三','四','五','上'];
+    const yaoStr = yaos.map(function(v,i){
+      const yn = v===6?'老阴×':(v===7?'少阳':(v===8?'少阴':'老阳○'));
+      return yaoLabels[i]+'爻'+yn;
+    }).join(' · ');
+    let scope = '';
+    try{ scope = (typeof getLiupai === 'function' && getLiupai() && getLiupai().meihua) ? (getLiupai().meihua.tiYong || '') : ''; }catch(_){}
+    const relScopeNote = scope ? '【'+scope+'】' : '';
+    let html = '<div class="card"><div class="card-title">🎲 手摇卦 · 梅花体用断</div>';
+    html += '<div class="kv"><span class="k">本卦</span><span class="v">'+ben.name+'（上'+ben.top.name+'，下'+ben.bot.name+'）</span></div>';
+    html += '<div class="kv"><span class="k">变卦</span><span class="v">'+bian.name+'（上'+bian.top.name+'，下'+bian.bot.name+'）</span></div>';
+    html += '<div class="kv"><span class="k">动爻</span><span class="v">'+(dongIdx.length ? dongIdx.map(function(i){return yaoLabels[i]+'爻';}).join('、') : '静卦·无动爻')+'</span></div>';
+    html += '<div class="kv"><span class="k">体用</span><span class="v">体：'+tiGua.name+'（'+tiGua.wx+'） / 用：'+yongGua.name+'（'+yongGua.wx+'） → '+relName+relScopeNote+'</span></div>';
+    html += '<div class="kv"><span class="k">六爻</span><span class="v" style="font-size:11px;">'+yaoStr+'</span></div>';
+    if(tip.career||tip.love||tip.decision){
+      html += '<div class="desc-text">'+(tip.career?tip.career+'<br>':'')+(tip.love?tip.love+'<br>':'')+(tip.decision?tip.decision:'')+'</div>';
+    }
+    html += '<div class="lingshu-tip" style="margin-top:8px;">'+((dongIdx.length?'动爻所在之卦为「用」，另一卦为「体」':'六爻皆静，以本卦下卦为体、上卦为用')+'；体用五行生克为梅花易数核心断法，仅供娱乐参考。')+'</div></div>';
+    const resultEl = document.getElementById('mh-result');
+    if(resultEl) resultEl.innerHTML = html;
+  };
+}catch(_){}
+try{ window.setYaosFromShouyao = window.setYaosFromShouyao || function(){}; }catch(_){}
 
 /* ============================================================
  *  Phase 3 · D: 大六壬简化排课
@@ -9952,7 +10021,7 @@ function hourToZhiIdx(h){
   h = ((h%24)+24)%24;
   // 23-1 子, 1-3 丑, 3-5 寅, 5-7 卯, 7-9 辰, 9-11 巳
   // 11-13午, 13-15未, 15-17申, 17-19酉, 19-21戌, 21-23亥
-  return (h+1)>>1;  // 0..11
+  return ((h+1)>>1) % 12;  // 0..11（修复 23 点越界：23→子时0）
 }
 try{ window.hourToZhiIdx = hourToZhiIdx; }catch(_){}
 
@@ -9975,11 +10044,12 @@ function calcDaliuren(){
   // 月将加时：天盘 i 位置 = 地盘 (jiangIdx - shiZhiIdx + i + 12*3) % 12
   // 说明：天盘是"地盘整体旋转"，地盘子(0)位天盘 = DLR_ZHIS[(jiangIdx - shiZhiIdx + 12)%12]
   const tianpanOf = (dizhiIdx) => DLR_ZHIS[(jiangIdx - shiZhiIdx + dizhiIdx + 12*3) % 12];
-  // 简化版天干日（以日期最后一位做日干分类：甲乙丙丁戊己庚辛壬癸循环）
+  // 日干支按紫金山天文台公式计算（23-0点子时按次日日柱，与奇门/八字模块同源）
   const RIGAN_TABLE = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
-  const riGanIdx = ((D-1)%10+10)%10;
+  const dgzi = dayGanZhiIdxFromDate(Y, M, D, h);
+  const riGanIdx = dgzi % 10;
   const riGan = RIGAN_TABLE[riGanIdx];
-  const riZhiIdx = ((M*2 + D + (Y%12) -1 )%12 +12)%12;  // 极度简化日支（不精确，仅占位）
+  const riZhiIdx = dgzi % 12;
   const riZhi = DLR_ZHIS[riZhiIdx];
   // 四课：日上两课 + 辰上两课
   // 日上：日天干寄宫（简化 → 甲→寅 乙→辰 丙→巳 丁→未 戊→巳 己→未 庚→申 辛→戌 壬→亥 癸→丑）
@@ -10035,7 +10105,7 @@ function calcDaliuren(){
   // 天将排布：以"贵神"起始按地盘旋转 → 简化，昼贵（日间 6-18）顺行，夜间逆行
   const isDay = (h>=6 && h<18);
   // 贵神落位（简化版：甲戊庚日→丑，乙己日→子，丙丁日→亥，壬癸日→巳，辛日→午）
-  const GUI_WEI = [1,0,11,11,1,1,0,6,5,5]; // 甲乙丙丁戊己庚辛壬癸 贵神落地盘 index
+  const GUI_WEI = [1,0,11,11,1,0,1,6,5,5]; // 甲乙丙丁戊己庚辛壬癸 贵神落地盘 index（甲戊庚→丑、乙己→子、丙丁→亥、辛→午、壬癸→巳）
   const guiDiZhiIdx = GUI_WEI[riGanIdx];
   const tianjiangOf = (dizhiIdx) => {
     const offset = isDay ? ((dizhiIdx - guiDiZhiIdx + 12)%12) : ((guiDiZhiIdx - dizhiIdx + 12)%12);
@@ -10044,7 +10114,7 @@ function calcDaliuren(){
   // 开始渲染
   let html = '';
   html += '<div class="lingshu-tip">📐 <b>简化版大六壬排课</b>：占问 '+Y+'-'+(M<10?'0':'')+M+'-'+(D<10?'0':'')+D+' '+h+'时<br>';
-  html += '月将：<b>'+jiangName+'</b>（按月查表简化） · 时支：<b>'+shiZhi+'</b> · 日干支（占位）：<b>'+riGan+riZhi+'</b></div>';
+  html += '月将：<b>'+jiangName+'</b>（按月查表简化） · 时支：<b>'+shiZhi+'</b> · 日干支：<b>'+riGan+riZhi+'</b></div>';
   // 天盘地盘表（一行地盘一行天盘）
   html += '<div style="overflow-x:auto;margin:10px 0;">';
   html += '<table style="width:100%;max-width:480px;margin:0 auto;font-size:12px;border-collapse:collapse;">';
@@ -11390,20 +11460,23 @@ try{ window.runFirstQcMatch = runFirstQcMatch; }catch(_){}
   };
   const _readXLR = () => {
     try{
-      const y=+document.getElementById("xlr-year").value;
+      // 小六壬输入为「月数/日数/时辰」，与真实表单 xlr-month/xlr-day/xlr-shichen 对齐
       const m=+document.getElementById("xlr-month").value;
       const d=+document.getElementById("xlr-day").value;
-      const h=+document.getElementById("xlr-hour").value;
-      return _chkDate(y,m,d,h,undefined);
+      const s=+document.getElementById("xlr-shichen").value;
+      return (m>=1&&m<=12)&&(d>=1&&d<=31)&&(s>=0&&s<=11);
     }catch(_){return false;}
   };
   const _readMH = () => {
     try{
+      // 梅花易数有三种模式：time/num/zi；仅「时间起卦」需要校验公历日期
+      let mode = 'time';
+      try{ mode = _mhMode || 'time'; }catch(_){}
+      if(mode !== 'time') return true;
       const y=+document.getElementById("mh-year").value;
       const m=+document.getElementById("mh-month").value;
       const d=+document.getElementById("mh-day").value;
       const h=+document.getElementById("mh-hour").value;
-      if(document.getElementById("mh-mode-num")&&document.getElementById("mh-mode-num").checked) return true;
       return _chkDate(y,m,d,h,undefined);
     }catch(_){return false;}
   };
@@ -11470,7 +11543,7 @@ try{ window.runFirstQcMatch = runFirstQcMatch; }catch(_){}
     const _o = window.calcCezi;
     window.calcCezi = function(){
       let txt='';
-      try{ txt = document.getElementById("cz-input").value.trim(); }catch(_){}
+      try{ txt = document.getElementById("cz-char").value.trim(); }catch(_){}
       if(!txt){ showToast('请输入一个汉字','warn'); return; }
       return _o.apply(this, arguments);
     };
@@ -11870,7 +11943,7 @@ function bootstrapUXBindings(){
     // 5) 五格单行快捷输入：注入姓名字段上方
     try{
       if(!document.getElementById('wuge-single-input-wrap')){
-        var surnameEl = document.getElementById('wuge-surname');
+        var surnameEl = document.getElementById('wg-surname');
         if(surnameEl && surnameEl.parentNode){
           var wrap = document.createElement('div');
           wrap.id = 'wuge-single-input-wrap';
@@ -11886,8 +11959,8 @@ function bootstrapUXBindings(){
               var r = null;
               try{ if(window.resolveWugeInput) r = window.resolveWugeInput(v); }catch(_){r=null;}
               if(!r){ r = {surname:v.slice(0,1), given:v.slice(1)}; }
-              try{ var s1=document.getElementById('wuge-surname'); if(s1) s1.value = r.surname||''; }catch(_){}
-              try{ var n1=document.getElementById('wuge-name'); if(n1) n1.value = r.given||''; }catch(_){}
+              try{ var s1=document.getElementById('wg-surname'); if(s1) s1.value = r.surname||''; }catch(_){}
+              try{ var n1=document.getElementById('wg-given'); if(n1) n1.value = r.given||''; }catch(_){}
             });
           }
         }
@@ -11961,7 +12034,7 @@ function renderNextSteps(r, type){
       actions = [
         {icon:'📓', label:'写预测复盘', onclick:"window.openDiaryModal&&window.openDiaryModal()"},
         {icon:'🔍', label:'规律关联', onclick:"window.showMyPatterns&&window.showMyPatterns()"},
-        {icon:'🎨', label:'生成分享卡', onclick:"window.autoShareCardFromHistory&&window.autoShareCardFromHistory()"}
+        {icon:'🎨', label:'生成分享卡', onclick:"window.onShareCardClick&&window.onShareCardClick()"}
       ];
     } else {
       actions = [
@@ -12144,11 +12217,11 @@ function _collectInputHash(moduleId){
       'bz-result': ['bz-year','bz-month','bz-day','bz-hour','bz-minute','bz-gender','bz-city','bz-customLng'],
       'qm-result': ['qm-year','qm-month','qm-day','qm-hour','qm-minute','qm-gender','qm-city','qm-question'],
       'gz-result': ['gz-question','gz-year','gz-month','gz-day','gz-hour','gz-minute','gz-city','gz-gender'],
-      'wg-result': ['wg-surname','wg-givenname'],
+      'wg-result': ['wg-surname','wg-given'],
       'zy-result': ['zy-yao1','zy-yao2','zy-yao3','zy-yao4','zy-yao5','zy-yao6','zy-question'],
-      'xlr-result': ['xlr-year','xlr-month','xlr-day','xlr-hour','xlr-question'],
-      'cz-result': ['cz-input'],
-      'mh-result': ['mh-mode-num','mh-mode-time','mh-num1','mh-num2','mh-year','mh-month','mh-day','mh-hour','mh-question'],
+      'xlr-result': ['xlr-month','xlr-day','xlr-shichen','xlr-question'],
+      'cz-result': ['cz-char','cz-question'],
+      'mh-result': ['mh-year','mh-month','mh-day','mh-hour','mh-num1','mh-num2','mh-zi','mh-question'],
       'tarot-result': ['tarot-count'],
       'zodiac-result': ['zodiac-sign','zodiac-type'],
       'ls-result': ['ls-year','ls-month','ls-day'],
@@ -18192,7 +18265,7 @@ function _ensureDayPickerRoot(){
 }
 function buildDayPickerModal(){
   var root = _ensureDayPickerRoot();
-  root.innerHTML = '<div class="day-picker-modal" id="dayPickerModal" onclick="if(event.target===this)closeDayPicker()"><div class="day-picker-card"><div class="day-picker-head"><h3>📅 找合适的日子</h3><button class="day-close-btn" onclick="window.closeDayPicker()">×</button></div><div class="day-task-radio" id="dayTaskList"><label><input type="radio" name="dayTask" value="搬家" checked>🏠 搬家</label><label><input type="radio" name="dayTask" value="签约">📝 签约</label><label><input type="radio" name="dayTask" value="装修">🛠 装修</label><label><input type="radio" name="dayTask" value="出差">✈️ 出差</label><label><input type="radio" name="dayTask" value="探亲">👨‍👩‍👧 探亲</label><label><input type="radio" name="dayTask" value="约会">💞 约会</label></div><div class="day-range-wrap"><input type="range" id="dayRangeSlider" min="7" max="90" step="1" value="30" style="width:100%;"><div class="day-range-val" id="dayRangeVal">30 天</div></div><button class="day-run-btn" onclick="window.dayPickerRun()">开始分析 🚀</button><div class="day-result" id="dayPickerResult"></div></div></div>';
+  root.innerHTML = '<div class="day-picker-modal" id="dayPickerModal" onclick="if(event.target===this)closeDayPicker()"><div class="day-picker-card"><div class="day-picker-head"><h3>📅 找合适的日子</h3><button class="day-close-btn" onclick="window.closeDayPicker()">×</button></div><div class="day-task-radio" id="dayTaskList"><label><input type="radio" name="dayTask" value="搬家" checked>🏠 搬家</label><label><input type="radio" name="dayTask" value="签约">📝 签约</label><label><input type="radio" name="dayTask" value="装修">🛠 装修</label><label><input type="radio" name="dayTask" value="出差">✈️ 出差</label><label><input type="radio" name="dayTask" value="探亲">👨‍👩‍👧 探亲</label><label><input type="radio" name="dayTask" value="约会">💞 约会</label><label><input type="radio" name="dayTask" value="嫁娶">💒 嫁娶</label><label><input type="radio" name="dayTask" value="出行">🚗 出行</label></div><div class="day-range-wrap"><input type="range" id="dayRangeSlider" min="7" max="90" step="1" value="30" style="width:100%;"><div class="day-range-val" id="dayRangeVal">30 天</div></div><button class="day-run-btn" onclick="window.dayPickerRun()">开始分析 🚀</button><div class="day-result" id="dayPickerResult"></div></div></div>';
   try{
     var sl = document.getElementById('dayRangeSlider');
     var vl = document.getElementById('dayRangeVal');
@@ -18248,7 +18321,7 @@ function dayPickerScore(taskName, ymdStr){
   }catch(_){ d = new Date(); }
   var today = new Date(); today.setHours(0,0,0,0);
   var diffDays = Math.floor((d.getTime() - today.getTime()) / 86400000);
-  var taskWXMap = {'搬家':'土','签约':'金','装修':'木','出差':'水','探亲':'火','约会':'木'};
+  var taskWXMap = {'搬家':'土','签约':'金','装修':'木','出差':'水','探亲':'火','约会':'木','嫁娶':'火','出行':'水'};
   var needWX = taskWXMap[taskName] || '土';
   var gz = _ganZhiOfDay(d);
   var wxMap = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
@@ -18263,7 +18336,7 @@ function dayPickerScore(taskName, ymdStr){
   if(yearWX && sheng[yearWX] === needWX){ wxScore += 10; }
   else if(yearWX && ke[yearWX] === needWX){ wxScore -= 20; }
   var yj = _dayYiJi(d);
-  var taskKWMap = {'搬家':['移徙','入宅','安床','搬家'], '签约':['开市','交易','立券','签约','订盟','纳采'], '装修':['修造','动土','上梁','竖柱','盖屋','装修'], '出差':['出行','赴任','出差'], '探亲':['出行','探亲','进人口'], '约会':['嫁娶','订盟','纳采','约会']};
+  var taskKWMap = {'搬家':['移徙','入宅','安床','搬家'], '签约':['开市','交易','立券','签约','订盟','纳采'], '装修':['修造','动土','上梁','竖柱','盖屋','装修'], '出差':['出行','赴任','出差'], '探亲':['出行','探亲','进人口'], '约会':['嫁娶','订盟','纳采','约会'], '嫁娶':['嫁娶','订盟','纳采','约会'], '出行':['出行','赴任','出差','探亲']};
   var kws = taskKWMap[taskName] || [];
   var yjScore = 15;
   for(var ki=0;ki<kws.length;ki++){
@@ -18272,7 +18345,7 @@ function dayPickerScore(taskName, ymdStr){
   }
   if(yj.yi.indexOf('诸事不宜')>=0){ yjScore = Math.min(yjScore, 5); }
   var fangScore = 5;
-  var fangMap = {'搬家':'东北','签约':'正西','装修':'正东','出差':'正北','探亲':'正南','约会':'东南'};
+  var fangMap = {'搬家':'东北','签约':'正西','装修':'正东','出差':'正北','探亲':'正南','约会':'东南','嫁娶':'正北','出行':'正东'};
   var goodFang = fangMap[taskName] || '';
   if(goodFang){ fangScore = 10; }
   var gapScore = 0;
@@ -18885,15 +18958,15 @@ window.onShareCardClick = window.onShareCardClick || function(){};
   <!-- ============== UX Smooth Skeleton END ============== -->
 
   <script>
-  // Phase3: 手摇卦按钮注入（sec-cn6 梅花易数区末尾追加）
+  // Phase3: 手摇卦按钮注入（sec-cn7 梅花易数区末尾追加）
   try{
-    const cn6sec = document.getElementById('sec-cn6');
-    if(cn6sec){
+    const cn7sec = document.getElementById('sec-cn7');
+    if(cn7sec){
       // 尝试找按钮行：找最后一个包含 button 的 div/form-row 或直接在末尾加
-      let btnRow = cn6sec.querySelector('.btn-row, .action-row');
+      let btnRow = cn7sec.querySelector('.btn-row, .action-row');
       if(!btnRow){
         // 找不到按钮行就找最后一个 btn-primary/btn-secondary 的父级
-        const lastBtn = cn6sec.querySelectorAll('button.btn-primary, button.btn-secondary');
+        const lastBtn = cn7sec.querySelectorAll('button.btn-primary, button.btn-secondary');
         if(lastBtn && lastBtn.length){
           btnRow = lastBtn[lastBtn.length-1].parentNode;
         }
@@ -18906,14 +18979,14 @@ window.onShareCardClick = window.onShareCardClick || function(){};
         shouBtn.textContent = '🎲 手摇卦（逐爻起卦）';
         btnRow.appendChild(shouBtn);
       } else {
-        // 兜底：直接在 sec-cn6 末尾 append
+        // 兜底：直接在 sec-cn7 末尾 append
         const shouBtn = document.createElement('button');
         shouBtn.className = 'btn-secondary';
         shouBtn.id = 'btn-shouyao';
         shouBtn.style.marginTop = '8px';
         shouBtn.onclick = function(){ try{ openShouyaoMeihua(); }catch(_){} };
         shouBtn.textContent = '🎲 手摇卦（逐爻起卦）';
-        cn6sec.appendChild(shouBtn);
+        cn7sec.appendChild(shouBtn);
       }
     }
   }catch(_){}
@@ -19865,6 +19938,27 @@ window.drawLenormand = function(){
   }catch(_){}
 };
 
+// 修复：翻牌函数（原 _buildLenormandCardHTML 引用了不存在的 window.revealLenormandCard）
+window.revealLenormandCard = function(index){
+  var cards = _lenormandLastDraw;
+  if(!cards || !cards[index]) return;
+  var table = document.getElementById('lenormandTable');
+  if(!table) return;
+  var el = table.querySelector('[data-index="'+index+'"]') || table.children[index];
+  if(!el || el.className.indexOf('revealed') >= 0) return;
+  var c = cards[index];
+  var posLabels = {3:['过去','现在','未来'],9:['根因','阻碍','助力','现状','核心','建议','环境','希望','结果'],5:['你','对方','关系','障碍','走向']};
+  var label = '';
+  if(_lenormandCurrentSpread==='3card' && cards.length===3) label = '<div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;text-align:center;">'+posLabels[3][index]+'</div>';
+  else if(_lenormandCurrentSpread==='9house' && cards.length===9) label = '<div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;text-align:center;">'+posLabels[9][index]+'</div>';
+  else if(_lenormandCurrentSpread==='relation' && cards.length===5) label = '<div style="font-size:10px;color:var(--text-hint);margin-bottom:4px;text-align:center;">'+posLabels[5][index]+'</div>';
+  el.className = 'lenormand-card revealed';
+  el.innerHTML = label +
+    '<div class="card-icon">'+c.icon+'</div>'+
+    '<div class="card-name">'+c.num+'. '+c.name+'</div>'+
+    '<div style="font-size:9px;color:var(--text-hint);margin-top:2px;padding:0 2px;text-align:center;">'+c.keywords+'</div>';
+};
+
 function _renderLenormandResult(cards){
   var result = document.getElementById('lenormandResult');
   if(!result) return;
@@ -19939,7 +20033,21 @@ window.speakLenormand = function(){
       text += '第'+(i+1)+'张，'+cards[i].name+'。'+cards[i].upright+' ';
     }
     text += _lenormandComboReading(cards);
-    window.speakText && window.speakText(text);
+    // 语音播报（修复 speakText 未定义：改用内置 SpeechSynthesis）
+    try{
+      if(typeof window.speechSynthesis !== 'undefined' && window.speechSynthesis){
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-CN'; u.rate = 1.0; u.pitch = 1.0;
+        try{
+          var v = (typeof getChineseVoice === 'function') ? getChineseVoice() : null;
+          if(v){ u.voice = v; u.lang = v.lang || 'zh-CN'; }
+        }catch(_){}
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      }else{
+        try{ showToast('本设备不支持语音播报','warn',2000); }catch(_){}
+      }
+    }catch(e){}
   }catch(e){}
 };
 

@@ -26,15 +26,23 @@ self.addEventListener('fetch', e => {
 
   // 页面与静态资源统一 network-first：在线时永远拿最新版，离线时回退缓存
   const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
-  e.respondWith(
-    fetch(req).then(res => {
+  e.respondWith((async () => {
+    try {
+      const res = await fetch(req);
       if (res && res.ok) {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(req, clone)).catch(() => {});
       }
       return res;
-    }).catch(() =>
-      caches.match(req).then(m => m || (isPage ? caches.match('./index.html') : undefined))
-    )
-  );
+    } catch (err) {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      if (isPage) {
+        const pageFallback = await caches.match('./index.html');
+        if (pageFallback) return pageFallback;
+      }
+      // 非页面资源离线且无缓存：不再 respondWith(undefined)，让请求自然失败由浏览器处理
+      throw err;
+    }
+  })());
 });
