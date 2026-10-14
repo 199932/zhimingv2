@@ -178,12 +178,13 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
 /* Section CSS-02 通用组件 (card/form/input/button/modal)       */
 /* ============================================================ */
 /* 顶栏：两行结构 —— 第一行 品牌+操作图标，第二行 今日信息（窄屏不再被挤压） */
-.topbar{position:sticky;top:0;z-index:50;background:var(--header-bg);background:rgba(0,0,0,0.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--card-border);padding:8px 12px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;}
-.topbar .brand{font-size:17px;font-weight:800;color:var(--pri);letter-spacing:1px;flex-shrink:0;order:1;display:inline-flex;align-items:baseline;}
-.topbar .today{order:3;flex:1 1 100%;width:100%;text-align:center;font-size:11.5px;color:var(--text-sub);font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}
-.topbar .actions{order:2;display:flex;gap:4px;align-items:center;flex:1;min-width:0;justify-content:flex-end;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+/* 顶栏：修复 background 被覆盖的 bug（原第二声明 rgba(0,0,0,.45) 使所有主题顶栏发黑），恢复主题感知的毛玻璃 */
+.topbar{position:sticky;top:0;z-index:50;background:var(--header-bg);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border-bottom:1px solid var(--card-border);padding:9px 12px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;}
+.topbar .brand{font-size:17px;font-weight:800;color:var(--pri);letter-spacing:2px;flex-shrink:0;order:1;display:inline-flex;align-items:baseline;text-shadow:0 1px 0 rgba(255,255,255,.08);}
+.topbar .today{order:3;flex:1 1 100%;width:100%;text-align:center;font-size:11.5px;color:var(--text-sub);font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;letter-spacing:.5px;}
+.topbar .actions{order:2;display:flex;gap:2px;align-items:center;flex:1;min-width:0;justify-content:flex-end;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .topbar .actions::-webkit-scrollbar{display:none;}
-.icon-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text-sub);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.icon-btn{width:32px;height:32px;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--text-sub);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,transform .15s;flex-shrink:0;}
 @media (max-width:400px){
   .topbar{padding:6px 8px 4px;gap:1px 8px;}
   .topbar .brand{font-size:15px;letter-spacing:0;}
@@ -191,8 +192,8 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
   .topbar .actions{gap:2px;}
   .icon-btn{width:29px;height:29px;font-size:14px;}
 }
-.icon-btn:active{transform:scale(0.94);}
-.icon-btn:hover{color:var(--pri);border-color:var(--pri);}
+.icon-btn:active{transform:scale(0.9);background:var(--pri-soft);}
+.icon-btn:hover{color:var(--pri);background:var(--pri-soft);}
 .subtabs{display:flex;gap:6px;padding:10px 16px 4px;overflow-x:auto;scrollbar-width:none;}
 .subtabs::-webkit-scrollbar{display:none;}
 .subtab{flex-shrink:0;padding:10px 16px;height:44px;border-radius:22px;background:var(--input-bg);border:1px solid var(--input-border);font-size:14px;color:var(--text-sub);white-space:nowrap;transition:all .2s;cursor:pointer;}
@@ -200,7 +201,16 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
 body.theme-wu .subtab{background:#1A1625;border-color:rgba(107,92,165,0.25);color:#B8A9D9;}
 body.theme-wu .subtab.active{background:linear-gradient(135deg,#6B5CA5,#8B7EC8);color:#fff;border-color:#6B5CA5;box-shadow:0 0 8px rgba(107,92,165,0.15);}
 .page{display:none;padding:8px 16px calc(70px + var(--kb-offset) + env(safe-area-inset-bottom));}
-.page.active{display:block;}
+.page.active{display:block;animation:pageIn .28s ease;}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+/* 主题切换柔和过渡：背景/卡片颜色渐变而非瞬跳 */
+body{transition:background-color .35s ease,color .35s ease;}
+.card{transition:background-color .3s ease,border-color .3s ease;}
+@media (prefers-reduced-motion:reduce){
+  .page.active,.section.active{animation:none;}
+  .modal-mask.show,.modal{animation:none;}
+  body,.card{transition:none;}
+}
 .section{display:none;}
 .section.active{display:block;animation:fadeIn .3s ease-out;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
@@ -218,9 +228,9 @@ button:focus-visible,a:focus-visible,[role="tab"]:focus-visible,[role="button"]:
 .radio-group input{display:none;}
 .radio-group input:checked + span{color:var(--pri);font-weight:600;}
 .radio-group label:has(input:checked){border-color:var(--pri);background:var(--pri-light);}
-.btn-primary{width:100%;height:48px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--pri-wu) 0%,var(--pri-wu-light,#8B7EC8) 100%);color:#fff;font-size:16px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-top:4px;box-shadow:0 4px 14px rgba(107,92,165,0.35);transition:transform .15s ease,box-shadow .25s ease,background .25s ease;}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(107,92,165,0.45),0 0 12px rgba(139,126,200,0.20);}
-.btn-primary:active{transform:translateY(0) scale(0.98);opacity:0.9;box-shadow:0 2px 8px rgba(107,92,165,0.25);}
+.btn-primary{width:100%;height:48px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--pri) 0%,var(--pri-dark) 100%);color:#fff;font-size:16px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-top:4px;box-shadow:0 4px 14px var(--pri-soft);transition:transform .15s ease,box-shadow .25s ease,background .25s ease;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--pri-soft),0 0 12px var(--pri-soft);}
+.btn-primary:active{transform:translateY(0) scale(0.98);opacity:0.9;box-shadow:0 2px 8px var(--pri-soft);}
 .btn-secondary{height:44px;padding:0 16px;border:1px solid var(--pri);background:var(--input-bg);color:var(--pri);border-radius:10px;font-size:14px;cursor:pointer;}
 .btn-secondary.small{height:34px;padding:0 12px;font-size:12px;}
 .result{margin-top:18px;}
@@ -294,14 +304,17 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .fangwei-cell .fw-v{font-size:14px;font-weight:700;color:var(--pri-dark);margin-top:2px;}
 .chongsha{font-size:14px;}
 .bottom-tabs{position:fixed;bottom:var(--kb-offset);left:0;right:0;z-index:100;background:var(--btab-bg);border-top:1px solid var(--btab-border);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 0 calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,0.04);}
-.btab{display:flex;flex-direction:column;align-items:center;justify-content:center;height:56px;cursor:pointer;color:var(--text-hint);transition:color .2s;gap:2px;user-select:none;}
-.btab .bi{font-size:22px;line-height:1;}
+.btab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:56px;cursor:pointer;color:var(--text-hint);transition:color .2s;gap:2px;user-select:none;}
+.btab::before{content:"";position:absolute;top:-1px;left:50%;width:18px;height:3px;border-radius:0 0 3px 3px;background:var(--pri);transform:translateX(-50%) scaleX(0);transition:transform .25s ease;}
+.btab.active::before{transform:translateX(-50%) scaleX(1);}
+.btab .bi{font-size:22px;line-height:1;transition:transform .25s ease;}
+.btab.active .bi{transform:translateY(-1px) scale(1.1);}
 .btab .bl{font-size:11px;}
 .btab.active{color:var(--pri);font-weight:600;}
 /* ============================================================ */
 /* Section CSS-05 塔罗/星座/灵数 + 复制栏/说明                 */
 /* ============================================================ */
-.copy-bar{position:sticky;bottom:72px;z-index:40;display:flex;gap:8px;padding:8px 16px;background:var(--header-bg);background:rgba(0,0,0,0.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.copy-bar{position:sticky;bottom:72px;z-index:40;display:flex;gap:8px;padding:8px 16px;background:var(--header-bg);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--card-border);}
 .copy-btn{flex:1;height:40px;background:var(--pri);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;}
 .copy-btn.ok{background:var(--good);}
 .disclaimer{position:fixed;bottom:68px;left:0;right:0;z-index:30;text-align:center;font-size:10px;color:var(--text-hint);padding:4px 12px;background:var(--header-bg);pointer-events:none;}
@@ -334,8 +347,10 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 /* Section CSS-09 历史Modal/词典/档案/日记/PWA提示              */
 /* ============================================================ */
 .modal-mask{position:fixed;inset:0;background:var(--modal-mask);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
-.modal-mask.show{display:flex;}
-.modal{background:var(--card);border-radius:16px;width:100%;max-width:520px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--card-border);box-shadow:0 10px 40px rgba(0,0,0,0.2);}
+.modal-mask.show{display:flex;animation:maskIn .2s ease;}
+@keyframes maskIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--card);border-radius:16px;width:100%;max-width:520px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--card-border);box-shadow:0 10px 40px rgba(0,0,0,0.2);animation:modalIn .25s cubic-bezier(.2,.8,.3,1);}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97);}to{opacity:1;transform:none;}}
 .modal-head{padding:14px 16px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;gap:8px;}
 .modal-head h3{flex:1;font-size:16px;color:var(--pri-dark);font-weight:700;}
 .modal-close{width:36px;height:36px;border-radius:50%;border:none;background:var(--track-bg);color:var(--text-sub);cursor:pointer;font-size:18px;}
@@ -1137,9 +1152,10 @@ body.theme-dark .term {
 .primary-action .pab{display:flex;align-items:center;justify-content:flex-start;gap:10px;height:48px;border-radius:12px;background:var(--card);color:var(--text);border:1px solid var(--line);box-shadow:0 1px 0 rgba(0,0,0,.02);font-size:14px;font-weight:600;padding:0 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .05s ease;}
 .primary-action .pab:active{transform:scale(.98);}
 .primary-action .pab .emj{font-size:22px;line-height:1;}
-.primary-action .pab.pab-cn{border-color:#e8dcc4;}
-.primary-action .pab.pab-wu{border-color:#ddd6ee;}
-.primary-action .pab.pab-al{border-color:#ecd1b9;}
+.primary-action .pab.pab-cn{border-color:transparent;background:var(--pri-cn-light);color:var(--pri-cn-dark);}
+.primary-action .pab.pab-wu{border-color:transparent;background:var(--pri-wu-light);color:var(--pri-wu-dark);}
+.primary-action .pab.pab-al{border-color:transparent;background:var(--pri-al-light);color:var(--pri-al-dark);}
+.primary-action .pab.pab-cn:hover,.primary-action .pab.pab-wu:hover,.primary-action .pab.pab-al:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.08);}
 .primary-action .pab.pab-qc{border:1px solid var(--line);background:var(--bg);color:var(--text-sub);}
 
 .result-next-steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding:10px;border-radius:10px;background:var(--bg);border:1px dashed var(--line);}
@@ -1499,7 +1515,7 @@ body{ padding-bottom:160px; }
     <span class="emj">❖</span><span>今日黄历</span>
   </button>
   <button class="pab pab-qc" type="button" onclick="window.openQuickCmd && window.openQuickCmd('起卦');">
-    <span class="emj">🔍</span><span>更多功能…（命令面板）</span>
+    <span class="emj">🔍</span><span>更多功能 · 命令面板</span>
   </button>
 </div>
 <div class="page" id="page-today">
@@ -2317,7 +2333,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.9.0-20260829';
+const ZHIMING_BUILD = 'v2.10.9-20261014';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -5939,7 +5955,21 @@ const TERM_GLOSSARY = {
   "四击":"四季相冲的地支方位，主冲突攻击、行事不稳。",
   "八专":"八专日，干支同位或同气（如甲寅、乙卯），主桃花情欲、暧昧之事。",
   "九丑":"九丑日，天地干支不合之日，主婚姻不利、丑事发生。",
-  "厌对":"六冲的相对位，主厌恶对立、相见两相厌、不宜会面。"
+  "厌对":"六冲的相对位，主厌恶对立、相见两相厌、不宜会面。",
+  "相生":"五行相生：木生火、火生土、土生金、金生水、水生木，如母子相养，主滋养、助长、促成之关系。",
+  "相克":"五行相克：木克土、土克水、水克火、火克金、金克木，如斧伐林木，主制约、管束、冲突之关系。",
+  "太岁":"流年地支之称，掌一年之吉凶。旧说太岁头上不动土，值太岁之年宜守静谨慎，不宜妄动。",
+  "犯太岁":"生肖与流年地支相同（值）、相冲、相刑、相害，统称犯太岁。旧俗认为其年运势起伏较大，宜低调行事、稳中求进。",
+  "本命年":"生肖与流年相同的年份，即值太岁之年。旧俗视为变动较多之年，宜谨慎守成、少涉险途。",
+  "红鸾":"主婚恋喜庆之星，按年支推得。红鸾入命或流年逢之，多主婚恋有成、喜事临门。",
+  "天喜":"与红鸾对冲之喜星，主添丁、怀庆、贺喜之事，流年逢之多主开心喜庆。",
+  "孤辰":"主孤寡之星，按年支三合局推得。旧说男怕孤辰，主性情偏静、六亲缘浅、聚少离多。",
+  "寡宿":"与孤辰相对之星，旧说女怕寡宿，主婚缘迟滞、独处之象，逢之多主感情少助。",
+  "元辰":"又名大耗，主耗散、暗损、是非纠缠之星，逢之多主钱财暗耗、谋事多阻。",
+  "岁运并临":"大运干支与流年干支完全相同之象，旧说其年之事重复应验，吉凶皆烈，宜谨慎行事。",
+  "天克地冲":"两柱天干相克、地支相冲，主激烈变动、冲突动荡之象，应事急而猛。",
+  "调候":"八字取用神之法之一，命局寒暖燥湿失衡时以调候为先，如冬月之金喜火暖、夏月之木喜水润。",
+  "魁罡":"庚辰、庚戌、壬辰、戊戌四组日柱，主人性刚果决、聪明有威，行事宜刚中带柔。"
 };
 const TERM_CATEGORY = {
   "值符":"qimen","值使":"qimen","空亡":"qimen","伏吟":"qimen","反吟":"qimen","马星":"bazi","驿马":"bazi",
@@ -5979,7 +6009,9 @@ const TERM_CATEGORY = {
   "阴历阳历":"misc","农历与干支历":"misc",
   "星座四元素":"misc","三方四正":"misc","本位星座":"misc","固定星座":"misc","变动星座":"misc",
   "恋人":"tarot","力量":"tarot","正义":"tarot","节制":"tarot","塔":"tarot",
-  "刑":"qimen","续世":"misc","解神":"misc","圣心":"misc","五墓":"misc","四击":"misc","八专":"misc","九丑":"misc","厌对":"misc"
+  "刑":"qimen","续世":"misc","解神":"misc","圣心":"misc","五墓":"misc","四击":"misc","八专":"misc","九丑":"misc","厌对":"misc",
+  "相生":"misc","相克":"misc",
+  "太岁":"bazi","犯太岁":"bazi","本命年":"bazi","红鸾":"bazi","天喜":"bazi","孤辰":"bazi","寡宿":"bazi","元辰":"bazi","岁运并临":"bazi","天克地冲":"bazi","调候":"bazi","魁罡":"bazi"
 };
 const _TERM_KEYS = Object.keys(TERM_GLOSSARY).sort((a,b)=>b.length-a.length);
 const _TERM_RE = new RegExp("(" + _TERM_KEYS.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|") + ")", "g");
@@ -7943,7 +7975,7 @@ function updateTopToday(){
   const d = new Date();
   const w = ["日","一","二","三","四","五","六"][d.getDay()];
   const a = buildAlmanac(d);
-  document.getElementById("topToday").textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} 周${w} · ${a.dayGZ}日 · ${a.zodiac}`;
+  document.getElementById("topToday").innerHTML = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} 周${w} · <span style="color:var(--pri);font-weight:700;">${a.dayGZ}日</span> · ${a.zodiac}`;
 }
 
 /* =========================================================
@@ -18074,7 +18106,7 @@ try{ window.rebuildCurrentShareCard = rebuildCurrentShareCard; }catch(_){}
     'renderCalFavorites','__toggleCalFavInModal','__calDayCastGua','__calDayViewAlmanac','__openFavDay','__delFav']);
 })();
 
-function paintPrimaryActionsSkeleton(){try{if(typeof renderAlmanac==='undefined'||typeof switchTab==='undefined'){setTimeout(function(){try{paintPrimaryActionsSkeleton();}catch(_){}},16);return;}var b=document.body;if(!b||b.getAttribute('data-skel-painted')==='1')return;var z=document.getElementById('primaryActionZone')||document.querySelector('.primary-action')||(b&&b.firstElementChild);if(!z)return;if(z.querySelector('.skel-primary-wrap')){b.setAttribute('data-skel-painted','1');return;}var w=document.createElement('div');w.className='skel-primary-wrap';w.style.cssText='position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px 4px;pointer-events:none;z-index:1;';for(var i=0;i<4;i++){var s=document.createElement('div');s.style.cssText='height:48px;border-radius:12px;background:#e5e1d8;opacity:.6;animation:skelPulse 1.2s ease-in-out infinite;';w.appendChild(s);}try{if(!document.getElementById('skel-pulse-style')){var st=document.createElement('style');st.id='skel-pulse-style';st.textContent='@keyframes skelPulse{0%,100%{opacity:.5}50%{opacity:.8}}';document.head.appendChild(st);}}catch(_){}z.style.position='relative';z.appendChild(w);b.setAttribute('data-skel-painted','1');}catch(_){}}
+function paintPrimaryActionsSkeleton(){try{if(typeof renderAlmanac==='undefined'||typeof switchTab==='undefined'){setTimeout(function(){try{paintPrimaryActionsSkeleton();}catch(_){}},16);return;}var b=document.body;if(!b||b.getAttribute('data-skel-painted')==='1')return;var z=document.getElementById('primaryActionZone')||document.querySelector('.primary-action')||(b&&b.firstElementChild);if(!z)return;if(z.querySelector('.skel-primary-wrap')){b.setAttribute('data-skel-painted','1');return;}var w=document.createElement('div');w.className='skel-primary-wrap';w.style.cssText='position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px 4px;pointer-events:none;z-index:1;';for(var i=0;i<4;i++){var s=document.createElement('div');s.style.cssText='height:48px;border-radius:12px;background:var(--track-bg,#e5e1d8);opacity:.6;animation:skelPulse 1.2s ease-in-out infinite;';w.appendChild(s);}try{if(!document.getElementById('skel-pulse-style')){var st=document.createElement('style');st.id='skel-pulse-style';st.textContent='@keyframes skelPulse{0%,100%{opacity:.5}50%{opacity:.8}}';document.head.appendChild(st);}}catch(_){}z.style.position='relative';z.appendChild(w);b.setAttribute('data-skel-painted','1');}catch(_){}}
 function paintRaf1Widgets(){try{if(typeof renderAlmanac==='undefined'||typeof switchTab==='undefined'){setTimeout(function(){try{paintRaf1Widgets();}catch(_){}},16);return;}var d=new Date();try{document.getElementById('almanac-body').innerHTML=renderAlmanac(d);}catch(_){}try{switchTab('today');}catch(_){}try{var tb=document.getElementById('today-body');if(tb){var ws=tb.querySelectorAll('.today-widget-grid .widget');for(var i=0;i<ws.length;i++){if(i===1||i>=4){ws[i].classList.add('lazy-hidden');try{ws[i].style.display='none';}catch(_){}}}}}catch(_){}}catch(_){}}
 function paintRaf2Widgets(){try{if(typeof renderAlmanac==='undefined'||typeof switchTab==='undefined'){setTimeout(function(){try{paintRaf2Widgets();}catch(_){}},16);return;}try{var hs=document.querySelectorAll('.lazy-hidden');for(var i=0;i<hs.length;i++){hs[i].classList.remove('lazy-hidden');try{hs[i].style.display='';}catch(_){}}}catch(_){}try{var sp=document.querySelectorAll('.skel-primary-wrap');for(var j=0;j<sp.length;j++){try{sp[j].remove();}catch(_){}}}catch(_){}try{if(typeof window.renderTrendCharts==='function'){};}catch(_){}if(typeof window.loadFromHash==='undefined'){window.loadFromHash=function(){};}}catch(_){}}
 window.paintPrimaryActionsSkeleton = paintPrimaryActionsSkeleton;
