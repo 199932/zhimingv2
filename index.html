@@ -1505,6 +1505,12 @@ body{ padding-bottom:160px; }
 .jiri-day .jd-rank{font-size:18px;font-weight:800;color:var(--pri);min-width:22px;text-align:center;}
 .grow-hint-noprofile{text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;line-height:2;}
 .grow-hint-noprofile button{margin-top:6px;}
+.rh-progress{height:8px;border-radius:4px;background:var(--track-bg,#EFEAE0);overflow:hidden;margin-top:10px;}
+.rh-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--pri),var(--pri-light));transition:width .5s cubic-bezier(.22,1,.36,1);}
+.rh-chart{width:100%;height:auto;margin-top:8px;}
+.rh-legend{display:flex;gap:16px;font-size:11px;color:var(--text-sub);margin-top:2px;}
+.rh-legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+.rh-theme{text-align:center;font-size:16px;font-weight:800;color:var(--pri-dark);letter-spacing:1px;}
 
   </style>
 </head>
@@ -1524,7 +1530,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.11.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.11.1</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2391,7 +2397,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.11.0-20261015';
+const ZHIMING_BUILD = 'v2.11.1-20261015';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -20863,6 +20869,100 @@ function _lenormandAIEnhance(cards, spreadType){
        ${wxTip?`<div class="hint" style="margin-top:10px;">🌤 今日干支五行属「${dayWX}」——${wxTip}</div>`:""}`);
   }
 
+  /* ---- 本周节律小结：连续打卡满 7 天解锁（永久） ---- */
+  function _streakDays(data){
+    let n=0; const d=new Date();
+    while(true){ const v=data[_dkey(d)]; if(v&&v.m){n++;d.setDate(d.getDate()-1);}else break; }
+    return n;
+  }
+  function _secRhythm(r){
+    const UNLOCK_KEY = "zhiming_grow_ck_unlock";
+    const data = _ck();
+    const streak = _streakDays(data);
+    let unlocked = false;
+    try{ unlocked = localStorage.getItem(UNLOCK_KEY)==="1"; }catch(e){}
+    if(!unlocked && streak>=7){ unlocked=true; try{ localStorage.setItem(UNLOCK_KEY,"1"); }catch(e){} }
+    if(!unlocked){
+      const pct = Math.min(100, Math.round(streak/7*100));
+      return _card("🔒 本周节律小结",
+        `<div class="hint">连续打卡满 7 天解锁：把一周的心情、精力曲线和每日五行摆在一起，看懂自己的节律。</div>
+         <div class="rh-progress"><div class="rh-fill" style="width:${pct}%"></div></div>
+         <div style="text-align:center;font-size:12px;color:var(--text-sub);margin-top:6px;">已连续 <b>${streak}</b> / 7 天——今天记一笔，别断哦 🔥</div>`);
+    }
+    /* 收集近 7 天记录 */
+    const week = [];
+    for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i);
+      const v=data[_dkey(d)]; if(v&&v.m) week.push({d, v, wx:GAN_WX(buildAlmanac(d).dayGan)});
+    }
+    if(week.length<4){
+      return _card("🗓️ 本周节律小结",
+        `<div class="hint">本周只记录了 ${week.length} 天，样本还不够看出节律——再记几天，这里会画出你的曲线。</div>`);
+    }
+    const W=320, H=100, X0=18, X1=302, YT=14, YB=84;
+    const xm=(i)=> X0 + (X1-X0)*i/6;
+    const ym=(m)=> YB - (m-0.5)/5*(YB-YT);
+    const ye=(e)=> YB - (e/100)*(YB-YT);
+    let moodPath="", enPath="", dots="";
+    for(let i=0;i<7;i++){
+      const d=new Date(); d.setDate(d.getDate()-6+i);
+      const v=data[_dkey(d)]; if(!v||!v.m) continue;
+      moodPath += (moodPath?" L":"M") + xm(i).toFixed(1) + " " + ym(v.m).toFixed(1);
+      enPath   += (enPath?" L":"M") + xm(i).toFixed(1) + " " + ye(v.e).toFixed(1);
+      dots += `<circle cx="${xm(i).toFixed(1)}" cy="${ym(v.m).toFixed(1)}" r="2.6" fill="var(--pri)"/>
+               <circle cx="${xm(i).toFixed(1)}" cy="${ye(v.e).toFixed(1)}" r="2.6" fill="#4CAF50"/>
+               <text x="${xm(i).toFixed(1)}" y="97" text-anchor="middle" font-size="8" fill="var(--text-hint)">${d.getMonth()+1}/${d.getDate()}</text>`;
+    }
+    const chart = `<svg class="rh-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      <line x1="${X0}" y1="${ym(3)}" x2="${X1}" y2="${ym(3)}" stroke="var(--track-bg,#EFEAE0)" stroke-width="1" stroke-dasharray="3 3"/>
+      <path d="${moodPath}" fill="none" stroke="var(--pri)" stroke-width="2" stroke-linejoin="round"/>
+      <path d="${enPath}" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linejoin="round" opacity="0.85"/>
+      ${dots}</svg>
+      <div class="rh-legend"><span><i style="background:var(--pri)"></i>心情 /5</span><span><i style="background:#4CAF50"></i>精力 %</span></div>`;
+    /* 趋势与统计 */
+    const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)*10/a.length)/10:0;
+    const first3 = avg(week.slice(0,3).map(w=>w.v.m));
+    const last3  = avg(week.slice(-3).map(w=>w.v.m));
+    const avgE   = avg(week.map(w=>w.v.e));
+    const avgM   = avg(week.map(w=>w.v.m));
+    const diff = last3 - first3;
+    const trendTxt = diff>=0.5 ? "📈 蓄力上行" : diff<=-0.5 ? "🛤️ 回调休整" : (avgE>=65?"⛰️ 高位平稳":avgE>=45?"🚶 平稳巡航":"🔋 低谷修复");
+    /* 五行对照：样本≥2 的五行里找精力最高/最低 */
+    let wxLine="";
+    try{
+      const grp={};
+      week.forEach(w=>{ if(!w.wx)return; (grp[w.wx]=grp[w.wx]||[]).push(w.v.e); });
+      const rows=Object.keys(grp).filter(k=>grp[k].length>=2).map(k=>({k, e:avg(grp[k]), n:grp[k].length})).sort((a,b)=>b.e-a.e);
+      if(rows.length>=2){
+        wxLine = `<div class="hint" style="margin-top:8px;">🧭 五行对照：${rows[0].n} 个「${rows[0].k}」日平均精力 ${rows[0].e}%，明显高于「${rows[rows.length-1].k}」日的 ${rows[rows.length-1].e}%——重要的事，试试安排在你的高能五行日。</div>`;
+      }
+    }catch(e){}
+    /* 最佳/最累的一天 + 建议 */
+    const best = week.slice().sort((a,b)=>b.v.m-a.v.m)[0];
+    const worst= week.slice().sort((a,b)=>a.v.m-b.v.m)[0];
+    const wkName=["周日","周一","周二","周三","周四","周五","周六"];
+    const tips=[];
+    if(avgE<45) tips.push("平均精力偏低——这周优先睡觉和户外走动，别硬撑高强度计划。");
+    if(diff<=-0.5) tips.push("状态在回落，属正常波动。把大任务拆小，本周先完成 60 分就赢。");
+    if(diff>=0.5) tips.push("状态在爬坡，趁势把拖了很久的那件事启动掉——势头比意志力好用。");
+    if(Math.abs(diff)<=0.5) tips.push("状态平稳，适合定一个固定的「每日 15 分钟」：同一时间做同一件事，平稳期最能养成习惯。");
+    if(streak>=14) tips.push(`已经连续 ${streak} 天了——别为打卡而打卡，哪天累了只点个表情也算数。`);
+    const focusWX = week.map(w=>w.wx).filter(Boolean);
+    return _card("🗓️ 本周节律小结",
+      `<div class="rh-theme">${trendTxt}</div>
+       ${chart}
+       <div class="ck-stat">
+         <div class="st"><div class="n">${avgM}</div><div class="l">平均心情 /5</div></div>
+         <div class="st"><div class="n">${avgE}%</div><div class="l">平均精力</div></div>
+         <div class="st"><div class="n">${best.v.m}</div><div class="l">最佳 · ${wkName[best.d.getDay()]}</div></div>
+         <div class="st"><div class="n">${worst.v.m}</div><div class="l">最累 · ${wkName[worst.d.getDay()]}</div></div>
+       </div>
+       ${wxLine}
+       ${tips.map(t=>`<div class="hint" style="margin-top:8px;">💡 ${t}</div>`).join("")}
+       <div class="hint" style="margin-top:6px;opacity:.7;">数据仅存本机；小结由你的打卡记录生成，只反映节律，不下判断。</div>`);
+  }
+
+  function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
+
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
   function _secJiri(r){
@@ -20925,7 +21025,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secJiri(r);
+      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secRhythm(r) + _secJiri(r);
   };
 
   /* ---- 交互 ---- */
