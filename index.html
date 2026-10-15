@@ -1517,6 +1517,10 @@ body{ padding-bottom:160px; }
 .arch-row .ar-meta{flex:1;font-size:12px;color:var(--text-sub);line-height:1.6;}
 .arch-row .ar-arrow{color:var(--text-hint);transition:transform .2s;}
 .arch-row.open .ar-arrow{transform:rotate(90deg);color:var(--pri);}
+.judge-item{display:flex;gap:8px;align-items:center;padding:9px 2px;border-top:1px dashed var(--input-border);}
+.judge-item:first-of-type{border-top:none;}
+.jd-act{display:inline-block;min-width:30px;height:30px;line-height:30px;text-align:center;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);cursor:pointer;font-size:13px;transition:all .15s;}
+.jd-act:active{transform:scale(.92);}
 
   </style>
 </head>
@@ -1536,7 +1540,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.13.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.14.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2403,7 +2407,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.13.0-20261015';
+const ZHIMING_BUILD = 'v2.14.0-20261015';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -21280,6 +21284,118 @@ function _lenormandAIEnhance(cards, spreadType){
        <button class="btn-primary" style="margin-top:10px;" onclick="window._growAnnualPoster()">🖼 生成《${y} 能量年报》长图</button>`);
   }
 
+  /* ---- 判断日志：记录判断 → 日后结算 → 与当日状态关联（验证"状态好时判断是否更准"） ---- */
+  var _JUDGE_KEY = "zhiming_judge_v1";
+  function _judgeAll(){
+    try{ const a=JSON.parse(localStorage.getItem(_JUDGE_KEY)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; }
+  }
+  function _judgeSave(a){ try{ localStorage.setItem(_JUDGE_KEY, JSON.stringify(a)); }catch(e){} }
+  function _judgeStatusMeta(s){
+    return s==="hit" ? ["✅","应验","var(--pri-dark)"]
+         : s==="miss" ? ["❌","未验","#C0392B"]
+         : s==="void" ? ["✖️","放弃","var(--text-hint)"]
+         : ["⏳","待验证","var(--text-sub)"];
+  }
+  function _secJudge(r){
+    const list=_judgeAll();
+    if(!list.length){
+      return _card("🎯 判断日志",
+        `<div class="hint">把你对未来的判断（或重大决定）记下来，日后回来标记结果——再用<b>判断当天的打卡状态</b>做关联分析，验证一件事：<b>状态好的时候，你的判断是不是真的更准？</b></div>
+         <div style="text-align:center;padding:14px 0 4px;color:var(--text-hint);font-size:13px;">还没有记录——写下第一条判断吧 👇</div>
+         ${_judgeForm()}`);
+    }
+    const settled=list.filter(x=>x.status==="hit"||x.status==="miss");
+    const pending=list.filter(x=>!x.status||x.status==="pending");
+    /* 统计 */
+    let statHtml="";
+    if(settled.length){
+      const hits=settled.filter(x=>x.status==="hit").length;
+      const rate=Math.round(hits/settled.length*100);
+      const grp=(lo,hi)=>{ // 按判断日心情分组准确率
+        const g=settled.filter(x=>x.m!=null&&x.m>=lo&&x.m<=hi);
+        if(!g.length) return null;
+        return {n:g.length, rate:Math.round(g.filter(x=>x.status==="hit").length/g.length*100)};
+      };
+      const hiG=grp(4,5), midG=grp(3,3), loG=grp(1,2);
+      /* 信心校准 */
+      const confG=(lo,hi)=>{ const g=settled.filter(x=>x.conf!=null&&x.conf>=lo&&x.conf<=hi); return g.length?{n:g.length,rate:Math.round(g.filter(x=>x.status==="hit").length/g.length*100)}:null; };
+      const confHi=confG(75,100), confLo=confG(0,45);
+      statHtml=`<div class="ck-stat">
+          <div class="st"><div class="n">${settled.length}</div><div class="l">已结算</div></div>
+          <div class="st"><div class="n">${rate}%</div><div class="l">总应验率</div></div>
+          ${hiG?`<div class="st"><div class="n">${hiG.rate}%</div><div class="l">好状态日(${hiG.n})</div></div>`:""}
+          ${loG?`<div class="st"><div class="n">${loG.rate}%</div><div class="l">差状态日(${loG.n})</div></div>`:""}
+        </div>`;
+      let insight="";
+      if(hiG&&loG&&hiG.n+loG.n>=3){
+        const d=hiG.rate-loG.rate;
+        insight = d>=25 ? `数据站在你这边：<b>状态好的日子准确率高 ${d} 个百分点</b>——重要判断尽量放在自己电量满格时做。`
+                : d<=-25 ? `有意思：<b>你状态差的时候判断反而更准</b>（高 ${Math.abs(d)} 个百分点）——低谷里的你可能更谨慎、更清醒。`
+                : `状态好坏对准确率影响不大（差 ${Math.abs(d)} 个百分点）——你的判断力相当稳定，这本身就是一种实力。`;
+      } else {
+        insight=`样本还太少——多记几条、多结算几次，规律自然会浮出来。`;
+      }
+      let calib="";
+      if(confHi&&confLo){
+        calib=`<div class="hint" style="margin-top:8px;">🎚 信心校准：高信心(≥75)时实际应验 ${confHi.rate}%（${confHi.n}件）· 低信心(≤45)时实际应验 ${confLo.rate}%（${confLo.n}件）${confHi.rate-confLo.rate>=30?"——你有点过度自信了，警惕「感觉特别稳」的时刻。":confHi.rate-confLo.rate<=-30?"——你的直觉比嘴上说的更靠谱，可以适当相信自己。":""}</div>`;
+      }
+      statHtml+=`<div class="hint" style="margin-top:8px;">💡 ${insight}</div>${calib}`;
+    }
+    /* 列表（新的在前，最多展示 8 条） */
+    const rows=[...list].reverse().slice(0,8).map(x=>{
+      const [ico,txt]=_judgeStatusMeta(x.status);
+      const st=x.m?`<span style="font-size:10px;color:var(--text-hint);">当日状态 ${MOODS[x.m-1]||"·"}${x.e!=null?" 精力"+x.e+"%":""}</span>`:"<span style=\"font-size:10px;color:var(--text-hint);\">当日无打卡</span>";
+      const acts=(x.status==="pending"||!x.status)
+        ? `<span class="jd-act" onclick="window._judgeSettle('${x.id}','hit')">✅</span><span class="jd-act" onclick="window._judgeSettle('${x.id}','miss')">❌</span><span class="jd-act" onclick="window._judgeSettle('${x.id}','void')">✖️</span>`
+        : `<span class="jd-act" onclick="window._judgeSettle('${x.id}','pending')">↩</span>`;
+      return `<div class="judge-item">
+          <div style="flex:1;min-width:0;"><div style="font-size:13px;line-height:1.5;word-break:break-all;">${_esc(x.text)}</div>
+          <div style="font-size:10px;color:var(--text-hint);margin-top:2px;">${x.date.slice(5).replace("-","/")} · 信心 ${x.conf}% · ${st}</div></div>
+          <div style="text-align:center;min-width:52px;"><div style="font-size:16px;">${ico}</div><div style="font-size:10px;color:var(--text-hint);">${txt}</div></div>
+          <div style="display:flex;gap:4px;">${acts}</div>
+        </div>`;
+    }).join("");
+    return _card("🎯 判断日志",
+      `<div style="margin-bottom:6px;">${statHtml}</div>
+       ${pending.length?`<div class="hint" style="margin-top:6px;">⏳ 有 ${pending.length} 条待验证——时间到了就回来给个交代。</div>`:""}
+       <div style="margin-top:4px;">${rows}</div>
+       <div style="margin-top:10px;">${_judgeForm()}</div>`);
+  }
+  function _judgeForm(){
+    return `<input id="judgeText" maxlength="60" placeholder="我判断/我决定：______" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--input-border);border-radius:10px;background:var(--input-bg);color:var(--text);font-size:13px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+        <span style="font-size:11px;color:var(--text-hint);white-space:nowrap;">信心</span>
+        <input type="range" min="0" max="100" step="5" value="60" class="energy-slider" id="judgeConf" oninput="document.getElementById('judgeConfV').textContent=this.value+'%'">
+        <span id="judgeConfV" style="font-size:12px;font-weight:700;color:var(--pri-dark);min-width:34px;text-align:right;">60%</span>
+      </div>
+      <button class="btn-primary" style="margin-top:8px;" onclick="window._judgeAdd()">✍️ 记下这条判断</button>`;
+  }
+  window._judgeAdd=function(){
+    const el=document.getElementById("judgeText");
+    const text=(el&&el.value||"").trim();
+    if(!text){ try{ window._toast&&window._toast("先写下你的判断"); }catch(e){ alert("先写下你的判断"); } return; }
+    const conf=(()=>{ const c=document.getElementById("judgeConf"); return c?+c.value:60; })();
+    const k=_dkey(new Date());
+    const ck=_ck()[k];
+    const list=_judgeAll();
+    list.push({ id:"j"+Date.now().toString(36), date:k, text, conf, status:"pending", m:ck?ck.m:null, e:ck?ck.e:null });
+    _judgeSave(list);
+    window._growDraft=null;
+    window.renderGrow();
+    try{ window._toast&&window._toast("已记录 ⏳ 时间会给你答案"); }catch(e){}
+  };
+  window._judgeSettle=function(id,status){
+    const list=_judgeAll();
+    const it=list.find(x=>x.id===id); if(!it) return;
+    it.status=status;
+    if(status==="hit"||status==="miss"){ it.settleDate=_dkey(new Date()); }
+    _judgeSave(list);
+    window.renderGrow();
+    try{ window._toast&&window._toast(status==="hit"?"恭喜应验 🎉":status==="miss"?"未验也无妨，数据+1":"已标记放弃"); }catch(e){}
+  };
+
+  function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
+
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
@@ -21346,7 +21462,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secRhythm(r) + _secArchive(r) + _secAnnual(r) + _secJiri(r);
+      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secRhythm(r) + _secArchive(r) + _secAnnual(r) + _secJudge(r) + _secJiri(r);
   };
 
   /* ---- 交互 ---- */
