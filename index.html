@@ -1540,7 +1540,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.16.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.17.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2407,7 +2407,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.16.0-20261016';
+const ZHIMING_BUILD = 'v2.17.0-20261016';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -21494,6 +21494,88 @@ function _lenormandAIEnhance(cards, spreadType){
     document.body.appendChild(wrap);
   };
 
+  /* ---- 数据保险箱：全量备份/恢复（纯本地的最后防线） ---- */
+  var _VAULT_KEYS = {profiles:"zhiming_v2_profiles", activeProfile:"zhiming_v2_active_profile", history:"zhiming_v2_history", diary:"zhiming_v2_diary", checkin:"zhiming_grow_ck_v1", archive:"zhiming_grow_arch_v1", judge:"zhiming_judge_v1", unlock:"zhiming_grow_ck_unlock", onboard:"zhiming_grow_seen_v1"};
+  function _vaultCount(k){
+    try{
+      const raw=localStorage.getItem(_VAULT_KEYS[k]); if(!raw) return 0;
+      const v=JSON.parse(raw);
+      if(Array.isArray(v)) return v.length;
+      if(k==="checkin") return Object.keys(v||{}).length;
+      if(k==="archive"){
+        let n=0; Object.keys(v||{}).forEach(y=>{ n+=Object.keys(v[y]||{}).length; }); return n;
+      }
+      return raw?1:0;
+    }catch(e){ return 0; }
+  }
+  window._vaultExport = function(){
+    const data={};
+    Object.keys(_VAULT_KEYS).forEach(k=>{
+      try{ const raw=localStorage.getItem(_VAULT_KEYS[k]); if(raw!=null){ try{ data[k]=JSON.parse(raw); }catch(e){ data[k]=raw; } } }catch(e){}
+    });
+    const pack={app:"zhimingv2", ver:(typeof ZHIMING_BUILD!=="undefined"?ZHIMING_BUILD:""), at:new Date().toISOString(), data:data};
+    const blob=new Blob([JSON.stringify(pack,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url;
+    a.download="知命V2_全量备份_"+new Date().toISOString().slice(0,10)+".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} },3000);
+    try{ window._toast?window._toast("📦 备份已下载——好好保管这份文件","info",1600):showToast("📦 备份已下载","info",1600); }catch(e){}
+  };
+  window._vaultPick = function(){ try{ document.getElementById("vaultFile").click(); }catch(e){} };
+  window._vaultImport = function(input){
+    const f=input.files&&input.files[0];
+    if(!f) return;
+    const rd=new FileReader();
+    rd.onload=function(){
+      let pack=null;
+      try{ pack=JSON.parse(rd.result); }catch(e){ try{ window._toast?window._toast("❌ 文件解析失败——不是有效的备份 JSON","err",2000):showToast("❌ 解析失败","err",2000); }catch(_){} return; }
+      if(!pack||pack.app!=="zhimingv2"||!pack.data||typeof pack.data!=="object"){
+        try{ window._toast?window._toast("❌ 这不是知命V2的备份文件","err",2000):showToast("❌ 不是知命V2备份","err",2000); }catch(e){}
+        return;
+      }
+      const d=pack.data;
+      const stats=[["profiles","档案",_vaN(d.profiles)],["checkin","打卡天数",_vaN(d.checkin)],["judge","判断日志",_vaN(d.judge)],["archive","归档月份",_vaN(d.archive)],["history","占卜历史",_vaN(d.history)],["diary","日记",_vaN(d.diary)]].filter(x=>x[2]>0).map(x=>x[1]+" "+x[2]).join(" · ")||"空备份";
+      const cur=["档案 "+_vaultCount("profiles"),"打卡 "+_vaultCount("checkin")+" 天","判断 "+_vaultCount("judge")+" 条","历史 "+_vaultCount("history")+" 条"].join(" · ")||"空";
+      const modal=document.createElement("div");
+      modal.id="vaultConfirm";
+      modal.style.cssText="position:fixed;inset:0;z-index:99991;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:24px;";
+      modal.innerHTML='<div style="max-width:330px;width:100%;background:var(--card-bg,#fff);color:var(--text,#222);border-radius:18px;padding:22px 20px;">'
+        +'<div style="font-size:16px;font-weight:800;margin-bottom:10px;">📥 恢复这份备份？</div>'
+        +'<div style="font-size:13px;line-height:1.9;color:var(--text-sub,#666);">备份内容：<b>'+stats+'</b><br>备份时间：'+(pack.at?pack.at.slice(0,10):"未知")+'<br><br>⚠️ 将覆盖当前数据（'+cur+'）。<br>点击「恢复」时会先自动下载当前数据的备份，以防万一。</div>'
+        +'<div style="display:flex;gap:10px;margin-top:16px;"><button id="vCancel" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--bg,#eee);color:var(--text,#333);font-size:14px;cursor:pointer;">取消</button>'
+        +'<button id="vOk" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--pri,#6B5CA5);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">恢复</button></div></div>';
+      document.body.appendChild(modal);
+      modal.querySelector("#vCancel").onclick=function(){ if(modal.parentNode) modal.parentNode.removeChild(modal); input.value=""; };
+      modal.querySelector("#vOk").onclick=function(){
+        try{ window._vaultExport(); }catch(e){}
+        Object.keys(_VAULT_KEYS).forEach(k=>{
+          try{
+            if(k in d){ const val=d[k]; localStorage.setItem(_VAULT_KEYS[k], (typeof val==="string")?val:JSON.stringify(val)); }
+            else if(k==="profiles"||k==="checkin"||k==="judge"||k==="history"||k==="diary"||k==="archive"){ localStorage.setItem(_VAULT_KEYS[k], k==="archive"?"{}":"[]"); }
+          }catch(e){}
+        });
+        if(modal.parentNode) modal.parentNode.removeChild(modal);
+        setTimeout(function(){ location.reload(); },400);
+      };
+    };
+    rd.readAsText(f);
+  };
+  function _vaN(v){ if(Array.isArray(v)) return v.length; if(v&&typeof v==="object") return Object.keys(v).length; return 0; }
+  function _secVault(r){
+    const total=_vaultCount("profiles")+_vaultCount("checkin")+_vaultCount("judge")+_vaultCount("history")+_vaultCount("diary");
+    return _card("📦 数据保险箱",
+      `<div style="font-size:13px;line-height:1.8;">当前档案：<b>档案 ${_vaultCount("profiles")}</b> · 打卡 <b>${_vaultCount("checkin")}</b> 天 · 判断 <b>${_vaultCount("judge")}</b> 条 · 占卜 <b>${_vaultCount("history")}</b> 次 · 日记 <b>${_vaultCount("diary")}</b> 条</div>
+       <div class="hint" style="margin-top:6px;">🔐 所有数据只存在这台设备的浏览器里——清缓存、换手机都会带走它们。定期导出一份 JSON，就是给过去的自己上保险。</div>
+       <div style="display:flex;gap:10px;margin-top:12px;">
+         <button onclick="window._vaultExport()" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--pri,#6B5CA5);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">📤 导出备份</button>
+         <button onclick="window._vaultPick()" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--bg,#eee);color:var(--text,#333);font-size:14px;font-weight:700;cursor:pointer;">📥 导入恢复</button>
+       </div>
+       <input type="file" id="vaultFile" accept=".json,application/json" style="display:none;" onchange="window._vaultImport(this)">`);
+  }
+
+  function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
+
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
@@ -21550,6 +21632,7 @@ function _lenormandAIEnhance(cards, spreadType){
     const p = (typeof window.getActiveProfile === "function") ? window.getActiveProfile() : null;
     const r = _growBazi();
     if (!p || !r){
+      let vault=""; try{ vault=_secVault(null); }catch(e){}
       body.innerHTML =
         `<div class="card"><div class="card-title">🌱 成长中心</div>
          <div class="grow-hint-noprofile">
@@ -21559,14 +21642,16 @@ function _lenormandAIEnhance(cards, spreadType){
            打卡与吉日无需档案，现在就能用。
            <br><button class="btn-primary" onclick="window.openProfileModal&&window.openProfileModal()">去设置档案</button>
          </div></div>` +
-        _secCheckin(null) + _secJiri(null);
+        _secCheckin(null) + _secJiri(null) + vault;
       return;
     }
+    const _tryGC=(fn)=>{ try{ return fn(); }catch(e){ try{ console.warn("grow card:",e); }catch(_){} return ""; } };
+    let vault=""; try{ vault=_secVault(r); }catch(e){ vault=""; }
     body.innerHTML =
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secDivineMoment(r) + _secRhythm(r) + _secArchive(r) + _secAnnual(r) + _secJudge(r) + _secJiri(r);
+      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJiri(r)) + vault;
   };
 
   /* ---- 交互 ---- */
