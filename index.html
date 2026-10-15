@@ -1511,6 +1511,12 @@ body{ padding-bottom:160px; }
 .rh-legend{display:flex;gap:16px;font-size:11px;color:var(--text-sub);margin-top:2px;}
 .rh-legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:4px;vertical-align:middle;}
 .rh-theme{text-align:center;font-size:16px;font-weight:800;color:var(--pri-dark);letter-spacing:1px;}
+.arch-row{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px dashed var(--input-border);cursor:pointer;}
+.arch-row:first-of-type{border-top:none;}
+.arch-row .ar-ym{font-weight:800;font-size:15px;color:var(--text);min-width:58px;font-variant-numeric:tabular-nums;}
+.arch-row .ar-meta{flex:1;font-size:12px;color:var(--text-sub);line-height:1.6;}
+.arch-row .ar-arrow{color:var(--text-hint);transition:transform .2s;}
+.arch-row.open .ar-arrow{transform:rotate(90deg);color:var(--pri);}
 
   </style>
 </head>
@@ -1530,7 +1536,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.11.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.12.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2397,7 +2403,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.11.1-20261015';
+const ZHIMING_BUILD = 'v2.12.0-20261015';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -20961,6 +20967,147 @@ function _lenormandAIEnhance(cards, spreadType){
        <div class="hint" style="margin-top:6px;opacity:.7;">数据仅存本机；小结由你的打卡记录生成，只反映节律，不下判断。</div>`);
   }
 
+  /* ---- 能量年谱：每月自动归档上月节律（纯本地） ---- */
+  var _ARCH_KEY = "zhiming_grow_arch_v1";
+  function _ymKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+  function _monthTheme(days){
+    // days 按时间正序；前半 vs 后半对比
+    const h = Math.ceil(days.length/2);
+    const seg = a => ({ m: a.reduce((s,x)=>s+x.m,0)/a.length, e: a.reduce((s,x)=>s+x.e,0)/a.length });
+    const A = seg(days.slice(0,h)), B = seg(days.slice(h));
+    const dm = B.m - A.m, de = B.e - A.e;
+    if (dm > 0.4) return "📈 月末比月初更有劲";
+    if (dm < -0.4) return "🛤️ 后半月偏累，注意休整";
+    if (de > 6) return "⚡ 越到月底电量越足";
+    if (de < -6) return "🌙 渐入低耗期";
+    return (B.e >= 65) ? "⚓ 高位平稳巡航" : (B.e >= 45 ? "🚶 平稳前行" : "🔋 低谷蓄力");
+  }
+  function _monthSummary(ym, days){
+    const avg = k => days.reduce((s,x)=>s+x[k],0)/days.length;
+    // 五行对照（样本≥3）
+    const byWx = {};
+    days.forEach(x=>{ if(x.wx){ (byWx[x.wx]=byWx[x.wx]||[]).push(x.e); } });
+    let topWx = null;
+    Object.keys(byWx).forEach(wx=>{
+      if (byWx[wx].length < 3) return;
+      const v = byWx[wx].reduce((s,x)=>s+x,0)/byWx[wx].length;
+      if (!topWx || v > topWx.v) topWx = {wx, v:Math.round(v)};
+    });
+    // 星期对照（样本≥2）
+    const byWk = {};
+    days.forEach(x=>{ (byWk[x.d]=byWk[x.d]||[]).push(x.m); });
+    let bestWk=null, worstWk=null;
+    Object.keys(byWk).forEach(w=>{
+      if (byWk[w].length < 2) return;
+      const v = byWk[w].reduce((s,x)=>s+x,0)/byWk[w].length;
+      if (!bestWk || v > bestWk.v) bestWk = {w:+w, v};
+      if (!worstWk || v < worstWk.v) worstWk = {w:+w, v};
+    });
+    return {
+      ym, days: days.length,
+      avgM: Math.round(avg("m")*10)/10,
+      avgE: Math.round(avg("e")),
+      theme: _monthTheme(days),
+      topWx: topWx ? {wx:topWx.wx, v:topWx.v, n:byWx[topWx.wx].length} : null,
+      bestWk: bestWk ? {w:bestWk.w, v:Math.round(bestWk.v*10)/10} : null,
+      worstWk: worstWk ? {w:worstWk.w, v:Math.round(worstWk.v*10)/10} : null,
+      at: Date.now()
+    };
+  }
+  function _archEnsure(){
+    const data = _ck();
+    let arch; try{ arch = JSON.parse(localStorage.getItem(_ARCH_KEY)||"[]"); }catch(e){ arch = []; }
+    if (!Array.isArray(arch)) arch = [];
+    let changed = false, guard = 0;
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()-1); // 上月 1 号
+    while (guard++ < 24){
+      const ym = _ymKey(d);
+      if (arch.some(a=>a.ym===ym)) break;   // 已归档到最近一个月为止
+      const days = [];
+      for (let dt = new Date(d); dt.getMonth()===d.getMonth(); dt.setDate(dt.getDate()+1)){
+        const v = data[_dkey(dt)];
+        if (v && v.m){
+          let wx = null;
+          try{ wx = GAN_WX(buildAlmanac(dt).dayGan); }catch(_){}
+          days.push({ m:v.m, e:(v.e!=null?v.e:60), wx:wx||null, d:dt.getDay() });
+        }
+      }
+      if (!days.length) break;               // 空月不再往前追
+      arch.push(_monthSummary(ym, days));
+      changed = true;
+      d.setMonth(d.getMonth()-1);
+    }
+    if (changed){ try{ localStorage.setItem(_ARCH_KEY, JSON.stringify(arch)); }catch(e){} }
+    arch.sort((a,b)=> a.ym<b.ym ? 1 : -1);
+    return arch;
+  }
+  function _monthCells(y, m){
+    const data = _ck();
+    let cells = "";
+    for (let dt = new Date(y, m-1, 1); dt.getMonth()===m-1; dt.setDate(dt.getDate()+1)){
+      const v = data[_dkey(dt)];
+      const bg = v ? (["#E53935","#FB8C00","#FDD835","#7CB342","#43A047"][v.m-1]||"#999") : "";
+      cells += `<div class="ck-cell${v?" has":""}" title="${_dkey(dt)}${v?` · 心情${v.m}/5 精力${v.e}`:""}" style="${v?`background:${bg};`:""}"></div>`;
+    }
+    return cells;
+  }
+  function _secArchive(r){
+    // 与节律小结同一把锁
+    let unlocked = false;
+    try{ unlocked = localStorage.getItem("zhiming_grow_ck_unlock")==="1"; }catch(e){}
+    if (!unlocked) return "";
+    const arch = _archEnsure();
+    const now = new Date();
+    const ymNow = _ymKey(now);
+    const data = _ck();
+    // 本月进度
+    let mCnt = 0, mSum = 0, mESum = 0;
+    for (let dt = new Date(now.getFullYear(), now.getMonth(), 1); dt.getMonth()===now.getMonth(); dt.setDate(dt.getDate()+1)){
+      const v = data[_dkey(dt)];
+      if (v && v.m){ mCnt++; mSum += v.m; mESum += (v.e!=null?v.e:60); }
+    }
+    const dayOfMonth = now.getDate();
+    const curHtml = `<div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+        <div style="flex:1;">
+          <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">本月（${ymNow}）已记 <b>${mCnt}</b> 天 / ${dayOfMonth} 天${mCnt?` · 平均心情 ${Math.round(mSum/mCnt*10)/10} · 平均精力 ${Math.round(mESum/mCnt)}%`:""}</div>
+          <div class="rh-progress"><div class="rh-fill" style="width:${Math.min(100,Math.round(mCnt/dayOfMonth*100))}%"></div></div>
+        </div>
+      </div>`;
+    let listHtml = "";
+    if (!arch.length){
+      listHtml = `<div class="hint" style="margin-top:12px;">📖 还没有归档。每个月结束后，上月的节律会自动归档到这里——坚持一年，你会得到一本自己的《能量年谱》。</div>`;
+    } else {
+      const wkName = ["日","一","二","三","四","五","六"];
+      listHtml = arch.map(a=>{
+        const [yy,mm] = a.ym.split("-").map(Number);
+        const open = (window._growArchSel||{}).ym===a.ym;
+        const detail = open ? `
+          <div style="padding:6px 0 10px;">
+            <div class="ck-strip" style="margin-top:4px;">${_monthCells(yy,mm)}</div>
+            <div style="font-size:12px;color:var(--text-sub);line-height:1.8;margin-top:8px;">
+              ${a.bestWk?`情绪最好的多在周${wkName[a.bestWk.w]}（均 ${a.bestWk.v}）`:''}${a.bestWk&&a.worstWk?'；':''}${a.worstWk?`最耗电的是周${wkName[a.worstWk.w]}（均 ${a.worstWk.v}）`:''}<br>
+              ${a.topWx?`⚡ 高能五行日：${a.topWx.wx}日（${a.topWx.n} 天平均精力 ${a.topWx.v}%）——重要的事优先排在${a.topWx.wx}日。`:""}
+            </div>
+          </div>` : "";
+        return `<div class="arch-row${open?" open":""}" onclick="window._growArchToggle('${a.ym}')">
+            <div class="ar-ym">${a.ym}</div>
+            <div class="ar-meta">${MOODS[a.avgM-1]||"🙂"} ${a.avgM} · ⚡${a.avgE}% · 📅 ${a.days}天<br><span style="color:var(--pri-dark);">${a.theme}</span></div>
+            <div class="ar-arrow">▸</div>
+          </div>${detail}`;
+      }).join("");
+    }
+    return _card("📜 能量年谱", curHtml + `<div style="margin-top:6px;">${listHtml}</div>`);
+  }
+  window._growArchToggle = function(ym){
+    const cur = (window._growArchSel||{}).ym;
+    window._growArchSel = (cur===ym) ? {} : {ym};
+    window.renderGrow();
+    try{
+      const rows = document.querySelectorAll("#grow-body .arch-row");
+      for (const row of rows){ if(row.textContent.indexOf(ym)>=0){ row.scrollIntoView({behavior:"smooth",block:"center"}); break; } }
+    }catch(e){}
+  };
+
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
@@ -21025,7 +21172,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secRhythm(r) + _secJiri(r);
+      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secRhythm(r) + _secArchive(r) + _secJiri(r);
   };
 
   /* ---- 交互 ---- */
