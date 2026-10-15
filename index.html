@@ -1536,7 +1536,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.12.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.13.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2403,7 +2403,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.12.0-20261015';
+const ZHIMING_BUILD = 'v2.13.0-20261015';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -21108,6 +21108,180 @@ function _lenormandAIEnhance(cards, spreadType){
     }catch(e){}
   };
 
+  /* ---- 能量年报：≥3 个月可预览与生成长图，集齐 12 个月解锁完整版 ---- */
+  function _archAll(){
+    try{ const a=JSON.parse(localStorage.getItem(_ARCH_KEY)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; }
+  }
+  function _annualPickYear(){
+    const arch=_archAll();
+    const byYear={};
+    arch.forEach(a=>{ const y=a.ym.slice(0,4); byYear[y]=(byYear[y]||0)+1; });
+    let bestY=String(new Date().getFullYear()), bestN=0;
+    Object.keys(byYear).forEach(y=>{ if(byYear[y]>bestN){ bestN=byYear[y]; bestY=y; } });
+    if(bestN===0) bestY=String(new Date().getFullYear());
+    return bestY;
+  }
+  function _annualYearData(y){
+    const months=[];
+    for(let m=1;m<=12;m++){
+      const a=_archAll().find(x=>x.ym===y+"-"+String(m).padStart(2,"0"));
+      months.push(a||null);
+    }
+    return months;
+  }
+  function _annualKeyword(months){
+    const have=months.filter(Boolean);
+    if(!have.length) return "🌱 静待第一笔记录";
+    const n=have.length;
+    const slope=(()=>{ // 最小二乘斜率（精力随月份）
+      const xs=have.map(a=>parseInt(a.ym.slice(5),10));
+      const ys=have.map(a=>a.avgE);
+      const mx=xs.reduce((s,v)=>s+v,0)/n, my=ys.reduce((s,v)=>s+v,0)/n;
+      const num=xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0), den=xs.reduce((s,x)=>s+(x-mx)*(x-mx),0)||1;
+      return num/den;
+    })();
+    const avgE=have.reduce((s,a)=>s+a.avgE,0)/n;
+    if(slope>1.5) return "📈 蓄力上行之年";
+    if(slope<-1.5) return "🛤️ 回调休整之年";
+    if(avgE>=65) return "⚓ 高位平稳之年";
+    if(avgE>=45) return "🚶 稳中有进之年";
+    return "🔋 深度蓄力之年";
+  }
+  window._growAnnualPoster = function(){
+    try{
+      const y=_annualPickYear();
+      const months=_annualYearData(y);
+      const have=months.filter(Boolean);
+      if(have.length<3){ try{ window._toast&&window._toast("再积累 "+(3-have.length)+" 个月就能生成年报啦"); }catch(e){ alert("再积累 "+(3-have.length)+" 个月就能生成年报啦"); } return; }
+      const p=(typeof window.getActiveProfile==="function")?window.getActiveProfile():null;
+      let dayWX="", zg="";
+      try{
+        if(p && typeof window.baziCalc==="function"){
+          const rr=window.baziCalc({year:p.year,month:p.month,day:p.day,hour:p.hour||12,minute:p.minute||30,gender:p.gender||"男",cityLng:p.cityLng});
+          dayWX=rr.dayGan?rr.dayGan+"日主":""; zg=rr.zodiac?rr.zodiac+"年":"";
+        }
+      }catch(_){}
+      const kw=_annualKeyword(months);
+      const totalDays=have.reduce((s,a)=>s+a.days,0);
+      const avgE=Math.round(have.reduce((s,a)=>s+a.avgE,0)/have.length);
+      const best=have.reduce((b,a)=>((b===null||a.avgE>b.avgE)?a:b),null);
+      const bestM=best?best.ym.slice(5).replace(/^0/,""):"--";
+      const wxCount={};
+      have.forEach(a=>{ if(a.topWx){ wxCount[a.topWx.wx]=(wxCount[a.topWx.wx]||0)+1; } });
+      const topWx=Object.keys(wxCount).sort((a,b)=>wxCount[b]-wxCount[a])[0]||null;
+      const full = months.filter(Boolean).length>=12;
+      const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      // 图表：640x230
+      const CW=640, CH=230, padL=46, padB=34, padT=16;
+      const iw=CW-padL-16, ih=CH-padT-padB;
+      const bars = months.map((a,i)=>{
+        const x=padL+i*(iw/12)+8, w=iw/12-14;
+        const h=a? Math.max(4, a.avgE/100*ih) : 4;
+        const fill=a? "#7C6FDD" : "#E5E0D5";
+        const op=a? (1-Math.max(0,(60-a.avgE))/160) : 1;
+        const dotY=a? padT+ih-(a.avgM-1)/4*ih : null;
+        return `<rect x="${x.toFixed(1)}" y="${(padT+ih-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="5" fill="${fill}" opacity="${op.toFixed(2)}"></rect>`
+          +(a? `<circle cx="${(x+w/2).toFixed(1)}" cy="${dotY.toFixed(1)}" r="4" fill="#E88D3A"></circle>`:"")
+          +`<text x="${(x+w/2).toFixed(1)}" y="${CH-12}" text-anchor="middle" font-size="11" fill="#8A8378">${(i+1)}月</text>`
+          +(a? `<text x="${(x+w/2).toFixed(1)}" y="${(padT+ih-h-5).toFixed(1)}" text-anchor="middle" font-size="10" fill="#6B655B">${a.avgE}</text>`:"");
+      }).join("");
+      const chart=`<svg xmlns="http://www.w3.org/2000/svg" width="${CW}" height="${CH}" viewBox="0 0 ${CW} ${CH}">
+        <line x1="${padL}" y1="${padT+ih}" x2="${CW-16}" y2="${padT+ih}" stroke="#D8D2C5" stroke-width="1"></line>
+        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+ih}" stroke="#D8D2C5" stroke-width="1"></line>
+        <text x="${padL-8}" y="${padT+8}" text-anchor="end" font-size="10" fill="#A39C8F">100</text>
+        <text x="${padL-8}" y="${padT+ih}" text-anchor="end" font-size="10" fill="#A39C8F">0</text>
+        ${bars}</svg>`;
+      const stat=(k,v)=>`<div style="flex:1;background:#FFFFFF;border-radius:12px;padding:12px 8px;text-align:center;border:1px solid #ECE6DA;"><div style="font-size:22px;font-weight:800;color:#3A342B;">${v}</div><div style="font-size:11px;color:#8A8378;margin-top:3px;">${k}</div></div>`;
+      const poster=`<div style="font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;width:672px;background:#FAF8F5;padding:24px;box-sizing:border-box;color:#1F1A14;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:13px;color:#8A8378;letter-spacing:2px;">🌱 知命 · 能量年报</div>
+          <div style="font-size:12px;background:#EFE9DC;border-radius:99px;padding:4px 12px;color:#6B655B;">${full?"🎉 集齐一年":"已积累 "+have.length+" 个月"}</div>
+        </div>
+        <div style="font-size:34px;font-weight:900;margin:14px 0 4px;color:#2E2A22;">${y} 能量年报</div>
+        <div style="font-size:15px;color:#7C6FDD;font-weight:700;margin-bottom:14px;">${esc(kw)}</div>
+        <div style="font-size:13px;color:#6B655B;margin-bottom:16px;">${p?esc((p.emoji||"👤")+" "+p.name)+" · ":""}${esc(zg)}${dayWX?" · "+esc(dayWX):""}</div>
+        <div style="background:#FFFFFF;border:1px solid #ECE6DA;border-radius:16px;padding:14px 8px 6px;">
+          <div style="font-size:11px;color:#8A8378;padding:0 10px 4px;">柱=月均精力 · 点=月均心情(1-5)</div>
+          ${chart}
+        </div>
+        <div style="display:flex;gap:10px;margin:16px 0;">
+          ${stat("打卡总天数",totalDays)}
+          ${stat("平均精力",avgE+"%")}
+          ${stat("最佳月份",bestM+"月")}
+          ${stat("高能五行",topWx?topWx:"--")}
+        </div>
+        ${topWx?`<div style="font-size:13px;line-height:1.8;color:#4A443A;background:#F3EEE2;border-radius:12px;padding:12px 14px;">💡 这一年，你在 <b>${esc(topWx)}日</b> 的状态最好（${wxCount[topWx]} 个月的高能日都落在${esc(topWx)}）。明年把重要的事继续安排在${esc(topWx)}日，顺势而为。</div>`:""}
+        <div style="display:flex;justify-content:space-between;margin-top:16px;font-size:11px;color:#A39C8F;">
+          <div>数据来自你的每日觉察打卡 · 仅存于本机</div>
+          <div>知命V2 · ${new Date().getFullYear()}.${new Date().getMonth()+1}.${new Date().getDate()} 生成</div>
+        </div>
+      </div>`;
+      // SVG→PNG（同分享卡机制）
+      const W=720, H=920;
+      const svgStr=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject width="100%" height="100%"><body xmlns="http://www.w3.org/1999/xhtml" style="margin:0;">${poster}</body></foreignObject></svg>`;
+      // data URL 而非 blob URL：部分环境（无头/旧内核）对 blob:SVG 绘制存在 canvas 污染差异
+      const url="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svgStr);
+      const img=new Image();
+      img.onload=function(){
+        const canvas=document.createElement("canvas"); const scale=2;
+        canvas.width=W*scale; canvas.height=H*scale;
+        const ctx=canvas.getContext("2d"); ctx.scale(scale,scale);
+        ctx.drawImage(img,0,0,W,H);
+        URL.revokeObjectURL(url);
+        try{
+          const a=document.createElement("a");
+          a.download=`知命_能量年报_${y}.png`;
+          a.href=canvas.toDataURL("image/png");
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          try{ window._toast&&window._toast("🖼 年报长图已生成","success"); }catch(_){}
+        }catch(e){ _growPosterModal(poster); }
+      };
+      img.onerror=function(){ URL.revokeObjectURL(url); _growPosterModal(poster); };
+      img.src=url;
+    }catch(e){ try{ window._toast&&window._toast("生成失败："+e.message); }catch(_){ alert("生成失败："+e.message); } }
+  };
+  function _growPosterModal(poster){
+    let m=document.getElementById("growPosterModal");
+    if(!m){
+      m=document.createElement("div");
+      m.id="growPosterModal";
+      m.style.cssText="position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.55);overflow:auto;display:none;";
+      m.innerHTML='<div style="max-width:760px;margin:24px auto;padding:12px;">'
+        +'<div style="text-align:center;margin-bottom:10px;"><span style="background:#fff;border-radius:99px;padding:8px 18px;font-size:13px;font-weight:700;color:#1F1A14;">📱 长图预览 · 截图或长按保存</span></div>'
+        +'<div id="growPosterHost" style="border-radius:16px;overflow:hidden;"></div>'
+        +'<div style="text-align:center;margin-top:12px;"><button onclick="document.getElementById(\'growPosterModal\').style.display=\'none\'" style="background:#fff;border:none;border-radius:99px;padding:10px 26px;font-size:14px;font-weight:700;color:#1F1A14;">关闭</button></div></div>';
+      document.body.appendChild(m);
+      m.addEventListener("click",function(ev){ if(ev.target===m){ m.style.display="none"; } });
+    }
+    document.getElementById("growPosterHost").innerHTML=poster;
+    m.style.display="block";
+  }
+  function _secAnnual(r){
+    const arch=_archAll();
+    if(arch.length<3) return "";
+    const y=_annualPickYear();
+    const months=_annualYearData(y);
+    const have=months.filter(Boolean);
+    const full=have.length>=12;
+    const mini=(()=>{ // 页面内迷你预览
+      const CW=320, CH=90, padL=20, padB=18;
+      const iw=CW-padL-8, ih=CH-padB-8;
+      return `<svg class="rh-chart" viewBox="0 0 ${CW} ${CH}" style="margin-top:6px;">
+        ${months.map((a,i)=>{
+          const x=padL+i*(iw/12)+2, w=iw/12-5;
+          const h=a?Math.max(3,a.avgE/100*ih):3;
+          const fill=a?"var(--pri)":"var(--track-bg,#EFEAE0)";
+          return `<rect x="${x.toFixed(1)}" y="${(8+ih-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${fill}"></rect><text x="${(x+w/2).toFixed(1)}" y="${CH-4}" text-anchor="middle" font-size="8" fill="var(--text-hint)">${i+1}</text>`;
+        }).join("")}</svg>`;
+    })();
+    return _card(full?"🎖️ 能量年报 · 集齐一年":"🎖️ 能量年报（积累中）",
+      `<div class="hint">你在 ${y} 年已积累 <b>${have.length}</b> 个月${full?"——集齐一年，生成属于你的能量年报长图 🎉":"——集满 12 个月解锁完整年报，现在就能预览生成"}</div>
+       ${mini}
+       <button class="btn-primary" style="margin-top:10px;" onclick="window._growAnnualPoster()">🖼 生成《${y} 能量年报》长图</button>`);
+  }
+
+  function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
+
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
@@ -21172,7 +21346,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secRhythm(r) + _secArchive(r) + _secJiri(r);
+      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secRhythm(r) + _secArchive(r) + _secAnnual(r) + _secJiri(r);
   };
 
   /* ---- 交互 ---- */
