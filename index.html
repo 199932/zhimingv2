@@ -1540,7 +1540,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.15.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.16.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2407,7 +2407,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.15.0-20261015';
+const ZHIMING_BUILD = 'v2.16.0-20261016';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6232,6 +6232,7 @@ function switchTab(page){
     document.body.classList.add("theme-today");
     try{ const cb=document.getElementById("copyBar"); if(cb) cb.style.display="none"; }catch(_){}
     try{ if(typeof window.renderGrow === 'function') window.renderGrow(); }catch(e){ console.warn('renderGrow:',e); }
+    try{ if(typeof window._growOnboardShow === 'function') window._growOnboardShow(); }catch(_e){}
   }
   window.scrollTo(0,0);
 }
@@ -21341,8 +21342,12 @@ function _lenormandAIEnhance(cards, spreadType){
       }
       statHtml+=`<div class="hint" style="margin-top:8px;">💡 ${insight}</div>${calib}`;
     }
-    /* 列表（新的在前，最多展示 8 条） */
-    const rows=[...list].reverse().slice(0,8).map(x=>{
+    /* 列表：待验证超期(>7天)优先 → 待验证 → 已结算新的在前，最多展示 8 条 */
+    const _DAY=86400000;
+    const _age=x=>{ try{ return (Date.now()-new Date(x.date+"T12:00:00").getTime())/_DAY; }catch(e){ return 0; } };
+    const overdue=list.filter(x=>(!x.status||x.status==="pending")&&_age(x)>7).length;
+    const rank=x=> ((!x.status||x.status==="pending") ? (_age(x)>7?0:1) : 2);
+    const rows=[...list].sort((a,b)=>rank(a)-rank(b)||new Date(b.date)-new Date(a.date)).slice(0,8).map(x=>{
       const [ico,txt]=_judgeStatusMeta(x.status);
       const st=x.m?`<span style="font-size:10px;color:var(--text-hint);">当日状态 ${MOODS[x.m-1]||"·"}${x.e!=null?" 精力"+x.e+"%":""}</span>`:"<span style=\"font-size:10px;color:var(--text-hint);\">当日无打卡</span>";
       const acts=(x.status==="pending"||!x.status)
@@ -21357,7 +21362,7 @@ function _lenormandAIEnhance(cards, spreadType){
     }).join("");
     return _card("🎯 判断日志",
       `<div style="margin-bottom:6px;">${statHtml}</div>
-       ${pending.length?`<div class="hint" style="margin-top:6px;">⏳ 有 ${pending.length} 条待验证——时间到了就回来给个交代。</div>`:""}
+       ${pending.length?`<div class="hint" style="margin-top:6px;">⏳ 有 ${pending.length} 条待验证——${overdue?`<b style="color:var(--pri-dark);">其中 ${overdue} 条已超过 7 天，时间到了，给个交代</b>`:"时间到了就回来给个交代"}。</div>`:""}
        <div style="margin-top:4px;">${rows}</div>
        <div style="margin-top:10px;">${_judgeForm()}</div>`);
   }
@@ -21395,7 +21400,7 @@ function _lenormandAIEnhance(cards, spreadType){
   };
 
   /* ---- 占卜时刻：占卜频率 × 当日心情的关联洞察（回答"占卜是找答案还是找安慰"） ---- */
-  var _DM_TYPE_NAME = {bazi:"八字", qimen:"奇门", tarot:"塔罗", zhouyi:"周易", liuyao:"六爻", meihua:"梅花", xiaoliuren:"小六壬", cezi:"测字", liqian:"测字", shengxiao:"生肖", zodiac:"生肖", lingshu:"灵数", gongzhen:"共振", wuge:"五格"};
+  var _DM_TYPE_NAME = {bazi:"八字", qimen:"奇门", tarot:"塔罗", tarot_daily:"每日塔罗", zhouyi:"周易", liuyao:"六爻", meihua:"梅花", xiaoliuren:"小六壬", cezi:"测字", liqian:"卦签", shengxiao:"生肖", zodiac:"星座", lingshu:"灵数", gongzhen:"共振", wuge:"五格", almanac:"黄历"};
   function _secDivineMoment(r){
     let hist=[];
     try{ hist=(typeof getHistory==="function")?getHistory():[]; }catch(e){ hist=[]; }
@@ -21449,6 +21454,47 @@ function _lenormandAIEnhance(cards, spreadType){
        ${insight?`<div class="hint" style="margin-top:8px;">💡 ${insight}</div>`:""}
        ${overflow?`<div class="hint" style="margin-top:4px;opacity:.6;">另有 ${overflow} 条更早的记录未计入。</div>`:""}`);
   }
+
+  /* ---- 成长页首次引导（3 步 onboarding，纯本地，看过即藏） ---- */
+  var _GO_KEY = "zhiming_grow_seen_v1";
+  window._growOnboardShow = function(){
+    var seen=false;
+    try{ seen = localStorage.getItem(_GO_KEY)==="1"; }catch(e){}
+    if(seen || document.getElementById("growOnboard")) return;
+    var steps=[
+      {ico:"🌱", t:"欢迎来到成长中心", d:"这里不给你算命，只帮你观察自己。<br>命盘是地图——走路的人，始终是你。"},
+      {ico:"✍️", t:"每天 10 秒，觉察打卡", d:"心情、精力、一句话。<br>坚持 7 天解锁节律小结，<br>看清自己的高低起伏规律。"},
+      {ico:"🔐", t:"数据只在你手里", d:"所有记录纯本地存储，永不上传。<br>记录判断、回看占卜时刻——<br>这是一份完全属于你的成长档案。"}
+    ];
+    var idx=0;
+    var wrap=document.createElement("div");
+    wrap.id="growOnboard";
+    wrap.style.cssText="position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:24px;";
+    function render(){
+      var s=steps[idx];
+      var dots=steps.map(function(_,i){ return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 4px;background:'+(i===idx?"var(--pri,#6B5CA5)":"rgba(255,255,255,.35)")+';"></span>'; }).join("");
+      wrap.innerHTML='<div style="max-width:340px;width:100%;background:var(--card-bg,#fff);color:var(--text,#222);border-radius:20px;padding:28px 24px 22px;text-align:center;box-shadow:0 18px 60px rgba(0,0,0,.4);position:relative;">'
+        +'<span onclick="window._growOnboardSkip()" style="position:absolute;top:10px;right:14px;font-size:12px;color:var(--text-hint,#999);cursor:pointer;">跳过</span>'
+        +'<div style="font-size:44px;line-height:1;margin-bottom:14px;">'+s.ico+'</div>'
+        +'<div style="font-size:18px;font-weight:800;margin-bottom:12px;">'+s.t+'</div>'
+        +'<div style="font-size:13px;line-height:2;color:var(--text-sub,#666);">'+s.d+'</div>'
+        +'<div style="margin-top:20px;">'+dots+'</div>'
+        +'<button id="goNext" style="margin-top:18px;width:100%;padding:12px;border:none;border-radius:12px;background:var(--pri,#6B5CA5);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">'+(idx<steps.length-1?"下一步 →":"开始使用 🌱")+'</button>'
+        +'</div>';
+      wrap.querySelector("#goNext").onclick=function(){
+        if(idx<steps.length-1){ idx++; render(); }
+        else window._growOnboardSkip();
+      };
+    }
+    window._growOnboardSkip=function(){
+      try{ localStorage.setItem(_GO_KEY,"1"); }catch(e){}
+      if(wrap.parentNode) wrap.parentNode.removeChild(wrap);
+    };
+    render();
+    document.body.appendChild(wrap);
+  };
+
+  function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
