@@ -303,7 +303,7 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .fangwei-cell .fw-k{font-size:11px;color:var(--text-sub);}
 .fangwei-cell .fw-v{font-size:14px;font-weight:700;color:var(--pri-dark);margin-top:2px;}
 .chongsha{font-size:14px;}
-.bottom-tabs{position:fixed;bottom:var(--kb-offset);left:0;right:0;z-index:100;background:var(--btab-bg);border-top:1px solid var(--btab-border);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 0 calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,0.04);}
+.bottom-tabs{position:fixed;bottom:var(--kb-offset);left:0;right:0;z-index:100;background:var(--btab-bg);border-top:1px solid var(--btab-border);display:grid;grid-template-columns:repeat(6,1fr);padding:8px 0 calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,0.04);}
 .btab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:56px;cursor:pointer;color:var(--text-hint);transition:color .2s;gap:2px;user-select:none;}
 .btab::before{content:"";position:absolute;top:-1px;left:50%;width:18px;height:3px;border-radius:0 0 3px 3px;background:var(--pri);transform:translateX(-50%) scaleX(0);transition:transform .25s ease;}
 .btab.active::before{transform:translateX(-50%) scaleX(1);}
@@ -1457,6 +1457,55 @@ body.banner-show{padding-top:40px;}
 /* ---- 13. 底栏安全区 ---- */
 body{ padding-bottom:160px; }
 
+/* ============================================================
+ *  Section CSS-10 成长中心（命格说明书/十年地图/觉察打卡/吉日启动）
+ * ============================================================ */
+.wx-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.wx-bar-k{width:16px;text-align:center;font-size:14px;font-weight:700;}
+.wx-bar-track{flex:1;height:14px;border-radius:7px;background:var(--track-bg,#EFEAE0);overflow:hidden;}
+.wx-bar-fill{height:100%;border-radius:7px;transition:width .6s cubic-bezier(.22,1,.36,1);}
+.wx-bar-v{width:38px;text-align:right;font-size:11px;color:var(--text-sub);font-variant-numeric:tabular-nums;}
+.grow-persona{font-size:14px;line-height:1.8;color:var(--text);}
+.grow-persona b{color:var(--pri-dark);}
+.grow-actions li{margin-bottom:8px;line-height:1.65;font-size:13px;}
+.grow-actions li b{color:var(--pri-dark);}
+.grow-talent{display:flex;gap:8px;align-items:flex-start;padding:9px 0;border-top:1px dashed var(--input-border);}
+.grow-talent:first-of-type{border-top:none;}
+.grow-talent .gt-ico{font-size:20px;line-height:1.3;}
+.grow-talent .gt-name{font-weight:700;font-size:13px;color:var(--text);}
+.grow-talent .gt-desc{font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:2px;}
+.dy-rail{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;}
+.dy-card{min-width:148px;max-width:148px;flex-shrink:0;border:1px solid var(--input-border);border-radius:14px;padding:10px;background:var(--card-bg);scroll-snap-align:start;position:relative;}
+.dy-card.current{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri-light),0 6px 18px rgba(0,0,0,.08);}
+.dy-card .dy-now{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--pri);color:#fff;font-size:10px;padding:2px 10px;border-radius:99px;white-space:nowrap;font-weight:700;}
+.dy-card .dy-gz{font-size:20px;font-weight:800;text-align:center;color:var(--text);}
+.dy-card .dy-age{text-align:center;font-size:11px;color:var(--text-hint);margin:2px 0 6px;}
+.dy-card .dy-th{font-size:12px;font-weight:700;color:var(--pri-dark);text-align:center;}
+.dy-card .dy-tip{font-size:11px;color:var(--text-sub);line-height:1.55;margin-top:5px;}
+.mood-row{display:flex;gap:6px;justify-content:space-between;margin:10px 0;}
+.mood-opt{flex:1;aspect-ratio:1/1;max-width:56px;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:24px;border:1.5px solid var(--input-border);border-radius:12px;background:var(--input-bg);cursor:pointer;transition:all .15s;}
+.mood-opt.on{border-color:var(--pri);background:var(--pri-light);transform:scale(1.1);box-shadow:0 3px 10px rgba(0,0,0,.08);}
+.energy-slider{width:100%;accent-color:var(--pri);}
+.ck-strip{display:flex;gap:3px;flex-wrap:wrap;margin-top:10px;}
+.ck-cell{width:17px;height:17px;border-radius:5px;background:var(--track-bg,#EFEAE0);opacity:.9;position:relative;}
+.ck-cell.has{opacity:1;}
+.ck-cell.today{outline:2px solid var(--pri);outline-offset:1px;}
+.ck-stat{display:flex;gap:8px;margin-top:10px;}
+.ck-stat .st{flex:1;text-align:center;background:var(--input-bg);border-radius:10px;padding:8px 4px;}
+.ck-stat .st .n{font-size:18px;font-weight:800;color:var(--pri-dark);font-variant-numeric:tabular-nums;}
+.ck-stat .st .l{font-size:10px;color:var(--text-hint);margin-top:1px;}
+.jiri-chip{display:inline-block;padding:7px 13px;border-radius:99px;border:1px solid var(--input-border);background:var(--input-bg);font-size:13px;margin:0 6px 8px 0;cursor:pointer;transition:all .15s;}
+.jiri-chip.on{border-color:var(--pri);background:var(--pri-light);color:var(--pri-dark);font-weight:700;}
+.jiri-day{display:flex;gap:12px;align-items:center;padding:11px 4px;border-top:1px dashed var(--input-border);}
+.jiri-day:first-of-type{border-top:none;}
+.jiri-day .jd-date{min-width:74px;text-align:center;}
+.jiri-day .jd-md{font-size:17px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;}
+.jiri-day .jd-wk{font-size:10px;color:var(--text-hint);}
+.jiri-day .jd-why{flex:1;font-size:12px;line-height:1.6;color:var(--text-sub);}
+.jiri-day .jd-rank{font-size:18px;font-weight:800;color:var(--pri);min-width:22px;text-align:center;}
+.grow-hint-noprofile{text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;line-height:2;}
+.grow-hint-noprofile button{margin-top:6px;}
+
   </style>
 </head>
 <body class="theme-light">
@@ -1475,7 +1524,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.10.9</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.11.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2132,6 +2181,14 @@ body{ padding-bottom:160px; }
   </div>
 
 
+<!-- ===== 成长中心主Tab ===== -->
+<div class="page" id="page-grow">
+  <div class="section active" id="sec-grow1">
+    <div id="grow-body"></div>
+    <div class="foot-disclaimer">※ 命理内容基于传统干支算法推演，仅供娱乐与自我觉察参考，不构成任何人生决策建议</div>
+  </div>
+</div>
+
 <div class="copy-bar" id="copyBar" style="display:none;"><button class="copy-btn" id="copyBtn" onclick="window.copyResult()">📋 一键复制</button><button class="share-btn" id="shareBtn" onclick="window.onShareCardClick()">🖼 分享卡</button></div>
 <div class="disclaimer">本工具仅供娱乐参考，不构成任何人生建议</div>
 
@@ -2142,6 +2199,7 @@ body{ padding-bottom:160px; }
   <div class="btab" data-page="wu" onclick="window.switchTab('wu')"><div class="bi">✦</div><div class="bl">西玄</div></div>
   <div class="btab" data-page="al" onclick="window.switchTab('al')"><div class="bi">❖</div><div class="bl">黄历</div></div>
   <div class="btab" id="tab-cal" data-page="cal" onclick="window.switchTab('cal')"><div class="bi">📅</div><div class="bl">日历</div></div>
+  <div class="btab" data-page="grow" onclick="window.switchTab('grow')"><div class="bi">🌱</div><div class="bl">成长</div></div>
 </div>
 
 <!-- ===== 历史 Modal ===== -->
@@ -2333,7 +2391,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.10.9-20261014';
+const ZHIMING_BUILD = 'v2.11.0-20261015';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6153,6 +6211,11 @@ function switchTab(page){
   else if (page==="cal") {
     document.body.classList.add("theme-al");
     try{ if(typeof window.renderCalendar === 'function'){ window.renderCalendar(window._calState?window._calState.y:0, window._calState?window._calState.m:0); } }catch(_){}
+  }
+  else if (page==="grow") {
+    document.body.classList.add("theme-today");
+    try{ const cb=document.getElementById("copyBar"); if(cb) cb.style.display="none"; }catch(_){}
+    try{ if(typeof window.renderGrow === 'function') window.renderGrow(); }catch(e){ console.warn('renderGrow:',e); }
   }
   window.scrollTo(0,0);
 }
@@ -20595,6 +20658,306 @@ function _lenormandAIEnhance(cards, spreadType){
 /* ============================================================
  *  P2 Features END
  * ============================================================ */
+
+/* ============================================================
+ *  Phase G · 成长中心 (renderGrow)
+ *  —— 把命理翻译成"看得懂、做得到"的现实成长工具：
+ *  ① 命格说明书（五行能量条 + 白话人设 + 补运行动清单 + 天赋神煞）
+ *  ② 人生十年地图（大运横向时间轴，十神主题白话化）
+ *  ③ 每日觉察打卡（心情/精力 → 30 天节律条带，与当日五行对照）
+ *  ④ 吉日启动器（想做的事 → 未来 30 天匹配宜忌，推荐启动日）
+ *  纯本地：打卡数据仅存 localStorage，不上传
+ * ============================================================ */
+(function __growCenter(){
+  if (typeof window.baziCalc !== "function") return;
+
+  const CK_KEY = "zhiming_grow_ck_v1";
+  const MOODS  = ["😞","😕","😐","🙂","😄"];
+
+  /* ---- 白话内容字典 ---- */
+  const GAN_PERSONA = {
+    "甲":{ico:"🌳",label:"参天大树",s:"你像一棵大树：有主见、能扛事、认准的方向不轻易回头。",t:"天赋在「定」——别人摇摆时你是那个稳住局面的人。",w:"提醒：树长得慢才长得高，别嫌自己进步慢，也别硬扛所有事。"},
+    "乙":{ico:"🌿",label:"花草藤蔓",s:"你像藤蔓花草：身段柔软、擅长借力，环境再难也能找到缝儿往上长。",t:"天赋在「韧」——你不是最强壮的，但往往是最熬得住的。",w:"提醒：善用柔劲不等于没立场，关键的事要敢于抓牢自己的支架。"},
+    "丙":{ico:"☀️",label:"太阳之火",s:"你像太阳：热情外放、点亮别人，走到哪都自带存在感。",t:"天赋在「暖」——你天生能给人能量，适合站在人前做事。",w:"提醒：太阳也有落山的时候，学会关机休息不是懒，是续航。"},
+    "丁":{ico:"🕯️",label:"灯烛星火",s:"你像一盏灯：安静但持久，照亮的范围不大，却足够温暖身边的人。",t:"天赋在「专」——你能把注意力放在一件小事上磨到精。",w:"提醒：别拿自己跟太阳比亮度，灯的价值是长明，不是耀眼。"},
+    "戊":{ico:"⛰️",label:"高山城垣",s:"你像一座山：厚重可靠、说到做到，是朋友眼里的「定海神针」。",t:"天赋在「稳」——你答应的事基本不会黄。",w:"提醒：山不动也会被风化，偶尔主动求变，比被动被改变好。"},
+    "己":{ico:"🌱",label:"田园沃土",s:"你像田园土：包容务实、滋养他人，擅长把乱摊子一点点收拾妥帖。",t:"天赋在「养」——你能让身边人事物慢慢变好。",w:"提醒：多付出也要记账，学会说「这次不行」，土才有肥力。"},
+    "庚":{ico:"⚔️",label:"刀剑矿石",s:"你像一块糙金：直来直去、抗压极强，越是有难度的事越来劲。",t:"天赋在「断」——你敢拍板、敢淘汰，决策快是本事。",w:"提醒：好钢要回火，赢了对错输了关系不划算，收着点锋芒。"},
+    "辛":{ico:"💎",label:"珠玉首饰",s:"你像首饰上的玉：细腻讲究、在意品质，对美和细节有天生的敏感。",t:"天赋在「精」——你经手的东西就是比别人做得体面。",w:"提醒：玉怕磕碰也别太娇气，允许瑕疵存在，完美主义别伤自己。"},
+    "壬":{ico:"🌊",label:"江河大海",s:"你像大江大河：主意多、闯劲足，天生闲不住，装得下大事也容得下人。",t:"天赋在「势」——你擅长顺水推舟，把资源拢到一起做成事。",w:"提醒：水太急容易翻船，大目标拆成小河段，一段一段渡。"},
+    "癸":{ico:"🌧️",label:"雨露甘泉",s:"你像雨水：安静渗透、以柔克刚，看起来温和，实则内心自有丘壑。",t:"天赋在「润」——你不动声色就把事情办成了。",w:"提醒：别什么都憋在心里，雨水也要汇入江海，多表达多求助。"}
+  };
+  const WX_META = {
+    "木":{ico:"🌿",color:"#4CAF50",act:["多穿绿色系衣物，工位或床头摆一盆绿植","上午去公园绿地散步 20 分钟，比补觉更提神","写作、规划、教别人东西——木主生发，输出就是滋养","多读点新领域的东西，保持「向上长」的状态"]},
+    "火":{ico:"🔥",color:"#FF7043",act:["穿暖色系提气，重要的场合选红色系配饰","别熬夜——火要养在白天，晚上 23 点前睡","多做有氧和社交：跑步、聚会，让热情流动起来","主动表达：把想法说出口，火怕闷着"]},
+    "土":{ico:"⛰️",color:"#8D6E63",act:["规律的作息和三餐就是最好的「补土」","徒步、爬山、接地气的运动，比器械更适合你","练一项「慢功夫」：书法、烹饪、园艺都行","少一点反复横跳，决定的事先稳稳执行一周"]},
+    "金":{ico:"⚔️",color:"#90A4AE",act:["桌面和房间定期断舍离，金喜整齐有序","练呼吸和力量训练，收敛浮躁","白/金属色系穿搭显气场，重要场合可用","学会拒绝：金主决断，练习温和而坚定地说「不」"]},
+    "水":{ico:"🌊",color:"#42A5F5",act:["多喝水真的有用，别等渴了才喝","游泳、拉伸等流动型运动最养你","睡前复盘 5 分钟，写三行日记即可——水主智，思考是 你的充电","多亲近水边：湖边散步、泡澡放空都算"]},
+  };
+  const SHISHEN_THEME = {
+    "比肩":{kw:"并肩打拼",tip:"这十年「人脉即底气」：多结交同频伙伴，合伙、组队容易出成绩；但要防好朋友谈钱伤感情，先小人后君子。"},
+    "劫财":{kw:"破局求生",tip:"这十年变数多、花销大：适合闯荡和折腾，但守财是必修课——大额支出设 24 小时冷静期。"},
+    "食神":{kw:"安心耕耘",tip:"这十年适合深耕才艺与生活：学技能、做内容、经营爱好，厚积薄发；心态放平，收获在后头。"},
+    "伤官":{kw:"才华出圈",tip:"这十年你的表达欲和创造力会爆棚：适合做有个人风格的事、大胆展示；注意管好嘴，锋芒别扎到关键的人。"},
+    "偏财":{kw:"机会遍地",tip:"这十年活水多、路子广：副业、投资、新领域都可以试；但见好就收，别把运气当实力加杠杆。"},
+    "正财":{kw:"细水长流",tip:"这十年靠踏实积累：主业为本、稳步加薪是主旋律；少投机多储蓄，慢就是快。"},
+    "七杀":{kw:"压力淬炼",tip:"这十年挑战密集、节奏快：高压环境反而成就你；锻炼身体、稳住情绪，把每次硬仗当升级打怪。"},
+    "正官":{kw:"名正言顺",tip:"这十年适合走正规路线：升职、考证、立规矩，体制和体系会给 你舞台；自律者得自由。"},
+    "偏印":{kw:"深度修炼",tip:"这十年适合钻研冷门与深度领域：专业壁垒越高越吃香；但别钻牛角尖，多与人交流防内耗。"},
+    "正印":{kw:"贵人扶持",tip:"这十年学习运和贵人运俱佳：进修、考证、请教师长都顺；吸收多了也要输出，别只进不出。"}
+  };
+  const SHENSHA_GROW = {
+    "天乙贵人":{ico:"🧚",d:"逢凶化吉的底子：关键时刻总有人拉一把。成长建议——平时多真诚帮人，这是在给未来的自己存贵人。"},
+    "文昌贵人":{ico:"📖",d:"天生的学习脑：读书考试、写文案、搞创作都比一般人顺。别浪费这个天赋，持续输出。"},
+    "桃花":{ico:"🌸",d:"自带人缘魅力：别人愿意亲近你。把它用在协作与谈判上，是隐形加分项。"},
+    "驿马":{ico:"🐎",d:"闲不住的命：换环境、跑动、出差反而带来好运。机会常在远方，别怕折腾。"},
+    "华盖":{ico:"🕉️",d:"孤而慧：独处是你的充电方式，审美和直觉出众。适合艺术、玄学、研究型的事。"},
+    "将星":{ico:"🎖️",d:"天生的组织者：团队里不知不觉你就是主心骨。练好领导力，别浪费统御天赋。"},
+    "禄神":{ico:"🍚",d:"衣食无忧的根基：正经工作运扎实，工资、福利、铁饭碗类的事有加成。"},
+    "羊刃":{ico:"🗡️",d:"藏着一股狠劲：抗压、敢拼、危机时刻爆发力惊人。用在竞争场景是宝，用在情绪上是伤。"}
+  };
+  const MOOD_WX_TIP = {
+    "木":"今日木气当令，适合做「生长」的事：学点新东西、写下计划。若情绪低落，出去走走见见绿色，比躺平管用。",
+    "火":"今日火旺，情绪容易上头：重要的话先放 10 分钟再说。把热情用在动起来上——运动、聚会都是好出口。",
+    "土":"今日土气主稳：适合处理积压的琐事、整理环境。心浮的时候做点「慢动作」，扫地做饭都算修行。",
+    "金":"今日金气清肃：适合断舍离、做决断。低落时别钻牛角尖，把房间收拾干净，气就顺了。",
+    "水":"今日水主智慧：适合复盘、读书、深度思考。精力低是正常的，早睡是最好的开运。"
+  };
+  const JIRI_PRESETS = [
+    {ico:"💪",name:"运动健身",kw:["栽种","习艺"]},
+    {ico:"📚",name:"开始学习",kw:["入学","习艺","开光"]},
+    {ico:"💼",name:"求职赴任",kw:["赴任","出行"]},
+    {ico:"❤️",name:"表白订婚",kw:["订盟","纳采","问名","嫁娶"]},
+    {ico:"🏠",name:"搬家入宅",kw:["移徙","入宅","安床"]},
+    {ico:"💰",name:"开业签约",kw:["开市","交易","立券","纳财"]},
+    {ico:"✈️",name:"出行远游",kw:["出行"]},
+    {ico:"🧘",name:"调养休整",kw:["解除","求医","安床"]}
+  ];
+
+  /* ---- 工具 ---- */
+  function _ck(){ try{ return JSON.parse(localStorage.getItem(CK_KEY)||"{}"); }catch(e){ return {}; } }
+  function _ckSave(o){ try{ localStorage.setItem(CK_KEY, JSON.stringify(o)); }catch(e){} }
+  function _dkey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  function _esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function _wxPercent(wx){
+    const total = Object.values(wx).reduce((a,b)=>a+b,0) || 1;
+    const out = {};
+    Object.keys(wx).forEach(k=> out[k] = Math.round(wx[k]*100/total));
+    return out;
+  }
+  function _growBazi(){
+    const p = (typeof window.getActiveProfile === "function") ? window.getActiveProfile() : null;
+    if (!p || !p.year || !p.month || !p.day) return null;
+    const sig = [p.id,p.year,p.month,p.day,p.hour,p.minute,p.gender,p.cityLng].join("|");
+    if (window._growBaziCache && window._growBaziCache.sig === sig) return window._growBaziCache.r;
+    let r = null;
+    try{
+      r = window.baziCalc({year:+p.year, month:+p.month, day:+p.day, hour:+(p.hour||12), minute:+(p.minute||30), gender:p.gender||"男", cityLng:p.cityLng});
+    }catch(e){ r = null; }
+    window._growBaziCache = {sig, r};
+    return r;
+  }
+
+  /* ---- 卡片渲染 ---- */
+  function _card(title, body, extra){
+    return `<div class="card"${extra||""}><div class="card-title">${title}</div>${body}</div>`;
+  }
+
+  function _secPersona(r, p){
+    const dp = GAN_PERSONA[r.dayGan] || {ico:"✨",label:"日主",s:"",t:"",w:""};
+    const wp = _wxPercent(r.wxScore);
+    const bars = ["木","火","土","金","水"].map(k=>
+      `<div class="wx-bar-row"><div class="wx-bar-k" title="${k}">${WX_META[k].ico}</div>
+       <div class="wx-bar-track"><div class="wx-bar-fill" style="width:${wp[k]||0}%;background:${WX_META[k].color};"></div></div>
+       <div class="wx-bar-v">${wp[k]||0}%</div></div>`).join("");
+    const xi = (r.xiYong||[]).map(x=>`<span class="yj-tag" style="background:${WX_META[x]?WX_META[x].color+"22":"transparent"};">${WX_META[x]?WX_META[x].ico:""} ${x}</span>`).join(" ");
+    const lackTxt = (r.lack&&r.lack.length) ? `命局缺「${r.lack.join("、")}」——缺不代表不好，但可以在生活里有意补一补：` : "五行俱全，底子均衡，重点是把喜用神的能量用足：";
+    const focus = ((r.xiYong&&r.xiYong[0])||(r.lack&&r.lack[0])||"木");
+    const acts = (WX_META[focus]?WX_META[focus].act:[]).map(a=>`<li>${a}</li>`).join("");
+    const ss = (r.shensha&&r.shensha.length? r.shensha.slice(0,3):[]).map(s=>{
+      const g = SHENSHA_GROW[s.name]; if(!g) return "";
+      return `<div class="grow-talent"><div class="gt-ico">${g.ico}</div><div><div class="gt-name">${_esc(s.name)}${s.pillar?` <span style="font-size:10px;color:var(--text-hint);">（落${_esc(s.pillar)}${s.zhi?"·"+_esc(s.zhi):""}）</span>`:""}</div><div class="gt-desc">${g.d}</div></div></div>`;
+    }).join("");
+    const wsTag = r.wangshuai==="偏旺"?'<span class="tag tag-warn">偏旺</span>':r.wangshuai==="偏弱"?'<span class="tag tag-info">偏弱</span>':'<span class="tag tag-good">中和</span>';
+    return _card("🪞 你的命格说明书",
+      `<div style="text-align:center;margin-bottom:10px;">
+        <div style="font-size:30px;">${dp.ico}</div>
+        <div style="font-weight:800;font-size:16px;">日主「${_esc(r.dayGan)}」· ${dp.label} ${wsTag}</div>
+        <div style="font-size:11px;color:var(--text-hint);margin-top:2px;">属${_esc(r.zodiac)} · 生于${_esc(r.yueLing||"")}月令 · 真太阳时 ${_esc(r.trueSolar||"")}</div>
+      </div>
+      <div class="grow-persona">${dp.s}<br><b>${dp.t}</b><br><span style="color:var(--text-sub);">${dp.w}</span></div>
+      <div style="margin-top:14px;">${bars}</div>
+      <div class="hint" style="margin:6px 0 4px;">喜用神：${xi}</div>
+      <div class="hint">${lackTxt}</div>
+      <ul class="grow-actions" style="margin-top:8px;padding-left:18px;">
+        <li style="font-weight:700;list-style:none;margin-left:-18px;">🧭 把「${focus}」补进日常：</li>
+        ${acts}
+      </ul>
+      ${ss?`<div style="margin-top:10px;font-weight:700;font-size:13px;">🎁 你的天赋神煞</div>${ss}`:""}`);
+  }
+
+  function _secDayun(r, p){
+    const list = (r.dayun&&r.dayun.list)||[];
+    const nowY = new Date().getFullYear();
+    const birthY = p.year ? +p.year : nowY;
+    const cards = list.map(d=>{
+      const th = SHISHEN_THEME[d.ganShi]||{kw:"流转十年",tip:"稳扎稳打，顺势而为。"};
+      const isNow = nowY>=d.startYear && nowY<=d.endYear;
+      const age0 = d.startSui - (birthY?0:0);
+      return `<div class="dy-card${isNow?" current":""}">
+        ${isNow?'<div class="dy-now">⬅ 你在这里</div>':""}
+        <div class="dy-gz">${_esc(d.gz)}</div>
+        <div class="dy-age">${d.startYear}–${d.endYear}<br>${d.startSui}~${d.endSui} 岁</div>
+        <div class="dy-th">${th.kw}</div>
+        <div class="dy-tip">${th.tip}</div>
+      </div>`;
+    }).join("");
+    return _card("🗺️ 人生十年地图",
+      `<div class="hint" style="margin-bottom:8px;">每 10 年一步大运，主题各不相同。当前这步是重点——先看清主题，再决定怎么用力。（起运于 ${_esc(String(r.dayun&&r.dayun.qiYunSui||""))} 虚岁，${r.dayun&&r.dayun.isShun?"顺排":"逆排"}）</div>
+       <div class="dy-rail">${cards}</div>
+       <div class="hint" style="margin-top:2px;">※ 大运论的是十年整体气候，不是宿命；同一步运里，努力方式不同，结果可以差很远。</div>`);
+  }
+
+  function _secCheckin(r){
+    const data = _ck();
+    const todayKey = _dkey(new Date());
+    const today = data[todayKey] || {};
+    const mood = (window._growDraft&&window._growDraft.mood!=null) ? window._growDraft.mood : today.m;
+    const energy = (window._growDraft&&window._growDraft.energy!=null) ? window._growDraft.energy : (today.e!=null?today.e:60);
+    const note = (window._growDraft&&window._growDraft.note!=null) ? window._growDraft.note : (today.note||"");
+    const moodRow = MOODS.map((m,i)=>`<div class="mood-opt${mood===(i+1)?" on":""}" onclick="window._growSetMood(${i+1})">${m}</div>`).join("");
+    // 近 30 天条带
+    let strip = "";
+    const days = [];
+    for (let i=29;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d); }
+    strip = days.map((d,i)=>{
+      const k=_dkey(d), v=data[k];
+      const bg = v ? (["#E53935","#FB8C00","#FDD835","#7CB342","#43A047"][v.m-1]||"#999") : "";
+      return `<div class="ck-cell${v?" has":""}${i===29?" today":""}" title="${k}${v?` · 心情${v.m}/5 精力${v.e}`:""}" style="${v?`background:${bg};`:""}"></div>`;
+    }).join("");
+    // 统计
+    const vals = Object.keys(data).sort().map(k=>data[k]).filter(v=>v&&v.m);
+    let streak = 0;
+    { const d=new Date(); while(true){ if(data[_dkey(d)]&&data[_dkey(d)].m){streak++;d.setDate(d.getDate()-1);}else break; } }
+    const avg = (arr)=> arr.length? Math.round(arr.reduce((a,b)=>a+b,0)*10/arr.length)/10 : "–";
+    const stats = `<div class="ck-stat">
+      <div class="st"><div class="n">${streak}</div><div class="l">连续天数 🔥</div></div>
+      <div class="st"><div class="n">${vals.length}</div><div class="l">累计打卡</div></div>
+      <div class="st"><div class="n">${avg(vals.map(v=>v.m))}</div><div class="l">平均心情 /5</div></div>
+      <div class="st"><div class="n">${avg(vals.map(v=>v.e))}</div><div class="l">平均精力 %</div></div>
+    </div>`;
+    const dayWX = r ? (WX_META[GAN_WX(r.dayGan)]?GAN_WX(r.dayGan):null) : null;
+    const wxTip = dayWX ? MOOD_WX_TIP[dayWX] : "";
+    return _card("📝 今日觉察打卡",
+      `<div class="hint">命理给了天气，心情是你的体感。每天 10 秒，坚持一个月，你会看见自己的节律。</div>
+       <div class="mood-row">${moodRow}</div>
+       <div style="display:flex;align-items:center;gap:10px;">
+         <span style="font-size:12px;color:var(--text-sub);white-space:nowrap;">⚡ 精力</span>
+         <input type="range" min="0" max="100" step="5" value="${energy}" class="energy-slider" oninput="window._growSetEnergy(this.value)">
+         <b id="growEnergyVal" style="min-width:34px;text-align:right;font-variant-numeric:tabular-nums;">${energy}%</b>
+       </div>
+       <input type="text" id="growNote" placeholder="一句话记录今天（可选）" value="${_esc(note)}" style="width:100%;margin-top:10px;" oninput="window._growSetNote(this.value)">
+       <button class="btn-primary" style="margin-top:10px;" onclick="window._growSaveToday()">${today.m?"✅ 更新今天":"记一笔今天"}</button>
+       <div class="ck-strip">${strip}</div>
+       ${stats}
+       ${wxTip?`<div class="hint" style="margin-top:10px;">🌤 今日干支五行属「${dayWX}」——${wxTip}</div>`:""}`);
+  }
+
+  function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
+
+  function _secJiri(r){
+    const chips = JIRI_PRESETS.map((c,i)=>`<span class="jiri-chip${(window._growJiri||{}).sel===i?" on":""}" onclick="window._growPickJiri(${i})">${c.ico} ${c.name}</span>`).join("");
+    let resultHtml = "";
+    const sel = (window._growJiri||{}).sel;
+    if (sel!=null){
+      const preset = JIRI_PRESETS[sel];
+      const days = [];
+      for (let i=1;i<=30;i++){ const d=new Date(); d.setDate(d.getDate()+i); days.push(d); }
+      const scored = days.map(d=>{
+        const a = buildAlmanac(d);
+        const yiHit = preset.kw.filter(k=>a.yi.indexOf(k)>=0);
+        const jiHit = a.ji.filter(j=>preset.kw.indexOf(j)>=0);
+        let score = yiHit.length*2 - jiHit.length*3;
+        if (a.ji.indexOf("诸事不宜")>=0) score -= 5;
+        return {d, a, yiHit, jiHit, score};
+      }).filter(x=>x.score>0).sort((x,y)=> y.score-x.score || x.d-y.d).slice(0,3);
+      if (scored.length===0){
+        resultHtml = `<div class="hint" style="margin-top:10px;">未来 30 天没有特别契合「${preset.name}」的吉日，平稳日子也能做事——尽心即是吉日。</div>`;
+      } else {
+        resultHtml = scored.map((x,i)=>{
+          const wk = x.a.week;
+          const why = `宜 ${x.yiHit.join("、")} · 喜神在${x.a.xiShen}方 · ${x.a.chongsha||""}`;
+          return `<div class="jiri-day">
+            <div class="jd-rank">${["🥇","🥈","🥉"][i]}</div>
+            <div class="jd-date"><div class="jd-md">${x.a.M}/${x.a.D}</div><div class="jd-wk">${wk} · ${_esc(x.a.dayGZ)}</div></div>
+            <div class="jd-why">${why}</div>
+          </div>`;
+        }).join("");
+      }
+    }
+    return _card("🚀 吉日启动器",
+      `<div class="hint">想开始一件事，挑个「宜」的日子起步，心理上先赢一半。选一件事，我帮你扫未来 30 天：</div>
+       <div style="margin-top:8px;">${chips}</div>
+       ${resultHtml}
+       <div class="hint" style="margin-top:8px;">※ 宜忌由干支哈希算法推演，仅供娱乐参考；真要紧的事，请以现实条件为准。</div>`);
+  }
+
+  /* ---- 主渲染 ---- */
+  window.renderGrow = function(){
+    const body = document.getElementById("grow-body");
+    if (!body) return;
+    const p = (typeof window.getActiveProfile === "function") ? window.getActiveProfile() : null;
+    const r = _growBazi();
+    if (!p || !r){
+      body.innerHTML =
+        `<div class="card"><div class="card-title">🌱 成长中心</div>
+         <div class="grow-hint-noprofile">
+           这里把命理翻译成「看得懂、做得到」的成长工具：<br>
+           🪞 命格说明书 · 🗺️ 人生十年地图 · 📝 觉察打卡 · 🚀 吉日启动器<br>
+           设置人物档案后，前两项将按<b>你的八字</b>生成；
+           打卡与吉日无需档案，现在就能用。
+           <br><button class="btn-primary" onclick="window.openProfileModal&&window.openProfileModal()">去设置档案</button>
+         </div></div>` +
+        _secCheckin(null) + _secJiri(null);
+      return;
+    }
+    body.innerHTML =
+      `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
+         <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
+       </div>` +
+      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secJiri(r);
+  };
+
+  /* ---- 交互 ---- */
+  window._growSetMood = function(m){
+    window._growDraft = Object.assign(window._growDraft||{}, {mood:m});
+    document.querySelectorAll("#grow-body .mood-opt").forEach((el,i)=>el.classList.toggle("on", i===m-1));
+  };
+  window._growSetEnergy = function(v){
+    window._growDraft = Object.assign(window._growDraft||{}, {energy:+v});
+    const el = document.getElementById("growEnergyVal"); if (el) el.textContent = v+"%";
+  };
+  window._growSetNote = function(v){
+    window._growDraft = Object.assign(window._growDraft||{}, {note:v});
+  };
+  window._growSaveToday = function(){
+    const draft = window._growDraft||{};
+    if (!draft.mood){ try{ window._toast&&window._toast("先选一个心情表情 🙂"); }catch(e){ alert("先选一个心情表情 🙂"); } return; }
+    const data = _ck();
+    const k = _dkey(new Date());
+    const prev = data[k]||{};
+    data[k] = { m:draft.mood, e:(draft.energy!=null?draft.energy:(prev.e!=null?prev.e:60)), note:draft.note!=null?draft.note:(prev.note||""), t:Date.now() };
+    _ckSave(data);
+    window._growDraft = null;
+    window.renderGrow();
+    try{ window._toast&&window._toast("已记录，明天见 🌙"); }catch(e){}
+  };
+  window._growPickJiri = function(i){
+    window._growJiri = {sel:i};
+    window.renderGrow();
+    try{ const card=document.querySelectorAll("#grow-body .card"); if(card.length){card[card.length-1].scrollIntoView({behavior:"smooth",block:"start"});} }catch(e){}
+  };
+})();
 
   </script>
 
