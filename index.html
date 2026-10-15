@@ -1540,7 +1540,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.14.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.15.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2407,7 +2407,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.14.0-20261015';
+const ZHIMING_BUILD = 'v2.15.0-20261015';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -21394,6 +21394,64 @@ function _lenormandAIEnhance(cards, spreadType){
     try{ window._toast&&window._toast(status==="hit"?"恭喜应验 🎉":status==="miss"?"未验也无妨，数据+1":"已标记放弃"); }catch(e){}
   };
 
+  /* ---- 占卜时刻：占卜频率 × 当日心情的关联洞察（回答"占卜是找答案还是找安慰"） ---- */
+  var _DM_TYPE_NAME = {bazi:"八字", qimen:"奇门", tarot:"塔罗", zhouyi:"周易", liuyao:"六爻", meihua:"梅花", xiaoliuren:"小六壬", cezi:"测字", liqian:"测字", shengxiao:"生肖", zodiac:"生肖", lingshu:"灵数", gongzhen:"共振", wuge:"五格"};
+  function _secDivineMoment(r){
+    let hist=[];
+    try{ hist=(typeof getHistory==="function")?getHistory():[]; }catch(e){ hist=[]; }
+    if(!hist.length) return "";
+    const days=[];
+    for(let i=29;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d); }
+    const key=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    const cnt={}, typeCnt={};
+    days.forEach(d=>cnt[key(d)]=0);
+    let overflow=0;
+    hist.forEach(h=>{
+      if(!h||!h.ts) return;
+      const d=new Date(h.ts);
+      const k=key(d);
+      if(k in cnt){ cnt[k]++; const t=_DM_TYPE_NAME[h.type]||h.type||"其他"; typeCnt[t]=(typeCnt[t]||0)+1; }
+      else overflow++;
+    });
+    const total=Object.values(cnt).reduce((s,v)=>s+v,0);
+    if(!total) return "";
+    const todayCnt=cnt[key(new Date())];
+    const maxDay=Math.max.apply(null,Object.values(cnt));
+    // 心情关联
+    const ckData=_ck();
+    const hi=[], lo=[];
+    days.forEach(d=>{
+      const k=key(d), c=cnt[k], v=ckData[k];
+      if(!v||v.m==null) return;
+      if(v.m>=4) hi.push(c); else if(v.m<=2) lo.push(c);
+    });
+    const avg=a=>a.length? (a.reduce((s,v)=>s+v,0)/a.length) : null;
+    const hiA=avg(hi), loA=avg(lo);
+    const topTypes=Object.keys(typeCnt).sort((a,b)=>typeCnt[b]-typeCnt[a]).slice(0,2)
+      .map(t=>t+"×"+typeCnt[t]).join("、");
+    const head=`近 30 天占卜 <b>${total}</b> 次${todayCnt?`，今天 ${todayCnt} 次`:''}${maxDay>1?`，最密集的一天 ${maxDay} 次`:''}${topTypes?`（最爱：${topTypes}）`:''}`;
+    let insight="";
+    const enough = hiA!=null && loA!=null && hi.length>=3 && lo.length>=3;
+    if(enough){
+      const diff=loA-hiA;
+      if(diff>0.3 && loA>hiA*1.4){
+        insight=`心情低的日子平均占 <b>${loA.toFixed(1)}</b> 次，心情好的日子只有 <b>${hiA.toFixed(1)}</b> 次——低落时你更想向外要答案。觉察一下：那一刻你是在做决策，还是在找安慰？答案通常在你自己身上。`;
+      }else if(diff<-0.3){
+        insight=`心情好的日子平均占 <b>${hiA.toFixed(1)}</b> 次，低落时反而只有 <b>${loA.toFixed(1)}</b> 次——你把占卜当思考工具而不是情绪拐杖，这个习惯很健康。`;
+      }else{
+        insight=`心情好坏和占卜频率基本无关（好状态日均 ${hiA.toFixed(1)} 次 / 低状态日均 ${loA.toFixed(1)} 次）——你占卜是出于工具习惯，稳定而理性。`;
+      }
+    }else{
+      insight=`多打几天卡，就能看出「心情」和「占卜冲动」的关系——有人低落时狂占，有人只在做决策时占。看清自己的模式，本身就是一种成长。`;
+    }
+    return _card("🔮 占卜时刻",
+      `<div style="font-size:13px;line-height:1.8;">${head}</div>
+       ${insight?`<div class="hint" style="margin-top:8px;">💡 ${insight}</div>`:""}
+       ${overflow?`<div class="hint" style="margin-top:4px;opacity:.6;">另有 ${overflow} 条更早的记录未计入。</div>`:""}`);
+  }
+
+  function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
+
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
@@ -21462,7 +21520,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secRhythm(r) + _secArchive(r) + _secAnnual(r) + _secJudge(r) + _secJiri(r);
+      _secPersona(r, p) + _secDayun(r, p) + _secCheckin(r) + _secDivineMoment(r) + _secRhythm(r) + _secArchive(r) + _secAnnual(r) + _secJudge(r) + _secJiri(r);
   };
 
   /* ---- 交互 ---- */
