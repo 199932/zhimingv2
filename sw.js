@@ -1,4 +1,4 @@
-const CACHE = 'zhiming_v2_sw_v17';
+const CACHE = 'zhiming_v2_sw_v18';
 const PRECACHE = ['./', './index.html', './widget.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './donate-qr.png'];
 
 self.addEventListener('install', e => {
@@ -24,9 +24,16 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // 页面与静态资源统一 network-first：在线时永远拿最新版，离线时回退缓存
+  // 页面与静态资源 stale-while-revalidate：有缓存立即返回（秒开），后台静默更新供下次生效；无缓存走网络
   const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
   e.respondWith((async () => {
+    const cached = await caches.match(req);
+    if (cached) {
+      fetch(req).then(res => {
+        if (res && res.ok) caches.open(CACHE).then(c => c.put(req, res.clone())).catch(() => {});
+      }).catch(() => {});
+      return cached;
+    }
     try {
       const res = await fetch(req);
       if (res && res.ok) {
@@ -35,13 +42,11 @@ self.addEventListener('fetch', e => {
       }
       return res;
     } catch (err) {
-      const cached = await caches.match(req);
-      if (cached) return cached;
       if (isPage) {
         const pageFallback = await caches.match('./index.html');
         if (pageFallback) return pageFallback;
       }
-      // 非页面资源离线且无缓存：不再 respondWith(undefined)，让请求自然失败由浏览器处理
+      // 非页面资源离线且无缓存：让请求自然失败由浏览器处理
       throw err;
     }
   })());
