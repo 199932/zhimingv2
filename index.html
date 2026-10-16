@@ -1546,7 +1546,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.24.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.25.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2414,7 +2414,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.24.0-20261017';
+const ZHIMING_BUILD = 'v2.25.0-20261017';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4022,6 +4022,44 @@ function calcLiunian(r, p, tst){
   }
   return out;
 }
+// 流月：未来 12 个节气月干支（年上起月法）+ 喜用神吉凶评分
+function calcLiuyue(r){
+  if (!r || !r.dayGan) return [];
+  const nowD = new Date();
+  const FIRST_MONTH_GAN = {"甲":"丙","己":"丙","乙":"戊","庚":"戊","丙":"庚","辛":"庚","丁":"壬","壬":"壬","戊":"甲","癸":"甲"};
+  const ZHI_BY_MONTH = {1:"丑",2:"寅",3:"卯",4:"辰",5:"巳",6:"午",7:"未",8:"申",9:"酉",10:"戌",11:"亥",12:"子"};
+  const zhiSeq = ["寅","卯","辰","巳","午","未","申","酉","戌","亥","子","丑"];
+  const GAN_YY = {"甲":1,"乙":0,"丙":1,"丁":0,"戊":1,"己":0,"庚":1,"辛":0,"壬":1,"癸":0};
+  const dayG = r.dayGan;
+  function _ss(og){
+    const dw=WUXING_GAN[dayG],ow=WUXING_GAN[og],dy=GAN_YY[dayG],oy=GAN_YY[og],sy=(dy===oy);
+    if(dayG===og) return "比肩"; if(dw===ow) return sy?"比肩":"劫财";
+    const SH={"金":"水","水":"木","木":"火","火":"土","土":"金"},KE={"金":"木","木":"土","土":"水","水":"火","火":"金"};
+    if(SH[dw]===ow) return sy?"食神":"伤官"; if(KE[dw]===ow) return sy?"偏财":"正财";
+    if(KE[ow]===dw) return sy?"七杀":"正官"; if(SH[ow]===dw) return sy?"偏印":"正印"; return "?";
+  }
+  const out = [];
+  let y = nowD.getFullYear(), m = nowD.getMonth() + 1;
+  for(let k=0;k<12;k++){
+    const zhi = ZHI_BY_MONTH[m];
+    const gzYear = (m===1) ? y-1 : y; // 1月丑月干支年仍属前一年
+    const yearGan = GAN[((gzYear-4)%10+10)%10];
+    const mi = zhiSeq.indexOf(zhi);
+    const firstGanIdx = GAN.indexOf(FIRST_MONTH_GAN[yearGan]);
+    const gan = GAN[(firstGanIdx+mi)%10];
+    let jx = {score:0, label:"平", detail:""};
+    try { jx = __ganZhiJiXiong(gan, zhi, r) || jx; } catch(_){}
+    out.push({
+      month: m, label: (m<10?"0":"")+m+"月",
+      gz: gan+zhi, ganShi: _ss(gan),
+      wx: WUXING_GAN[gan]+"/"+WUXING_ZHI[zhi],
+      score: Math.round(70 + jx.score*25),
+      jiXiong: jx
+    });
+    m++; if(m>12){ m=1; y++; }
+  }
+  return out;
+}
 // 五行雷达图 SVG
 function drawWuxingRadar(wxScore, size){
   size = size || 220;
@@ -4324,6 +4362,7 @@ function calcDayunLiunianJiXiong(r){
     r.hechong = calcHeChongXingHai(r);
     r.geju = calcGeju(r);
     r.dayunJiXiong = calcDayunLiunianJiXiong(r);
+    r.liuyue = calcLiuyue(r);
     return r;
   };
 })();
@@ -6618,6 +6657,36 @@ function calcBazi(){
       h += `</tbody></table></div>
       <div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 吉凶判定：以日干五行+身强弱定喜忌，天干五行+地支五行合判（皆喜=大吉，一喜一平=吉，一喜一忌=平，一忌一平=凶，皆忌=大凶）。</div>
       </div>`;
+    }
+    // === 流月运势（未来12个月趋势折线，喜用神评分） ===
+    const ly = r.liuyue || [];
+    if (ly.length === 12){
+      const W=360,H=158,PX=30,PT=24,PB=40;
+      const yv=v=>PT+(H-PT-PB)*(100-v)/55;
+      const xs=ly.map((pt,i)=>PX+i*(W-PX-16)/(ly.length-1));
+      const hi=Math.max.apply(null,ly.map(x=>x.score)), lo=Math.min.apply(null,ly.map(x=>x.score));
+      const hiIdx=ly.findIndex(x=>x.score===hi), loIdx=ly.findIndex(x=>x.score===lo);
+      const jxColor={1:"#5B8C3E","0.5":"#7CB342",0:"#B8860B","-0.5":"#E67E22","-1":"#C0392B"};
+      const poly=ly.map((pt,i)=>xs[i]+","+yv(pt.score)).join(" ");
+      let dots=ly.map((pt,i)=>{
+        const cx=xs[i], cy=yv(pt.score);
+        const c=jxColor[String(pt.jiXiong.score)]||"#B8860B";
+        const isHi=i===hiIdx, isLo=i===loIdx&&hi!==lo;
+        const tag=isHi?'<text x="'+cx+'" y="'+(cy-10)+'" font-size="9" fill="#5B8C3E" text-anchor="middle" font-weight="700">高峰 '+pt.score+'</text>'
+              :(isLo?'<text x="'+cx+'" y="'+(cy+16)+'" font-size="9" fill="#B0A488" text-anchor="middle">蓄力 '+pt.score+'</text>':"");
+        const gzTag='<text x="'+cx+'" y="'+(H-26)+'" font-size="8.5" fill="var(--text-hint)" text-anchor="middle">'+pt.gz+'</text>';
+        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isHi||isLo?4.5:3)+'" fill="'+c+'"><title>'+pt.label+' '+pt.gz+'('+pt.wx+') 十神:'+pt.ganShi+' '+pt.jiXiong.label+' — '+pt.jiXiong.detail+'</title></circle>'+tag+gzTag
+          +'<text x="'+cx+'" y="'+(H-12)+'" font-size="9.5" fill="var(--text-sub)" text-anchor="middle">'+pt.label+'</text>';
+      }).join("");
+      h += '<div class="card"><div class="card-title">📈 未来 12 个月 · 流月运势（喜用神评分）</div>';
+      h += '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;" role="img" aria-label="未来十二个月流月运势折线图">';
+      h += '<polyline points="'+poly+'" fill="none" stroke="var(--pri)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+dots+'</svg>';
+      h += '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px;font-size:10px;color:var(--text-hint);">';
+      [["大吉 95","#5B8C3E"],["吉 83","#7CB342"],["平 70","#B8860B"],["凶 58","#E67E22"],["大凶 45","#C0392B"]].forEach(x=>{
+        h += '<span><span style="display:inline-block;width:8px;height:8px;background:'+x[1]+';border-radius:50%;margin-right:3px;vertical-align:middle;"></span>'+x[0]+'</span>';
+      });
+      h += '</div>';
+      h += '<div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 流月干支按节气月（年上起月法），吉凶以命局喜用神合判；悬停数据点可查看当月干支与十神。命理推演仅供娱乐参考。</div></div>';
     }
     // === 合冲刑害 ===
     const hc = r.hechong || [];
