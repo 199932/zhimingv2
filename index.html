@@ -1540,7 +1540,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.17.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.18.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2407,7 +2407,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.17.0-20261016';
+const ZHIMING_BUILD = 'v2.18.0-20261016';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -21520,6 +21520,7 @@ function _lenormandAIEnhance(cards, spreadType){
     a.download="知命V2_全量备份_"+new Date().toISOString().slice(0,10)+".json";
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} },3000);
+    try{ localStorage.setItem("zhiming_last_backup", String(Date.now())); }catch(e){}
     try{ window._toast?window._toast("📦 备份已下载——好好保管这份文件","info",1600):showToast("📦 备份已下载","info",1600); }catch(e){}
   };
   window._vaultPick = function(){ try{ document.getElementById("vaultFile").click(); }catch(e){} };
@@ -21564,8 +21565,11 @@ function _lenormandAIEnhance(cards, spreadType){
   function _vaN(v){ if(Array.isArray(v)) return v.length; if(v&&typeof v==="object") return Object.keys(v).length; return 0; }
   function _secVault(r){
     const total=_vaultCount("profiles")+_vaultCount("checkin")+_vaultCount("judge")+_vaultCount("history")+_vaultCount("diary");
+    let _bkHint="";
+    try{ const _lb=+(localStorage.getItem("zhiming_last_backup")||0); const _dn=_vaultCount("profiles")+_vaultCount("checkin")+_vaultCount("judge")+_vaultCount("history")+_vaultCount("diary"); if(_dn>=8&&(!_lb||Date.now()-_lb>14*86400000)){ _bkHint=`<div class="hint" style="color:var(--pri-dark);font-weight:700;">⏰ ${_lb?"距离上次备份已 "+Math.floor((Date.now()-_lb)/86400000)+" 天":"还没有备份记录"}——花 3 秒导出一份，给过去的自己上保险。</div>`; } }catch(e){}
     return _card("📦 数据保险箱",
       `<div style="font-size:13px;line-height:1.8;">当前档案：<b>档案 ${_vaultCount("profiles")}</b> · 打卡 <b>${_vaultCount("checkin")}</b> 天 · 判断 <b>${_vaultCount("judge")}</b> 条 · 占卜 <b>${_vaultCount("history")}</b> 次 · 日记 <b>${_vaultCount("diary")}</b> 条</div>
+       ${_bkHint}
        <div class="hint" style="margin-top:6px;">🔐 所有数据只存在这台设备的浏览器里——清缓存、换手机都会带走它们。定期导出一份 JSON，就是给过去的自己上保险。</div>
        <div style="display:flex;gap:10px;margin-top:12px;">
          <button onclick="window._vaultExport()" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--pri,#6B5CA5);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">📤 导出备份</button>
@@ -21573,6 +21577,58 @@ function _lenormandAIEnhance(cards, spreadType){
        </div>
        <input type="file" id="vaultFile" accept=".json,application/json" style="display:none;" onchange="window._vaultImport(this)">`);
   }
+  /* ---- 判断月报：按月切开的应验率与趋势 ---- */
+  function _jmKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+  function _secJudgeMonthly(r){
+    let list=[];
+    try{ list=_judgeAll()||[]; }catch(e){ list=[]; }
+    if(!list.length) return "";
+    const byM={};
+    list.forEach(x=>{ const k=(x.date||"").slice(0,7); if(/^\d{4}-\d{2}$/.test(k)){ (byM[k]=byM[k]||[]).push(x); } });
+    const months=Object.keys(byM).sort().slice(-6);
+    if(!months.length) return "";
+    const rows=months.map(k=>{
+      const arr=byM[k];
+      const st=arr.filter(x=>x.status==="hit"||x.status==="miss");
+      const hit=st.filter(x=>x.status==="hit").length;
+      const rate=st.length?Math.round(hit/st.length*100):null;
+      const pend=arr.filter(x=>!x.status||x.status==="pending").length;
+      const bar=rate==null
+        ? `<span style="font-size:11px;color:var(--text-hint);">还没结算过</span>`
+        : `<div style="height:8px;border-radius:4px;background:var(--bg,#eee);overflow:hidden;"><div style="height:100%;width:${rate}%;background:${rate>=60?"#4caf50":rate>=40?"var(--pri,#6B5CA5)":"#e57373"};border-radius:4px;"></div></div>`;
+      const label=(rate==null?"":hit+"/"+st.length+" · "+rate+"%")+(pend?` · <span style="color:var(--pri,#6B5CA5);">${pend}待</span>`:"");
+      return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-top:6px;">
+        <span style="width:46px;flex:none;color:var(--text-sub);">${k.replace("-","/")}</span>
+        <div style="flex:1;min-width:0;">${bar}</div>
+        <span style="width:88px;flex:none;text-align:right;color:var(--text-hint);font-size:11px;">${label}</span>
+      </div>`;
+    }).join("");
+    /* 趋势：最近有结算的两个月对比 */
+    let trend="";
+    const stOf=k=>(byM[k]||[]).filter(x=>x.status==="hit"||x.status==="miss");
+    for(let i=months.length-1;i>0&&!trend;i--){
+      const cur=stOf(months[i]), prev=stOf(months[i-1]);
+      if(cur.length>=1&&prev.length>=1){
+        const cr=Math.round(cur.filter(x=>x.status==="hit").length/cur.length*100);
+        const pr=Math.round(prev.filter(x=>x.status==="hit").length/prev.length*100);
+        const d=cr-pr;
+        trend=d>=15?`📈 最近一期比前期 <b>+${d}pp</b>——状态在线，乘胜记录。`:d<=-15?`📉 最近一期比前期 <b>${d}pp</b>——别慌，样本小，波动是常态。`:`➡️ 最近两期基本持平（${pr}% → ${cr}%）。`;
+      }
+    }
+    /* 连续记录月数 */
+    let streak=0;
+    let cur=new Date();
+    if(!byM[_jmKey(cur)]) cur.setMonth(cur.getMonth()-1);
+    while(byM[_jmKey(cur)]&&streak<24){ streak++; cur.setMonth(cur.getMonth()-1); }
+    const streakLine=streak>=2?`<div class="hint" style="margin-top:8px;">🔥 你已连续 <b>${streak}</b> 个月在记录判断——这本身就是一种元认知练习。</div>`:`<div class="hint" style="margin-top:8px;">💡 坚持到第 2 个月，这里会亮起连续记录火焰。</div>`;
+    return _card("📆 判断月报",
+      `<div style="font-size:13px;color:var(--text-sub);line-height:1.6;">把判断按月切开看——水平不是直线，是波浪。看趋势，别看单点。</div>
+       <div style="margin-top:6px;">${rows}</div>
+       ${trend?`<div class="hint" style="margin-top:8px;">${trend}</div>`:""}
+       ${streakLine}`);
+  }
+
+  function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
 
@@ -21651,7 +21707,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJiri(r)) + vault;
+      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secJiri(r)) + vault;
   };
 
   /* ---- 交互 ---- */
