@@ -1540,7 +1540,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.20.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.21.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2407,7 +2407,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.20.0-20261016';
+const ZHIMING_BUILD = 'v2.21.0-20261016';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6273,8 +6273,13 @@ function switchSub(page, sub){
     all.forEach(s=>{
       const isTarget = s.id === 'sub-'+page+'-'+sub;
       s.classList.toggle('hidden', !isTarget);
-      if(isTarget && sub==='today' && !s.innerHTML && typeof window.openAlmanacDay==='function'){
-        const now=new Date(); window.openAlmanacDay(now.getFullYear(), now.getMonth()+1, now.getDate());
+      if(isTarget && sub==='today' && !s.innerHTML && typeof renderAlmanac==='function'){
+        /* 内联渲染今日黄历（原 openAlmanacDay 会跳去 al Tab，导致本 sub 永远空白）；移除"日历切换"卡避免与 al Tab 状态错乱 */
+        try{
+          const now=new Date();
+          s.innerHTML = renderAlmanac(now);
+          s.querySelectorAll('.card').forEach(c=>{ if((c.textContent||'').indexOf('日历切换')>=0) c.remove(); });
+        }catch(_){}
       }
       if(isTarget && sub==='fav' && typeof window.renderCalFavorites==='function'){
         window.renderCalFavorites();
