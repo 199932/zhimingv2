@@ -1546,7 +1546,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.23.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.24.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -1970,6 +1970,7 @@ body{ padding-bottom:160px; }
         <div class="period-tab active" data-p="0" onclick="window.switchZodiacPeriod(0)">今日</div>
         <div class="period-tab" data-p="1" onclick="window.switchZodiacPeriod(1)">本周</div>
         <div class="period-tab" data-p="2" onclick="window.switchZodiacPeriod(2)">本月</div>
+        <div class="period-tab" data-p="3" onclick="window.switchZodiacPeriod(3)">半年</div>
       </div>
     </div>
     <div class="result" id="zodiac-result" aria-live="polite"></div>
@@ -2413,7 +2414,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.23.1-20261017';
+const ZHIMING_BUILD = 'v2.24.0-20261017';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -3281,6 +3282,20 @@ const TEXT = {
       "摩羯本月年末冲刺，事业上有重要里程碑。感情需要做出一个承诺，别让对方等太久。注意补充睡眠。",
       "水瓶本月朋友圈最活跃，人脉决定发展上限。做自己才最有魅力。中下旬会有一项好消息来到。",
       "双鱼本月贵人多小人也多，需分辨真伪。感情甜蜜但警惕第三者干扰。做让内心安宁的事最重要。"
+    ],
+    halfYear:[
+      "白羊下半年先扬后稳：头两个月冲劲最足，开疆拓土就趁现在；中段转入沉淀期，把节奏放慢反而走得远；末段迎来收获兑现。感情宜趁热段定调，别拿忙碌当借口。",
+      "金牛半年主线是价值积累：前半程财务与技能双增长，中段可能有一笔意外进账或资源到位，末段安全感显著提升。感情进入务实期，谈钱不伤感情，藏着才伤。",
+      "双子半年社交版图持续扩张：前两月人脉爆发，中段信息量巨大需要筛选，别被机会晃花眼；末段锁定两三件真正要做的事。夏初感情升温，言而有信是关键。",
+      "巨蟹半年情感与家庭是主旋律：前段置业搬家概率高，中段多留意家人健康，末段关系明显更紧密。存款与保障规划宜早不宜迟，安全感要自己给。",
+      "狮子半年是一场事业长跑：前段高光开局，中段遇瓶颈别硬扛，学会借力打力，末段重回上升通道。感情里收一收强势，多问对方想要什么。",
+      "处女半年是系统化升级期：前段养成的好习惯回报巨大，中段工作流程再造效率翻倍，末段考证晋升有戏。感情里少盯缺点多看优点，关系会顺滑很多。",
+      "天秤半年合作运贯穿始终：前段团队磨合渐入佳境，中段贵人与大项目出现，末段名利双收。单身者下半年的社交圈含桃花量很高，多出门。",
+      "天蝎半年是深水区潜行：前段暗中布局，中段资源整合压力最大，熬过去末段厚积薄发。感情信任的重建需要时间，别急着要答案。",
+      "射手半年向外生长：前段出行求学签证顺遂，中段视野大开但防过度承诺，末段把收获落地成习惯。异地缘桃花活跃，心动就别只停在聊天框。",
+      "摩羯半年里程碑密集：前段打基础最辛苦，中段复利效应显现，末段迎来重要确认——晋升、承诺或合作落定。睡眠是底线资源，别透支。",
+      "水瓶半年是创新窗口期：前段想法多落地少，中段遇到同频伙伴，末段作品与成果亮相。感情里做真实的自己，反而最有吸引力。",
+      "双鱼半年灵感与直觉高峰：前段创作疗愈运势佳，中段人际分辨真伪，末段内心安定感回归。财务上防情绪化消费，心动不如行动，剁手前先冷静。"
     ],
     subToday:[
       {overall:"综合运势积极向上，宜主动。",love:"感情升温，主动表达有效。",career:"工作上适合攻坚突破。",wealth:"财运尚可，理性消费。",health:"注意上火与运动安全。"},
@@ -7510,14 +7525,43 @@ function renderZodiac(silent){
   const z = ZODIAC_12[_curZodiacIdx];
   if (!z) return;
   const p = _curZodiacPeriod;
-  const periodNames = ["今日","本周","本月"];
-  const periodTextArr = p===0 ? TEXT.zodiac.today : (p===1 ? TEXT.zodiac.week : TEXT.zodiac.month);
+  const periodNames = ["今日","本周","本月","半年"];
+  const periodTextArr = p===0 ? TEXT.zodiac.today : (p===1 ? TEXT.zodiac.week : (p===2 ? TEXT.zodiac.month : TEXT.zodiac.halfYear));
   const summaryText = (periodTextArr && periodTextArr[_curZodiacIdx]) || "";
   const today = new Date();
   const scores = zodiacSubScores(_curZodiacIdx, p, today);
   const overallScore = scores[0];
   const subHtml = zodiacBuildSubHtml(_curZodiacIdx, p, scores, today);
   const personality = TEXT.zodiac.personality[_curZodiacIdx] || "";
+  // 半年趋势卡：未来 6 个月综合分 SVG 折线（月粒度哈希，高峰/低谷标注）
+  let halfYearChartHtml = "";
+  if(p===3){
+    try{
+      const nowD=new Date(); const pts=[];
+      for(let k=0;k<6;k++){
+        const md=new Date(nowD.getFullYear(), nowD.getMonth()+k, 15);
+        pts.push({label:(md.getMonth()+1)+"月", s:hashScore(_curZodiacIdx,3,0,md)});
+      }
+      const hi=Math.max(...pts.map(x=>x.s)), lo=Math.min(...pts.map(x=>x.s));
+      const W=340,H=150,PX=34,PT=26,PB=34;
+      const y=v=>PT+(H-PT-PB)*(100-v)/40;
+      const xs=pts.map((pt,i)=>PX+i*(W-PX-14)/(pts.length-1));
+      const poly=pts.map((pt,i)=>xs[i]+","+y(pt.s)).join(" ");
+      let dots=pts.map((pt,i)=>{
+        const cx=xs[i], cy=y(pt.s);
+        const isHi=pt.s===hi, isLo=pt.s===lo && hi!==lo;
+        const col=isHi?"#4CAF7D":(isLo?"#B0A488":"var(--pri)");
+        const tag=isHi?'<text x="'+cx+'" y="'+(cy-9)+'" font-size="9" fill="#4CAF7D" text-anchor="middle" font-weight="700">高峰 '+pt.s+'</text>'
+              :(isLo?'<text x="'+cx+'" y="'+(cy+16)+'" font-size="9" fill="#B0A488" text-anchor="middle">蓄力 '+pt.s+'</text>':"");
+        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isHi||isLo?4.5:3)+'" fill="'+col+'"/>'+tag
+          +'<text x="'+cx+'" y="'+(H-12)+'" font-size="10" fill="var(--text-hint)" text-anchor="middle">'+pt.label+'</text>';
+      }).join("");
+      halfYearChartHtml = '<div class="card"><div class="card-title">📈 未来 6 个月 · 综合走势</div>'
+        +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;" role="img" aria-label="未来六个月综合运势折线图">'
+        +'<polyline points="'+poly+'" fill="none" stroke="var(--pri)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+dots+'</svg>'
+        +'<div class="hint" style="margin-top:6px;">高峰月 '+pts[pts.findIndex(x=>x.s===hi)].label+' 宜主动出击，蓄力月 '+pts[pts.findIndex(x=>x.s===lo)].label+' 宜稳守积累；曲线按月刷新</div></div>';
+    }catch(_){}
+  }
   const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
   const html = `
     <div class="card">
@@ -7537,6 +7581,7 @@ function renderZodiac(silent){
       <div class="desc-title">${periodNames[p]}总评</div>
       <div class="desc-text">${summaryText}</div>
     </div>
+    ${p===3?halfYearChartHtml:''}
     <div class="hint">※ 评分由日期哈希算法自动生成，每日/每周/每月自动刷新，仅供娱乐</div>
   `;
   // AI增强：添加文学化诗意解读层
@@ -20381,7 +20426,7 @@ function _tarotAIPrelude(cards, question, spread){
 // 2. 星座 AI 增强
 function _zodiacAIEnhance(zodiacIdx, period, scores, summaryText){
   const z = ZODIAC_12[zodiacIdx];
-  const periodNames = ["今日","本周","本月"];
+  const periodNames = ["今日","本周","本月","半年"];
   
   // 运势等级诗意化
   const overall = scores[0];
