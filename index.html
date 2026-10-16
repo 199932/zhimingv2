@@ -1540,7 +1540,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.19.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.20.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2407,7 +2407,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.19.0-20261016';
+const ZHIMING_BUILD = 'v2.20.0-20261016';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4426,6 +4426,34 @@ function buildAlmanac(date){
     nearest, yi, ji
   };
 }
+function _shiChart(dayZhi){
+  const SHEN=["青龙","明堂","天刑","朱雀","金匮","宝光","白虎","玉堂","天牢","玄武","司命","勾陈"];
+  const HUANG={"青龙":1,"明堂":1,"金匮":1,"宝光":1,"玉堂":1,"司命":1};
+  const QL={"寅":0,"申":0,"卯":2,"酉":2,"辰":4,"戌":4,"巳":6,"亥":6,"子":8,"午":8,"丑":10,"未":10};
+  const startZ=(QL[dayZhi]!=null)?QL[dayZhi]:0;
+  const nowZ=(function(){ const h=new Date().getHours(); return Math.floor(((h+1)%24)/2); })();
+  const rng=zi=>{ const s=zi===0?23:zi*2-1; const e=(s+2)%24; const p=n=>String(n).padStart(2,"0"); return p(s)+"–"+p(e); };
+  let cells="";
+  for(let i=0;i<12;i++){
+    const zi=i; /* 按子→亥自然时序排列，便于查阅 */
+    const shen=SHEN[((zi-startZ)%12+12)%12];
+    const good=!!HUANG[shen];
+    const isNow=zi===nowZ;
+    cells+=`<div style="background:${good?"rgba(88,167,122,.12)":"rgba(224,106,122,.10)"};border:${isNow?"2px solid var(--pri,#6B5CA5)":"1px solid transparent"};border-radius:10px;padding:7px 4px;text-align:center;${isNow?"box-shadow:0 2px 8px rgba(0,0,0,.08);":""}">
+      <div style="font-size:15px;font-weight:800;">${ZHI[zi]}时${isNow?'<span style="font-size:9px;color:var(--pri,#6B5CA5);margin-left:2px;">现在</span>':""}</div>
+      <div style="font-size:10px;color:var(--text-hint);">${rng(zi)}</div>
+      <div style="font-size:12px;font-weight:700;margin-top:2px;color:${good?"#58A77A":"#E06A7A"};">${good?"吉":"凶"}·${shen}</div>
+    </div>`;
+  }
+  const curShen=SHEN[((nowZ-startZ)%12+12)%12];
+  const curGood=!!HUANG[curShen];
+  return `<div class="card">
+    <div class="card-title">⏰ 时辰吉凶 · 黄黑道</div>
+    <div style="font-size:13px;margin-bottom:8px;">🦌 现在是 <b>${ZHI[nowZ]}时</b> · ${curShen}${curGood?" · 黄道吉时 ✅ 好时机抓紧行动":" · 黑道 ⚠️ 大事缓一缓，等下个吉时"}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">${cells}</div>
+    <div class="hint" style="margin-top:8px;">※ 按日支起青龙、顺轮十二神分黄黑道（传统通书规则）。吉时：青龙/明堂/金匮/宝光/玉堂/司命。</div>
+  </div>`;
+}
 function renderAlmanac(date){
   const a = buildAlmanac(date);
   const lunarStr = `${a.yearGZ}年【${a.zodiac}年】 ${lunarMonthStr(a.lunar.month,a.lunar.isLeap)}${lunarDayStr(a.lunar.day)}`;
@@ -4454,7 +4482,8 @@ function renderAlmanac(date){
       <div class="ji-box"><div class="yj-t">❌ 忌</div><div class="yj-list">${a.ji.map(y=>`<span class="yj-tag">${y}</span>`).join("")}</div></div>
     </div>
   </div>
-  <div class="card">
+${_shiChart(a.dayZhi)}
+    <div class="card">
     <div class="card-title">日历切换</div>
     <div class="switch-row">
       <button class="switch-btn active" id="sw-today" onclick="window.switchAlmanac(0)">今日</button>
