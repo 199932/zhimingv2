@@ -1540,7 +1540,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.18.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.19.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2407,7 +2407,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.18.0-20261016';
+const ZHIMING_BUILD = 'v2.19.0-20261016';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -20856,7 +20856,7 @@ function _lenormandAIEnhance(cards, spreadType){
     const vals = Object.keys(data).sort().map(k=>data[k]).filter(v=>v&&v.m);
     let streak = 0;
     { const d=new Date(); while(true){ if(data[_dkey(d)]&&data[_dkey(d)].m){streak++;d.setDate(d.getDate()-1);}else break; } }
-    const avg = (arr)=> arr.length? Math.round(arr.reduce((a,b)=>a+b,0)*10/arr.length)/10 : "–";
+    const avg = (arr)=> arr.length? Math.round(arr.reduce((a,b)=>a+b,0)*10/arr.length)/10 : `<span style="opacity:.35;font-weight:400;">–</span>`;
     const stats = `<div class="ck-stat">
       <div class="st"><div class="n">${streak}</div><div class="l">连续天数 🔥</div></div>
       <div class="st"><div class="n">${vals.length}</div><div class="l">累计打卡</div></div>
@@ -21577,6 +21577,45 @@ function _lenormandAIEnhance(cards, spreadType){
        </div>
        <input type="file" id="vaultFile" accept=".json,application/json" style="display:none;" onchange="window._vaultImport(this)">`);
   }
+  /* ---- 信心校准曲线：月度应验率 vs 自报信心的偏差 ---- */
+  function _jmConfCurve(){
+    let list=[];
+    try{ list=(_judgeAll()||[]).filter(x=>x.status==="hit"||x.status==="miss"); }catch(e){ return ""; }
+    if(list.length<6) return "";
+    const byM={};
+    list.forEach(x=>{ const k=(x.date||"").slice(0,7); if(/^\d{4}-\d{2}$/.test(k)){ (byM[k]=byM[k]||[]).push(x); } });
+    const months=Object.keys(byM).sort();
+    if(months.length<3) return "";
+    const pts=months.map(k=>{
+      const arr=byM[k];
+      const rate=Math.round(arr.filter(x=>x.status==="hit").length/arr.length*100);
+      const conf=Math.round(arr.reduce((a,b)=>a+(+b.conf||50),0)/arr.length);
+      return {k:k.slice(2).replace("-","/"), rate, conf};
+    });
+    const W=304,H=96,P=8;
+    const xs=i=>months.length===1?W/2:P+i*(W-2*P)/(months.length-1);
+    const ys=v=>H-P-(v/100)*(H-2*P);
+    const line=(key,color)=>{
+      const p=pts.map((pt,i)=>`${xs(i).toFixed(1)},${ys(pt[key]).toFixed(1)}`).join(" ");
+      const dots=pts.map((pt,i)=>`<circle cx="${xs(i).toFixed(1)}" cy="${ys(pt[key]).toFixed(1)}" r="3" fill="${color}"><title>${pt.k} ${key==="rate"?"应验":"自报信心"} ${pt[key]}%</title></circle>`).join("");
+      return `<polyline points="${p}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
+    };
+    const gap=Math.round(pts[pts.length-1].rate-pts[pts.length-1].conf);
+    const gapTxt=gap>=20?`最近一个月：实际应验比自报信心高 <b>${gap}pp</b>——你比自己以为的更稳。`:gap<=-20?`最近一个月：自报信心比实际高 <b>${-gap}pp</b>——下次记判断时，信心打保守一点。`:`最近一个月信心与实际基本吻合（差 ${Math.abs(gap)}pp）。`;
+    return `<div style="margin-top:12px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:4px;">🎯 信心校准曲线</div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;background:var(--bg,#f5f2ec);border-radius:10px;padding:2px;" preserveAspectRatio="none">
+        <line x1="${P}" y1="${ys(50)}" x2="${W-P}" y2="${ys(50)}" stroke="var(--text-hint,#999)" stroke-width="1" stroke-dasharray="3,4" opacity=".5"/>
+        ${line("conf","#b8a67a")}${line("rate","#6B5CA5")}
+      </svg>
+      <div style="display:flex;gap:14px;font-size:11px;color:var(--text-hint);margin-top:4px;">
+        <span style="white-space:nowrap;"><span style="display:inline-block;width:10px;height:3px;background:#6B5CA5;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>应验率</span>
+        <span style="white-space:nowrap;"><span style="display:inline-block;width:10px;height:3px;background:#b8a67a;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>自报信心</span>
+        ${pts.map(p=>`<span>${p.k}</span>`).join("")}
+      </div>
+      <div class="hint" style="margin-top:6px;">${gapTxt}</div>
+    </div>`;
+  }
   /* ---- 判断月报：按月切开的应验率与趋势 ---- */
   function _jmKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
   function _secJudgeMonthly(r){
@@ -21625,7 +21664,8 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="font-size:13px;color:var(--text-sub);line-height:1.6;">把判断按月切开看——水平不是直线，是波浪。看趋势，别看单点。</div>
        <div style="margin-top:6px;">${rows}</div>
        ${trend?`<div class="hint" style="margin-top:8px;">${trend}</div>`:""}
-       ${streakLine}`);
+       ${streakLine}
+       ${_jmConfCurve()}`);
   }
 
   function GAN_WX(g){ return (typeof WUXING_GAN!=="undefined"&&WUXING_GAN[g])||null; }
