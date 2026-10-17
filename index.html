@@ -1549,7 +1549,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.28.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.28.1</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2420,7 +2420,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.28.0-20261017';
+const ZHIMING_BUILD = 'v2.28.1-20261017';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6298,6 +6298,33 @@ document.addEventListener("scroll", _hideTermPop, true);
 /* =========================================================
  *  Tab & Section 切换
  * =======================================================*/
+/* 导入数据清洗：去 HTML 危险字符 + 结构限幅，防 localStorage 污染与 innerHTML 注入 */
+function _sanitizeImported(arr, maxLen){
+  maxLen = maxLen || 1000;
+  function clean(v, depth){
+    if(depth > 5) return null;
+    if(typeof v === 'string') return v.replace(/[<>\u003c\u003e]/g,'').slice(0,300);
+    if(typeof v === 'number' || typeof v === 'boolean' || v === null) return v;
+    if(Array.isArray(v)) return v.slice(0,50).map(function(x){ return clean(x, depth+1); });
+    if(typeof v === 'object'){
+      var o = {};
+      var keys = Object.keys(v).slice(0,40);
+      for(var i=0;i<keys.length;i++){ o[clean(keys[i], depth+1)] = clean(v[keys[i]], depth+1); }
+      return o;
+    }
+    return null;
+  }
+  if(!Array.isArray(arr)) return [];
+  return arr.slice(0, maxLen).map(function(x){ return clean(x, 0); });
+}
+/* _alert2：统一轻提示。toast 优先（非阻塞、不挡操作），异常环境回退原生弹窗 */
+function _alert2(msg){
+  try{
+    if(typeof showToastBottom==='function'){ showToastBottom(String(msg).replace(/\n+/g,' · ')); return; }
+  }catch(_){}
+  try{ alert(String(msg)); }catch(__){}
+}
+
 function switchTab(page){
   document.body.dataset.page = page;
   document.querySelectorAll(".btab").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
@@ -11547,32 +11574,6 @@ function retryLastAction(){
 try{ window.retryLastAction = retryLastAction; }catch(_){}
 
 /* -------- G4: 底部轻 toast -------- */
-/* 导入数据清洗：去 HTML 危险字符 + 结构限幅，防 localStorage 污染与 innerHTML 注入 */
-function _sanitizeImported(arr, maxLen){
-  maxLen = maxLen || 1000;
-  function clean(v, depth){
-    if(depth > 5) return null;
-    if(typeof v === 'string') return v.replace(/[<>\u003c\u003e]/g,'').slice(0,300);
-    if(typeof v === 'number' || typeof v === 'boolean' || v === null) return v;
-    if(Array.isArray(v)) return v.slice(0,50).map(function(x){ return clean(x, depth+1); });
-    if(typeof v === 'object'){
-      var o = {};
-      var keys = Object.keys(v).slice(0,40);
-      for(var i=0;i<keys.length;i++){ o[clean(keys[i], depth+1)] = clean(v[keys[i]], depth+1); }
-      return o;
-    }
-    return null;
-  }
-  if(!Array.isArray(arr)) return [];
-  return arr.slice(0, maxLen).map(function(x){ return clean(x, 0); });
-}
-/* _alert2：统一轻提示。toast 优先（非阻塞、不挡操作），异常环境回退原生弹窗 */
-function _alert2(msg){
-  try{
-    if(typeof showToastBottom==='function'){ showToastBottom(String(msg).replace(/\n+/g,' · ')); return; }
-  }catch(_){}
-  try{ alert(String(msg)); }catch(__){}
-}
 function showToastBottom(text, timeoutMs){
   try{
     if(!text) return;
