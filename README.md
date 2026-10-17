@@ -38,3 +38,14 @@
 ---
 
 技术栈：纯 HTML / CSS / JavaScript 单页应用 · GitHub Pages 托管
+
+
+## 构建（v2.30.0 起三件套架构）
+
+源码在 `src/index.html`（单文件，含全部内联 CSS/JS），**根目录 index.html / assets/app.js / assets/style.css 是构建产物，勿直接手改**。
+
+```bash
+node build.js   # src/index.html → 根产物（terser 压缩 JS、压缩 CSS）
+```
+
+改动流程：编辑 `src/index.html` → `node build.js` → 本地打开根 index.html 验证 → 提交全部变更。sw.js 的 PRECACHE 已包含 assets 两文件，离线可用不受影响。
