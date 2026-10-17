@@ -189,6 +189,8 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
 .topbar .actions{order:2;display:flex;gap:2px;align-items:center;flex:1;min-width:0;justify-content:flex-end;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .topbar .actions::-webkit-scrollbar{display:none;}
 .icon-btn{width:32px;height:32px;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--text-sub);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,transform .15s;flex-shrink:0;}
+body.theme-dark .icon-btn, body.theme-wu .icon-btn, body.theme-cn .icon-btn{color:var(--text);}
+.icon-btn:hover{background:rgba(128,128,128,.12);}
 @media (max-width:400px){
   .topbar{padding:6px 8px 4px;gap:1px 8px;}
   .topbar .brand{font-size:15px;letter-spacing:0;}
@@ -1547,7 +1549,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.27.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.28.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2385,10 +2387,10 @@ body{ padding-bottom:160px; }
           ta.value = '=== 知命V2 现场错误 ===\n错误:'+String(msg)+'\n行:'+line+'\n列:'+col+'\n堆栈:'+String(stack);
           ta.style.position='fixed';ta.style.left='-9999px';
           document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-          alert('已复制，粘贴给开发者即可');
-        }catch(_){ alert('复制失败，请手动截图'); }
+          _alert2('已复制，粘贴给开发者即可');
+        }catch(_){ _alert2('复制失败，请手动截图'); }
       };
-    }catch(_){ try{ alert('知命V2错误:\n'+String(msg)+'\n'+String(stack||'').slice(0,300)); }catch(__){} }
+    }catch(_){ try{ _alert2('知命V2错误:\n'+String(msg)+'\n'+String(stack||'').slice(0,300)); }catch(__){} }
   }
   window.__showBigErrBox = _showBigErrBox;
 
@@ -2418,7 +2420,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.27.0-20261017';
+const ZHIMING_BUILD = 'v2.28.0-20261017';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4909,7 +4911,7 @@ function lyFlip(i){
 }
 function lyCast(){
   if (!document.getElementById("ly-result")) return;
-  if (_lyYaos.length >= 6){ try{ alert("已摇满 6 爻，可点「重摇」重新起卦"); }catch(_){} return; }
+  if (_lyYaos.length >= 6){ try{ _alert2("已摇满 6 爻，可点「重摇」重新起卦"); }catch(_){} return; }
   const sum = _lyCoins.reduce((a, c) => a + (c === 0 ? 3 : 2), 0);
   _lyYaos.push(sum);
   const h = document.getElementById("lyYaoHint");
@@ -4945,7 +4947,7 @@ function lyTodayGzIdx(){
   }
 }
 function lyCalc(){
-  if (_lyYaos.length !== 6){ try{ alert("请先摇满 6 爻"); }catch(_){} return; }
+  if (_lyYaos.length !== 6){ try{ _alert2("请先摇满 6 爻"); }catch(_){} return; }
   const q = (document.getElementById("ly-question").value || "").trim();
   const t = document.getElementById("ly-type").value || "other";
   const r = lyBuild(_lyYaos, t, lyTodayGzIdx());
@@ -5542,11 +5544,11 @@ function importHistory(ev){
       if (!Array.isArray(data)) throw new Error("格式错误");
       const mode = confirm("是否覆盖现有历史？\n确定=覆盖，取消=追加");
       const exist = mode ? [] : getHistory();
-      saveHistory([...data, ...exist].slice(0,1000));
+      saveHistory([..._sanitizeImported(data), ...exist].slice(0,1000));
       renderHistory();
-      alert("导入成功！共 " + data.length + " 条");
+      _alert2("导入成功！共 " + data.length + " 条");
     }catch(err){
-      alert("导入失败："+err.message);
+      _alert2("导入失败："+err.message);
     }
   };
   reader.readAsText(file);
@@ -5573,7 +5575,7 @@ function restoreHistory(id){
     closeHistory();
     calcBazi();
   } else {
-    alert("该类型(Phase4-6)历史还原功能即将支持");
+    _alert2("该类型(Phase4-6)历史还原功能即将支持");
   }
 }
 
@@ -6479,7 +6481,7 @@ function calcBazi(){
   const mn=+document.getElementById("bz-minute").value;
   const gd = document.querySelector('input[name="bz-gender"]:checked').value;
   let lng = _pickCityLng();
-  if (!y||!m||!d){ alert("请填写完整的年月日"); return; }
+  if (!y||!m||!d){ _alert2("请填写完整的年月日"); return; }
   const r = baziCalc({year:y,month:m,day:d,hour:h,minute:mn,gender:gd,cityLng:lng});
   _lastBaziResult = r;
   const db = r._debug;
@@ -6767,6 +6769,12 @@ function calcBazi(){
   })()}
   <div class="hint">提示：本结果基于简化版命理模型，仅供娱乐参考</div>
   `;
+  try{
+    var _bzh = (p && typeof p.hour==='number') ? p.hour : null;
+    if(_bzh===23){
+      html += '<div class="hint">※ 出生于 23:00-24:00（晚子时）：本盘按「换日派」以次日日柱起盘。早晚子时归派历来有争议，子平正统多用换日，结果仅供参考。</div>';
+    }
+  }catch(_){}
   document.getElementById("bz-result").innerHTML = enhanceResultHtml(html);
   try{ updateWesternViewPanel(); }catch(_){}
   try{
@@ -6814,7 +6822,7 @@ function copyResult(){
         btn.textContent = "✅ 已复制";
         btn.classList.add("ok");
         setTimeout(()=>{btn.textContent=ot;btn.classList.remove("ok");},1500);
-      }catch(e){alert("复制失败,请手动复制:\n"+_copyTextBuf);}
+      }catch(e){_alert2("复制失败,请手动复制:\n"+_copyTextBuf);}
       document.body.removeChild(ta);
       return;
     }
@@ -6868,7 +6876,7 @@ function copyResult(){
     btn.textContent = "✅ 已复制";
     btn.classList.add("ok");
     setTimeout(()=>{btn.textContent=ot;btn.classList.remove("ok");},1500);
-  }catch(e){alert("复制失败,请手动复制:\n"+_copyTextBuf);}
+  }catch(e){_alert2("复制失败,请手动复制:\n"+_copyTextBuf);}
   document.body.removeChild(ta);
 }
 
@@ -7242,7 +7250,7 @@ function calcQimen(){
       question = (document.getElementById("qm-question").value || "").trim();
     }catch(_){}
   }
-  if (!y||!m||!d){ try{ alert("请填写完整的问事年月日"); }catch(_){} return; }
+  if (!y||!m||!d){ try{ _alert2("请填写完整的问事年月日"); }catch(_){} return; }
   const r = qimenCalc({y, m, d, h, minute:mn, cityLng:lng, gender:gd, question});
   // 向后兼容字段：自检/外部调用期望 ju=阴阳+中文数字、pan=九宫对象聚合
   if(r && r.juNum !== undefined && !r.ju){
@@ -7582,8 +7590,8 @@ function switchZodiacPeriod(p){
 function detectZodiacByBirthday(){
   const m = +document.getElementById("bd-month").value;
   const d = +document.getElementById("bd-day").value;
-  if (!m || !d) { alert("请输入完整的月和日"); return; }
-  if (m < 1 || m > 12 || d < 1 || d > 31) { alert("日期不合法"); return; }
+  if (!m || !d) { _alert2("请输入完整的月和日"); return; }
+  if (m < 1 || m > 12 || d < 1 || d > 31) { _alert2("日期不合法"); return; }
   const idx = detectZodiacIdx(m, d);
   selectZodiac(idx);
   setTimeout(()=>document.getElementById("zodiac-result").scrollIntoView({behavior:"smooth",block:"start"}),80);
@@ -7733,7 +7741,7 @@ const WUGE_81_JX = (function buildJX(){
 function calcWuge(){
   const surname = (document.getElementById("wg-surname").value || "").trim();
   const given = (document.getElementById("wg-given").value || "").trim();
-  if (!surname || !given) { alert("请填写姓氏与名字"); return; }
+  if (!surname || !given) { _alert2("请填写姓氏与名字"); return; }
   const sIn = +document.getElementById("wg-surname-bi").value;
   const gIn = +document.getElementById("wg-given-bi").value;
   const surnameBi = sIn>0 ? sIn : strokeApprox(surname);
@@ -7809,7 +7817,7 @@ function flipCoin(idx){
   if (c) c.textContent = _zyCoins[idx] ? "背" : "字";
 }
 function yaoZhouyi(){
-  if (_zyYaos.length >= 6) { alert("已摇完6爻，可查看结果或「重置」"); return; }
+  if (_zyYaos.length >= 6) { _alert2("已摇完6爻，可查看结果或「重置」"); return; }
   const sum = _zyCoins.reduce((a,c)=>a + (c===0?3:2), 0);
   _zyYaos.push(sum);
   document.getElementById("zyYaoHint").textContent = `已记录 ${_zyYaos.length} / 6 爻：${_zyYaos.map(v=>v).join("-")}`;
@@ -7884,7 +7892,7 @@ function calcZhouyi(autoGen){
     }
     document.getElementById("zyYaoHint").textContent = `一键起卦 6 爻：${_zyYaos.join("-")}`;
   }
-  if (_zyYaos.length !== 6) { alert("请先摇满6爻"); return; }
+  if (_zyYaos.length !== 6) { _alert2("请先摇满6爻"); return; }
   const [thisIdx, changeIdx, yinyang, changePos] = _yao6ToIndex(_zyYaos);
   const changesArr = [0,0,0,0,0,0]; changePos.forEach(p=>changesArr[p-1]=1);
   const yinyang2 = yinyang.slice();
@@ -7995,8 +8003,8 @@ function calcXiaoliuren(){
       question = (document.getElementById("xlr-question").value||"").trim();
     }catch(_){}
   }
-  if (!mo || !da){ try{ alert("请填写月数与日数"); }catch(_){} return; }
-  if (mo<1||mo>12||da<1||da>31){ try{ alert("月数1-12、日数1-31"); }catch(_){} return; }
+  if (!mo || !da){ try{ _alert2("请填写月数与日数"); }catch(_){} return; }
+  if (mo<1||mo>12||da<1||da>31){ try{ _alert2("月数1-12、日数1-31"); }catch(_){} return; }
   if (shiIdx<0||shiIdx>11) shiIdx = 0;
   const gongIdx = ((((mo-1)+(da-1)+shiIdx)%6)+6)%6;
   const g = XIAOLIUREN_DATA[gongIdx];
@@ -8075,10 +8083,10 @@ let _lastCeziResult = null;
 function calcCezi(){
   const ch = (document.getElementById("cz-char").value || "").trim();
   const question = (document.getElementById("cz-question").value || "").trim();
-  if (!ch){ alert("请输入一个汉字"); return; }
+  if (!ch){ _alert2("请输入一个汉字"); return; }
   const code = ch.charCodeAt(0);
   const isCJK = (code >= 0x4E00 && code <= 0x9FFF) || (code >= 0x3400 && code <= 0x4DBF);
-  if (!isCJK){ alert("请输入一个规范汉字（暂不支持非汉字/生僻字）"); return; }
+  if (!isCJK){ _alert2("请输入一个规范汉字（暂不支持非汉字/生僻字）"); return; }
   const kb = (TEXT.wuge && TEXT.wuge.kbBi) ? TEXT.wuge.kbBi[ch] : 0;
   const stroke = kb || (code % 24 + 8);
   const strokeSrc = kb ? "康熙笔画表" : "码点估算";
@@ -9794,7 +9802,7 @@ function saveDiaryEntry(emoji, mood, note, tags){
 }
 try{window.saveDiaryEntry=saveDiaryEntry;}catch(_){}
 function confirmDiaryCheckin(){try{
-  if(!__moodCur){ alert('请先选一个心情'); return; }
+  if(!__moodCur){ _alert2('请先选一个心情'); return; }
   const note=document.getElementById('diaryNote').value.trim();
   const tags=[];
   try{ const t=document.getElementById('today-tarot-card'); if(t&&t.textContent) tags.push('塔罗日签'); }catch(_){}
@@ -11539,6 +11547,32 @@ function retryLastAction(){
 try{ window.retryLastAction = retryLastAction; }catch(_){}
 
 /* -------- G4: 底部轻 toast -------- */
+/* 导入数据清洗：去 HTML 危险字符 + 结构限幅，防 localStorage 污染与 innerHTML 注入 */
+function _sanitizeImported(arr, maxLen){
+  maxLen = maxLen || 1000;
+  function clean(v, depth){
+    if(depth > 5) return null;
+    if(typeof v === 'string') return v.replace(/[<>\u003c\u003e]/g,'').slice(0,300);
+    if(typeof v === 'number' || typeof v === 'boolean' || v === null) return v;
+    if(Array.isArray(v)) return v.slice(0,50).map(function(x){ return clean(x, depth+1); });
+    if(typeof v === 'object'){
+      var o = {};
+      var keys = Object.keys(v).slice(0,40);
+      for(var i=0;i<keys.length;i++){ o[clean(keys[i], depth+1)] = clean(v[keys[i]], depth+1); }
+      return o;
+    }
+    return null;
+  }
+  if(!Array.isArray(arr)) return [];
+  return arr.slice(0, maxLen).map(function(x){ return clean(x, 0); });
+}
+/* _alert2：统一轻提示。toast 优先（非阻塞、不挡操作），异常环境回退原生弹窗 */
+function _alert2(msg){
+  try{
+    if(typeof showToastBottom==='function'){ showToastBottom(String(msg).replace(/\n+/g,' · ')); return; }
+  }catch(_){}
+  try{ alert(String(msg)); }catch(__){}
+}
 function showToastBottom(text, timeoutMs){
   try{
     if(!text) return;
@@ -14598,7 +14632,7 @@ function _execCopy(text){
     btn.textContent = "✅ 已复制";
     btn.classList.add("ok");
     setTimeout(()=>{btn.textContent=ot;btn.classList.remove("ok");},1500);
-  }catch(e){alert("复制失败,请手动复制:\n"+(text||""));}
+  }catch(e){_alert2("复制失败,请手动复制:\n"+(text||""));}
   document.body.removeChild(ta);
 }
 
@@ -14990,11 +15024,11 @@ function profilePickEmoji(e, btn){
 }
 function submitProfileForm(){
   const name = (document.getElementById("pf-name").value||"").trim();
-  if (!name){ alert("请填写姓名"); return; }
+  if (!name){ _alert2("请填写姓名"); return; }
   const year = +document.getElementById("pf-year").value;
   const month = +document.getElementById("pf-month").value;
   const day = +document.getElementById("pf-day").value;
-  if (!year || !month || !day){ alert("请填写完整生日年月日"); return; }
+  if (!year || !month || !day){ _alert2("请填写完整生日年月日"); return; }
   const hour = +document.getElementById("pf-hour").value || 0;
   const minute = +document.getElementById("pf-minute").value || 0;
   const gender = document.querySelector('input[name="pf-gender"]:checked').value;
@@ -15058,7 +15092,7 @@ window.__openModalById = function(id, opts){
       s.setProperty('z-index', zi, 'important');
     }catch(_){}
     m.classList.add("show");
-  }catch(e){ try{ alert('打开弹窗失败: '+e.message); }catch(_){} }
+  }catch(e){ try{ _alert2('打开弹窗失败: '+e.message); }catch(_){} }
 };
 window.__closeModalById = function(id){
   try{
@@ -15081,7 +15115,7 @@ function openProfileModal(){
     window.__openModalById("profileModal");  // [Chrome83] 暴力修复
   }catch(e){
     if(window.__showBigErrBox){ window.__showBigErrBox('打开档案弹窗失败: '+e.message, -1, -1, e.stack||''); }
-    else { try{ alert('打开档案弹窗失败: '+e.message); }catch(_){} }
+    else { try{ _alert2('打开档案弹窗失败: '+e.message); }catch(_){} }
   }
 }
 function closeProfileModal(){
@@ -15138,7 +15172,7 @@ function handleDonateQrUpload(e){
     reader.onload = function(ev){
       _compressDonateImg(ev.target.result, 800, 0.82, function(dataUrl){
         try{ localStorage.setItem(DONATE_QR_KEY, dataUrl); }
-        catch(err){ alert('保存失败，图片还是太大，请换张小一点的收款码'); return; }
+        catch(err){ _alert2('保存失败，图片还是太大，请换张小一点的收款码'); return; }
         const img = document.getElementById('donateQrImg');
         const ph = document.getElementById('donateQrPlaceholder');
         const hint = document.getElementById('donateQrHint');
@@ -15153,7 +15187,7 @@ function handleDonateQrUpload(e){
       });
     };
     reader.readAsDataURL(f);
-  }catch(err){ try{ alert('读取图片失败: '+err.message); }catch(_){} }
+  }catch(err){ try{ _alert2('读取图片失败: '+err.message); }catch(_){} }
 }
 function openDonateModal(){
   try{
@@ -15171,7 +15205,7 @@ try{ window.openDonateModal = openDonateModal; window.closeDonateModal = closeDo
 function copyDonateQrData(){
   try{
     const data = localStorage.getItem(DONATE_QR_KEY);
-    if(!data){ alert('还没有收款码，请先上传'); return; }
+    if(!data){ _alert2('还没有收款码，请先上传'); return; }
     const textarea = document.createElement('textarea');
     textarea.value = data;
     textarea.style.position = 'fixed';
@@ -15184,27 +15218,27 @@ function copyDonateQrData(){
     try{ ok = document.execCommand('copy'); }catch(_){ ok = false; }
     document.body.removeChild(textarea);
     if(ok){
-      alert('✅ 已复制！请把剪贴板里的内容粘贴发给作者\n\n（内容是一长串 base64 图片数据，直接粘贴发送即可）');
+      _alert2('✅ 已复制！请把剪贴板里的内容粘贴发给作者\n\n（内容是一长串 base64 图片数据，直接粘贴发送即可）');
     } else {
       // fallback：用 navigator.clipboard
       try{
         navigator.clipboard.writeText(data).then(function(){
-          alert('✅ 已复制！请把剪贴板内容粘贴发给作者');
+          _alert2('✅ 已复制！请把剪贴板内容粘贴发给作者');
         }).catch(function(){
-          alert('复制失败，请手动长按下面的文本框全选复制');
+          _alert2('复制失败，请手动长按下面的文本框全选复制');
         });
       }catch(_){
-        alert('复制失败，请手动长按下面的文本框全选复制');
+        _alert2('复制失败，请手动长按下面的文本框全选复制');
       }
     }
-  }catch(err){ alert('复制出错: '+err.message); }
+  }catch(err){ _alert2('复制出错: '+err.message); }
 }
 try{ window.copyDonateQrData = copyDonateQrData; }catch(_){}
 
 function _saveDonateQrDataUrl(dataUrl){
   _compressDonateImg(dataUrl, 800, 0.82, function(compressed){
     try{ localStorage.setItem(DONATE_QR_KEY, compressed); }
-    catch(err){ alert('保存失败，图片太大'); return; }
+    catch(err){ _alert2('保存失败，图片太大'); return; }
     const img = document.getElementById('donateQrImg');
     const ph = document.getElementById('donateQrPlaceholder');
     const hint = document.getElementById('donateQrHint');
@@ -15231,13 +15265,13 @@ function handleDonatePaste(e){
         return;
       }
     }
-  }catch(err){ alert('粘贴失败: '+err.message); }
+  }catch(err){ _alert2('粘贴失败: '+err.message); }
 }
 
 function readDonateQrFromClipboard(){
   try{
     if(!navigator.clipboard || !navigator.clipboard.read){
-      alert('此浏览器不支持读取剪贴板，请用「长按粘贴」方式');
+      _alert2('此浏览器不支持读取剪贴板，请用「长按粘贴」方式');
       return;
     }
     navigator.clipboard.read().then(function(items){
@@ -15257,11 +15291,11 @@ function readDonateQrFromClipboard(){
         }
         if(found) break;
       }
-      if(!found) alert('剪贴板里没有图片，请先在相册里复制收款码图片');
+      if(!found) _alert2('剪贴板里没有图片，请先在相册里复制收款码图片');
     }).catch(function(err){
-      alert('读取剪贴板失败，请用「长按粘贴」方式。错误: '+err.message);
+      _alert2('读取剪贴板失败，请用「长按粘贴」方式。错误: '+err.message);
     });
-  }catch(err){ alert('读取失败: '+err.message); }
+  }catch(err){ _alert2('读取失败: '+err.message); }
 }
 
 try{ window.handleDonatePaste = handleDonatePaste; window.readDonateQrFromClipboard = readDonateQrFromClipboard; window._saveDonateQrDataUrl = _saveDonateQrDataUrl; }catch(_){}
@@ -15427,7 +15461,7 @@ function gongzhenCalc(question, y, m, d, h, minute, city, gender){
 /* ----- 共振判定：UI渲染 ----- */
 function calcGongzhen(){
   const question = (document.getElementById("gz-question").value||"").trim();
-  if (!question){ alert("请先填写所问之事"); return; }
+  if (!question){ _alert2("请先填写所问之事"); return; }
   const y = +document.getElementById("gz-year").value;
   const m = +document.getElementById("gz-month").value;
   const d = +document.getElementById("gz-day").value;
@@ -15438,7 +15472,7 @@ function calcGongzhen(){
   let lng;
   if (sel.value === "__custom__") lng = +document.getElementById("gz-customLng").value || 116.4;
   else lng = +sel.value;
-  if (!y||!m||!d){ alert("请填写完整的问事年月日"); return; }
+  if (!y||!m||!d){ _alert2("请填写完整的问事年月日"); return; }
 
   const r = gongzhenCalc(question, y, m, d, h, mn, {lng}, gd);
   window._lastGongzhenResult = r;
@@ -16154,7 +16188,8 @@ function _scoreClass(s){
   if(s>=75) return {cls:"good", ring:"ftGold", grade:"good", badge:"✨ 良好"};
   if(s>=65) return {cls:"ok", ring:"ftBlue", grade:"ok", badge:"🙂 平平"};
   if(s>=55) return {cls:"warn", ring:"ftPurple", grade:"warn", badge:"⚠️ 小心"};
-  return {cls:"bad", ring:"ftRed", grade:"bad", badge:"🛑 不宜"};
+  if(s>=45) return {cls:"warn", ring:"ftPurple", grade:"warn", badge:"🔻 谨慎"};
+  return {cls:"bad", ring:"ftRed", grade:"bad", badge:"⛔ 不宜"};
 }
 function _getGoodBadShichen(subKey, date, score, profileSeed){
   // 高分 → 2-3 好时辰 + 0-1 坏时辰；低分 → 0-1 好时辰 + 2-3 坏时辰；中分 → 1+1
@@ -16376,7 +16411,7 @@ function onShareCardClick(){
     type = "almanac";
   }
   if (!type || !data){
-    alert("暂无结果可分享，先进行占卜吧～");
+    _alert2("暂无结果可分享，先进行占卜吧～");
     return;
   }
   try {
@@ -16390,7 +16425,7 @@ function onShareCardClick(){
     }
   }catch(e){
     _warn("分享卡生成失败:", e);
-    alert("分享卡生成失败: " + (e.message||e));
+    _alert2("分享卡生成失败: " + (e.message||e));
   }
 }
 function buildShareCardHTML(type, r){
@@ -17563,7 +17598,7 @@ function calcMeihua(opts){
       Y=+document.getElementById("mh-year").value; M=+document.getElementById("mh-month").value; D=+document.getElementById("mh-day").value;
       h=+document.getElementById("mh-hour").value; min=+document.getElementById("mh-minute").value||0;
     }
-    if(!Y||!M||!D){ alert("请输入完整日期"); return; }
+    if(!Y||!M||!D){ _alert2("请输入完整日期"); return; }
     let lng = 116.4;
     if(isDirectMode){ lng = opts.lng || 116.4; }
     else try{
@@ -17590,7 +17625,7 @@ function calcMeihua(opts){
     let n1, n2;
     if(isDirectMode){ n1 = Math.abs(+opts.num1); n2 = Math.abs(+opts.num2); }
     else { n1 = Math.abs(+document.getElementById("mh-num1").value); n2 = Math.abs(+document.getElementById("mh-num2").value); }
-    if(!n1||!n2){ alert("请输入两个正整数"); return; }
+    if(!n1||!n2){ _alert2("请输入两个正整数"); return; }
     topN = mod8(n1); botN = mod8(n2); dongYao = mod6(n1 + n2);
     inputSummary = `报数 ${n1} / ${n2}`;
   } else {
@@ -17598,7 +17633,7 @@ function calcMeihua(opts){
     let txt;
     if(isDirectMode){ txt = opts.zi || ""; }
     else txt = (document.getElementById("mh-zi").value || "").trim();
-    if(!txt){ alert("请输入所测文字"); return; }
+    if(!txt){ _alert2("请输入所测文字"); return; }
     const chars = Array.from(txt);
     const n = chars.length;
     let half1, half2;
@@ -17942,7 +17977,7 @@ function calcLingshu(){
     M = +document.getElementById("ls-month").value;
     D = +document.getElementById("ls-day").value;
   }
-  if(!Y||!M||!D){ alert("请输入完整的出生日期"); return; }
+  if(!Y||!M||!D){ _alert2("请输入完整的出生日期"); return; }
   const yDigits = digitsOfNum(Y), mDigits = digitsOfNum(M), dDigits = digitsOfNum(D);
   const allDigits = [...yDigits, ...mDigits, ...dDigits];
   const lifeRes = _sumDigitsUntil(allDigits, true);
@@ -18924,12 +18959,12 @@ function copyShareHashLink(typeHint){
     }catch(e){}
     promptFallback(full);
   }catch(eTop){
-    try{ alert('复制失败：'+eTop.message); }catch(_){}
+    try{ _alert2('复制失败：'+eTop.message); }catch(_){}
   }
   function promptFallback(txt){
     try{
       window.prompt('👉 请手动复制下方直达链接：', txt);
-    }catch(e){ alert('复制失败'); }
+    }catch(e){ _alert2('复制失败'); }
   }
 }
 window.copyShareHashLink = copyShareHashLink;
@@ -19401,11 +19436,11 @@ function copyResultWeChat(){
       try{
         window.prompt('👉 请手动复制分享文案（微信聊天框粘贴）：', final);
       }catch(e2){
-        alert('复制失败');
+        _alert2('复制失败');
       }
     }
   }catch(eTop){
-    try{ alert('分享版生成失败：'+eTop.message); }catch(_){}
+    try{ _alert2('分享版生成失败：'+eTop.message); }catch(_){}
   }
 }
 window.copyResultWeChat = copyResultWeChat;
@@ -19415,7 +19450,7 @@ function saveShareCardPNG(){
   try{
     // 获取分享卡节点
     const card = document.getElementById('shareCardInner') || document.querySelector('.share-card') || document.querySelector('.result-card');
-    if(!card){ alert('暂无分享卡可保存'); return; }
+    if(!card){ _alert2('暂无分享卡可保存'); return; }
     const W = 750, H = 1200;
     const styles = Array.from(document.styleSheets).map(s=>{try{return s.cssRules?Array.from(s.cssRules).map(r=>r.cssText).join(''):''}catch(e){return ''}}).join('');
     const html = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><defs></defs><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;padding:24px;background:#FAF8F5;color:#1F1A14;width:${W-48}px;box-sizing:border-box;"><style>${styles}</style>${card.outerHTML}</div></foreignObject></svg>`;
@@ -19451,7 +19486,7 @@ function saveShareCardPNG(){
           toast('⚠️ 浏览器不支持PNG，已保存 SVG 格式');
         }catch(e2){
           // 路径 C: 提示手动截图
-          alert('💡 请手动截图分享卡区域后发送');
+          _alert2('💡 请手动截图分享卡区域后发送');
         }
       }
     };
@@ -19468,12 +19503,12 @@ function saveShareCardPNG(){
         setTimeout(()=>URL.revokeObjectURL(url2), 5000);
         toast('⚠️ 已保存 SVG (Chrome83兼容模式)');
       }catch(e){
-        alert('💡 请手动截图分享卡区域发送 (fallback)');
+        _alert2('💡 请手动截图分享卡区域发送 (fallback)');
       }
     };
     img.src = url;
   }catch(eTop){
-    try{ alert('💡 请手动截图分享卡区域发送'); }catch(_){}
+    try{ _alert2('💡 请手动截图分享卡区域发送'); }catch(_){}
   }
 }
 window.saveShareCardPNG = saveShareCardPNG;
@@ -21324,7 +21359,7 @@ function _lenormandAIEnhance(cards, spreadType){
       const y=_annualPickYear();
       const months=_annualYearData(y);
       const have=months.filter(Boolean);
-      if(have.length<3){ try{ window._toast&&window._toast("再积累 "+(3-have.length)+" 个月就能生成年报啦"); }catch(e){ alert("再积累 "+(3-have.length)+" 个月就能生成年报啦"); } return; }
+      if(have.length<3){ try{ window._toast&&window._toast("再积累 "+(3-have.length)+" 个月就能生成年报啦"); }catch(e){ _alert2("再积累 "+(3-have.length)+" 个月就能生成年报啦"); } return; }
       const p=(typeof window.getActiveProfile==="function")?window.getActiveProfile():null;
       let dayWX="", zg="";
       try{
@@ -21410,7 +21445,7 @@ function _lenormandAIEnhance(cards, spreadType){
       };
       img.onerror=function(){ URL.revokeObjectURL(url); _growPosterModal(poster); };
       img.src=url;
-    }catch(e){ try{ window._toast&&window._toast("生成失败："+e.message); }catch(_){ alert("生成失败："+e.message); } }
+    }catch(e){ try{ window._toast&&window._toast("生成失败："+e.message); }catch(_){ _alert2("生成失败："+e.message); } }
   };
   function _growPosterModal(poster){
     let m=document.getElementById("growPosterModal");
@@ -21545,7 +21580,7 @@ function _lenormandAIEnhance(cards, spreadType){
   window._judgeAdd=function(){
     const el=document.getElementById("judgeText");
     const text=(el&&el.value||"").trim();
-    if(!text){ try{ window._toast&&window._toast("先写下你的判断"); }catch(e){ alert("先写下你的判断"); } return; }
+    if(!text){ try{ window._toast&&window._toast("先写下你的判断"); }catch(e){ _alert2("先写下你的判断"); } return; }
     const conf=(()=>{ const c=document.getElementById("judgeConf"); return c?+c.value:60; })();
     const k=_dkey(new Date());
     const ck=_ck()[k];
@@ -21741,6 +21776,7 @@ function _lenormandAIEnhance(cards, spreadType){
        <div style="display:flex;gap:10px;margin-top:12px;">
          <button onclick="window._vaultExport()" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--pri,#6B5CA5);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">📤 导出备份</button>
          <button onclick="window._vaultPick()" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--bg,#eee);color:var(--text,#333);font-size:14px;font-weight:700;cursor:pointer;">📥 导入恢复</button>
+         <!-- 恢复数据经 _sanitizeImported 清洗后写入 -->
        </div>
        <input type="file" id="vaultFile" accept=".json,application/json" style="display:none;" onchange="window._vaultImport(this)">`);
   }
@@ -21931,7 +21967,7 @@ function _lenormandAIEnhance(cards, spreadType){
   };
   window._growSaveToday = function(){
     const draft = window._growDraft||{};
-    if (!draft.mood){ try{ window._toast&&window._toast("先选一个心情表情 🙂"); }catch(e){ alert("先选一个心情表情 🙂"); } return; }
+    if (!draft.mood){ try{ window._toast&&window._toast("先选一个心情表情 🙂"); }catch(e){ _alert2("先选一个心情表情 🙂"); } return; }
     const data = _ck();
     const k = _dkey(new Date());
     const prev = data[k]||{};
