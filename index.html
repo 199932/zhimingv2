@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.30.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.31.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -408,7 +408,7 @@
       <span class="wu-pf-zodiac">♈ --</span>
       <span style="color:var(--text-hint);">｜</span>
       <span class="wu-pf-lingshu">🔢 --</span>
-      <button style="margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid rgba(107,92,165,0.25);background:rgba(107,92,165,0.10);color:var(--text-sub);font-size:11px;cursor:pointer;" onclick="window.switchTab('cn');window.switchSec('cn','cn1');">切换档案</button>
+      <button style="margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid rgba(107,92,165,0.25);background:rgba(107,92,165,0.10);color:var(--text-sub);font-size:11px;cursor:pointer;" onclick="window.openProfileModal && window.openProfileModal()">切换档案</button>
     </div>
     <div class="card" id="tarotDailyCard" style="display:none;">
       <div class="card-title">🌅 今日塔罗日签</div>
@@ -428,7 +428,7 @@
       </div>
       <div class="tarot-cards-area" id="tarotCardsArea"></div>
 
-      <div class="card" style="margin-top:10px;"><div class="card-title">🎨 牌背主题</div>
+      <details class="card" style="margin-top:10px;"><summary class="card-title" style="cursor:pointer;list-style:none;">🎨 牌背主题（点开更换）</summary>
         <div class="tarot-back-tabs" id="tarotBackTabs" role="tablist" aria-label="选择牌背主题">
           <div class="tarot-back-tab active" data-back="classic" role="tab" aria-selected="true" tabindex="0" onclick="window.switchTarotBack('classic',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('classic',this)">
             <span class="tb-icon">✦</span><span class="tb-name">韦特经典</span>
@@ -446,7 +446,7 @@
             <span class="tb-icon">🎋</span><span class="tb-name">国风水墨</span><span class="tb-hint">🔒 30天解锁</span>
           </div>
         </div>
-      </div>
+      </details>
       <button class="btn-primary" id="tarotDrawBtn" onclick="window.drawTarot()">🎴 抽 牌</button>
     </div>
     <div class="result" id="tarot-result" aria-live="polite"></div>

@@ -311,6 +311,7 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .fangwei-cell .fw-v{font-size:14px;font-weight:700;color:var(--pri-dark);margin-top:2px;}
 .chongsha{font-size:14px;}
 .bottom-tabs{position:fixed;bottom:var(--kb-offset);left:0;right:0;z-index:100;background:var(--btab-bg);border-top:1px solid var(--btab-border);display:grid;grid-template-columns:repeat(6,1fr);padding:8px 0 calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,0.04);}
+.topbar .actions{ -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent); }
 .btab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:56px;cursor:pointer;color:var(--text-hint);transition:color .2s;gap:2px;user-select:none;}
 .btab::before{content:"";position:absolute;top:-1px;left:50%;width:18px;height:3px;border-radius:0 0 3px 3px;background:var(--pri);transform:translateX(-50%) scaleX(0);transition:transform .25s ease;}
 .btab.active::before{transform:translateX(-50%) scaleX(1);}
@@ -437,10 +438,11 @@ body.theme-wu .tarot-face.front{background:var(--card);border:1px solid rgba(107
 .tarot-ur-badge.reversed{background:#FCEAEA;color:#C0392B;}
 .tarot-kw-row{margin:6px 0 10px;}
 .tarot-kw{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px;margin:2px;background:var(--track-bg);color:var(--text-sub);}
+.theme-dark .tarot-kw{background:rgba(255,255,255,.10);color:var(--text);border:1px solid rgba(255,255,255,.12);}
 .tarot-desc-block{margin:6px 0;}
 .tarot-desc-t{font-size:13px;font-weight:700;color:var(--pri-dark);margin-bottom:2px;}
 .tarot-desc-p{font-size:13px;color:var(--text-sub);line-height:1.7;}
-.tarot-sum-box{background:var(--pri-light);border-radius:12px;padding:14px;border:1px solid var(--card-border);margin-top:6px;}
+.tarot-sum-box{background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--card-border);margin-top:6px;}
 .tarot-sum-title{font-size:14px;font-weight:700;color:var(--pri-dark);margin-bottom:8px;}
 .tarot-sum-text{font-size:13px;color:var(--text);line-height:1.8;}
 /* 塔罗牌阵布局图 */
@@ -674,6 +676,7 @@ body.theme-dark .donate-qr-img{background:#f5f5f5;}
 .pf-active-meta{font-size:12px;color:var(--text-sub);margin-top:2px;line-height:1.5;}
 .pf-active-badge{background:var(--pri);color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;flex-shrink:0;}
 .pf-tpl-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.modal-close,.b-close,.cal-day-close,.ft-close,.liupai-close,.modal-x,.day-close-btn,.modal .close{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;cursor:pointer;flex-shrink:0;}
 .pf-tpl-btn{flex:1;min-width:60px;height:40px;border:1px solid var(--input-border);background:var(--input-bg);border-radius:10px;font-size:13px;color:var(--text-sub);cursor:pointer;transition:all .15s;}
 .pf-tpl-btn:active{transform:scale(0.96);}
 .pf-tpl-btn:hover{border-color:var(--pri);color:var(--pri);}
@@ -1287,6 +1290,7 @@ body.banner-show{padding-top:40px;}
 .streak-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(255,120,0,.08),rgba(255,80,0,.04));border:1px solid rgba(255,140,0,.2);border-radius:12px;margin-bottom:12px;}
 .streak-bar .streak-flame{font-size:22px;line-height:1;}
 .streak-bar .streak-info{flex:1;min-width:0;}
+@media (max-width:719px){ .topbar .streak-bar{display:none;} } /* 手机顶栏隐藏签到卡（防挤压竖排+抽牌区保持神秘感，成长tab仍可签到） */
 .streak-bar .streak-count{font-size:18px;font-weight:800;color:var(--pri);}
 .streak-bar .streak-sub{font-size:11px;color:var(--text-hint);}
 .streak-bar .streak-progress{flex:1;height:6px;background:var(--track-bg);border-radius:3px;overflow:hidden;margin-top:4px;}
@@ -1568,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.30.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.31.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -1923,7 +1927,7 @@ body{ padding-bottom:160px; }
       <span class="wu-pf-zodiac">♈ --</span>
       <span style="color:var(--text-hint);">｜</span>
       <span class="wu-pf-lingshu">🔢 --</span>
-      <button style="margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid rgba(107,92,165,0.25);background:rgba(107,92,165,0.10);color:var(--text-sub);font-size:11px;cursor:pointer;" onclick="window.switchTab('cn');window.switchSec('cn','cn1');">切换档案</button>
+      <button style="margin-left:auto;padding:3px 10px;border-radius:6px;border:1px solid rgba(107,92,165,0.25);background:rgba(107,92,165,0.10);color:var(--text-sub);font-size:11px;cursor:pointer;" onclick="window.openProfileModal && window.openProfileModal()">切换档案</button>
     </div>
     <div class="card" id="tarotDailyCard" style="display:none;">
       <div class="card-title">🌅 今日塔罗日签</div>
@@ -1943,7 +1947,7 @@ body{ padding-bottom:160px; }
       </div>
       <div class="tarot-cards-area" id="tarotCardsArea"></div>
 
-      <div class="card" style="margin-top:10px;"><div class="card-title">🎨 牌背主题</div>
+      <details class="card" style="margin-top:10px;"><summary class="card-title" style="cursor:pointer;list-style:none;">🎨 牌背主题（点开更换）</summary>
         <div class="tarot-back-tabs" id="tarotBackTabs" role="tablist" aria-label="选择牌背主题">
           <div class="tarot-back-tab active" data-back="classic" role="tab" aria-selected="true" tabindex="0" onclick="window.switchTarotBack('classic',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('classic',this)">
             <span class="tb-icon">✦</span><span class="tb-name">韦特经典</span>
@@ -1961,7 +1965,7 @@ body{ padding-bottom:160px; }
             <span class="tb-icon">🎋</span><span class="tb-name">国风水墨</span><span class="tb-hint">🔒 30天解锁</span>
           </div>
         </div>
-      </div>
+      </details>
       <button class="btn-primary" id="tarotDrawBtn" onclick="window.drawTarot()">🎴 抽 牌</button>
     </div>
     <div class="result" id="tarot-result" aria-live="polite"></div>
@@ -6038,7 +6042,7 @@ const TERM_GLOSSARY = {
   "老阳":"六爻之一，三阳爻重叠，动爻，可变阴。",
   "动爻":"卦中老阴老阳变之爻，为卦之核心，主事情变化走向。",
   "静爻":"卦中少阳少阴不变之爻，主稳定现状。",
-  "本卦":"起卦所得之原卦，主当下现状。",
+  "本卦":"起卦所得之原卦，主当下现状。（六爻中与「变卦」相对）",
   "变卦":"本卦动爻变化后之卦，主未来结果发展。",
   "互卦":"取本卦二三四爻为下卦、三四五爻为上卦组成之卦，主过程中间。",
   "错卦":"本卦各爻阴阳全反之卦，主对立方、另一个极端。",
@@ -6349,7 +6353,16 @@ function _alert2(msg){
   try{ alert(String(msg)); }catch(__){}
 }
 
+document.addEventListener('keydown', function(e){
+  if(e.key!=='Escape') return;
+  try{
+    var qc=document.getElementById('quickCmdPanel');
+    if(qc && qc.style.display!=='none' && !qc.classList.contains('hide')) return; // 面板有自己的 Esc
+  }catch(_){}
+  try{ if(window.__closeTopModal){ e.preventDefault(); window.__closeTopModal(); } }catch(_){}
+}, true);
 function switchTab(page){
+  try{ window.__closeAllModals && window.__closeAllModals(); }catch(_){}
   document.body.dataset.page = page;
   document.querySelectorAll(".btab").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
   document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active", p.id==="page-"+page));
@@ -6842,7 +6855,7 @@ function calcBazi(){
   }catch(__bz_e){}
   document.getElementById("copyBar").style.display="flex";
   addHistory("bazi", {year:y,month:m,day:d,hour:h,minute:mn,gender:gd,cityLng:lng}, r, "");
-  try{showToast('✅ 排盘完成','success',1200);}catch(_){}
+  try{showToast('✅ 分析完成','success',1200);}catch(_){}
   setTimeout(()=>document.getElementById("bz-result").scrollIntoView({behavior:"smooth",block:"start"}), 100);
 }
 
@@ -12414,7 +12427,7 @@ function bootstrapUXBindings(){
     try{
       var vb = localStorage.getItem('zhiming_v2_ux_ver');
       if(vb !== '2'){
-        setTimeout(function(){ try{ window.showToastBottom && window.showToastBottom('✨ 提示：顶部有 4 个常用入口，右上角🔍可打开所有功能'); }catch(_){} }, 1200);
+        setTimeout(function(){ try{ window.showToastBottom && window.showToastBottom('✨ 提示：顶部图标可直达档案/词典/历史/回测，可左右滑动查看更多，🔍 打开全部功能'); }catch(_){} }, 1200);
         try{ localStorage.setItem('zhiming_v2_ux_ver','2'); }catch(_){}
       }
     }catch(_){}
@@ -14132,7 +14145,7 @@ function renderTarotElementChart(cards){
     {k:"swords",label:"宝剑·风", icon:"💨", color:"#7F8C8D"},
     {k:"pentacles",label:"星币·土",icon:"🌿",color:"#B8860B"}
   ];
-  let h = `<div class="tarot-elem-chart">`;
+  let h = `<div style="font-size:11px;color:var(--text-hint);margin-bottom:6px;">小阿卡那花色分布（大阿卡那不计入花色，见下方阿卡那统计）</div><div class="tarot-elem-chart">`;
   items.forEach(it=>{
     const n = s[it.k]||0;
     const pct = Math.round(n/total*100);
@@ -14200,13 +14213,13 @@ function renderTarotSpreadDiagram(spread, cards){
   pts.forEach((p,i)=>{
     const c = cards[i];
     const t = c ? TAROT_DATA[c.id] : null;
-    const name = t ? t.num : "?";
+    const name = t ? (t.name || t.num) : "?";
     const isRev = c ? c.reversed : false;
     const fill = isRev ? "url(#tgRev)" : (c ? "url(#tgUp)" : "var(--line)");
     svg += `<g transform="translate(${p[0]},${p[1]})">`;
     svg += `<rect x="-4.5" y="-7" width="9" height="14" rx="1.6" fill="${fill}" opacity="0.92" stroke="#fff" stroke-width="0.35"/>`;
     svg += `<rect x="-4.5" y="-7" width="9" height="14" rx="1.6" fill="none" stroke="rgba(0,0,0,0.14)" stroke-width="0.55" transform="translate(0.7,1)"/>`;
-    svg += `<text x="0" y="0.6" font-size="3.4" font-family="sans-serif" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">${name}</text>`;
+    svg += `<text x="0" y="0.6" font-size="2.6" font-family="sans-serif" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="middle">${name}</text>`;
     svg += `<text x="0" y="9.4" font-size="2.3" font-family="sans-serif" font-weight="700" fill="var(--text-sub)" text-anchor="middle">${isRev?'逆 ':''}${i+1}</text>`;
     svg += `</g>`;
   });
@@ -14259,7 +14272,7 @@ function drawTarot(count){
     }catch(__t_e){}
     document.getElementById("copyBar").style.display = "flex";
     addHistory("tarot", {question, spreadType:_tarotSpread, cards:cards.map(c=>({id:c.id,reversed:c.reversed}))}, {interpretationHTML}, "");
-    try{showToast('✅ 排盘完成','success',1200);}catch(_){}
+    try{showToast('✅ 占卜完成','success',1200);}catch(_){}
     _lastTarotResult = {cards, question, spread:_tarotSpread, spreadName:spread.name, positions:spread.positions};
     const res = document.getElementById("tarot-result");
     if (res) res.scrollIntoView({behavior:"smooth",block:"start"});
@@ -14321,7 +14334,7 @@ function renderTarotInterpretation(cards, question, spread){
   const order = classifyQuestion(question);
   const labels = {love:"💞 感情解读",career:"💼 事业/财运",choice:"⚖ 抉择建议"};
   const spreadType = _tarotSpreadTypeOf(spread);
-  let html = `<div class="card" style="padding:10px 14px;margin-bottom:10px;"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;"><div class="card-title" style="margin-bottom:0;">塔罗解读<span class="liupai-badge">流派:逆位敏感度 ${__lp.tarot.sensitivity}%</span></div><span class="tarot-spread-name-badge">${spread.name} · ${spread.count}张</span></div></div>
+  let html = `<div class="card" style="padding:10px 14px;margin-bottom:10px;"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;"><div class="card-title" style="margin-bottom:0;">塔罗解读<span class="liupai-badge">逆位判定灵敏度 ${__lp.tarot.sensitivity}%</span></div><span class="tarot-spread-name-badge">${spread.name} · ${spread.count}张</span></div></div>
 `;
   // 牌阵布局图 + 四元素分析
   html += `<div class="card">
@@ -14867,13 +14880,14 @@ function setActiveProfile(id){
     if (window._activeProfileId) localStorage.setItem(ACTIVE_PROFILE_KEY, window._activeProfileId);
     else localStorage.removeItem(ACTIVE_PROFILE_KEY);
   }catch(e){}
-  updateTopProfileBadge();
   const p = getActiveProfile();
-  if (p) fillFormWithProfile(p);
-  if (typeof renderToday === "function") renderToday();
-  renderProfilesUI();
+  try{ updateTopProfileBadge(); }catch(_){}
+  try{ if (p) fillFormWithProfile(p); }catch(_){}
+  try{ if (typeof renderToday === "function") renderToday(); }catch(_){}
+  try{ renderProfilesUI(); }catch(_){}
   try{ syncProfileToWuTabs(); }catch(_){}
   try{ updateWesternViewPanel(); }catch(_){}
+  try{ if(typeof showToast==='function'&&p) showToast('已切换到「'+(p.name||'未命名')+'」','success',1800); }catch(_){}
 }
 function addProfile(data){
   const p = Object.assign({
@@ -14910,7 +14924,7 @@ function deleteProfile(id){
   saveProfiles();
 }
 function cityOptionsForProfile(selectedLng){
-  let html = "";
+  let html = '<option value="" ' + (!selectedLng ? "selected" : "") + '>请选择城市</option>';
   Object.entries(CITIES).forEach(([group,arr])=>{
     html += `<optgroup label="${group}">`;
     arr.forEach(c=>{
@@ -14956,16 +14970,16 @@ function renderProfilesUI(){
   } else {
     listHtml = window._profiles.map(p => {
       const isActive = (p.id === window._activeProfileId);
-      return `<div class="pf-list-item ${isActive?'active':''}">
+      return `<div class="pf-list-item ${isActive?'active':''}" onclick="window.setActiveProfile('${p.id}')" title="点击设为当前">
         <div class="pf-emoji">${p.emoji||"👤"}</div>
         <div class="pf-info">
           <div class="pf-name">${p.name||"(无姓名)"}</div>
           <div class="pf-note">🎂 ${p.year||"-"}/${String(p.month||0).padStart(2,"0")}/${String(p.day||0).padStart(2,"0")} · 📍 ${p.cityName||"-"} ${p.note?`· ${p.note}`:""}</div>
         </div>
         <div class="pf-actions">
-          ${!isActive ? `<button class="pf-act-btn set" title="设为当前" onclick="window.setActiveProfile('${p.id}')">⭐</button>` : ``}
-          <button class="pf-act-btn" title="编辑" onclick="window.openProfileForm('${p.id}')">✎</button>
-          <button class="pf-act-btn del" title="删除" onclick="window.confirmDeleteProfile('${p.id}')">✕</button>
+          ${!isActive ? `<button class="pf-act-btn set" title="设为当前" onclick="event.stopPropagation();window.setActiveProfile('${p.id}')">⭐</button>` : ``}
+          <button class="pf-act-btn" title="编辑" onclick="event.stopPropagation();window.openProfileForm('${p.id}')">✎</button>
+          <button class="pf-act-btn del" title="删除（不会误触，有确认）" onclick="event.stopPropagation();window.confirmDeleteProfile('${p.id}')">✕</button>
         </div>
       </div>`;
     }).join("");
@@ -14980,14 +14994,20 @@ function renderProfilesUI(){
   `;
 }
 function quickAddProfile(tpl){
-  const now = new Date();
-  const y = (tpl.name === "我") ? 1998 : (tpl.name === "父亲" || tpl.name === "母亲") ? 1968 : (tpl.name === "伴侣") ? 1998 : 2018;
-  const p = addProfile({
-    emoji: tpl.emoji, name: tpl.name, gender: tpl.gender,
-    year: y, month: now.getMonth()+1, day: Math.min(now.getDate(),28),
-    hour: 12, minute: 0, cityName: "北京", cityLng: 116.407
-  });
-  setActiveProfile(p.id);
+  // 打开创建表单并预填关系信息；生日留空由用户填写（避免静默生成假生日档案）
+  window.openProfileForm(null);
+  try{
+    var _tpl=tpl;
+    setTimeout(function(){
+      try{
+        var nm=document.getElementById('pf-name'); if(nm&&!nm.value) nm.value=_tpl.name;
+        var gd=document.getElementById('pf-gender'); if(gd) gd.value=_tpl.gender;
+        window._profileSelEmoji=_tpl.emoji;
+        var btns=document.querySelectorAll('.pf-emoji-btn');
+        btns.forEach(function(b){ b.classList.toggle('sel', b.textContent===_tpl.emoji); });
+      }catch(_){}
+    },60);
+  }catch(_){}
 }
 window.quickAddProfile = quickAddProfile;
 function confirmDeleteProfile(id){
@@ -15008,7 +15028,7 @@ function openProfileForm(id){
     window._profileEditingId = null;
     window._profileSelEmoji = "👨";
     const now = new Date();
-    p = {emoji:"👨", name:"", gender:"男", year:now.getFullYear()-25, month:now.getMonth()+1, day:Math.min(now.getDate(),28), hour:12, minute:0, cityName:"北京", cityLng:116.407, note:""};
+    p = {emoji:"👨", name:"", gender:"男", year:"", month:"", day:"", hour:12, minute:0, cityName:"", cityLng:null, note:""};
   }
   const emojiGrid = PROFILE_EMOJIS.map(e=>`<button class="pf-emoji-btn ${e===window._profileSelEmoji?'sel':''}" onclick="window.profilePickEmoji('${e}', this)">${e}</button>`).join("");
   area.innerHTML = `
@@ -15050,17 +15070,22 @@ function profilePickEmoji(e, btn){
 function submitProfileForm(){
   const name = (document.getElementById("pf-name").value||"").trim();
   if (!name){ _alert2("请填写姓名"); return; }
-  const year = +document.getElementById("pf-year").value;
-  const month = +document.getElementById("pf-month").value;
-  const day = +document.getElementById("pf-day").value;
+  const year = parseInt(document.getElementById("pf-year").value,10);
+  const month = parseInt(document.getElementById("pf-month").value,10);
+  const day = parseInt(document.getElementById("pf-day").value,10);
   if (!year || !month || !day){ _alert2("请填写完整生日年月日"); return; }
+  if (!(year>=1900 && year<=2100)){ _alert2("出生年份需在 1900-2100 之间"); return; }
+  if (!(month>=1 && month<=12)){ _alert2("月份需在 1-12 之间"); return; }
+  const _dtChk = new Date(year, month-1, day);
+  if (_dtChk.getFullYear()!==year || _dtChk.getMonth()!==(month-1) || _dtChk.getDate()!==day){ _alert2("这一天不存在（比如 2 月 30 日），请核对生日"); return; }
   const hour = +document.getElementById("pf-hour").value || 0;
   const minute = +document.getElementById("pf-minute").value || 0;
   const gender = document.querySelector('input[name="pf-gender"]:checked').value;
   const sel = document.getElementById("pf-city");
-  let cityLng = +sel.value, cityName = "北京";
+  let cityLng = sel.value ? +sel.value : 0, cityName = "";
   const selOpt = sel.options[sel.selectedIndex];
-  if (selOpt) cityName = selOpt.textContent;
+  if (selOpt && selOpt.value) cityName = selOpt.textContent;
+  if (!cityName){ _alert2("请选择出生城市（用于真太阳时校正，选不到就选最近的大城市）"); return; }
   const note = (document.getElementById("pf-note").value||"").trim();
   const patch = {emoji:window._profileSelEmoji, name, gender, year, month, day, hour, minute, cityName, cityLng, note};
   if (window._profileEditingId){
@@ -15079,10 +15104,39 @@ function submitProfileForm(){
    会被祖先的某些 CSS 规则意外覆盖（尤其是 z-index:200 vs 999999）。
    修复: ① setProperty(name, val, 'important') 写 12 条 ② setAttribute 再覆盖 ③ setProperty 补回 important
    三个步骤一个不能少，缺一在 Chrome 83 里偶发失效。 */
+window.__modalStack = window.__modalStack || [];
+window.__closeTopModal = function(){
+  while(window.__modalStack.length){
+    var top = window.__modalStack.pop();
+    try{
+      var el = document.getElementById(top.id);
+      if(!el || el.style.display==='none' || el.classList.contains('hide')) continue;
+      window.__closeModalById(top.id);
+      return top.id;
+    }catch(_){ continue; }
+  }
+  return null;
+};
+window.__closeAllModals = function(){
+  var closed = 0;
+  while(window.__modalStack.length){
+    var top = window.__modalStack.pop();
+    try{
+      var el = document.getElementById(top.id);
+      if(el && el.style.display!=='none'){ window.__closeModalById(top.id); closed++; }
+    }catch(_){}
+  }
+  return closed;
+};
 window.__openModalById = function(id, opts){
   try{
     var m = document.getElementById(id);
     if(!m){ return; }
+    // esc 栈注册：仅新打开（display none → 显示）时入栈
+    if(m.style.display==='none' || !m.style.display){
+      if(window.__modalStack.length>=20) window.__modalStack.shift();
+      window.__modalStack.push({id:id, t:Date.now()});
+    }
     var o = opts || {};
     var isQuick = (id === 'quickCmdModal');
     var alignItems = o.alignItems || (isQuick ? 'flex-start' : 'center');
@@ -15120,6 +15174,7 @@ window.__openModalById = function(id, opts){
   }catch(e){ try{ _alert2('打开弹窗失败: '+e.message); }catch(_){} }
 };
 window.__closeModalById = function(id){
+  try{ window.__modalStack = (window.__modalStack||[]).filter(function(x){ return x.id!==id; }); }catch(_){}
   try{
     var m = document.getElementById(id);
     if(!m) return;
@@ -16302,8 +16357,16 @@ function renderWidget_fortuneGrid(r){
         </div>
       </div>`;
     }).join("");
+    let _base = '';
+    try{
+      const _p = (typeof window.getActiveProfile==='function') ? window.getActiveProfile() : null;
+      _base = _p
+        ? '<div style="font-size:11px;color:var(--text-hint);margin-bottom:6px;">基于档案「'+(_p.name||'未命名')+'」 · ' + _p.year + '-' + _p.month + '-' + _p.day + ' <span style="cursor:pointer;color:var(--pri);" onclick="window.openProfileModal&&window.openProfileModal()">切换 ›</span></div>'
+        : '<div style="font-size:11px;color:var(--text-hint);margin-bottom:6px;">未建档：按今日日柱通用计算，仅供参考 <span style="cursor:pointer;color:var(--pri);" onclick="window.openProfileModal&&window.openProfileModal()">去建档 ›</span></div>';
+    }catch(_){}
     return `<div class="fortune-grid-wrap">
       <svg width="0" height="0" style="position:absolute">${grads}</svg>
+      ${_base}
       <div class="fortune-grid">${cards}</div>
     </div>`;
   }catch(e){try{console&&console.error(e);}catch(_){}return '';}
@@ -18421,7 +18484,7 @@ window.paintRaf2Widgets = paintRaf2Widgets;
 
 try{
   var _actStyleEl = document.createElement('style');
-  _actStyleEl.textContent = '.act-suggest-box{margin:12px 0;padding:12px 14px;border:1px solid var(--card-border, #e8e2d4);border-radius:12px;background:linear-gradient(135deg, rgba(255,239,204,0.25), rgba(230,245,255,0.2));}.act-title{margin:0 0 8px 0;font-size:15px;font-weight:700;color:var(--pri-dark, #8B4513);}.act-list{margin:0;padding:0;list-style:none;}.act-list li{margin:5px 0;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.6);font-size:13px;line-height:1.55;}.act-refresh-wrap{margin-top:8px;text-align:right;background:none !important;padding:0 !important;}.btn-mini{padding:4px 10px;font-size:12px;border-radius:16px;border:1px solid var(--card-border, #ddd);background:var(--bg, #fff);cursor:pointer;}.day-picker-modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}.day-picker-card{width:100%;max-width:420px;max-height:85vh;overflow-y:auto;background:#fff;border-radius:16px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,0.3);}.day-picker-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}.day-picker-head h3{margin:0;font-size:17px;}.day-close-btn{background:none;border:none;font-size:24px;cursor:pointer;line-height:1;}.day-task-radio label{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px dashed #eee;cursor:pointer;}.day-range-wrap{margin:14px 0;}.day-range-val{text-align:center;font-weight:700;margin:4px 0;}.day-run-btn{width:100%;padding:12px;font-size:15px;font-weight:700;border:none;border-radius:12px;background:linear-gradient(135deg,#8B4513,#D2691E);color:#fff;cursor:pointer;}.day-result{margin-top:14px;}.day-card{margin:10px 0;padding:10px 12px;border:1px solid #eee;border-radius:12px;background:#fafafa;}.day-card-head{font-weight:700;margin-bottom:6px;}.day-score-bar{height:8px;background:#eee;border-radius:4px;overflow:hidden;margin:6px 0;}.day-score-fill{height:100%;background:linear-gradient(90deg,#58A77A,#FFD700);border-radius:4px;transition:width 0.4s;}.day-card ul{margin:6px 0 0 0;padding-left:20px;font-size:12px;}';
+  _actStyleEl.textContent = '.act-suggest-box{margin:12px 0;padding:12px 14px;border:1px solid var(--card-border, #e8e2d4);border-radius:12px;background:linear-gradient(135deg, rgba(255,239,204,0.25), rgba(230,245,255,0.2));}.act-title{margin:0 0 8px 0;font-size:15px;font-weight:700;color:var(--pri-dark, #8B4513);}.act-list{margin:0;padding:0;list-style:none;}.act-list li{margin:5px 0;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.6);font-size:13px;line-height:1.55;}.act-refresh-wrap{margin-top:8px;text-align:right;background:none !important;padding:0 !important;}.btn-mini{padding:4px 10px;font-size:12px;border-radius:16px;border:1px solid var(--card-border, #ddd);background:var(--bg, #fff);cursor:pointer;}.day-picker-modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}.day-picker-card{width:100%;max-width:420px;max-height:85vh;overflow-y:auto;background:var(--card,#fff);color:var(--text,#2b2b2b);border:1px solid var(--card-border,#eee);border-radius:16px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,0.3);}.day-picker-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}.day-picker-head h3{margin:0;font-size:17px;}.day-close-btn{background:none;border:none;font-size:24px;cursor:pointer;line-height:1;}.day-task-radio label{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px dashed var(--card-border,#eee);cursor:pointer;user-select:none;-webkit-user-select:none;}.day-range-wrap{margin:14px 0;}.day-range-val{text-align:center;font-weight:700;margin:4px 0;}.day-run-btn{width:100%;padding:12px;font-size:15px;font-weight:700;border:none;border-radius:12px;background:linear-gradient(135deg,#8B4513,#D2691E);color:#fff;cursor:pointer;}.day-result{margin-top:14px;}.day-card{margin:10px 0;padding:10px 12px;border:1px solid var(--card-border,#eee);border-radius:12px;background:var(--bg,#fafafa);}.day-card-head{font-weight:700;margin-bottom:6px;}.day-score-bar{height:8px;background:var(--card-border,#eee);border-radius:4px;overflow:hidden;margin:6px 0;}.day-score-fill{height:100%;background:linear-gradient(90deg,#58A77A,#FFD700);border-radius:4px;transition:width 0.4s;}.day-card ul{margin:6px 0 0 0;padding-left:20px;font-size:12px;}';
   document.head.appendChild(_actStyleEl);
 }catch(_){}
 
@@ -18696,7 +18759,19 @@ function _ensureDayPickerRoot(){
 }
 function buildDayPickerModal(){
   var root = _ensureDayPickerRoot();
-  root.innerHTML = '<div class="day-picker-modal" id="dayPickerModal" onclick="if(event.target===this)closeDayPicker()"><div class="day-picker-card"><div class="day-picker-head"><h3>📅 找合适的日子</h3><button class="day-close-btn" onclick="window.closeDayPicker()">×</button></div><div class="day-task-radio" id="dayTaskList"><label><input type="radio" name="dayTask" value="搬家" checked>🏠 搬家</label><label><input type="radio" name="dayTask" value="签约">📝 签约</label><label><input type="radio" name="dayTask" value="装修">🛠 装修</label><label><input type="radio" name="dayTask" value="出差">✈️ 出差</label><label><input type="radio" name="dayTask" value="探亲">👨‍👩‍👧 探亲</label><label><input type="radio" name="dayTask" value="约会">💞 约会</label><label><input type="radio" name="dayTask" value="嫁娶">💒 嫁娶</label><label><input type="radio" name="dayTask" value="出行">🚗 出行</label></div><div class="day-range-wrap"><input type="range" id="dayRangeSlider" min="7" max="90" step="1" value="30" style="width:100%;"><div class="day-range-val" id="dayRangeVal">30 天</div></div><button class="day-run-btn" onclick="window.dayPickerRun()">开始分析 🚀</button><div class="day-result" id="dayPickerResult"></div></div></div>';
+  root.innerHTML = '<div class="day-picker-modal" id="dayPickerModal" onclick="if(event.target===this)closeDayPicker()"><div class="day-picker-card"><div class="day-picker-head"><h3>📅 找合适的日子</h3><button class="day-close-btn" onclick="window.closeDayPicker()">×</button></div><div style="font-size:11.5px;color:var(--text-hint,#999);margin:-6px 0 10px 0;">'+(function(){ try{ var p=(typeof window.getActiveProfile==='function')?window.getActiveProfile():null; return p?('以当前档案「'+(p.name||'未命名')+'」('+p.year+'-'+p.month+'-'+p.day+') 的八字分析'):'⚠️ 未选择档案，按今日日柱通用分析——建议先在顶部「档案」创建'; }catch(_){ return ''; } })()+'</div><div class="day-task-radio" id="dayTaskList"><label><input type="radio" name="dayTask" value="搬家" checked>🏠 搬家</label><label><input type="radio" name="dayTask" value="签约">📝 签约</label><label><input type="radio" name="dayTask" value="装修">🛠 装修</label><label><input type="radio" name="dayTask" value="出差">✈️ 出差</label><label><input type="radio" name="dayTask" value="探亲">👨‍👩‍👧 探亲</label><label><input type="radio" name="dayTask" value="约会">💞 约会</label><label><input type="radio" name="dayTask" value="嫁娶">💒 嫁娶</label><label><input type="radio" name="dayTask" value="出行">🚗 出行</label></div><div class="day-range-wrap"><input type="range" id="dayRangeSlider" min="7" max="90" step="1" value="30" style="width:100%;"><div class="day-range-val" id="dayRangeVal">30 天</div></div><button class="day-run-btn" onclick="window.dayPickerRun()">开始分析 🚀</button><div class="day-result" id="dayPickerResult"></div></div></div>';
+  try{
+    var tl = document.getElementById('dayTaskList');
+    if(tl && !tl.__rowBind){
+      tl.addEventListener('click', function(ev){
+        var lb = ev.target.closest ? ev.target.closest('label') : null;
+        if(!lb) return;
+        var rb = lb.querySelector('input[type=radio]');
+        if(rb){ rb.checked = true; }
+      });
+      tl.__rowBind = true;
+    }
+  }catch(_){}
   try{
     var sl = document.getElementById('dayRangeSlider');
     var vl = document.getElementById('dayRangeVal');
@@ -18833,13 +18908,15 @@ function renderDayPickerResult(top3){
     var week = '星期'+weeks[d.getDay()];
     var gz = _ganZhiOfDay(d);
     var gzStr = gz.gz || '';
-    html += '<div class="day-card"><div class="day-card-head">'+(i===0?'🥇 ':i===1?'🥈 ':'🥉 ')+item.ymd+' '+week+(gzStr?' · '+gzStr:'')+' · Score <b style="color:#58A77A;">'+item.score+'</b></div>';
+    var _g = item.score>=80?'吉':item.score>=65?'良':item.score>=50?'中平':'欠佳';
+    var _gc = item.score>=65?'#3E9B6B':item.score>=50?'#C08A2D':'#B0563A';
+    html += '<div class="day-card"><div class="day-card-head">'+(i===0?'🥇 ':i===1?'🥈 ':'🥉 ')+item.ymd+' '+week+(gzStr?' · '+gzStr:'')+' · <span style="color:'+_gc+';font-weight:700;">'+_g+'</span> <b style="color:#58A77A;">'+item.score+'分</b></div>';
     html += '<div class="day-score-bar"><div class="day-score-fill" style="width:'+item.score+'%;"></div></div>';
     html += '<ul>';
     for(var k=0;k<item.reasons.length;k++){ html += '<li>'+item.reasons[k]+'</li>'; }
     html += '</ul></div>';
   }
-  html += '<div style="margin-top:10px;padding:8px;font-size:12px;color:var(--text-hint, #666);background:#f9f9f9;border-radius:8px;">🏆 最佳 3 天如上，具体时辰请结合八字时辰进一步择（如需 → 可在本页切到八字模块）</div>';
+  html += '<div style="margin-top:10px;padding:8px;font-size:12px;color:var(--text-hint, #666);background:var(--card,#f9f9f9);border-radius:8px;">分数为当日与「'+(function(){try{var p=window.getActiveProfile?window.getActiveProfile():null;return p?(p.name||'当前档案')+'」匹配度':('今日日柱」通用匹配度');}catch(_){return '今日日柱」通用匹配度';}})()+'，80+ 很难得、65-79 值得考虑、50-64 中平、50 以下避开。🏆 具体时辰请结合八字进一步择</div>';
   el.innerHTML = html;
 }
 window.renderDayPickerResult = renderDayPickerResult;

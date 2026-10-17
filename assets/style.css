@@ -256,6 +256,7 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .fangwei-cell .fw-v{font-size:14px;font-weight:700;color:var(--pri-dark);margin-top:2px;}
 .chongsha{font-size:14px;}
 .bottom-tabs{position:fixed;bottom:var(--kb-offset);left:0;right:0;z-index:100;background:var(--btab-bg);border-top:1px solid var(--btab-border);display:grid;grid-template-columns:repeat(6,1fr);padding:8px 0 calc(8px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(0,0,0,0.04);}
+.topbar .actions{ -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent); }
 .btab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:56px;cursor:pointer;color:var(--text-hint);transition:color .2s;gap:2px;user-select:none;}
 .btab::before{content:"";position:absolute;top:-1px;left:50%;width:18px;height:3px;border-radius:0 0 3px 3px;background:var(--pri);transform:translateX(-50%) scaleX(0);transition:transform .25s ease;}
 .btab.active::before{transform:translateX(-50%) scaleX(1);}
@@ -373,10 +374,11 @@ body.theme-wu .tarot-face.front{background:var(--card);border:1px solid rgba(107
 .tarot-ur-badge.reversed{background:#FCEAEA;color:#C0392B;}
 .tarot-kw-row{margin:6px 0 10px;}
 .tarot-kw{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px;margin:2px;background:var(--track-bg);color:var(--text-sub);}
+.theme-dark .tarot-kw{background:rgba(255,255,255,.10);color:var(--text);border:1px solid rgba(255,255,255,.12);}
 .tarot-desc-block{margin:6px 0;}
 .tarot-desc-t{font-size:13px;font-weight:700;color:var(--pri-dark);margin-bottom:2px;}
 .tarot-desc-p{font-size:13px;color:var(--text-sub);line-height:1.7;}
-.tarot-sum-box{background:var(--pri-light);border-radius:12px;padding:14px;border:1px solid var(--card-border);margin-top:6px;}
+.tarot-sum-box{background:var(--card);border-radius:12px;padding:14px;border:1px solid var(--card-border);margin-top:6px;}
 .tarot-sum-title{font-size:14px;font-weight:700;color:var(--pri-dark);margin-bottom:8px;}
 .tarot-sum-text{font-size:13px;color:var(--text);line-height:1.8;}
 .tarot-spread-svg{width:100%;max-width:340px;height:auto;display:block;margin:0 auto;background:var(--bg);border-radius:10px;border:1px solid var(--line);}
@@ -603,6 +605,7 @@ body.theme-dark .donate-qr-img{background:#f5f5f5;}
 .pf-active-meta{font-size:12px;color:var(--text-sub);margin-top:2px;line-height:1.5;}
 .pf-active-badge{background:var(--pri);color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;flex-shrink:0;}
 .pf-tpl-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.modal-close,.b-close,.cal-day-close,.ft-close,.liupai-close,.modal-x,.day-close-btn,.modal .close{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;cursor:pointer;flex-shrink:0;}
 .pf-tpl-btn{flex:1;min-width:60px;height:40px;border:1px solid var(--input-border);background:var(--input-bg);border-radius:10px;font-size:13px;color:var(--text-sub);cursor:pointer;transition:all .15s;}
 .pf-tpl-btn:active{transform:scale(0.96);}
 .pf-tpl-btn:hover{border-color:var(--pri);color:var(--pri);}
@@ -1175,6 +1178,7 @@ body.banner-show{padding-top:40px;}
 .streak-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(255,120,0,.08),rgba(255,80,0,.04));border:1px solid rgba(255,140,0,.2);border-radius:12px;margin-bottom:12px;}
 .streak-bar .streak-flame{font-size:22px;line-height:1;}
 .streak-bar .streak-info{flex:1;min-width:0;}
+@media (max-width:719px){ .topbar .streak-bar{display:none;} }
 .streak-bar .streak-count{font-size:18px;font-weight:800;color:var(--pri);}
 .streak-bar .streak-sub{font-size:11px;color:var(--text-hint);}
 .streak-bar .streak-progress{flex:1;height:6px;background:var(--track-bg);border-radius:3px;overflow:hidden;margin-top:4px;}
