@@ -1159,6 +1159,7 @@ body.theme-dark .term {
 .primary-action .pab.pab-cn{border-color:transparent;background:var(--pri-cn-light);color:var(--pri-cn-dark);}
 .primary-action .pab.pab-wu{border-color:transparent;background:var(--pri-wu-light);color:var(--pri-wu-dark);}
 .primary-action .pab.pab-al{border-color:transparent;background:var(--pri-al-light);color:var(--pri-al-dark);}
+.primary-action .pab.pab-grow{border-color:transparent;background:#EAF7EC;color:#3E6B32;}
 .primary-action .pab.pab-cn:hover,.primary-action .pab.pab-wu:hover,.primary-action .pab.pab-al:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.08);}
 .primary-action .pab.pab-qc{border:1px solid var(--line);background:var(--bg);color:var(--text-sub);}
 
@@ -1546,7 +1547,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.26.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.27.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -1584,6 +1585,9 @@ body{ padding-bottom:160px; }
   </button>
   <button class="pab pab-al" type="button" onclick="window.switchTab && window.switchTab('al'); var e1=document.getElementById('page-al'); if(e1) try{e1.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}">
     <span class="emj">❖</span><span>今日黄历</span>
+  </button>
+  <button class="pab pab-grow" type="button" onclick="window.switchTab && window.switchTab('grow'); var e1=document.getElementById('page-grow'); if(e1) try{e1.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}">
+    <span class="emj">🌱</span><span>成长中心</span>
   </button>
   <button class="pab pab-qc" type="button" onclick="window.openQuickCmd && window.openQuickCmd('起卦');">
     <span class="emj">🔍</span><span>更多功能 · 命令面板</span>
@@ -2414,7 +2418,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.26.0-20261017';
+const ZHIMING_BUILD = 'v2.27.0-20261017';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6296,14 +6300,22 @@ function switchTab(page){
   document.body.dataset.page = page;
   document.querySelectorAll(".btab").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
   document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active", p.id==="page-"+page));
-  document.body.classList.remove("theme-cn","theme-wu","theme-al","theme-today");
+  // 主题类互斥：cn/wu/al 为独占完整皮肤，需同时清掉基础明暗类，避免变量打架出现半亮半暗
+  document.body.classList.remove("theme-light","theme-dark","theme-cn","theme-wu","theme-al","theme-today");
+  var __skin = page==="cn" ? "theme-cn" : page==="wu" ? "theme-wu" : (page==="al"||page==="cal") ? "theme-al" : null;
+  if(__skin){ document.body.classList.add(__skin); }
+  else {
+    var __t = 'light';
+    try{ __t = (window.__getSavedTheme ? window.__getSavedTheme() : 'auto') || 'auto'; }catch(_){}
+    if(__t === 'auto') __t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    document.body.classList.add(__t === 'dark' ? 'theme-dark' : (document.body.classList.contains('theme-'+__t) ? '' : 'theme-'+__t));
+  }
   if (page==="today") {
     document.body.classList.add("theme-today");
     if (typeof renderToday === "function") renderToday();
   }
-  else if (page==="cn") document.body.classList.add("theme-cn");
+  else if (page==="cn") ;
   else if (page==="wu") {
-    document.body.classList.add("theme-wu");
     try{ syncProfileToWuTabs(); }catch(_){}
   }
   else if (page==="al") {
@@ -20708,6 +20720,7 @@ function _lenormandAIEnhance(cards, spreadType){
   };
 
   window.setTheme = function(t){ currentTheme = t; saveTheme(t); applyThemeClass(t); };
+  window.__getSavedTheme = getSavedTheme; // 供 switchTab 恢复用户偏好
 
   if(window.matchMedia){
     var mql = window.matchMedia('(prefers-color-scheme: dark)');
