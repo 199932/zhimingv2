@@ -1290,7 +1290,7 @@ body.banner-show{padding-top:40px;}
 .streak-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(255,120,0,.08),rgba(255,80,0,.04));border:1px solid rgba(255,140,0,.2);border-radius:12px;margin-bottom:12px;}
 .streak-bar .streak-flame{font-size:22px;line-height:1;}
 .streak-bar .streak-info{flex:1;min-width:0;}
-@media (max-width:719px){ .topbar .streak-bar{display:none;} } /* 手机顶栏隐藏签到卡（防挤压竖排+抽牌区保持神秘感，成长tab仍可签到） */
+.topbar .streak-bar{display:none;} /* 连签系统移除（用户反馈没用）：顶栏不再显示签到卡，数据仍记录 */ /* 手机顶栏隐藏签到卡（防挤压竖排+抽牌区保持神秘感，成长tab仍可签到） */
 .streak-bar .streak-count{font-size:18px;font-weight:800;color:var(--pri);}
 .streak-bar .streak-sub{font-size:11px;color:var(--text-hint);}
 .streak-bar .streak-progress{flex:1;height:6px;background:var(--track-bg);border-radius:3px;overflow:hidden;margin-top:4px;}
@@ -1572,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.31.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.31.1</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -1952,17 +1952,17 @@ body{ padding-bottom:160px; }
           <div class="tarot-back-tab active" data-back="classic" role="tab" aria-selected="true" tabindex="0" onclick="window.switchTarotBack('classic',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('classic',this)">
             <span class="tb-icon">✦</span><span class="tb-name">韦特经典</span>
           </div>
-          <div class="tarot-back-tab locked" data-back="starfield" role="tab" aria-selected="false" tabindex="0" onclick="window.switchTarotBack('starfield',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('starfield',this)">
-            <span class="tb-icon">🌌</span><span class="tb-name">星夜秘仪</span><span class="tb-hint">🔒 3天解锁</span>
+          <div class="tarot-back-tab" data-back="starfield" role="tab" aria-selected="false" tabindex="0" onclick="window.switchTarotBack('starfield',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('starfield',this)">
+            <span class="tb-icon">🌌</span><span class="tb-name">星夜秘仪</span>
           </div>
-          <div class="tarot-back-tab locked" data-back="bronze" role="tab" aria-selected="false" tabindex="0" onclick="window.switchTarotBack('bronze',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('bronze',this)">
-            <span class="tb-icon">🏛</span><span class="tb-name">古铜墨韵</span><span class="tb-hint">🔒 7天解锁</span>
+          <div class="tarot-back-tab" data-back="bronze" role="tab" aria-selected="false" tabindex="0" onclick="window.switchTarotBack('bronze',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('bronze',this)">
+            <span class="tb-icon">🏛</span><span class="tb-name">古铜墨韵</span>
           </div>
-          <div class="tarot-back-tab locked" data-back="cyber" role="tab" aria-selected="false" tabindex="0" onclick="window.switchTarotBack('cyber',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('cyber',this)">
-            <span class="tb-icon">💠</span><span class="tb-name">赛博朋克</span><span class="tb-hint">🔒 14天解锁</span>
+          <div class="tarot-back-tab" data-back="cyber" role="tab" aria-selected="false" tabindex="0" onclick="window.switchTarotBack('cyber',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('cyber',this)">
+            <span class="tb-icon">💠</span><span class="tb-name">赛博朋克</span>
           </div>
-          <div class="tarot-back-tab locked" data-back="ink" role="tab" aria-selected="false" tabindex="0" onclick="window.switchTarotBack('ink',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('ink',this)">
-            <span class="tb-icon">🎋</span><span class="tb-name">国风水墨</span><span class="tb-hint">🔒 30天解锁</span>
+          <div class="tarot-back-tab" data-back="ink" role="tab" aria-selected="false" tabindex="0" onclick="window.switchTarotBack('ink',this)" onkeydown="if(event.key==='Enter'||event.key===' ')window.switchTarotBack('ink',this)">
+            <span class="tb-icon">🎋</span><span class="tb-name">国风水墨</span>
           </div>
         </div>
       </details>
@@ -20071,10 +20071,8 @@ if(typeof window.toast !== 'function'){
   }
 
   function isBackUnlocked(name){
-    if(name === 'classic') return true;
-    var info = BACK_INFO[name]; if(!info) return false;
-    var streak = (typeof window.getStreakData === 'function') ? window.getStreakData() : {count:0};
-    return (streak.count || 0) >= info.need;
+    // 连签系统已移除（用户反馈没用）：全部牌背直接解锁
+    return !!BACK_INFO[name];
   }
 
   window.switchTarotBack = function(name, el){
