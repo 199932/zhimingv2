@@ -1572,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.31.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.32.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -14364,15 +14364,15 @@ function renderTarotInterpretation(cards, question, spread){
       <div class="tarot-kw-row">${kw.map(k=>`<span class="tarot-kw">${k}</span>`).join("")}</div>
       <div class="tarot-desc-block">
         <div class="tarot-desc-t">${labels[order[0]]}</div>
-        <div class="tarot-desc-p">${desc[order[0]]}</div>
+        <div class="tarot-desc-p">${wrapTerms(desc[order[0]])}</div>
       </div>
       <div class="tarot-desc-block">
         <div class="tarot-desc-t">${labels[order[1]]}</div>
-        <div class="tarot-desc-p">${desc[order[1]]}</div>
+        <div class="tarot-desc-p">${wrapTerms(desc[order[1]])}</div>
       </div>
       <div class="tarot-desc-block">
         <div class="tarot-desc-t">${labels[order[2]]}</div>
-        <div class="tarot-desc-p">${desc[order[2]]}</div>
+        <div class="tarot-desc-p">${wrapTerms(desc[order[2]])}</div>
       </div>
     </div>`;
   });
@@ -14405,7 +14405,7 @@ function renderTarotInterpretation(cards, question, spread){
   }
   html += `<div class="tarot-sum-box">
     <div class="tarot-sum-title">✨ 综合解读</div>
-    <div class="tarot-sum-text">${sumArr.join("")}</div>
+    <div class="tarot-sum-text">${wrapTerms(sumArr.join(""))}</div>
   </div>`;
   // 牌阵对比分析（多牌牌阵的能量趋势 / 选项对比）
   const stat = analyzeTarotCards(cards);
@@ -21096,7 +21096,7 @@ function _lenormandAIEnhance(cards, spreadType){
     const acts = (WX_META[focus]?WX_META[focus].act:[]).map(a=>`<li>${a}</li>`).join("");
     const ss = (r.shensha&&r.shensha.length? r.shensha.slice(0,3):[]).map(s=>{
       const g = SHENSHA_GROW[s.name]; if(!g) return "";
-      return `<div class="grow-talent"><div class="gt-ico">${g.ico}</div><div><div class="gt-name">${_esc(s.name)}${s.pillar?` <span style="font-size:10px;color:var(--text-hint);">（落${_esc(s.pillar)}${s.zhi?"·"+_esc(s.zhi):""}）</span>`:""}</div><div class="gt-desc">${g.d}</div></div></div>`;
+      return `<div class="grow-talent"><div class="gt-ico">${g.ico}</div><div><div class="gt-name">${_esc(s.name)}${s.pillar?` <span style="font-size:10px;color:var(--text-hint);">（落${_esc(s.pillar)}${s.zhi?"·"+_esc(s.zhi):""}）</span>`:""}</div><div class="gt-desc">${wrapTerms(g.d)}</div></div></div>`;
     }).join("");
     const wsTag = r.wangshuai==="偏旺"?'<span class="tag tag-warn">偏旺</span>':r.wangshuai==="偏弱"?'<span class="tag tag-info">偏弱</span>':'<span class="tag tag-good">中和</span>';
     return _card("🪞 你的命格说明书",
@@ -21105,7 +21105,7 @@ function _lenormandAIEnhance(cards, spreadType){
         <div style="font-weight:800;font-size:16px;">日主「${_esc(r.dayGan)}」· ${dp.label} ${wsTag}</div>
         <div style="font-size:11px;color:var(--text-hint);margin-top:2px;">属${_esc(r.zodiac)} · 生于${_esc(r.yueLing||"")}月令 · 真太阳时 ${_esc(r.trueSolar||"")}</div>
       </div>
-      <div class="grow-persona">${dp.s}<br><b>${dp.t}</b><br><span style="color:var(--text-sub);">${dp.w}</span></div>
+      <div class="grow-persona">${wrapTerms(dp.s)}<br><b>${wrapTerms(dp.t)}</b><br><span style="color:var(--text-sub);">${wrapTerms(dp.w)}</span></div>
       <div style="margin-top:14px;">${bars}</div>
       <div class="hint" style="margin:6px 0 4px;">喜用神：${xi}</div>
       <div class="hint">${lackTxt}</div>
