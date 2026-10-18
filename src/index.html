@@ -1572,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.36.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.37.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2296,6 +2296,15 @@ body{ padding-bottom:160px; }
     <div class="modal-body" id="profileModalBody"></div>
   </div>
 </div>
+<div class="modal-mask" id="hepanModal" onclick="if(event.target===this)closeHePan()" style="display:none;">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>💑 双人合盘</h3>
+      <button class="modal-close" onclick="window.closeHePan()">✕</button>
+    </div>
+    <div class="modal-body" id="hepanModalBody"></div>
+  </div>
+</div>
 
 <!-- ===== 打赏支持弹窗 ===== -->
 <div class="modal-mask" id="donateModal" onclick="if(event.target===this)window.closeDonateModal()">
@@ -2443,7 +2452,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.36.0-20261018';
+const ZHIMING_BUILD = 'v2.37.0-20261018';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -14951,6 +14960,7 @@ function renderProfilesUI(){
         </div>
       </div>
       <span class="pf-active-badge">⭐当前</span>
+      <button class="pf-act-btn set" style="font-size:12px;padding:6px 10px;flex-shrink:0;" title="双人合盘" onclick="window.openHePan()">💑</button>
     </div>` : `<div class="card" style="padding:14px;text-align:center;color:var(--text-hint);">尚未选择当前人物，请在下方列表设为当前或新增档案。</div>`;
 
   const tpls = [
@@ -16396,6 +16406,86 @@ function _solarTermInfo(d){
   return {name:cur.n, phase:cur.p, nextName:next.n, daysToNext:daysTo};
 }
 function renderDailyStickCard(r){
+/* ================= 双人合盘（简化口径：日柱干支关系+生肖关系） ================= */
+function _hpZhiIdx(year){ return ((year-4)%12+12)%12; }
+function computeHePan(pA, pB){
+  if(!pA||!pB) return null;
+  var dA=new Date(parseInt(pA.year,10), parseInt(pA.month,10)-1, parseInt(pA.day,10));
+  var dB=new Date(parseInt(pB.year,10), parseInt(pB.month,10)-1, parseInt(pB.day,10));
+  var gzA=_ganZhiOfDay(dA), gzB=_ganZhiOfDay(dB);
+  var ganA=gzA.gz.charAt(0), zhiA=gzA.gz.charAt(1), ganB=gzB.gz.charAt(0), zhiB=gzB.gz.charAt(1);
+  var zhiI={"子":0,"丑":1,"寅":2,"卯":3,"辰":4,"巳":5,"午":6,"未":7,"申":8,"酉":9,"戌":10,"亥":11};
+  var zhiName="子丑寅卯辰巳午未申酉戌亥".split("");
+  var iA=zhiI[zhiA], iB=zhiI[zhiB];
+  var items=[]; var score=60;
+  var GAN_HE={"甲":"己","己":"甲","乙":"庚","庚":"乙","丙":"辛","辛":"丙","丁":"壬","壬":"丁","戊":"癸","癸":"戊"};
+  if(GAN_HE[ganA]===ganB){ score+=30; items.push(["good","日干相合",ganA+zhiA+" 与 "+ganB+zhiB+"："+ganA+ganB+"相合，主彼此有天然的吸引与默契，性格互补。"]); }
+  else if(ganA===ganB){ score+=10; items.push(["ok","日干比和","两人日主同为"+ganA+"，像并肩同行的战友，懂彼此但也容易犟在同一处。"]); }
+  else if(__GAN_CHONG[ganA]===ganB){ score-=15; items.push(["warn","日干相冲",ganA+"与"+ganB+"相冲，观点易碰撞——不是不合，是需要学会把争论变成讨论。"]); }
+  else { items.push(["ok","日干平配","日主"+ganA+"与"+ganB+"无明显生克，关系走向更多看相处。"]); }
+  if(SX_HE[iA]===iB){ score+=25; items.push(["good","日支六合",zhiA+zhiB+"六合，相处氛围融洽，日常小事上很搭。"]); }
+  else if(SX_CHONG[iA]===iB){ score-=20; items.push(["warn","日支六冲",zhiA+zhiB+"六冲，生活节奏和习惯差异较大，需要更多磨合与边界感。"]); }
+  else if((SX_SANHE[0].indexOf(iA)>=0&&SX_SANHE[0].indexOf(iB)>=0)||(SX_SANHE[1].indexOf(iA)>=0&&SX_SANHE[1].indexOf(iB)>=0)||(SX_SANHE[2].indexOf(iA)>=0&&SX_SANHE[2].indexOf(iB)>=0)||(SX_SANHE[3].indexOf(iA)>=0&&SX_SANHE[3].indexOf(iB)>=0)){ score+=20; items.push(["good","日支三合",zhiA+zhiB+"三合，气场同频，是可以一起做事的组合。"]); }
+  var sxList="鼠牛虎兔龙蛇马羊猴鸡狗猪".split("");
+  var sxA=sxList[_hpZhiIdx(parseInt(pA.year,10))], sxB=sxList[_hpZhiIdx(parseInt(pB.year,10))];
+  var ziA=_hpZhiIdx(parseInt(pA.year,10)), ziB=_hpZhiIdx(parseInt(pB.year,10));
+  if(SX_CHONG[ziA]===ziB){ score-=10; items.push(["warn","生肖六冲",sxA+"与"+sxB+"六冲，长辈辈观念里比较忌——现代相处里它更像提醒：价值观差异点会集中在金钱与亲密关系上，提前对齐预期。"]); }
+  else if(SX_HE[ziA]===ziB){ score+=15; items.push(["good","生肖六合",sxA+"与"+sxB+"六合，传统口径里这是相当亲近的组合。"]); }
+  score=Math.max(30,Math.min(98,score));
+  var grade=score>=85?"上等":score>=70?"良缘":score>=55?"中平":"需经营";
+  return {score:score,grade:grade,items:items,gzA:gzA.gz,gzB:gzB.gz,sxA:sxA,sxB:sxB};
+}
+function renderHePan(){
+  var body=document.getElementById("hepanModalBody"); if(!body) return;
+  var list=window._profiles||[];
+  if(list.length<1){ body.innerHTML='<div class="hist-empty">至少需要 1 个档案才能合盘，先去创建吧</div>'; return; }
+  var opts=function(selId, defId){
+    return '<select id="'+selId+'" class="gloss-search" style="width:100%;">'+list.map(function(p){ return '<option value="'+p.id+'"'+(p.id===defId?' selected':'')+'>'+((p.emoji||'👤')+' '+(p.name||'未命名')+' ('+(p.year||'?')+'/'+(p.month||'?')+'/'+(p.day||'?')+')')+'</option>'; }).join('')+'</select>';
+  };
+  body.innerHTML='<div class="card" style="margin-bottom:10px;">'
+    +'<div class="form-row"><label> TA</label>'+opts('hpSelA', window._activeProfileId||'')+'</div>'
+    +'<div class="form-row"><label> 另一位</label>'+opts('hpSelB', list.length>1?(list.filter(function(p){return p.id!==window._activeProfileId;})[0]||list[1]||list[0]).id:'')+'</div>'
+    +'<button class="btn-primary" style="width:100%;margin-top:6px;" onclick="window.runHePan()">💝 看看你们的关系</button>'
+    +'<div style="font-size:11px;color:var(--text-hint);margin-top:8px;line-height:1.6;">简化口径：日柱干支关系+生肖关系推演，仅供娱乐参考，感情好坏终究看经营。</div>'
+    +'</div><div id="hpResult"></div>';
+}
+function runHePan(){
+  var aEl=document.getElementById('hpSelA'), bEl=document.getElementById('hpSelB');
+  if(!aEl||!bEl) return;
+  var pA=window._profiles.find(function(p){return p.id===aEl.value;});
+  var pB=window._profiles.find(function(p){return p.id===bEl.value;});
+  if(!pA||!pB||pA.id===pB.id){ try{_alert2('请选两个不同的人');}catch(_){} return; }
+  var r=computeHePan(pA,pB); if(!r) return;
+  var colMap={good:'#2E7D4F',ok:'var(--text-sub)',warn:'#C62828'};
+  var html='<div style="text-align:center;margin:4px 0 12px 0;">'
+    +'<div style="font-size:13px;color:var(--text-sub);">'+(pA.emoji||'👤')+' '+(pA.name||'未命名')+' <b style="color:var(--pri);">×</b> '+(pB.emoji||'👤')+' '+(pB.name||'未命名')+'</div>'
+    +'<div style="font-size:26px;font-weight:900;color:'+(r.score>=70?'#2E7D4F':r.score>=55?'#D2691E':'#C62828')+';margin:4px 0;">'+r.score+'<span style="font-size:12px;font-weight:600;color:var(--text-sub);"> /100 · '+r.grade+'</span></div>'
+    +'<div style="font-size:11px;color:var(--text-hint);">日柱 '+r.gzA+' × '+r.gzB+' ｜ '+r.sxA+' × '+r.sxB+'</div></div>'
+    +r.items.map(function(it){ return '<div style="padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);margin-bottom:6px;"><div style="font-weight:700;font-size:13px;color:'+colMap[it[0]]+';">'+(it[0]==='good'?'✨ ':it[0]==='warn'?'⚡ ':'· ')+it[1]+'</div><div style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:3px;">'+wrapTerms(it[2])+'</div></div>'; }).join('');
+  document.getElementById('hpResult').innerHTML=html;
+}
+function openHePan(){ renderHePan(); window.__openModalById('hepanModal'); }
+function closeHePan(){ window.__closeModalById('hepanModal'); }
+try{ window.openHePan=openHePan; window.closeHePan=closeHePan; window.runHePan=runHePan; }catch(_){}
+/* ================= 流日提醒（明日 vs 档案日柱） ================= */
+function getTomorrowHint(){
+  try{
+    var p=window.getActiveProfile?window.getActiveProfile():null;
+    if(!p||!p.year) return null;
+    var tm=new Date(); tm.setDate(tm.getDate()+1); tm.setHours(0,0,0,0);
+    var gz=_ganZhiOfDay(tm); var zhi=gz.gz.charAt(1);
+    var zhiI={"子":0,"丑":1,"寅":2,"卯":3,"辰":4,"巳":5,"午":6,"未":7,"申":8,"酉":9,"戌":10,"亥":11};
+    var bD=new Date(parseInt(p.year,10), parseInt(p.month,10)-1, parseInt(p.day,10));
+    var bZhi=_ganZhiOfDay(bD).gz.charAt(1);
+    var iZ=zhiI[zhi], iB=zhiI[bZhi];
+    if(SX_CHONG[iZ]===iB){ return {lv:'warn', html:'⚠️ <b>明日'+gz.gz+'，冲你日支'+bZhi+'</b>——重要签约、表白、大额消费建议缓一天。'}; }
+    if(SX_HE[iZ]===iB){ return {lv:'good', html:'🌿 <b>明日'+gz.gz+'，与你日支相合</b>——气场顺，适合推进想做的事。'}; }
+    return null;
+  }catch(_){ return null; }
+}
+try{ window.getTomorrowHint=getTomorrowHint; }catch(_){}
+
+
   try{
     const today = r.today || new Date();
     const seed = (typeof _getProfileSeed==='function') ? _getProfileSeed() : 0;
@@ -16429,6 +16519,7 @@ function renderDailyStickCard(r){
         </div>
       </div>
       <div style="text-align:right;font-size:10px;color:#9a8a76;">仅供娱乐参考 · 明日自动换签</div>
+      ${(function(){var th=window.getTomorrowHint?window.getTomorrowHint():null;return th?'<div style="margin-top:8px;padding:7px 10px;border-radius:8px;text-align:left;background:'+(th.lv==='warn'?'rgba(229,57,53,.08);color:#C62828':'rgba(46,125,79,.08);color:#2E7D4F')+';font-size:12px;line-height:1.6;">'+th.html+'</div>':'';})()}
     </div>`;
   }catch(e){ return ''; }
 }
