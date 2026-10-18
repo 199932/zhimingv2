@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.39.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.40.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -957,7 +957,8 @@
       <button data-m="4" onclick="window.__pickMood(this,4)">😡</button>
       <button data-m="5" onclick="window.__pickMood(this,5)">🤔</button>
     </div>
-    <textarea id="diaryNote" rows="3" placeholder="（可选）写一句今天的感悟 / 占卜笔记……" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);resize:none;font-size:13px;box-sizing:border-box;"></textarea>
+    <div id="diaryPrompt" style="margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--pri-light);font-size:12px;line-height:1.7;color:var(--pri-dark);"></div>
+    <textarea id="diaryNote" rows="3" placeholder="（可选）照着上面的问题写两句，或者写任何你想记下的……" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);resize:none;font-size:13px;box-sizing:border-box;"></textarea>
     <div style="display:flex;gap:8px;margin-top:12px;">
       <button class="diary-btn-secondary" onclick="document.getElementById('diaryCheckinBox').style.display='none'" style="flex:1;padding:10px;border-radius:10px;">取消</button>
       <button class="diary-btn-primary" onclick="window.confirmDiaryCheckin()" style="flex:1;padding:10px;border-radius:10px;background:var(--pri);color:#fff;border:0;">💾 保存打卡</button>

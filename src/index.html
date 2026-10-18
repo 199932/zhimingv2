@@ -1591,7 +1591,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.39.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.40.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2508,7 +2508,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.39.1-20261018';
+const ZHIMING_BUILD = 'v2.40.0-20261019';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -9916,6 +9916,16 @@ function openDiaryCheckin(){try{
   __moodCur=0;
   (document.querySelectorAll('#moodPicker button')||[]).forEach(bx=>bx.classList.remove('on'));
   var note=document.getElementById('diaryNote'); if(note) note.value='';
+  try{
+    var _pr=document.getElementById('diaryPrompt');
+    if(_pr){
+      var _d=new Date();
+      var _ps=_getProfileSeed?_getProfileSeed():0;
+      var _seed=(_d.getFullYear()*10000+_d.getMonth()*100+_d.getDate())*13+(parseInt(_ps,10)||0);
+      var _qs=['今天让你消耗最多能量的，是事还是人？','此刻身体的感觉是什么？紧绷还是松弛？','今天有没有一个瞬间，你克制住了想说的某句话？','如果今天重来一次，你会少做哪一件事？','今天最让你平静的 5 分钟，是在做什么？','你今天替谁操了不该你操的心？','今天有没有小题大做的地方？','今天的你，比昨天多知道了什么？','哪个念头今天反复出现？它想提醒你什么？','今天你是主动选择，还是被动反应居多？','有没有一件小事，你做得比想象中好？','今天你在害怕什么？哪怕很小。','今天想对谁说声谢谢，但没说出口？','今天你的注意力最难收回的地方是哪里？','如果给今天的疲惫取个名字，它叫什么？','今天你对自己最苛刻的一句话是什么？','有没有一件事其实可以明天再做？那就先放下吧。','今天你的直觉对了几次？留意它。','今天哪里不舒服？身体常常先于头脑知道答案。','把今天放下之前，你最想留下哪一刻？'];
+      _pr.textContent='💭 今日反问：'+_qs[_seed%_qs.length];
+    }
+  }catch(_){}
 }catch(_){}}
 try{window.openDiaryCheckin=openDiaryCheckin;}catch(_){}
 function __pickMood(btn,m){try{
@@ -19895,7 +19905,8 @@ window.onShareCardClick = window.onShareCardClick || function(){};
       <button data-m="4" onclick="window.__pickMood(this,4)">😡</button>
       <button data-m="5" onclick="window.__pickMood(this,5)">🤔</button>
     </div>
-    <textarea id="diaryNote" rows="3" placeholder="（可选）写一句今天的感悟 / 占卜笔记……" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);resize:none;font-size:13px;box-sizing:border-box;"></textarea>
+    <div id="diaryPrompt" style="margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--pri-light);font-size:12px;line-height:1.7;color:var(--pri-dark);"></div>
+    <textarea id="diaryNote" rows="3" placeholder="（可选）照着上面的问题写两句，或者写任何你想记下的……" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);resize:none;font-size:13px;box-sizing:border-box;"></textarea>
     <div style="display:flex;gap:8px;margin-top:12px;">
       <button class="diary-btn-secondary" onclick="document.getElementById('diaryCheckinBox').style.display='none'" style="flex:1;padding:10px;border-radius:10px;">取消</button>
       <button class="diary-btn-primary" onclick="window.confirmDiaryCheckin()" style="flex:1;padding:10px;border-radius:10px;background:var(--pri);color:#fff;border:0;">💾 保存打卡</button>
