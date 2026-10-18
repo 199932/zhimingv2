@@ -1572,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.32.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.33.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -6695,7 +6695,7 @@ function calcBazi(){
             <span class="tag ${isJi?'tag-good':'tag-warn'}" style="font-size:10px;padding:1px 6px;">${s.pillar}</span>
           </div>
           <div style="font-size:10px;color:var(--text-hint);margin-top:3px;">落在 ${s.zhi} 支</div>
-          <div style="font-size:11px;color:var(--text-hint);margin-top:4px;line-height:1.4;">${s.desc}</div>
+          <div style="font-size:11px;color:var(--text-hint);margin-top:4px;line-height:1.4;">${wrapTerms(s.desc)}</div>
         </div>`;
       });
       h += `</div>`;
@@ -18759,7 +18759,7 @@ function _ensureDayPickerRoot(){
 }
 function buildDayPickerModal(){
   var root = _ensureDayPickerRoot();
-  root.innerHTML = '<div class="day-picker-modal" id="dayPickerModal" onclick="if(event.target===this)closeDayPicker()"><div class="day-picker-card"><div class="day-picker-head"><h3>📅 找合适的日子</h3><button class="day-close-btn" onclick="window.closeDayPicker()">×</button></div><div style="font-size:11.5px;color:var(--text-hint,#999);margin:-6px 0 10px 0;">'+(function(){ try{ var p=(typeof window.getActiveProfile==='function')?window.getActiveProfile():null; return p?('以当前档案「'+(p.name||'未命名')+'」('+p.year+'-'+p.month+'-'+p.day+') 的八字分析'):'⚠️ 未选择档案，按今日日柱通用分析——建议先在顶部「档案」创建'; }catch(_){ return ''; } })()+'</div><div class="day-task-radio" id="dayTaskList"><label><input type="radio" name="dayTask" value="搬家" checked>🏠 搬家</label><label><input type="radio" name="dayTask" value="签约">📝 签约</label><label><input type="radio" name="dayTask" value="装修">🛠 装修</label><label><input type="radio" name="dayTask" value="出差">✈️ 出差</label><label><input type="radio" name="dayTask" value="探亲">👨‍👩‍👧 探亲</label><label><input type="radio" name="dayTask" value="约会">💞 约会</label><label><input type="radio" name="dayTask" value="嫁娶">💒 嫁娶</label><label><input type="radio" name="dayTask" value="出行">🚗 出行</label></div><div class="day-range-wrap"><input type="range" id="dayRangeSlider" min="7" max="90" step="1" value="30" style="width:100%;"><div class="day-range-val" id="dayRangeVal">30 天</div></div><button class="day-run-btn" onclick="window.dayPickerRun()">开始分析 🚀</button><div class="day-result" id="dayPickerResult"></div></div></div>';
+  root.innerHTML = '<div class="day-picker-modal" id="dayPickerModal" onclick="if(event.target===this)closeDayPicker()"><div class="day-picker-card"><div class="day-picker-head"><h3>📅 找合适的日子</h3><button class="day-close-btn" onclick="window.closeDayPicker()">×</button></div><div style="font-size:11.5px;color:var(--text-hint,#999);margin:-6px 0 10px 0;">'+(function(){ try{ var p=(typeof window.getActiveProfile==='function')?window.getActiveProfile():null; return p?('以当前档案「'+(p.name||'未命名')+'」('+p.year+'-'+p.month+'-'+p.day+') 的八字分析'):'⚠️ 未选择档案，按今日日柱通用分析——建议先在顶部「档案」创建'; }catch(_){ return ''; } })()+'</div><div class="day-task-radio" id="dayTaskList"><label><input type="radio" name="dayTask" value="搬家" checked>🏠 搬家</label><label><input type="radio" name="dayTask" value="签约">📝 签约</label><label><input type="radio" name="dayTask" value="装修">🛠 装修</label><label><input type="radio" name="dayTask" value="出差">✈️ 出差</label><label><input type="radio" name="dayTask" value="探亲">👨‍👩‍👧 探亲</label><label><input type="radio" name="dayTask" value="约会">💞 约会</label><label><input type="radio" name="dayTask" value="嫁娶">💒 嫁娶</label><label><input type="radio" name="dayTask" value="出行">🚗 出行</label><label><input type="radio" name="dayTask" value="__custom">✏️ 其他：<input type="text" id="dayCustomTask" placeholder="输入事项，如：领证、开业、剃胎发" maxlength="12" style="flex:1;min-width:0;border:none;border-bottom:1px dashed var(--card-border,#ccc);background:transparent;color:var(--text,#2b2b2b);font-size:13px;padding:2px 0;outline:none;"></label></div><div class="day-range-wrap"><input type="range" id="dayRangeSlider" min="7" max="90" step="1" value="30" style="width:100%;"><div class="day-range-val" id="dayRangeVal">30 天</div></div><button class="day-run-btn" onclick="window.dayPickerRun()">开始分析 🚀</button><div class="day-result" id="dayPickerResult"></div></div></div>';
   try{
     var tl = document.getElementById('dayTaskList');
     if(tl && !tl.__rowBind){
@@ -18776,6 +18776,13 @@ function buildDayPickerModal(){
     var sl = document.getElementById('dayRangeSlider');
     var vl = document.getElementById('dayRangeVal');
     if(sl && vl){ sl.addEventListener('input', function(){ vl.textContent = sl.value + ' 天'; }); }
+    var custEl = document.getElementById('dayCustomTask');
+    if(custEl){
+      custEl.addEventListener('focus', function(){ var c=this.closest('label'); if(c){ var r=c.querySelector('input[type=radio]'); if(r){ r.checked=true; } } });
+      custEl.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); window.dayPickerRun(); } });
+      var cl=custEl.closest('label');
+      if(cl){ cl.addEventListener('click', function(e){ if(e.target!==custEl){ setTimeout(function(){ try{custEl.focus();}catch(_){}} ,0); } }); }
+    }
   }catch(_){}
   return root;
 }
@@ -18874,6 +18881,11 @@ function dayPickerRun(taskName, nDays){
   if(!taskName){
     var sel = document.querySelector('input[name="dayTask"]:checked');
     taskName = sel ? sel.value : '搬家';
+    if(taskName==='__custom'){
+      var cEl=document.getElementById('dayCustomTask');
+      taskName=(cEl&&cEl.value||'').trim();
+      if(!taskName){ try{ (typeof showToast==='function')&&showToast('请先输入具体事项，或选一个预设','warn',2200); }catch(_){} if(cEl){ cEl.focus(); } return; }
+    }
   }
   if(!nDays){
     var s = document.getElementById('dayRangeSlider');
