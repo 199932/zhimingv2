@@ -1591,7 +1591,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.39.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.39.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2508,7 +2508,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.39.0-20261018';
+const ZHIMING_BUILD = 'v2.39.1-20261018';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -16530,9 +16530,12 @@ function gameSpinXlr(){
   wheel.style.transform='rotate('+target+'deg)';
   wheel.setAttribute('data-rot',target);
   setTimeout(function(){
-    if(r&&r.gongName){
-      var info={name:r.gongName,jx:r.jx||'',cls:r.cls||'',fang:r.fang||'',shou:r.shou||'',desc:r.desc||''};
-      res.innerHTML='<b style=\"color:var(--pri);font-size:16px;\">'+info.name+'</b> <span class=\"tag '+info.cls+'\">'+info.jx+'</span><br><span style=\"color:var(--text-sub);\">方位：'+info.fang+' · 守护：'+info.shou+'</span><br>'+info.desc;
+    if(r&&r.name){
+      res.innerHTML='<b style=\"color:var(--pri);font-size:16px;\">'+r.name+'</b> <span class=\"tag '+r.cls+'\">'+r.jx+'</span>'
+        +'<div style=\"font-size:12px;color:var(--text-sub);margin-top:4px;\">方位：'+r.fang+' · 守护：'+r.shou+' · 五行：'+r.wx+'</div>'
+        +'<div style=\"font-size:12px;color:var(--text-sub);margin-top:4px;\">关键词：'+r.kw.join(' / ')+'</div>'
+        +'<div style=\"font-size:12px;line-height:1.7;margin-top:6px;\">'+(q?'「'+q+'」——':'')+r.career+'</div>'
+        +'<div style=\"font-size:11px;color:var(--text-hint);margin-top:6px;\">想看感情/决策维度的完整详解 → 「🎴 小六壬」子区</div>';
     }else{
       res.innerHTML='<b style=\"color:var(--pri);\">'+names[idx]+'</b>——欲知详解，去「🎴 小六壬」子区起一课。';
     }
