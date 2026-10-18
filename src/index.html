@@ -1572,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.37.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.38.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2452,7 +2452,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.37.0-20261018';
+const ZHIMING_BUILD = 'v2.38.0-20261018';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -16408,6 +16408,7 @@ function _solarTermInfo(d){
 function renderDailyStickCard(r){
 /* ================= 双人合盘（简化口径：日柱干支关系+生肖关系） ================= */
 function _hpZhiIdx(year){ return ((year-4)%12+12)%12; }
+var WXS5=["木","火","土","金","水"];
 function computeHePan(pA, pB){
   if(!pA||!pB) return null;
   var dA=new Date(parseInt(pA.year,10), parseInt(pA.month,10)-1, parseInt(pA.day,10));
@@ -16433,7 +16434,24 @@ function computeHePan(pA, pB){
   else if(SX_HE[ziA]===ziB){ score+=15; items.push(["good","生肖六合",sxA+"与"+sxB+"六合，传统口径里这是相当亲近的组合。"]); }
   score=Math.max(30,Math.min(98,score));
   var grade=score>=85?"上等":score>=70?"良缘":score>=55?"中平":"需经营";
-  return {score:score,grade:grade,items:items,gzA:gzA.gz,gzB:gzB.gz,sxA:sxA,sxB:sxB};
+  var wx=null;
+  try{
+    var bA=baziCalc({year:parseInt(pA.year,10),month:parseInt(pA.month,10),day:parseInt(pA.day,10),hour:parseInt(pA.hour,10)||12,minute:0,cityLng:pA.cityLng});
+    var bB=baziCalc({year:parseInt(pB.year,10),month:parseInt(pB.month,10),day:parseInt(pB.day,10),hour:parseInt(pB.hour,10)||12,minute:0,cityLng:pB.cityLng});
+    if(bA&&bB&&bA.wxScore&&bB.wxScore){
+      var WXS=["木","火","土","金","水"];
+      var sumA=0,sumB=0; WXS.forEach(function(k){ sumA+=bA.wxScore[k]; sumB+=bB.wxScore[k]; });
+      if(sumA>0&&sumB>0){
+        var pA5={},pB5={}; WXS.forEach(function(k){ pA5[k]=Math.round(bA.wxScore[k]/sumA*100); pB5[k]=Math.round(bB.wxScore[k]/sumB*100); });
+        var weakA=WXS.slice().sort(function(x,y){return pA5[x]-pA5[y];})[0];
+        var weakB=WXS.slice().sort(function(x,y){return pB5[x]-pB5[y];})[0];
+        var strongA=WXS.slice().sort(function(x,y){return pB5[y]-pB5[x];})[0];
+        var strongB=WXS.slice().sort(function(x,y){return pA5[y]-pA5[x];})[0];
+        wx={a5:pA5,b5:pB5,weakA:weakA,weakB:weakB,strongA:strongA,strongB:strongB,compA:strongA===weakA,compB:strongB===weakB};
+      }
+    }
+  }catch(_){}
+  return {score:score,grade:grade,items:items,gzA:gzA.gz,gzB:gzB.gz,sxA:sxA,sxB:sxB,wx:wx};
 }
 function renderHePan(){
   var body=document.getElementById("hepanModalBody"); if(!body) return;
@@ -16461,7 +16479,20 @@ function runHePan(){
     +'<div style="font-size:13px;color:var(--text-sub);">'+(pA.emoji||'👤')+' '+(pA.name||'未命名')+' <b style="color:var(--pri);">×</b> '+(pB.emoji||'👤')+' '+(pB.name||'未命名')+'</div>'
     +'<div style="font-size:26px;font-weight:900;color:'+(r.score>=70?'#2E7D4F':r.score>=55?'#D2691E':'#C62828')+';margin:4px 0;">'+r.score+'<span style="font-size:12px;font-weight:600;color:var(--text-sub);"> /100 · '+r.grade+'</span></div>'
     +'<div style="font-size:11px;color:var(--text-hint);">日柱 '+r.gzA+' × '+r.gzB+' ｜ '+r.sxA+' × '+r.sxB+'</div></div>'
-    +r.items.map(function(it){ return '<div style="padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);margin-bottom:6px;"><div style="font-weight:700;font-size:13px;color:'+colMap[it[0]]+';">'+(it[0]==='good'?'✨ ':it[0]==='warn'?'⚡ ':'· ')+it[1]+'</div><div style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:3px;">'+wrapTerms(it[2])+'</div></div>'; }).join('');
+    +r.items.map(function(it){ return '<div style="padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);margin-bottom:6px;"><div style="font-weight:700;font-size:13px;color:'+colMap[it[0]]+';">'+(it[0]==='good'?'✨ ':it[0]==='warn'?'⚡ ':'· ')+it[1]+'</div><div style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:3px;">'+wrapTerms(it[2])+'</div></div>'; }).join('')
+    +(r.wx?(function(){
+      var WXCOL={"木":"#2E7D4F","火":"#C62828","土":"#8B6F47","金":"#7A7A8A","水":"#2C4A6E"};
+      var bars=function(p5){ return WXS5.map(function(k){ return '<div style="display:flex;align-items:center;gap:6px;margin:3px 0;"><span style="width:16px;font-size:11px;color:'+WXCOL[k]+';font-weight:700;">'+k+'</span><div style="flex:1;height:10px;background:var(--track-bg);border-radius:5px;overflow:hidden;"><div style="height:100%;width:'+p5[k]+'%;background:'+WXCOL[k]+';opacity:.85;"></div></div><span style="width:30px;font-size:10px;color:var(--text-hint);text-align:right;">'+p5[k]+'%</span></div>'; }).join(''); };
+      var compLine='';
+      if(r.wx.compA&&r.wx.compB){ compLine='<div style="padding:8px 10px;border-radius:10px;background:var(--pri-light);color:var(--pri-dark);font-size:12px;line-height:1.6;margin-bottom:6px;">🤝 <b>五行互补极佳</b>：TA 最旺的"'+r.wx.strongA+'"恰好补你最弱的短板，反之亦然——你们是天生的能量互补搭档。</div>'; }
+      else if(r.wx.compA){ compLine='<div style="padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);font-size:12px;color:var(--text-sub);line-height:1.6;margin-bottom:6px;">💡 TA 最旺的"'+r.wx.strongA+'"正好补你最弱的"'+r.wx.weakA+'"——相处中 TA 能稳住你容易失衡的那一面。</div>'; }
+      else if(r.wx.compB){ compLine='<div style="padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);font-size:12px;color:var(--text-sub);line-height:1.6;margin-bottom:6px;">💡 你最旺的"'+r.wx.strongB+'"正好补 TA 最弱的"'+r.wx.weakB+'"——这段关系里你更像定海神针。</div>'; }
+      return '<div style="margin:10px 0 6px 0;"><div class="desc-title" style="margin-bottom:8px;">⚖ 五行互补</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+        +'<div style="padding:8px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);"><div style="font-size:11px;color:var(--text-hint);margin-bottom:5px;">'+(pA.emoji||'👤')+' '+(pA.name||'TA')+' 的八字</div>'+bars(r.wx.a5)+'</div>'
+        +'<div style="padding:8px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);"><div style="font-size:11px;color:var(--text-hint);margin-bottom:5px;">'+(pB.emoji||'👤')+' '+(pB.name||'另一位')+' 的八字</div>'+bars(r.wx.b5)+'</div>'
+        +'</div>'+compLine+'</div>';
+    })():'');
   document.getElementById('hpResult').innerHTML=html;
 }
 function openHePan(){ renderHePan(); window.__openModalById('hepanModal'); }
