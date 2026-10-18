@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.38.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.39.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -121,6 +121,7 @@
     <div class="subtab" data-sec="cn6">✎ 测字</div>
     <div class="subtab" data-sec="cn7">🌸 梅花易数</div>
     <div class="subtab" data-sec="cn7d">📐 大六壬</div>
+    <div class="subtab" data-sec="cnGame">🎮 趣味互动</div>
     <div class="subtab" data-sec="cn8">🔮 六爻纳甲</div>
   </div>
   <!-- 八字 -->
@@ -275,6 +276,50 @@
     </form></div>
     <div class="result" id="qm-result"></div>
     <div class="foot-disclaimer">※ 奇门排盘结果仅供娱乐参考，流派众多，版本差异属正常现象</div>
+  </div>
+  <!-- 趣味互动 -->
+  <div class="section" id="sec-cnGame">
+    <div class="card"><div class="card-title">🪙 摇钱成卦</div>
+      <p class="hint">静心默念所问之事，连摇六次铜钱成卦。摇完自动出卦象与解读（复用六爻金钱卦引擎）。</p>
+      <div class="game-yao-track" id="coinTrack">
+        <span class="game-yao-chip">初爻</span><span class="game-yao-chip">二爻</span><span class="game-yao-chip">三爻</span><span class="game-yao-chip">四爻</span><span class="game-yao-chip">五爻</span><span class="game-yao-chip">上爻</span>
+      </div>
+      <div class="game-coin-row" id="coinRow">
+        <div class="game-coin"><span class="coin-hole">乾</span></div>
+        <div class="game-coin"><span class="coin-hole">乾</span></div>
+        <div class="game-coin"><span class="coin-hole">乾</span></div>
+      </div>
+      <div class="hint" id="coinLog" style="text-align:center;min-height:18px;">心诚则灵 · 点击下方开始</div>
+      <button class="btn-primary" id="coinBtn" style="width:100%;" onclick="window.gameTossCoin()">🪙 摇 第 1 爻</button>
+    </div>
+    <div class="card"><div class="card-title">🎡 小六壬转盘</div>
+      <p class="hint">心中默念所问之事，转一下六宫盘——指针停在哪宫，便是答案。</p>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="game-xlr-wheel" id="xlrWheel">
+          <div class="game-xlr-pointer"></div>
+          <div class="game-xlr-seg" style="transform:rotate(0deg) translateY(-96px);">大安</div>
+          <div class="game-xlr-seg" style="transform:rotate(60deg) translateY(-96px);">留连</div>
+          <div class="game-xlr-seg" style="transform:rotate(120deg) translateY(-96px);">速喜</div>
+          <div class="game-xlr-seg" style="transform:rotate(180deg) translateY(-96px);">赤口</div>
+          <div class="game-xlr-seg" style="transform:rotate(240deg) translateY(-96px);">小吉</div>
+          <div class="game-xlr-seg" style="transform:rotate(300deg) translateY(-96px);">空亡</div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <input type="text" id="spinQ" maxlength="30" placeholder="问什么？(可选)" style="width:100%;margin-bottom:8px;">
+          <button class="btn-primary" style="width:100%;" id="spinBtn" onclick="window.gameSpinXlr()">🎡 转</button>
+          <div id="spinResult" style="margin-top:10px;font-size:13px;line-height:1.7;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">🃏 卦卡快抽</div>
+      <p class="hint">什么都别想，凭直觉抽一张卦——今日指引，一卦即答。</p>
+      <div class="game-gua-card" id="guaCard" onclick="window.gameFlipGua()">
+        <div class="back"><div class="gb-sym">☯</div><div style="font-size:12px;letter-spacing:2px;">问一事 · 抽一卦</div><div style="font-size:10px;opacity:.7;">点击翻开</div></div>
+        <div class="front" id="guaCardFront"></div>
+      </div>
+      <button class="btn-secondary" style="width:100%;" id="guaAgainBtn" style="display:none;" onclick="window.gameFlipGua(true)">🔄 再抽一张</button>
+    </div>
+    <div class="foot-disclaimer">※ 趣味互动均为简化游戏向演绎，仅供娱乐参考，不构成人生决策建议</div>
   </div>
   <!-- 小六壬 -->
   <div class="section" id="sec-cn5">

@@ -303,6 +303,25 @@ body.theme-wu .card{background:#242030;border:1px solid rgba(107,92,165,0.25);bo
 body.theme-dark .yi-box .yj-tag{background:var(--pri-light);filter:none;color:var(--pri-dark);}
 body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 /* ============================================================ */
+/* ===== 趣味互动游戏区 ===== */
+.game-coin{width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7d774,#d4a017 60%,#a97c0f);border:2px solid #8a6410;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#6b4a08;box-shadow:0 3px 8px rgba(0,0,0,.25),inset 0 0 0 4px rgba(255,255,255,.25);position:relative;transition:transform .55s ease;}
+.game-coin .coin-hole{width:18px;height:18px;background:var(--card,#faf6ec);border:2px solid #8a6410;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;}
+.game-coin.flipping{transform:rotateY(720deg) scale(1.15);}
+.game-coin-row{display:flex;gap:14px;justify-content:center;margin:12px 0;min-height:60px;}
+.game-yao-track{display:flex;gap:6px;justify-content:center;margin:10px 0;flex-wrap:wrap;}
+.game-yao-chip{min-width:34px;padding:4px 6px;border-radius:8px;border:1px dashed var(--card-border);font-size:11px;color:var(--text-sub);text-align:center;background:var(--bg);}
+.game-yao-chip.on{border-style:solid;border-color:var(--pri);color:var(--pri);font-weight:700;background:var(--pri-light);}
+.game-xlr-wheel{position:relative;width:240px;height:240px;margin:10px auto;transition:transform 2.2s cubic-bezier(.15,.85,.25,1);}
+.game-xlr-seg{position:absolute;left:50%;top:50%;width:96px;margin-left:-48px;text-align:center;font-size:15px;font-weight:800;color:var(--text-sub);}
+.game-xlr-pointer{position:absolute;left:50%;top:-10px;margin-left:-10px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:16px solid var(--pri);filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));z-index:2;}
+.game-gua-card{width:180px;height:250px;margin:12px auto;border-radius:14px;position:relative;cursor:pointer;transition:transform .5s ease,opacity .4s;display:flex;align-items:center;justify-content:center;}
+.game-gua-card .back{position:absolute;inset:0;border-radius:14px;background:linear-gradient(145deg,#2c2440,#4a3f73);color:#cfc7ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 18px rgba(0,0,0,.3);}
+.game-gua-card .back .gb-sym{font-size:44px;}
+.game-gua-card .front{position:absolute;inset:0;border-radius:14px;background:var(--card);border:1px solid var(--card-border);color:var(--text);padding:14px 12px;overflow-y:auto;opacity:0;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.18);}
+.game-gua-card.open{transform:rotateY(180deg) scale(1.04);}
+.game-gua-card.open .front{opacity:1;transform:rotateY(180deg);}
+.game-gua-card.open .back{opacity:0;}
+
 /* Section CSS-04 奇门/小六壬/测字/梅花                         */
 /* ============================================================ */
 .fangwei-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
@@ -1572,7 +1591,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.38.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.39.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1640,6 +1659,7 @@ body{ padding-bottom:160px; }
     <div class="subtab" data-sec="cn6">✎ 测字</div>
     <div class="subtab" data-sec="cn7">🌸 梅花易数</div>
     <div class="subtab" data-sec="cn7d">📐 大六壬</div>
+    <div class="subtab" data-sec="cnGame">🎮 趣味互动</div>
     <div class="subtab" data-sec="cn8">🔮 六爻纳甲</div>
   </div>
   <!-- 八字 -->
@@ -1794,6 +1814,50 @@ body{ padding-bottom:160px; }
     </form></div>
     <div class="result" id="qm-result"></div>
     <div class="foot-disclaimer">※ 奇门排盘结果仅供娱乐参考，流派众多，版本差异属正常现象</div>
+  </div>
+  <!-- 趣味互动 -->
+  <div class="section" id="sec-cnGame">
+    <div class="card"><div class="card-title">🪙 摇钱成卦</div>
+      <p class="hint">静心默念所问之事，连摇六次铜钱成卦。摇完自动出卦象与解读（复用六爻金钱卦引擎）。</p>
+      <div class="game-yao-track" id="coinTrack">
+        <span class="game-yao-chip">初爻</span><span class="game-yao-chip">二爻</span><span class="game-yao-chip">三爻</span><span class="game-yao-chip">四爻</span><span class="game-yao-chip">五爻</span><span class="game-yao-chip">上爻</span>
+      </div>
+      <div class="game-coin-row" id="coinRow">
+        <div class="game-coin"><span class="coin-hole">乾</span></div>
+        <div class="game-coin"><span class="coin-hole">乾</span></div>
+        <div class="game-coin"><span class="coin-hole">乾</span></div>
+      </div>
+      <div class="hint" id="coinLog" style="text-align:center;min-height:18px;">心诚则灵 · 点击下方开始</div>
+      <button class="btn-primary" id="coinBtn" style="width:100%;" onclick="window.gameTossCoin()">🪙 摇 第 1 爻</button>
+    </div>
+    <div class="card"><div class="card-title">🎡 小六壬转盘</div>
+      <p class="hint">心中默念所问之事，转一下六宫盘——指针停在哪宫，便是答案。</p>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="game-xlr-wheel" id="xlrWheel">
+          <div class="game-xlr-pointer"></div>
+          <div class="game-xlr-seg" style="transform:rotate(0deg) translateY(-96px);">大安</div>
+          <div class="game-xlr-seg" style="transform:rotate(60deg) translateY(-96px);">留连</div>
+          <div class="game-xlr-seg" style="transform:rotate(120deg) translateY(-96px);">速喜</div>
+          <div class="game-xlr-seg" style="transform:rotate(180deg) translateY(-96px);">赤口</div>
+          <div class="game-xlr-seg" style="transform:rotate(240deg) translateY(-96px);">小吉</div>
+          <div class="game-xlr-seg" style="transform:rotate(300deg) translateY(-96px);">空亡</div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <input type="text" id="spinQ" maxlength="30" placeholder="问什么？(可选)" style="width:100%;margin-bottom:8px;">
+          <button class="btn-primary" style="width:100%;" id="spinBtn" onclick="window.gameSpinXlr()">🎡 转</button>
+          <div id="spinResult" style="margin-top:10px;font-size:13px;line-height:1.7;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">🃏 卦卡快抽</div>
+      <p class="hint">什么都别想，凭直觉抽一张卦——今日指引，一卦即答。</p>
+      <div class="game-gua-card" id="guaCard" onclick="window.gameFlipGua()">
+        <div class="back"><div class="gb-sym">☯</div><div style="font-size:12px;letter-spacing:2px;">问一事 · 抽一卦</div><div style="font-size:10px;opacity:.7;">点击翻开</div></div>
+        <div class="front" id="guaCardFront"></div>
+      </div>
+      <button class="btn-secondary" style="width:100%;" id="guaAgainBtn" style="display:none;" onclick="window.gameFlipGua(true)">🔄 再抽一张</button>
+    </div>
+    <div class="foot-disclaimer">※ 趣味互动均为简化游戏向演绎，仅供娱乐参考，不构成人生决策建议</div>
   </div>
   <!-- 小六壬 -->
   <div class="section" id="sec-cn5">
@@ -2444,7 +2508,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.38.1-20261018';
+const ZHIMING_BUILD = 'v2.39.0-20261018';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -16398,6 +16462,103 @@ function _solarTermInfo(d){
   return {name:cur.n, phase:cur.p, nextName:next.n, daysToNext:daysTo};
 }
 function renderDailyStickCard(r){
+/* ================= 趣味互动游戏 ================= */
+var _gameYaoIdx=0, _gameBusy=false;
+var _GAME_YAO_NAMES=['初爻','二爻','三爻','四爻','五爻','上爻'];
+function gameTossCoin(){
+  if(_gameBusy) return;
+  var btn=document.getElementById('coinBtn');
+  if(_gameYaoIdx===0){
+    _zyYaos=[]; 
+    var chips=document.querySelectorAll('#coinTrack .game-yao-chip');
+    chips.forEach(function(c){ c.classList.remove('on'); });
+    var lg=document.getElementById('coinLog'); if(lg) lg.textContent='静心 · 默念所问之事…';
+  }
+  _gameBusy=true;
+  var coins=document.querySelectorAll('#coinRow .game-coin');
+  coins.forEach(function(c){ c.classList.add('flipping'); });
+  setTimeout(function(){
+    var vals=[];
+    coins.forEach(function(c){
+      var back=Math.random()<0.5;
+      var hole=c.querySelector('.coin-hole');
+      hole.textContent=back?'背':'字';
+      c.classList.remove('flipping');
+      vals.push(back?2:3);
+    });
+    var sum=vals.reduce(function(a,v){return a+v;},0);
+    _zyYaos.push(sum);
+    var chips=document.querySelectorAll('#coinTrack .game-yao-chip');
+    if(chips[_gameYaoIdx]) chips[_gameYaoIdx].classList.add('on');
+    var lg=document.getElementById('coinLog');
+    var mean={6:'老阴 ✱',7:'少阳 ⚊',8:'少阴 ⚋',9:'老阳 ✱'}[sum];
+    if(lg) lg.textContent='第'+_GAME_YAO_NAMES[_gameYaoIdx]+'：'+sum+'（'+mean+'）';
+    _gameYaoIdx++;
+    if(_gameYaoIdx<6){
+      if(btn) btn.textContent='🪙 摇 第'+_GAME_YAO_NAMES[_gameYaoIdx].replace('爻','')+'爻';
+      _gameBusy=false;
+    }else{
+      if(btn) btn.textContent='🔮 卦已成 · 正在解卦…';
+      setTimeout(function(){
+        _gameYaoIdx=0;
+        try{
+          window.switchTab&&window.switchTab('cn');
+          window.switchSec&&window.switchSec('cn','cn8');
+          calcZhouyi(false);
+          var zy=document.getElementById('zy-result');
+          if(zy) zy.scrollIntoView({behavior:'smooth',block:'start'});
+        }catch(_){}
+        if(btn) btn.textContent='🪙 再摇一卦';
+        _gameBusy=false;
+      },800);
+    }
+  },600);
+}
+var _spinBusy=false;
+function gameSpinXlr(){
+  if(_spinBusy) return;
+  _spinBusy=true;
+  var now=new Date();
+  var q=(document.getElementById('spinQ')||{value:''}).value.trim();
+  var res=document.getElementById('spinResult');
+  var r=calcXiaoliuren({month:now.getMonth()+1,day:now.getDate(),hour:_getHourIdx(now.getHours()),question:q});
+  var idx=(r&&r.finalIdx!=null)?r.finalIdx:Math.floor(Math.random()*6);
+  var names=['大安','留连','速喜','赤口','小吉','空亡'];
+  var wheel=document.getElementById('xlrWheel');
+  var cur=parseInt(wheel.getAttribute('data-rot')||'0',10);
+  var target=cur+1440+(360-idx*60)-(((cur%360)+360)%360);
+  wheel.style.transform='rotate('+target+'deg)';
+  wheel.setAttribute('data-rot',target);
+  setTimeout(function(){
+    if(r&&r.gongName){
+      var info={name:r.gongName,jx:r.jx||'',cls:r.cls||'',fang:r.fang||'',shou:r.shou||'',desc:r.desc||''};
+      res.innerHTML='<b style=\"color:var(--pri);font-size:16px;\">'+info.name+'</b> <span class=\"tag '+info.cls+'\">'+info.jx+'</span><br><span style=\"color:var(--text-sub);\">方位：'+info.fang+' · 守护：'+info.shou+'</span><br>'+info.desc;
+    }else{
+      res.innerHTML='<b style=\"color:var(--pri);\">'+names[idx]+'</b>——欲知详解，去「🎴 小六壬」子区起一课。';
+    }
+    _spinBusy=false;
+  },2300);
+}
+var _guaBusy=false;
+function gameFlipGua(again){
+  if(_guaBusy) return; _guaBusy=true;
+  var card=document.getElementById('guaCard');
+  var front=document.getElementById('guaCardFront');
+  card.classList.remove('open');
+  setTimeout(function(){
+    var idx=Math.floor(Math.random()*64);
+    var h=(TEXT.zhouyi.hex[idx]||[]);
+    var name=h[0]||('第'+(idx+1)+'卦'), tuan=h[1]||'', brief=h[2]||'';
+    front.innerHTML='<div style=\"text-align:center;font-weight:900;color:var(--pri);font-size:17px;margin-bottom:8px;\">'+name+'</div>'
+      +'<div style=\"font-size:12px;line-height:1.7;color:var(--text-sub);\"><b>卦辞：</b>'+tuan+'</div>'
+      +'<div style=\"font-size:12px;line-height:1.7;color:var(--text-sub);margin-top:6px;\"><b>指引：</b>'+wrapTerms(brief)+'</div>';
+    card.classList.add('open');
+    var ab=document.getElementById('guaAgainBtn'); if(ab) ab.style.display='block';
+    _guaBusy=false;
+  }, again?300:80);
+}
+try{ window.gameTossCoin=gameTossCoin; window.gameSpinXlr=gameSpinXlr; window.gameFlipGua=gameFlipGua; }catch(_){}
+
 /* ================= 双人合盘（简化口径：日柱干支关系+生肖关系） ================= */
 function _hpZhiIdx(year){ return ((year-4)%12+12)%12; }
 var WXS5=["木","火","土","金","水"];

@@ -250,6 +250,23 @@ body.theme-wu .card{background:#242030;border:1px solid rgba(107,92,165,0.25);bo
 .ji-box .yj-tag{background:#FCEAEA;color:var(--bad);}
 body.theme-dark .yi-box .yj-tag{background:var(--pri-light);filter:none;color:var(--pri-dark);}
 body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
+.game-coin{width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f7d774,#d4a017 60%,#a97c0f);border:2px solid #8a6410;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#6b4a08;box-shadow:0 3px 8px rgba(0,0,0,.25),inset 0 0 0 4px rgba(255,255,255,.25);position:relative;transition:transform .55s ease;}
+.game-coin .coin-hole{width:18px;height:18px;background:var(--card,#faf6ec);border:2px solid #8a6410;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;}
+.game-coin.flipping{transform:rotateY(720deg) scale(1.15);}
+.game-coin-row{display:flex;gap:14px;justify-content:center;margin:12px 0;min-height:60px;}
+.game-yao-track{display:flex;gap:6px;justify-content:center;margin:10px 0;flex-wrap:wrap;}
+.game-yao-chip{min-width:34px;padding:4px 6px;border-radius:8px;border:1px dashed var(--card-border);font-size:11px;color:var(--text-sub);text-align:center;background:var(--bg);}
+.game-yao-chip.on{border-style:solid;border-color:var(--pri);color:var(--pri);font-weight:700;background:var(--pri-light);}
+.game-xlr-wheel{position:relative;width:240px;height:240px;margin:10px auto;transition:transform 2.2s cubic-bezier(.15,.85,.25,1);}
+.game-xlr-seg{position:absolute;left:50%;top:50%;width:96px;margin-left:-48px;text-align:center;font-size:15px;font-weight:800;color:var(--text-sub);}
+.game-xlr-pointer{position:absolute;left:50%;top:-10px;margin-left:-10px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:16px solid var(--pri);filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));z-index:2;}
+.game-gua-card{width:180px;height:250px;margin:12px auto;border-radius:14px;position:relative;cursor:pointer;transition:transform .5s ease,opacity .4s;display:flex;align-items:center;justify-content:center;}
+.game-gua-card .back{position:absolute;inset:0;border-radius:14px;background:linear-gradient(145deg,#2c2440,#4a3f73);color:#cfc7ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 18px rgba(0,0,0,.3);}
+.game-gua-card .back .gb-sym{font-size:44px;}
+.game-gua-card .front{position:absolute;inset:0;border-radius:14px;background:var(--card);border:1px solid var(--card-border);color:var(--text);padding:14px 12px;overflow-y:auto;opacity:0;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.18);}
+.game-gua-card.open{transform:rotateY(180deg) scale(1.04);}
+.game-gua-card.open .front{opacity:1;transform:rotateY(180deg);}
+.game-gua-card.open .back{opacity:0;}
 .fangwei-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .fangwei-cell{background:var(--pri-light);border-radius:8px;padding:8px;text-align:center;}
 .fangwei-cell .fw-k{font-size:11px;color:var(--text-sub);}
