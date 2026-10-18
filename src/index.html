@@ -1572,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.35.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.36.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2443,7 +2443,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.35.0-20261018';
+const ZHIMING_BUILD = 'v2.36.0-20261018';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -8406,6 +8406,7 @@ function renderToday(){
       </div>
       <div class="fdc-link" onclick="window.switchTab('cal');window.switchSub('cal','view');setTimeout(function(){try{openDayPicker();}catch(_){}},80);">自定义筛选 →</div>
     </div>
+    ${(typeof window.renderDailyStickCard==='function'?window.renderDailyStickCard(r):'')}
     <div id="fortuneBigBlock">
       ${(typeof window.renderWidget_fortuneGrid==='function'?window.renderWidget_fortuneGrid(r):'<div style="color:var(--text-hint);padding:20px;text-align:center;font-size:12px;">运势组件加载中…</div>')}
     </div>
@@ -14991,6 +14992,16 @@ function renderProfilesUI(){
     <div class="card-title" style="font-size:14px;color:var(--pri-dark);font-weight:700;margin-bottom:8px;">📋 档案列表 (${window._profiles.length})</div>
     ${listHtml}
     <div id="profileFormArea" style="margin-top:14px;"></div>
+    <div class="card" style="margin-top:14px;border-style:dashed;">
+      <div class="card-title" style="font-size:14px;">💾 数据备份（纯本地，随时带走）</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn-secondary" style="flex:1;min-width:130px;" onclick="window.exportUserData()">📤 导出全部数据</button>
+        <label class="btn-secondary" style="flex:1;min-width:130px;text-align:center;cursor:pointer;display:inline-block;">📥 导入备份
+          <input type="file" accept=".json,application/json" style="display:none;" onchange="window.importUserData(this)">
+        </label>
+      </div>
+      <div style="font-size:11px;color:var(--text-hint);margin-top:8px;line-height:1.6;">包含：档案、占卜历史、日记、成长签到与归档、回测记录。导出为 JSON 存本机；导入会覆盖现有同名数据（会先跟你确认）。数据从不离开你的设备。</div>
+    </div>
   `;
 }
 function quickAddProfile(tpl){
@@ -16314,6 +16325,184 @@ function buildFortuneData(date){
   });
   return out;
 }
+/* ================= 每日一签（确定性：同日同档案同签） ================= */
+const FORTUNE_STICKS = [
+  {g:"上上签",lvl:3,poem:"春山可望，舟行顺风",line:"该出手时就出手，犹豫的成本比试错高。",d:"推进搁置已久的计划",j:"三心二意"},
+  {g:"上上签",lvl:3,poem:"灯下有光，路遇故人",line:"你等的答案会自己走向你。",d:"主动联络旧友",j:"闭门造车"},
+  {g:"上上签",lvl:3,poem:"潭深水静，一钓即中",line:"今天的关键词是「恰好」——别贪多，盯准一个目标。",d:"聚焦要事",j:"贪多求全"},
+  {g:"上上签",lvl:3,poem:"风起萍末，云开月明",line:"之前的铺垫开始显效了，继续浇灌。",d:"复盘沉淀",j:"推翻重来"},
+  {g:"上上签",lvl:3,poem:"竹节拔高，声惊四座",line:"你的努力会被看见，别急着自证。",d:"展示成果",j:"过度谦虚"},
+  {g:"上上签",lvl:3,poem:"潮平两岸阔",line:"格局打开，小事不配占据你的情绪。",d:"谈钱谈合作",j:"纠缠细节"},
+  {g:"上上签",lvl:3,poem:"桃李不言，下自成蹊",line:"真诚是今天最好的人脉。",d:"以诚待人",j:"算计得失"},
+  {g:"上上签",lvl:3,poem:"星垂平野，月涌江流",line:"视野决定状态，站高一点看问题。",d:"规划长远",j:"斤斤计较"},
+  {g:"中吉",lvl:2,poem:"云过山头，风过竹林",line:"事在流转，不必今天给答案。",d:"静观其变",j:"强行推进"},
+  {g:"中吉",lvl:2,poem:"一盏茶凉了可续",line:"错过的时机还会回来，别自责。",d:"调整节奏",j:"熬夜硬撑"},
+  {g:"中吉",lvl:2,poem:"门半掩，客自来",line:"机会需要你多说一句话，别等。",d:"主动开口",j:"被动等待"},
+  {g:"中吉",lvl:2,poem:"老树发新芽",line:"旧方法能解决老问题，别迷信新工具。",d:"回归基本面",j:"舍近求远"},
+  {g:"中吉",lvl:2,poem:"水缓石出",line:"慢下来才能看清，急是今天最贵的成本。",d:"核查细节",j:"拍板大事"},
+  {g:"中吉",lvl:2,poem:"雨后路滑，稳字当先",line:"承诺出口前多想一夜。",d:"缓签缓诺",j:"当场表态"},
+  {g:"中吉",lvl:2,poem:"半山风景，可歇可上",line:"到哪都行，但别原地打转。",d:"小步试水",j:"骑墙观望"},
+  {g:"中吉",lvl:2,poem:"灯不拨不亮",line:"有误会今天说开，拖到明天会长刺。",d:"坦诚沟通",j:"冷战回避"},
+  {g:"中吉",lvl:2,poem:"船到桥头自然直",line:"规划不必太满，留三分给变化。",d:"弹性安排",j:"死守计划"},
+  {g:"平",lvl:1,poem:"井水虽深，一桶足用",line:"知足今天最值钱，别跟人比。",d:"专注己事",j:"攀比内耗"},
+  {g:"平",lvl:1,poem:"月有阴晴圆缺",line:"状态起伏是常量，别怀疑自己。",d:"记录情绪",j:"自我否定"},
+  {g:"平",lvl:1,poem:"春种一粒粟",line:"今天播的种子看不见，但记得浇水。",d:"学习积累",j:"立竿见影"},
+  {g:"平",lvl:1,poem:"岔路口，慢即是快",line:"选哪个都行，别选「都要」。",d:"做减法",j:"两头下注"},
+  {g:"平",lvl:1,poem:"蝉噪林愈静",line:"外界喧嚣与你无关，守好内心秩序。",d:"屏蔽噪音",j:"卷入是非"},
+  {g:"慎行",lvl:0,poem:"雾夜行舟，宜泊不宜行",line:"今天不适合开新局，守成即赢。",d:"守势休整",j:"签约开张"},
+  {g:"慎行",lvl:0,poem:"高处风急",line:"锋芒太露招风，收三分。",d:"藏拙守静",j:"正面硬刚"},
+  {g:"慎行",lvl:0,poem:"水浑莫捞鱼",line:"信息不足时决策等于赌博，等数据齐。",d:"收集情报",j:"听风是雨"},
+  {g:"慎行",lvl:0,poem:"借出的伞，湿了自己",line:"今天别当担保人，也别借钱出去。",d:"婉言拒绝",j:"碍于情面"},
+  {g:"慎行",lvl:0,poem:"退一步海阔天空",line:"硬碰硬不划算，绕道也是路。",d:"以退为进",j:"死磕到底"},
+  {g:"慎行",lvl:0,poem:"满招损，谦受益",line:"日子顺的时候最容易栽跟头，警惕膨胀。",d:"谦虚谨慎",j:"得意忘形"},
+  {g:"慎行",lvl:0,poem:"屋漏偏逢连夜雨",line:"杂物事缠身，一件件来别慌。",d:"列清单逐个清",j:"多头开火"},
+  {g:"慎行",lvl:0,poem:"桥面结霜，慢行",line:"熟人也得立字据，感情不背书。",d:"白纸黑字",j:"口头信任"}
+];
+function _stickHash(d, seed){
+  const y=d.getFullYear(), m=d.getMonth()+1, dd=d.getDate();
+  let h = (y*10000+m*100+dd) ^ (seed*2654435761 >>> 0);
+  h = ((h*1103515245+12345) ^ (h>>>16)) >>> 0;
+  return h % FORTUNE_STICKS.length;
+}
+/* 节气（近似日期，±1天，标注"约"） */
+const SOLAR_TERMS = [
+  {n:"小寒",m:1,d:5,p:"雁北乡，鹊始巢"},{n:"大寒",m:1,d:20,p:"冰坚而春近"},
+  {n:"立春",m:2,d:4,p:"东风解冻，蛰虫始振"},{n:"雨水",m:2,d:19,p:"獭祭鱼，草木萌动"},
+  {n:"惊蛰",m:3,d:5,p:"春雷乍动，万物复苏"},{n:"春分",m:3,d:20,p:"昼夜均而寒暑平"},
+  {n:"清明",m:4,d:4,p:"气清景明，万物皆显"},{n:"谷雨",m:4,d:20,p:"雨生百谷"},
+  {n:"立夏",m:5,d:5,p:"万物至此皆长大"},{n:"小满",m:5,d:21,p:"麦粒渐满未全熟"},
+  {n:"芒种",m:6,d:5,p:"有芒之谷可种"},{n:"夏至",m:6,d:21,p:"日长至，阳气盛极"},
+  {n:"小暑",m:7,d:7,p:"温风至，蟋蟀居壁"},{n:"大暑",m:7,d:22,p:"湿热交蒸，一年最盛"},
+  {n:"立秋",m:8,d:7,p:"凉风至，白露降"},{n:"处暑",m:8,d:23,p:"暑气至此而止"},
+  {n:"白露",m:9,d:7,p:"露凝而白，鸿雁来"},{n:"秋分",m:9,d:23,p:"昼夜再度均分"},
+  {n:"寒露",m:10,d:8,p:"露气寒冷，将凝结"},{n:"霜降",m:10,d:23,p:"初霜出现，草木黄落"},
+  {n:"立冬",m:11,d:7,p:"万物收藏，规避寒冷"},{n:"小雪",m:11,d:22,p:"天地初寒，雨凝为雪"},
+  {n:"大雪",m:12,d:7,p:"至此而雪盛"},{n:"冬至",m:12,d:21,p:"日短至，一阳来复"}
+];
+function _solarTermInfo(d){
+  const y=d.getFullYear(), m=d.getMonth()+1, dd=d.getDate();
+  const todayN = m*100+dd;
+  let cur=null, curIdx=-1;
+  for(let i=0;i<SOLAR_TERMS.length;i++){
+    const t=SOLAR_TERMS[i], tn=t.m*100+t.d;
+    if(tn<=todayN){ cur=t; curIdx=i; }
+  }
+  if(!cur){ cur=SOLAR_TERMS[11]; curIdx=11; } /* 1月1-4日属冬至 */
+  const next=SOLAR_TERMS[(curIdx+1)%24];
+  const dn=new Date(y, next.m-1, next.d);
+  const base=new Date(y, m-1, dd);
+  let daysTo=Math.round((dn-base)/86400000);
+  if(daysTo<0){ daysTo=Math.round((new Date(y+1, next.m-1, next.d)-base)/86400000); }
+  return {name:cur.n, phase:cur.p, nextName:next.n, daysToNext:daysTo};
+}
+function renderDailyStickCard(r){
+  try{
+    const today = r.today || new Date();
+    const seed = (typeof _getProfileSeed==='function') ? _getProfileSeed() : 0;
+    const stick = FORTUNE_STICKS[_stickHash(today, seed)];
+    const st = _solarTermInfo(today);
+    const hasP = !!((typeof window.getActiveProfile==='function') && window.getActiveProfile());
+    const grad = stick.lvl===3 ? 'linear-gradient(160deg,#fdf3e0,#f7e6c4)' : stick.lvl===2 ? 'linear-gradient(160deg,#f4f1ea,#e8e4d8)' : stick.lvl===1 ? 'linear-gradient(160deg,#eef0f0,#e0e3e4)' : 'linear-gradient(160deg,#ece7ef,#ddd6e2)';
+    const gc = stick.lvl===3 ? '#B03A2E' : stick.lvl===2 ? '#8B6914' : stick.lvl===1 ? '#4A6B6B' : '#6B5CA5';
+    const gBg = stick.lvl===3 ? '#B03A2E' : stick.lvl===2 ? '#8B6914' : stick.lvl===1 ? '#4A6B6B' : '#6B5CA5';
+    return `
+    <div class="card" id="dailyStickCard" style="position:relative;overflow:hidden;background:${grad};border-color:rgba(139,90,43,.25);">
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${gBg};"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+        <div class="card-title" style="margin-bottom:0;color:#5a4632;">🏮 今日一签</div>
+        <span style="font-size:11px;color:#8a7a66;">${st.name} · ${st.phase} ｜ ${st.nextName}还有${st.daysToNext}天（约）</span>
+      </div>
+      <div id="stickBody" onclick="window.openDailyStick()" style="cursor:pointer;text-align:center;padding:14px 8px 10px;">
+        <div id="stickClosed">
+          <div style="font-size:34px;line-height:1;filter:drop-shadow(0 2px 3px rgba(90,70,50,.3));">🥢</div>
+          <div style="font-size:13px;color:#5a4632;font-weight:700;margin-top:8px;">摇签筒 · 点我揭晓</div>
+          <div style="font-size:10.5px;color:#9a8a76;margin-top:3px;">${hasP?'以你的生辰起卦':'未建档，按今日日柱起卦'} · 一日一签，明日再来</div>
+        </div>
+        <div id="stickOpen" style="display:none;">
+          <div style="display:inline-block;background:${gBg};color:#fff;font-size:12px;font-weight:800;padding:3px 14px;border-radius:99px;letter-spacing:2px;">${stick.g}</div>
+          <div style="font-family:serif;font-size:19px;font-weight:900;color:#3d3020;letter-spacing:3px;margin-top:10px;">${stick.poem}</div>
+          <div style="font-size:13px;color:#5a4632;margin-top:8px;line-height:1.6;">${stick.line}</div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
+            <span style="font-size:11.5px;background:rgba(91,140,62,.14);color:#4d7134;padding:3px 10px;border-radius:8px;">宜 · ${stick.d}</span>
+            <span style="font-size:11.5px;background:rgba(176,58,46,.12);color:#a04034;padding:3px 10px;border-radius:8px;">忌 · ${stick.j}</span>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:10px;color:#9a8a76;">仅供娱乐参考 · 明日自动换签</div>
+    </div>`;
+  }catch(e){ return ''; }
+}
+window.renderDailyStickCard = renderDailyStickCard;
+window.openDailyStick = function(){
+  try{
+    var c=document.getElementById('stickClosed'), o=document.getElementById('stickOpen');
+    if(!c||!o) return;
+    c.style.display='none';
+    o.style.display='block';
+    o.style.animation='stickReveal .45s ease';
+    if(typeof showToast==='function') showToast('签文已解，明日在来 🙏','success',1600);
+  }catch(_){}
+};
+if(!document.getElementById('stickRevealStyle')){
+  var _ss=document.createElement('style'); _ss.id='stickRevealStyle';
+  _ss.textContent='@keyframes stickReveal{0%{opacity:0;transform:translateY(10px) scale(.96);}100%{opacity:1;transform:none;}}';
+  document.head.appendChild(_ss);
+}
+/* ================= 数据备份：导出/导入（纯本地） ================= */
+const BACKUP_KEYS = {
+  profiles:'zhiming_v2_profiles', activeProfile:'zhiming_v2_active_profile',
+  history:'zhiming_v2_history', diary:'zhiming_v2_diary',
+  growCheckin:'zhiming_grow_ck_v1', growArchive:'zhiming_grow_arch_v1',
+  judge:'zhiming_judge_v1', growUnlock:'zhiming_grow_ck_unlock',
+  growOnboard:'zhiming_grow_seen_v1', streak:'zhiming_v2_streak_data'
+};
+window.exportUserData = function(){
+  try{
+    var data={ meta:{ app:'知命V2', type:'userdata-backup', version:(typeof ZHIMING_BUILD!=='undefined'?ZHIMING_BUILD:'?'), exportedAt:new Date().toISOString() }, data:{} };
+    var count=0;
+    Object.keys(BACKUP_KEYS).forEach(function(k){
+      var v=null; try{ v=localStorage.getItem(BACKUP_KEYS[k]); }catch(_){}
+      if(v!==null){ data.data[k]=v; count++; }
+    });
+    if(!count){ if(typeof showToast==='function') showToast('没有可导出的数据','warn'); return; }
+    var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    var a=document.createElement('a');
+    var d=new Date();
+    a.download='zhiming-backup-'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.json';
+    a.href=URL.createObjectURL(blob);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(_){} },2000);
+    if(typeof showToast==='function') showToast('已导出 '+count+' 类数据，JSON 文件含你的全部档案与记录','success',2600);
+  }catch(e){ if(typeof _alert2==='function') _alert2('导出失败：'+e.message); }
+};
+window.importUserData = function(input){
+  try{
+    var file=input.files&&input.files[0];
+    if(!file) return;
+    if(file.size>2*1024*1024){ _alert2('文件过大，不是有效的备份文件'); return; }
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var parsed=JSON.parse(reader.result);
+        if(!parsed || !(parsed.meta) || parsed.meta.type!=='userdata-backup' || !parsed.data){ _alert2('不是知命V2的备份文件（校验失败）'); return; }
+      }catch(pe){ _alert2('文件解析失败：'+pe.message); return; }
+      var keys=Object.keys(parsed.data||{});
+      if(!keys.length){ _alert2('备份文件里没有数据'); return; }
+      var names={profiles:'档案',activeProfile:'当前档案',history:'占卜历史',diary:'日记',growCheckin:'成长签到',growArchive:'成长归档',judge:'回测记录',growUnlock:'成长解锁',growOnboard:'引导状态',streak:'连签数据'};
+      var list=keys.map(function(k){ return names[k]||k; }).join('、');
+      if(!confirm('将覆盖现有数据：\n\n'+list+'\n\n此操作不可撤销，确定继续？')){ input.value=''; return; }
+      var applied=0;
+      keys.forEach(function(k){
+        var key=BACKUP_KEYS[k]; if(!key) return;
+        try{ localStorage.setItem(key, parsed.data[k]); applied++; }catch(_){}
+      });
+      if(typeof showToast==='function') showToast('已恢复 '+applied+' 类数据，刷新页面生效','success',2800);
+      setTimeout(function(){ location.reload(); }, 1600);
+    };
+    reader.readAsText(file);
+  }catch(e){ if(typeof _alert2==='function') _alert2('导入失败：'+e.message); }
+  input.value='';
+};
 function _makeRingSvg(score, cls){
   const r = 28, c = 2*Math.PI*r;
   const off = c * (1 - score/100);
