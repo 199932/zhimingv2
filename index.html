@@ -53,17 +53,9 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.38.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.38.1</span></div>
 
-  <!-- Streak 计数器 -->
-  <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
-    <span class="streak-flame" id="streakFlame">🔥</span>
-    <div class="streak-info">
-      <div class="streak-count">连续占卜 <span id="streakCount">0</span> 天</div>
-      <div class="streak-progress"><div class="streak-fill" id="streakFill" style="width:0%"></div></div>
-    </div>
-    <div class="streak-sub" id="streakNext">距离下个奖励: --</div>
-  </div>
+  <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
   <div class="actions">
     <button class="icon-btn" id="themeBtn" aria-label="深浅模式切换" title="深浅模式切换" onclick="window.toggleTheme()"><i class="ib-emoji">☀️</i><i class="ib-lbl">主题</i></button>

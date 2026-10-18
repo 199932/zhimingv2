@@ -1178,7 +1178,6 @@ body.banner-show{padding-top:40px;}
 .streak-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(255,120,0,.08),rgba(255,80,0,.04));border:1px solid rgba(255,140,0,.2);border-radius:12px;margin-bottom:12px;}
 .streak-bar .streak-flame{font-size:22px;line-height:1;}
 .streak-bar .streak-info{flex:1;min-width:0;}
-.topbar .streak-bar{display:none;}
 .streak-bar .streak-count{font-size:18px;font-weight:800;color:var(--pri);}
 .streak-bar .streak-sub{font-size:11px;color:var(--text-hint);}
 .streak-bar .streak-progress{flex:1;height:6px;background:var(--track-bg);border-radius:3px;overflow:hidden;margin-top:4px;}

@@ -1290,7 +1290,7 @@ body.banner-show{padding-top:40px;}
 .streak-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(255,120,0,.08),rgba(255,80,0,.04));border:1px solid rgba(255,140,0,.2);border-radius:12px;margin-bottom:12px;}
 .streak-bar .streak-flame{font-size:22px;line-height:1;}
 .streak-bar .streak-info{flex:1;min-width:0;}
-.topbar .streak-bar{display:none;} /* 连签系统移除（用户反馈没用）：顶栏不再显示签到卡，数据仍记录 */ /* 手机顶栏隐藏签到卡（防挤压竖排+抽牌区保持神秘感，成长tab仍可签到） */
+
 .streak-bar .streak-count{font-size:18px;font-weight:800;color:var(--pri);}
 .streak-bar .streak-sub{font-size:11px;color:var(--text-hint);}
 .streak-bar .streak-progress{flex:1;height:6px;background:var(--track-bg);border-radius:3px;overflow:hidden;margin-top:4px;}
@@ -1572,17 +1572,9 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.38.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.38.1</span></div>
 
-  <!-- Streak 计数器 -->
-  <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
-    <span class="streak-flame" id="streakFlame">🔥</span>
-    <div class="streak-info">
-      <div class="streak-count">连续占卜 <span id="streakCount">0</span> 天</div>
-      <div class="streak-progress"><div class="streak-fill" id="streakFill" style="width:0%"></div></div>
-    </div>
-    <div class="streak-sub" id="streakNext">距离下个奖励: --</div>
-  </div>
+  <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
   <div class="actions">
     <button class="icon-btn" id="themeBtn" aria-label="深浅模式切换" title="深浅模式切换" onclick="window.toggleTheme()"><i class="ib-emoji">☀️</i><i class="ib-lbl">主题</i></button>
@@ -2452,7 +2444,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.38.0-20261018';
+const ZHIMING_BUILD = 'v2.38.1-20261018';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -20344,6 +20336,8 @@ if(typeof window.toast !== 'function'){
   }
 
   function renderStreakBar(){
+    /* 连签系统已移除：顶栏不再渲染（数据仍记录） */
+    return;
     var data = getStreakData();
     var bar = document.getElementById('streakBar');
     var countEl = document.getElementById('streakCount');
