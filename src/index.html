@@ -1572,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.34.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.34.1</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -4918,7 +4918,7 @@ function lyRender(r, question){
   html += '<div class="kv"><span class="k">用神</span><span class="v">' + r.ysTypes.join(" / ") + (r.ysPos >= 0 ? "（" + LY_YAO_POS[r.ysPos] + " " + r.benNaj[r.ysPos] + " " + r.benLq[r.ysPos] + "）" : "（伏藏不上卦）") + '</span></div>';
   if (r.rel && r.rel.length) html += '<div class="kv"><span class="k">世应</span><span class="v">' + r.rel.join("；") + '</span></div>';
   html += '<div class="kv"><span class="k">参考</span><span class="v">' + r.levelTip + '（倾向分 ' + r.score + '）</span></div>';
-  html += '<ul style="margin:8px 0 0 18px;padding:0;font-size:12px;color:var(--text-sub);line-height:1.8;">' + r.reasons.map(x => '<li>' + x + '</li>').join("") + '</ul>';
+  html += '<ul style="margin:8px 0 0 18px;padding:0;font-size:12px;color:var(--text-sub);line-height:1.8;">' + r.reasons.map(x => '<li>' + wrapTerms(x) + '</li>').join("") + '</ul>';
   html += '<div class="hint" style="margin-top:8px;">' + askHint(r.askType) + '</div></div>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">';
   html += '<button class="btn-primary" onclick="window.lyCopy()">📋 复制结果</button>';
@@ -7941,7 +7941,7 @@ function renderGuaHTML(title, idx, yinyang, changes){
       <div class="desc-title">卦辞</div>
       <div class="desc-text">${h?h[1]:""}</div>
       <div class="desc-title">简解</div>
-      <div class="desc-text">${h?h[2]:""}</div>
+      <div class="desc-text">${h?wrapTerms(h[2]):""}</div>
     </div>
   `;
 }
