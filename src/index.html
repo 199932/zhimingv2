@@ -1572,7 +1572,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.34.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.35.0</span></div>
 
   <!-- Streak 计数器 -->
   <div id="streakBar" class="streak-bar" style="display:none;order:2;flex:1;min-width:0;justify-content:flex-start;" aria-live="polite">
@@ -2443,7 +2443,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.30.0-20261018';
+const ZHIMING_BUILD = 'v2.35.0-20261018';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -7389,7 +7389,7 @@ function calcQimen(){
     const isG = r.goodGe.indexOf(n) >= 0;
     return `<div style="padding:3px 0;border-bottom:1px dashed var(--card-border);">
       <span class="tag ${isG?'tag-good':'tag-bad'}">${n}</span>
-      <span style="font-size:12px;color:var(--text-sub);margin-left:4px;">${exp}</span></div>`;
+      <span style="font-size:12px;color:var(--text-sub);margin-left:4px;">${wrapTerms(exp)}</span></div>`;
   }).join("");
 
   const questionHtml = question
@@ -7420,7 +7420,7 @@ function calcQimen(){
   </div>
   <div class="card">
     <div class="card-title">整体局象简析</div>
-    <div class="desc-text">${overview}</div>
+    <div class="desc-text">${wrapTerms(overview)}</div>
     <div class="desc-title">事业与决策建议</div>
     <div class="desc-text">${careerTip}</div>
     <div class="desc-title">感情与人际建议</div>
