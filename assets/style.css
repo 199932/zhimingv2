@@ -1373,6 +1373,10 @@ body{ padding-bottom:160px; }
 .dy-card .dy-age{text-align:center;font-size:11px;color:var(--text-hint);margin:2px 0 6px;}
 .dy-card .dy-th{font-size:12px;font-weight:700;color:var(--pri-dark);text-align:center;}
 .dy-card .dy-tip{font-size:11px;color:var(--text-sub);line-height:1.55;margin-top:5px;}
+.mcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.mcal-cell{aspect-ratio:1/1;border-radius:7px;background:var(--bg-soft,rgba(0,0,0,.04));display:flex;align-items:center;justify-content:center;min-height:26px;}
+.mcal-cell.today{outline:2px solid var(--pri);outline-offset:1px;}
+.mcal-cell.has{cursor:default;}
 .mood-row{display:flex;gap:6px;justify-content:space-between;margin:10px 0;}
 .mood-opt{flex:1;aspect-ratio:1/1;max-width:56px;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:24px;border:1.5px solid var(--input-border);border-radius:12px;background:var(--input-bg);cursor:pointer;transition:all .15s;}
 .mood-opt.on{border-color:var(--pri);background:var(--pri-light);transform:scale(1.1);box-shadow:0 3px 10px rgba(0,0,0,.08);}

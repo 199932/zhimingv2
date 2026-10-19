@@ -1531,6 +1531,10 @@ body{ padding-bottom:160px; }
 .dy-card .dy-age{text-align:center;font-size:11px;color:var(--text-hint);margin:2px 0 6px;}
 .dy-card .dy-th{font-size:12px;font-weight:700;color:var(--pri-dark);text-align:center;}
 .dy-card .dy-tip{font-size:11px;color:var(--text-sub);line-height:1.55;margin-top:5px;}
+.mcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.mcal-cell{aspect-ratio:1/1;border-radius:7px;background:var(--bg-soft,rgba(0,0,0,.04));display:flex;align-items:center;justify-content:center;min-height:26px;}
+.mcal-cell.today{outline:2px solid var(--pri);outline-offset:1px;}
+.mcal-cell.has{cursor:default;}
 .mood-row{display:flex;gap:6px;justify-content:space-between;margin:10px 0;}
 .mood-opt{flex:1;aspect-ratio:1/1;max-width:56px;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:24px;border:1.5px solid var(--input-border);border-radius:12px;background:var(--input-bg);cursor:pointer;transition:all .15s;}
 .mood-opt.on{border-color:var(--pri);background:var(--pri-light);transform:scale(1.1);box-shadow:0 3px 10px rgba(0,0,0,.08);}
@@ -1591,7 +1595,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.41.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.42.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2508,7 +2512,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.41.0-20261019';
+const ZHIMING_BUILD = 'v2.42.0-20261019';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -21732,6 +21736,87 @@ function _lenormandAIEnhance(cards, spreadType){
        ${wxTip?`<div class="hint" style="margin-top:10px;">🌤 今日干支五行属「${dayWX}」——${wxTip}</div>`:""}`);
   }
 
+  /* ---- 情绪热力月历：整月网格 + 翻月 + 分布 + 规律洞察（无门槛） ---- */
+  window._mcalYM = null;
+  window._mcalNav = function(dir){
+    if(!window._mcalYM){ const d=new Date(); window._mcalYM={y:d.getFullYear(), m:d.getMonth()}; }
+    let m=window._mcalYM.m+dir, y=window._mcalYM.y;
+    if(m<0){m=11;y--;} if(m>11){m=0;y++;}
+    window._mcalYM={y:y,m:m};
+    window.renderGrow();
+  };
+  function _secMoodCalendar(){
+    const data = _ck();
+    const now=new Date();
+    const ym = window._mcalYM || {y:now.getFullYear(), m:now.getMonth()};
+    const first=new Date(ym.y, ym.m, 1);
+    const dim=new Date(ym.y, ym.m+1, 0).getDate();
+    const lead=(first.getDay()+6)%7; /* 周一开头 */
+    const isCur = (ym.y===now.getFullYear()&&ym.m===now.getMonth());
+    const MC_COL=["#E53935","#FB8C00","#FDD835","#7CB342","#43A047"];
+    let cells="";
+    for(let i=0;i<lead;i++) cells+='<div></div>';
+    for(let d=1;d<=dim;d++){
+      const k=ym.y+"-"+String(ym.m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+      const v=data[k];
+      const today=isCur&&d===now.getDate();
+      cells+='<div class="mcal-cell'+(v?" has":"")+(today?" today":"")+'" title="'+k+(v?(' · 心情'+v.m+'/5 精力'+v.e):"")+'" style="'+(v?('background:'+(MC_COL[v.m-1]||"#999")+';'):"")+'">'+(v?('<span style="font-size:9px;color:rgba(255,255,255,.9);font-weight:700;">'+v.m+'</span>'):'')+'</div>';
+    }
+    const mk=[], mv=[], av=[];
+    Object.keys(data).sort().forEach(function(k){ const v=data[k]; if(!v||!v.m) return; av.push(v); if(k.indexOf(ym.y+"-"+String(ym.m+1).padStart(2,"0"))===0){ mk.push(k); mv.push(v); } });
+    function avg(a){ return a.length? a.reduce(function(x,y){return x+y;},0)/a.length : null; }
+    const aM=avg(mv.map(function(v){return v.m;})), aA=avg(av.map(function(v){return v.m;}));
+    let dist="";
+    for(let i=1;i<=5;i++){
+      const c=mv.filter(function(v){return v.m===i;}).length;
+      dist+='<div style="flex:'+(c||0.001)+';min-width:'+(c?0:4)+'px;background:'+MC_COL[i-1]+';border-radius:4px;position:relative;" title="'+MOODS[i-1]+' ×'+c+'">'+(c?('<span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:9px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.4);">'+c+'</span>'):"")+'</div>';
+    }
+    const tips=[];
+    if(mv.length>=3 && aA!=null){
+      const df=Math.round((aM-aA)*10)/10;
+      if(Math.abs(df)>=0.3) tips.push('本月平均 '+aM.toFixed(1)+'/5，比你的整体水平'+(df>0?"高":"低")+' '+Math.abs(df)+' —— '+(df>0?"这个月过得不赖":"这个月有点费劲，正常"));
+      else tips.push('本月平均 '+aM.toFixed(1)+'/5，和你整体水平基本一致，稳');
+    }
+    if(mv.length>=5){
+      const dowAvg=[[],[],[],[],[],[],[]];
+      Object.keys(data).sort().forEach(function(k){ const v=data[k]; if(!v||!v.m) return; if(k.indexOf(ym.y+"-"+String(ym.m+1).padStart(2,"0"))!==0) return; const dd=new Date(k+"T12:00:00"); if(!isNaN(dd)) dowAvg[(dd.getDay()+6)%7].push(v.m); });
+      const WN=["周一","周二","周三","周四","周五","周六","周日"];
+      const valid=dowAvg.map(function(a,i){ return {x:avg(a),i:i,n:a.length}; }).filter(function(o){ return o.x!=null&&o.n>=2; });
+      if(valid.length>=3){
+        const lo=valid.slice().sort(function(a,b){return a.x-b.x;})[0], hi=valid.slice().sort(function(a,b){return b.x-a.x;})[0];
+        if(lo.i!==hi.i) tips.push(WN[hi.i]+'是你的高点（'+hi.x.toFixed(1)+'/5），'+WN[lo.i]+'最低（'+lo.x.toFixed(1)+'/5）—— '+WN[lo.i]+'对自己好一点');
+      }
+    }
+    let best=null;
+    for(let i=mv.length-1;i>=0;i--){ if(mv[i].m===5&&mv[i].note){ best={v:mv[i],k:mk[i]}; break; } }
+    if(best) tips.push('本月最好的一天（'+best.k.slice(5).replace('-','/')+'）：「'+best.v.note+'」');
+    const daysN=isCur?now.getDate():dim;
+    const rate=mv.length?Math.round(mv.length/daysN*100):0;
+    tips.push('本月打卡 '+mv.length+'/'+daysN+' 天（'+rate+'%）—— '+(rate>=60?"记录得很勤，规律会越来越清楚":rate>=20?"继续记，数据多了规律才浮现":"记少一点也没关系，想记的时候记"));
+    let tipHtml;
+    if(tips.length){
+      tipHtml='<div style="margin-top:10px;">'+tips.map(function(t,i){ return '<div style="font-size:12px;color:var(--text);line-height:1.7;padding:6px 0;'+(i?'border-top:1px dashed var(--line,#eee);':'')+'">· '+t+'</div>'; }).join('')+'</div>';
+    } else {
+      tipHtml='<div class="hint" style="margin-top:8px;">这个月还没打卡记录——先去上面记一笔，回头看会很有意思。</div>';
+    }
+    return _card("🎨 情绪热力月历",
+      '<div style="display:flex;align-items:center;justify-content:space-between;">'+
+        '<button onclick="window._mcalNav(-1)" style="border:none;background:none;font-size:15px;color:var(--text-sub);cursor:pointer;padding:4px 8px;">←</button>'+
+        '<b style="font-size:13px;color:var(--text-sub);">'+ym.y+' 年 '+(ym.m+1)+' 月</b>'+
+        '<button onclick="window._mcalNav(1)" style="border:none;background:none;font-size:15px;color:var(--text-sub);cursor:pointer;padding:4px 8px;">→</button>'+
+      '</div>'+
+      '<div class="mcal-grid" style="margin-top:8px;">'+
+        ["一","二","三","四","五","六","日"].map(function(w){ return '<div style="font-size:10px;color:var(--text-hint);text-align:center;">'+w+'</div>'; }).join("")+
+        cells+
+      '</div>'+
+      '<div style="display:flex;gap:2px;height:14px;margin-top:10px;" title="本月心情分布">'+dist+'</div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:4px;">'+
+        MOODS.map(function(m,i){ return '<span style="font-size:10px;color:var(--text-hint);">'+m+'<i style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:2px;background:'+MC_COL[i]+';"></i></span>'; }).join("")+
+      '</div>'+
+      tipHtml);
+  }
+  window._secMoodCalendar = _secMoodCalendar;
+
   /* ---- 本周节律小结：连续打卡满 7 天解锁（永久） ---- */
   function _streakDays(data){
     let n=0; const d=new Date();
@@ -22591,7 +22676,7 @@ function _lenormandAIEnhance(cards, spreadType){
            打卡与吉日无需档案，现在就能用。
            <br><button class="btn-primary" onclick="window.openProfileModal&&window.openProfileModal()">去设置档案</button>
          </div></div>` +
-        _secCheckin(null) + _secJiri(null) + vault;
+        _secCheckin(null) + (function(){ try{ return _secMoodCalendar(); }catch(e){ return ""; } })() + _secJiri(null) + vault;
       return;
     }
     const _tryGC=(fn)=>{ try{ return fn(); }catch(e){ try{ console.warn("grow card:",e); }catch(_){} return ""; } };
@@ -22600,7 +22685,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secJiri(r)) + vault;
+      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secMoodCalendar()) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secJiri(r)) + vault;
   };
 
   /* ---- 交互 ---- */
