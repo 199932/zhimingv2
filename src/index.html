@@ -1591,7 +1591,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.40.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.41.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2508,7 +2508,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.40.0-20261019';
+const ZHIMING_BUILD = 'v2.41.0-20261019';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -8481,6 +8481,7 @@ function renderToday(){
       ${(typeof window['renderWidget_godsDir']==='function'?window['renderWidget_godsDir'](r):'<div class="widget"><div class="widget-title">💰 喜财福方位</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_wuxingToday']==='function'?window['renderWidget_wuxingToday'](r):'<div class="widget"><div class="widget-title">🌿 今日五行</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_jqCountdown']==='function'?window['renderWidget_jqCountdown'](r):'<div class="widget"><div class="widget-title">📍 节气倒计时</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
+      ${(typeof window['renderWidget_houToday']==='function'?window['renderWidget_houToday'](r):'')}
       ${(typeof window['renderWidget_festivalCountdown']==='function'?window['renderWidget_festivalCountdown'](r):'<div class="widget"><div class="widget-title">⏳ 下一节日</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_yijiRadar']==='function'?window['renderWidget_yijiRadar'](r):'<div class="widget"><div class="widget-title">📈 本月宜忌雷达</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_peopleShortcut']==='function'?window['renderWidget_peopleShortcut'](r):'<div class="widget"><div class="widget-title">⭐ 人物快捷</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
@@ -11907,7 +11908,7 @@ try{ window.switchProfileAllTabs = switchProfileAllTabs; }catch(_){}
     // 城市下拉初始化
     'buildCitySelect','buildQimenCitySelect','buildGongzhenCitySelect','upgradeCityPickers',
     // 今日小组件 renderWidget (renderToday 内直接调用，若未挂 Chrome 83 WebView 作用域内会 ReferenceError)
-    'renderWidget_5score','renderWidget_dailyTarot','renderWidget_godsDir','renderWidget_wuxingToday','renderWidget_jqCountdown','renderWidget_festivalCountdown','renderWidget_yijiRadar','renderWidget_peopleShortcut',
+    'renderWidget_5score','renderWidget_dailyTarot','renderWidget_godsDir','renderWidget_wuxingToday','renderWidget_jqCountdown','renderWidget_houToday','renderWidget_festivalCountdown','renderWidget_yijiRadar','renderWidget_peopleShortcut',
     // 常用 function 顶层 (Chrome 83 WebView 作用域兼容)
     'almanacForDate','showToast','riGZ','solar2lunar','dayGanZhiIdxFromDate','nayinGZ','hourToZhiIdx','jiazi2ganzhiIdx','jiaziIdx2gz','bindDraftAutoSave','fillFromDraft','addHistory','enhanceResultHtml','mhInitCity','setMhMode','mod8','mod6','numToBagua','buildGua6from3','huGua','bianGua','tiYongOf','tiYongRelation','meihuaSimpleTip','_sumDigitsUntil','digitsOfNum','filterCityOptions','initTheme','initKeyboardFix','initPWA','initProfiles','openProfileForm','confirmDeleteProfile','profilePickEmoji','submitProfileForm','switchSub','renderCalendar','cycleCalMonth','longPressCastGua','openAlmanacDay','_calJqOfMonth','_bindLongPress','__doCastGua','_buildCalCell',
     // 常用 const 顶层值 (挂载到window便于沙箱/老WebView拿到)
@@ -16178,6 +16179,62 @@ function renderWidget_jqCountdown(r){
   </div>`;
 }
 try{window.renderWidget_jqCountdown=renderWidget_jqCountdown;}catch(_){}
+/* ============ 七十二候 · 今日一候 ============ */
+const SEVENTY2_HOU=[
+ [{n:"雁北乡",d:"大雁最先感知阳气，掉头向北。",g:"心已经掉头了，身体还会远吗。"},{n:"鹊始巢",d:"喜鹊开始搭窝，为春天准备。",g:"为还没来的春天先搭好窝。"},{n:"雉始雊",d:"野鸡发声，求偶季开锣。",g:"寒冷中的发声，最容易被听见。"}],
+ [{n:"鸡始乳",d:"母鸡开始孵蛋，春天在蛋里。",g:"新的生命，在最冷的日子酝酿。"},{n:"征鸟厉疾",d:"猛禽捕猎最凶，御寒靠体力。",g:"越冷越要行动，猛禽的过冬法。"},{n:"水泽腹坚",d:"冰冻到水中央最厚处。",g:"冻到最厚，就是化开的开始。"}],
+ [{n:"东风解冻",d:"风从东来，坚冰悄然化水。",g:"冻住的事情，松动往往无声。"},{n:"蛰虫始振",d:"土里的虫子醒了，还不出门。",g:"想动又没动的那股劲儿，人人都有季节。"},{n:"鱼陟负冰",d:"鱼儿上浮，顶着薄冰游。",g:"顶着阻力也要向上的时刻，水知道。"}],
+ [{n:"獭祭鱼",d:"水獭把鱼摆开，像小小的仪式。",g:"把收获摆出来看一眼，也是一种郑重。"},{n:"候雁北",d:"大雁排好队，飞回北方。",g:"该回去的地方，心里有导航。"},{n:"草木萌动",d:"草木在土里悄悄冒尖。",g:"有些改变早就开始了，只是还没冒头。"}],
+ [{n:"桃始华",d:"桃花开了，第一抹春色。",g:"时机到了，绽放不需要通知谁。"},{n:"仓庚鸣",d:"黄鹂开口，叫醒整个春天。",g:"想说什么就大声点，春天听得见。"},{n:"鹰化为鸠",d:"鹰躲起来，斑鸠多了——古人天真的观察。",g:"暂时收起锋芒，不等于没了锋芒。"}],
+ [{n:"玄鸟至",d:"燕子回家了。",g:"回家的路，每年都认得。"},{n:"雷乃发声",d:"春雷第一声，理直气壮。",g:"憋了很久的话，总有一声惊雷。"},{n:"始电",d:"闪电划亮天空，能量在线。",g:"灵光一闪，也是能量在线。"}],
+ [{n:"桐始华",d:"桐花开，清明的信使。",g:"不争的颜色，反而最先被看见。"},{n:"田鼠化鴽",d:"田鼠躲回洞，鴽鸟出来晒太阳。",g:"换个方式出场，也是活法。"},{n:"虹始见",d:"雨后第一道彩虹，值得抬头。",g:"风雨之后，记得抬头。"}],
+ [{n:"萍始生",d:"浮萍冒头，水开始暖。",g:"水面安静，底下已经活了。"},{n:"鸣鸠拂其羽",d:"布谷鸟梳羽催耕。",g:"该做的事，一声一声催自己。"},{n:"戴胜降于桑",d:"戴胜鸟落在桑树上，蚕事将近。",g:"准备工作就绪，收获在路上。"}],
+ [{n:"蝼蝈鸣",d:"蛙声一片，夏夜开场。",g:"热闹是他们的，你也有你的频道。"},{n:"蚯蚓出",d:"蚯蚓松土，大地伸懒腰。",g:"不出名地努力，土地都记得。"},{n:"王瓜生",d:"藤蔓开始疯长。",g:"给点阳光就疯长，是毛病也是天赋。"}],
+ [{n:"苦菜秀",d:"苦菜开花，青黄不接时的救星。",g:"苦日子开出的花，格外醒目。"},{n:"靡草死",d:"喜阴的草，在渐盛的阳气里退场。",g:"有些告别，是因为光越来越强。"},{n:"麦秋至",d:"麦子成熟在即——对麦子来说，这就是秋天。",g:"你的秋天，未必在秋天。"}],
+ [{n:"螳螂生",d:"螳螂破卵而出。",g:"新对手登场，世界永远有新人。"},{n:"鵙始鸣",d:"伯劳鸟开口，声音带锋。",g:"有锋芒，就让它响。"},{n:"反舌无声",d:"爱学舌的反舌鸟，此刻安静。",g:"不模仿的时候，才听见自己。"}],
+ [{n:"鹿角解",d:"鹿角脱落，旧物让位新生。",g:"卸下最重的那部分，才好继续长。"},{n:"蜩始鸣",d:"蝉开嗓，夏天的长音。",g:"一件事坚持到底，就是一整个夏天的音。"},{n:"半夏生",d:"半夏出土，喜阴药草感知阴起。",g:"阴柔的力量，总在最盛时萌芽。"}],
+ [{n:"温风至",d:"风都是温的，热身完毕。",g:"连风都变暖了，慢慢来。"},{n:"蟋蟀居宇",d:"蟋蟀搬到墙缝里避暑。",g:"换个地方待着，不丢人。"},{n:"鹰始挚",d:"鹰开始凶猛，高空有戏。",g:"高处的凶猛，自有高处的道理。"}],
+ [{n:"腐草为萤",d:"萤火虫从腐草里飞出——黑暗里生光。",g:"烂摊子里，也能飞出光。"},{n:"土润溽暑",d:"土地湿热，蒸笼模式。",g:"最难受的时候，往往在最盛之后。"},{n:"大雨时行",d:"说来就来的暴雨，天的脾气。",g:"情绪来了就让它下，下完就晴。"}],
+ [{n:"凉风至",d:"风里有了凉意，最先知道的是皮肤。",g:"变化先从最小的体感开始。"},{n:"白露生",d:"清晨草叶开始挂露。",g:"清晨的凝结，是夜里的功课。"},{n:"寒蝉鸣",d:"寒蝉的叫声，是夏天的告别演出。",g:"告别也可以唱得很认真。"}],
+ [{n:"鹰乃祭鸟",d:"鹰大量捕猎，摆得像祭礼。",g:"为过冬做准备，不寒碜。"},{n:"天地始肃",d:"天地开始收起松弛。",g:"松弛收起来，节奏回来了。"},{n:"禾乃登",d:"庄稼成熟，收获兑现。",g:"种过的事，总会兑现。"}],
+ [{n:"鸿雁来",d:"雁阵南来，一字或人字。",g:"有秩序的队伍，飞得最远。"},{n:"玄鸟归",d:"燕子南归，夏客告辞。",g:"该走就走，明年再来。"},{n:"群鸟养羞",d:"鸟们囤粮过冬，「羞」就是食物。",g:"囤积不是贪婪，是过冬的智慧。"}],
+ [{n:"雷始收声",d:"雷公收工，秋声安静。",g:"有些力量，收起来才叫圆满。"},{n:"蛰虫坯户",d:"虫子用土封洞口，准备猫冬。",g:"提前封好洞口，冬天不慌。"},{n:"水始涸",d:"水位下降，河床露脸。",g:"退潮的时候，才看清河床。"}],
+ [{n:"鸿雁来宾",d:"最后一批雁，排最后的座次。",g:"最后来的，也有座次。"},{n:"雀入大水为蛤",d:"雀鸟少了，蛤纹像雀——古人浪漫的联想。",g:"古人把想不通的，都编成了故事。"},{n:"菊有黄华",d:"菊花顶霜而开，秋天的倔强。",g:"越冷越开的花，靠的不是运气。"}],
+ [{n:"豺乃祭兽",d:"豺捕兽陈列，像仪式。",g:"生存的仪式感，猛兽也讲究。"},{n:"草木黄落",d:"黄叶落下，树在减负。",g:"放下，是树在过冬前学会的事。"},{n:"蛰虫咸俯",d:"虫子全部低头入眠。",g:"全员低头休息，也是一种整齐。"}],
+ [{n:"水始冰",d:"水面结出第一层薄冰。",g:"第一层薄冰，最脆也最有意义。"},{n:"地始冻",d:"土地开始变硬。",g:"变硬，是为了扛住接下来的重量。"},{n:"雉入大水为蜃",d:"野鸡少见，海边大蛤多——又是浪漫联想。",g:"见不到的，就用想象补上。"}],
+ [{n:"虹藏不见",d:"彩虹收起来了，等春天。",g:"暂时消失的美，不是不存在。"},{n:"天腾地降",d:"天之气上腾，地之气下降，各走各的。",g:"各自沉淀的时期，别急。"},{n:"闭塞成冬",d:"万物收敛，冬正式闭环。",g:"关门不是逃避，是供暖。"}],
+ [{n:"鹖鴠不鸣",d:"好斗的寒号鸟也不叫了，冷到沉默。",g:"冷到不想说话的时候，就安静待着。"},{n:"虎始交",d:"老虎开始求偶，极寒里有生机。",g:"极寒里也有生机，老虎比你先知道。"},{n:"荔挺出",d:"马蔺草感知阳气，独自抽芽。",g:"都缩着的时候，敢冒头的最亮眼。"}],
+ [{n:"蚯蚓结",d:"蚯蚓在土里打结取暖。",g:"抱紧自己过冬，不丢人。"},{n:"麋角解",d:"麋鹿角脱落，旧岁卸载。",g:"卸载旧版本，是为了长新的。"},{n:"水泉动",d:"泉眼在冰下悄悄流动。",g:"冰面下的流动，就是你没放弃的那部分。"}],
+];
+function _houInfo(){
+  try{
+    var now=new Date();
+    var m=now.getMonth()+1, dd=now.getDate(), y=now.getFullYear();
+    var tn=m*100+dd, curIdx=-1;
+    for(var i=0;i<SOLAR_TERMS.length;i++){ var t=SOLAR_TERMS[i]; if(t.m*100+t.d<=tn) curIdx=i; }
+    if(curIdx<0) curIdx=11; /* 1月1-4日属冬至 */
+    var cur=SOLAR_TERMS[curIdx];
+    var diff=Math.floor((new Date(y,m-1,dd)-new Date(y,cur.m-1,cur.d))/86400000);
+    var hi=Math.max(0,Math.min(2,Math.floor(diff/5)));
+    var hou=SEVENTY2_HOU[curIdx]&&SEVENTY2_HOU[curIdx][hi];
+    var h2n=(SEVENTY2_HOU[curIdx]&&SEVENTY2_HOU[curIdx][hi+1])?(hi+1):(SEVENTY2_HOU[(curIdx+1)%24]&&SEVENTY2_HOU[(curIdx+1)%24][0]);
+    return {term:cur.n, hi:hi, hou:hou, next:h2n, left:Math.max(1,(hi+1)*5-diff)};
+  }catch(_){ return null; }
+}
+function renderWidget_houToday(){
+  var h=_houInfo();
+  if(!h||!h.hou) return "";
+  return `<div class="widget" style="grid-column:1/-1;">
+    <div class="widget-title">🌱 今日一候 · ${h.term}${["初","二","三"][h.hi]}候</div>
+    <div class="widget-body" style="padding:10px 12px;">
+      <div style="font-size:14px;font-weight:700;color:var(--pri);margin-bottom:4px;">${h.hou.n}</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.7;">${h.hou.d}</div>
+      <div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:4px;">→ ${h.hou.g}</div>
+      <div style="font-size:10px;color:var(--text-hint);margin-top:6px;">本候还剩${h.left}天 · 下候「${h.next?h.next.n:""}」 · 按近似节气日推算，仅供文化参考</div>
+    </div>
+  </div>`;
+}
+try{window.renderWidget_houToday=renderWidget_houToday;}catch(_){}
 function renderWidget_festivalCountdown(r){
   const f = _findNextFestival(r.today);
   return `<div class="widget">
