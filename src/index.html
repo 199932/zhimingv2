@@ -1282,15 +1282,6 @@ body.banner-show{padding-top:40px;}
 .wheel-pointer{position:absolute;top:50%;left:50%;width:0;height:0;margin-left:-12px;margin-top:-24px;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:24px solid #D4AF37;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));z-index:2;}
 .wheel-result-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:14px;margin-top:10px;text-align:center;font-size:16px;font-weight:700;color:var(--text);}
 /* 今日推送 */
-.notify-toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:12px 14px;margin-top:14px;cursor:pointer;}
-.notify-toggle-row .nt-left{display:flex;align-items:center;gap:10px;}
-.notify-toggle-row .nt-icon{font-size:20px;}
-.notify-toggle-row .nt-text{font-size:14px;font-weight:600;color:var(--text);}
-.notify-toggle-row .nt-sub{font-size:11px;color:var(--text-hint);margin-top:2px;}
-.notify-toggle-row .nt-switch{width:44px;height:24px;border-radius:12px;background:var(--track-bg);position:relative;transition:background .2s;flex-shrink:0;}
-.notify-toggle-row .nt-switch.on{background:var(--good);}
-.notify-toggle-row .nt-switch::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
-.notify-toggle-row .nt-switch.on::after{left:22px;}
 /* 找合适的日子卡片 */
 .find-day-card{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:14px;margin:14px 0;}
 .find-day-card .fdc-title{font-size:14px;font-weight:700;color:var(--pri);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
@@ -1489,10 +1480,6 @@ body.banner-show{padding-top:40px;}
 .profile-link-strip{ margin:0 0 10px; padding:10px 12px; border-radius:12px; background:rgba(107,92,165,.08); border:1px dashed rgba(107,92,165,.4); font-size:12px; color:var(--text-sub); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .profile-link-strip button{ padding:3px 10px; border-radius:6px; border:1px solid rgba(107,92,165,.35); background:var(--card); color:var(--pri); font-size:11px; cursor:pointer; }
 
-/* ---- 10. 推送行 ---- */
-.notify-toggle-row{ border-radius:14px; padding:13px 16px; margin-top:16px; }
-.notify-toggle-row .nt-icon{ font-size:18px; }
-
 /* ---- 11. 顶栏：图标分组，去连排感 ---- */
 .topbar{ padding:10px 14px 7px; }
 .topbar .actions{ gap:5px; }
@@ -1595,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.42.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.43.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2512,7 +2499,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.42.0-20261019';
+const ZHIMING_BUILD = 'v2.43.0-20261019';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -8458,6 +8445,7 @@ function renderToday(){
         <div class="tmc-right">
           <div class="tmc-lunar">${r.lunarStr}</div>
           <div class="tmc-zodiac">生肖：${a.zodiac} · ${a.chongsha}</div>
+        ${(typeof window._chongshaHint==="function"?window._chongshaHint(a.chongsha):"")}
           <div style="margin-top:6px;font-size:11px;color:var(--pri);font-weight:600;">${a.nearest.isToday?`🎉 今日${a.nearest.name}`:`下一个节气·${a.nearest.name}·还有${a.nearest.days}天`}</div>
         </div>
       </div>
@@ -8484,21 +8472,9 @@ function renderToday(){
       ${(typeof window['renderWidget_dailyTarot']==='function'?window['renderWidget_dailyTarot'](r):'<div class="widget"><div class="widget-title">🎴 每日塔罗</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_godsDir']==='function'?window['renderWidget_godsDir'](r):'<div class="widget"><div class="widget-title">💰 喜财福方位</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_wuxingToday']==='function'?window['renderWidget_wuxingToday'](r):'<div class="widget"><div class="widget-title">🌿 今日五行</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
-      ${(typeof window['renderWidget_jqCountdown']==='function'?window['renderWidget_jqCountdown'](r):'<div class="widget"><div class="widget-title">📍 节气倒计时</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
+      ${(typeof window['renderWidget_shixu']==='function'?window['renderWidget_shixu'](r):'')}
       ${(typeof window['renderWidget_houToday']==='function'?window['renderWidget_houToday'](r):'')}
-      ${(typeof window['renderWidget_festivalCountdown']==='function'?window['renderWidget_festivalCountdown'](r):'<div class="widget"><div class="widget-title">⏳ 下一节日</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
-      ${(typeof window['renderWidget_yijiRadar']==='function'?window['renderWidget_yijiRadar'](r):'<div class="widget"><div class="widget-title">📈 本月宜忌雷达</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_peopleShortcut']==='function'?window['renderWidget_peopleShortcut'](r):'<div class="widget"><div class="widget-title">⭐ 人物快捷</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
-    </div>
-    <div class="notify-toggle-row" id="notifyToggleRow" onclick="window.toggleDailyNotify()" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')window.toggleDailyNotify()" aria-live="polite">
-      <div class="nt-left">
-        <div class="nt-icon">🔔</div>
-        <div>
-          <div class="nt-text">开启每日推送</div>
-          <div class="nt-sub">每天首次打开时提醒今日运势</div>
-        </div>
-      </div>
-      <div class="nt-switch" id="notifySwitch"></div>
     </div>
   `;
   archiveDailyTarot(td, dateStr);
@@ -11912,7 +11888,7 @@ try{ window.switchProfileAllTabs = switchProfileAllTabs; }catch(_){}
     // 城市下拉初始化
     'buildCitySelect','buildQimenCitySelect','buildGongzhenCitySelect','upgradeCityPickers',
     // 今日小组件 renderWidget (renderToday 内直接调用，若未挂 Chrome 83 WebView 作用域内会 ReferenceError)
-    'renderWidget_5score','renderWidget_dailyTarot','renderWidget_godsDir','renderWidget_wuxingToday','renderWidget_jqCountdown','renderWidget_houToday','renderWidget_festivalCountdown','renderWidget_yijiRadar','renderWidget_peopleShortcut',
+    'renderWidget_5score','renderWidget_dailyTarot','renderWidget_godsDir','renderWidget_wuxingToday','renderWidget_jqCountdown','renderWidget_shixu','renderWidget_houToday','renderWidget_festivalCountdown','renderWidget_yijiRadar','renderWidget_peopleShortcut',
     // 常用 function 顶层 (Chrome 83 WebView 作用域兼容)
     'almanacForDate','showToast','riGZ','solar2lunar','dayGanZhiIdxFromDate','nayinGZ','hourToZhiIdx','jiazi2ganzhiIdx','jiaziIdx2gz','bindDraftAutoSave','fillFromDraft','addHistory','enhanceResultHtml','mhInitCity','setMhMode','mod8','mod6','numToBagua','buildGua6from3','huGua','bianGua','tiYongOf','tiYongRelation','meihuaSimpleTip','_sumDigitsUntil','digitsOfNum','filterCityOptions','initTheme','initKeyboardFix','initPWA','initProfiles','openProfileForm','confirmDeleteProfile','profilePickEmoji','submitProfileForm','switchSub','renderCalendar','cycleCalMonth','longPressCastGua','openAlmanacDay','_calJqOfMonth','_bindLongPress','__doCastGua','_buildCalCell',
     // 常用 const 顶层值 (挂载到window便于沙箱/老WebView拿到)
@@ -16250,6 +16226,32 @@ function renderWidget_festivalCountdown(r){
   </div>`;
 }
 try{window.renderWidget_festivalCountdown=renderWidget_festivalCountdown;}catch(_){}
+function _chongshaHint(cs){
+  try{
+    const m=(cs||"").match(/冲([鼠牛虎兔龙蛇马羊猴鸡狗猪]{1})\s*煞([东南西北]{1,2})/);
+    if(!m) return "";
+    const sx=m[1], dir=m[2];
+    const dirN={"北":"北方","南":"南方","东":"东方","西":"西方","东北":"东北方","东南":"东南方","西北":"西北方","西南":"西南方"}[dir]||(dir+"方");
+    return '<div style="font-size:10px;color:var(--text-hint);margin-top:3px;">冲【'+sx+'】属'+sx+'者今日缓出头，大事缓拍板 · 煞【'+dir+'】'+dirN+'事宜从简</div>';
+  }catch(e){ return ""; }
+}
+function renderWidget_shixu(r){
+  try{
+    const n=r.a&&r.a.nearest;
+    const f=_findNextFestival(r.today);
+    if(!n&&!f) return "";
+    return `<div class="widget">
+      <div class="widget-title">🌗 时序</div>
+      <div class="widget-body" style="display:flex;flex-direction:column;gap:6px;">
+        ${n?`<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;"><span>📍 ${n.name}</span><span style="color:var(--text-hint);font-size:11px;">${n.isToday?"就是今天":"还有 "+n.days+" 天"}</span></div>`:""}
+        ${f?`<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;"><span>🎊 ${f.name}</span><span style="color:var(--text-hint);font-size:11px;">${f.date?(f.date.getMonth()+1)+"/"+f.date.getDate()+" · ":""}还有 ${f.days} 天</span></div>`:""}
+      </div>
+    </div>`;
+  }catch(e){ return ""; }
+}
+try{window.renderWidget_shixu=renderWidget_shixu;}catch(_){}
+try{window._chongshaHint=_chongshaHint;}catch(_){}
+
 function renderWidget_yijiRadar(r){
   const freq = _collectMonthYijiFreq(r.today);
   const labels = freq.topYi.map(e=>e[0]);
@@ -16902,7 +16904,22 @@ function renderWidget_fortuneGrid(r){
         ? '<div style="font-size:11px;color:var(--text-hint);margin-bottom:6px;">基于档案「'+(_p.name||'未命名')+'」 · ' + _p.year + '-' + _p.month + '-' + _p.day + ' <span style="cursor:pointer;color:var(--pri);" onclick="window.openProfileModal&&window.openProfileModal()">切换 ›</span></div>'
         : '<div style="font-size:11px;color:var(--text-hint);margin-bottom:6px;">未建档：按今日日柱通用计算，仅供参考 <span style="cursor:pointer;color:var(--pri);" onclick="window.openProfileModal&&window.openProfileModal()">去建档 ›</span></div>';
     }catch(_){}
-    return `<div class="fortune-grid-wrap">
+    let brief="";
+    try{
+      if(FDs&&FDs.length){
+        let ti=0, li=0;
+        FDs.forEach(function(f2,i2){ if(f2.score>FDs[ti].score) ti=i2; if(f2.score<FDs[li].score) li=i2; });
+        const ACT={overall:"顺着状态走，别拧巴",career:"要紧的事适合今天谈",wealth:"适合处理钱相关的事",love:"适合见想见的人",health:"身体在提醒你休息，别硬撑",villain:"少卷是非，话留三分",benefactor:"遇到长辈贵人，多请教一句",study:"适合啃硬骨头",travel:"适合出门办事",charm:"形象加分，见人有利"};
+        const T=FDs[ti], L=FDs[li];
+        const box='margin:0 0 10px;padding:9px 12px;border-radius:10px;background:var(--bg-soft,rgba(0,0,0,.04));font-size:12px;line-height:1.7;color:var(--text);';
+        if(T.score-L.score>=8){
+          brief='<div style="'+box+'">🧭 <b>今日解读：</b>【'+T.D.title+'】最顺（'+T.score+' 分），【'+L.D.title+'】偏弱（'+L.score+' 分）——'+(ACT[T.D.key]||'顺着状态走')+'；'+L.D.title+'上别硬来。</div>';
+        }else{
+          brief='<div style="'+box+'">🧭 <b>今日解读：</b>各维度均衡，没有明显短板——平稳的日子适合做积累的事。</div>';
+        }
+      }
+    }catch(e){}
+    return `${brief}<div class="fortune-grid-wrap">
       <svg width="0" height="0" style="position:absolute">${grads}</svg>
       ${_base}
       <div class="fortune-grid">${cards}</div>
@@ -20237,54 +20254,8 @@ window.spinWheel = function(){
   }, 3500);
 };
 /* ---- 3. 今日运势推送 ---- */
-window.toggleDailyNotify = function(){
-  try{
-    const KEY='zhiming_v2_notify_perm';
-    const KEY_LAST='zhiming_v2_notify_last_day';
-    const saved = localStorage.getItem(KEY);
-    if(saved==='granted'){
-      localStorage.removeItem(KEY);
-      localStorage.removeItem(KEY_LAST);
-      _updateNotifyToggleUI(false);
-      try{ showToast('已关闭每日推送','info',1000); }catch(_){}
-      return;
-    }
-    if(typeof Notification !== 'undefined' && Notification.requestPermission){
-      Notification.requestPermission().then(function(p){
-        try{ localStorage.setItem(KEY, p); }catch(_){}
-        _updateNotifyToggleUI(p==='granted');
-        if(p==='granted'){
-          localStorage.setItem(KEY_LAST, new Date().toDateString());
-          try{ showToast('已开启每日推送 ✅','success',1200); }catch(_){}
-        }else{
-          try{ showToast('通知权限被拒绝','warn',1200); }catch(_){}
-        }
-      });
-    }
-  }catch(_){}
-};
-function _updateNotifyToggleUI(on){
-  const sw = document.getElementById('notifySwitch');
-  if(sw) sw.classList.toggle('on', !!on);
-}
-function _checkDailyNotifyOnInit(){
-  try{
-    const KEY='zhiming_v2_notify_perm';
-    const KEY_LAST='zhiming_v2_notify_last_day';
-    const saved = localStorage.getItem(KEY);
-    const isGranted = saved==='granted' || (typeof Notification !== 'undefined' && Notification.permission==='granted');
-    _updateNotifyToggleUI(isGranted);
-    if(!isGranted) return;
-    const today = new Date().toDateString();
-    const last = localStorage.getItem(KEY_LAST);
-    if(last !== today){
-      localStorage.setItem(KEY_LAST, today);
-      try{
-        new Notification('知命V2 · 今日运势', { body: '点击查看今日综合运势与塔罗指引', icon: './icon-192.png' });
-      }catch(_){}
-    }
-  }catch(_){}
-}
+/* [removed] daily notify */
+
 /* ---- 4. 历史准确率看板增强 ---- */
 window.renderHistoryWithAccuracyBoard = function(){
   try{ renderHistory(); }catch(_){}
@@ -20499,7 +20470,6 @@ window.renderGongzhenRadar = function(r){
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', _checkDailyNotifyOnInit);
   }else{
-    _checkDailyNotifyOnInit();
   }
 })();
 
