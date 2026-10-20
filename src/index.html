@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.44.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.45.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2499,7 +2499,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.44.0-20261020';
+const ZHIMING_BUILD = 'v2.45.0-20261020';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4582,6 +4582,42 @@ const MOON_INFO = [
   {e:"🌗",n:"下弦月",t:"又只剩一半。",g:"该断舍离了：留一半，舍一半。"},
   {e:"🌘",n:"残月",t:"细细一弯，快回到零。",g:"旧周期在收尾，空出来的地方，是给下一轮的。"}
 ];
+/* ---- 十二时辰：当前时辰白话条（无门槛） ---- */
+const SHICHEN_INFO = [
+  {n:"子",b:"夜半",t:"一日已尽，新一日未名。",g:"该睡了——凌晨的清醒是借来的，要还。"},
+  {n:"丑",b:"鸡鸣",t:"万籁俱寂，万兽休息。",g:"还醒着的人，多半在和白天较劲。"},
+  {n:"寅",b:"平旦",t:"天将亮未亮，夜最深。",g:"最深的黑里，光已经在路上了。"},
+  {n:"卯",b:"日出",t:"日出而作，一天的门开了。",g:"早起的人，赚的是没被打扰的时间。"},
+  {n:"辰",b:"食时",t:"朝食之时，一天的正经开始了。",g:"好好吃早饭，是最便宜的自律。"},
+  {n:"巳",b:"隅中",t:"日近中午，头脑最清明。",g:"要紧的事放现在，别浪费黄金两小时。"},
+  {n:"午",b:"日中",t:"阳气极盛，阴阳交接。",g:"忙了一上午，允许自己歇一会儿。"},
+  {n:"未",b:"日昳",t:"日过中天，微微偏西。",g:"下午的开局，从一杯水开始。"},
+  {n:"申",b:"晡时",t:"第二次正餐的饭点。",g:"收尾的事现在办，别拖到明天。"},
+  {n:"酉",b:"日落",t:"日落而息，一天收工。",g:"太阳都下班了，你也差不多该歇了。"},
+  {n:"戌",b:"黄昏",t:"天地收工，人也该收工。",g:"陪陪家人，或陪陪自己。"},
+  {n:"亥",b:"人定",t:"夜深了，人定而静。",g:"放下手机的那一刻，明天会谢你。"}
+];
+function _shichenNow(){
+  const h=new Date().getHours();
+  return Math.floor(((h+1)%24)/2);
+}
+function _shichenStrip(){
+  try{
+    const idx=_shichenNow(), si=SHICHEN_INFO[idx];
+    const cells=SHICHEN_INFO.map((s,i)=>{
+      const on=i===idx;
+      return '<div style="flex:1;text-align:center;padding:5px 0;border-radius:7px;font-size:12px;'+(on?'background:var(--pri);color:#fff;font-weight:700;':'color:var(--text-hint);')+'">'+s.n+'</div>';
+    }).join("");
+    return `<div class="card">
+      <div class="card-title">⏳ 现在是 ${si.n}时 · ${si.b}</div>
+      <div style="display:flex;gap:2px;">${cells}</div>
+      <div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:8px;">${si.t}</div>
+      <div style="font-size:12px;color:var(--pri);line-height:1.7;margin-top:2px;">→ ${si.g}</div>
+      <div style="font-size:10px;color:var(--text-hint);margin-top:6px;">十二时辰制：每两小时一时辰，${si.n}时约 ${idx===0?"23:00–01:00":String(idx*2-1).padStart(2,"0")+":00–"+String((idx*2+1)%24).padStart(2,"0")+":00"}，随真实时间自动切换</div>
+    </div>`;
+  }catch(e){ return ""; }
+}
+
 function _moonPhase(d){
   const jd = d.getTime()/86400000 + 2440587.5;
   const syn = 29.530588853;
@@ -4669,6 +4705,7 @@ function renderAlmanac(date){
     </div>
   </div>
 ${_moonCard(date)}
+${_shichenStrip()}
 ${_shiChart(a.dayZhi)}
     <div class="card">
     <div class="card-title">日历切换</div>
