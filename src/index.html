@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.43.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.44.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2499,7 +2499,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.43.0-20261019';
+const ZHIMING_BUILD = 'v2.44.0-20261020';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4571,6 +4571,47 @@ function buildAlmanac(date){
     nearest, yi, ji
   };
 }
+/* ---- 今晚月亮：月相卡（纯天文计算，无门槛） ---- */
+const MOON_INFO = [
+  {e:"🌑",n:"新月（朔）",t:"月亮藏进日光里，看不见——旧的一轮收完了，新的一轮从零开始。",g:"适合起头：想开始的事，从今晚记下第一笔。"},
+  {e:"🌒",n:"娥眉月",t:"月牙很细，刚冒头。",g:"新起的头还很嫩，护着点，别急着看成果。"},
+  {e:"🌓",n:"上弦月",t:"半个月亮，明暗各半。",g:"走到半程——该使劲的使劲，该放下的放下。"},
+  {e:"🌔",n:"盈凸月",t:"比一半多，还没全亮。",g:"圆之前最后的爬坡，再顶一顶就到了。"},
+  {e:"🌕",n:"满月（望）",t:"最圆最亮的时候。",g:"盛极的时刻，尽情用它，也记得满则亏。"},
+  {e:"🌖",n:"亏凸月",t:"从满往下走了。",g:"从顶点回落是常态，学会收，才守得住。"},
+  {e:"🌗",n:"下弦月",t:"又只剩一半。",g:"该断舍离了：留一半，舍一半。"},
+  {e:"🌘",n:"残月",t:"细细一弯，快回到零。",g:"旧周期在收尾，空出来的地方，是给下一轮的。"}
+];
+function _moonPhase(d){
+  const jd = d.getTime()/86400000 + 2440587.5;
+  const syn = 29.530588853;
+  let p = ((jd - 2451550.1) / syn) % 1;
+  if(p < 0) p += 1;
+  const idx = Math.floor(p * 8 + 0.5) % 8;
+  return {p:p, idx:idx, age:p*syn};
+}
+function _moonCard(d){
+  try{
+    const m = _moonPhase(d);
+    const mi = MOON_INFO[m.idx];
+    const toFull = m.p<=0.5 ? (0.5-m.p)*29.530588853 : (1.5-m.p)*29.530588853;
+    const toNew = (1-m.p)*29.530588853;
+    const fullTxt = toFull<0.8 ? "就是今晚" : "距满月还有 "+Math.round(toFull)+" 天";
+    return `<div class="card">
+      <div class="card-title">🌙 今晚月亮</div>
+      <div style="display:flex;align-items:center;gap:14px;padding:4px 0;">
+        <div style="font-size:40px;line-height:1;filter:drop-shadow(0 2px 4px rgba(120,110,80,.3));">${mi.e}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);">${mi.n}<span style="font-size:10px;font-weight:400;color:var(--text-hint);margin-left:8px;">月龄 ${m.age.toFixed(1)} 天</span></div>
+          <div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:3px;">${mi.t}</div>
+          <div style="font-size:12px;color:var(--pri);line-height:1.7;margin-top:2px;">→ ${mi.g}</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-hint);margin-top:6px;">${fullTxt} · 距新月还有 ${Math.round(toNew)} 天 · 月相按朔望周期推算，供文化参考</div>
+    </div>`;
+  }catch(e){ return ""; }
+}
+
 function _shiChart(dayZhi){
   const SHEN=["青龙","明堂","天刑","朱雀","金匮","宝光","白虎","玉堂","天牢","玄武","司命","勾陈"];
   const HUANG={"青龙":1,"明堂":1,"金匮":1,"宝光":1,"玉堂":1,"司命":1};
@@ -4627,6 +4668,7 @@ function renderAlmanac(date){
       <div class="ji-box"><div class="yj-t">❌ 忌</div><div class="yj-list">${a.ji.map(y=>`<span class="yj-tag">${y}</span>`).join("")}</div></div>
     </div>
   </div>
+${_moonCard(date)}
 ${_shiChart(a.dayZhi)}
     <div class="card">
     <div class="card-title">日历切换</div>
