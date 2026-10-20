@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.45.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.46.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2411,6 +2411,17 @@ body{ padding-bottom:160px; }
   </div>
 </div>
 
+<!-- ===== 七十二候详情 Modal ===== -->
+<div class="modal-mask" id="houModal" onclick="if(event.target===this)window.closeHouDetail()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="houModalTitle">🌱 三候</h3>
+      <button class="modal-close" onclick="window.closeHouDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="houModalBody"></div>
+  </div>
+</div>
+
 <!-- ===== 占卜日记 Modal ===== -->
 <div class="modal-mask" id="diaryModal" onclick="if(event.target===this)closeDiaryModal()" style="z-index:210;">
   <div class="modal" style="max-width:680px;">
@@ -2499,7 +2510,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.45.0-20261020';
+const ZHIMING_BUILD = 'v2.46.0-20261020';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -16280,11 +16291,42 @@ function _houInfo(){
     return {term:cur.n, hi:hi, hou:hou, next:h2n, left:Math.max(1,(hi+1)*5-diff)};
   }catch(_){ return null; }
 }
+window.openHouDetail = function(){
+  try{
+    var h = _houInfo();
+    if(!h || !h.hou){ try{ _alert2 && _alert2("候数据加载中，稍后再试"); }catch(e){} return; }
+    var idx = -1;
+    for(var i=0;i<SOLAR_TERMS.length;i++){ if(SOLAR_TERMS[i].n===h.term){ idx=i; break; } }
+    var list = (idx>=0 && SEVENTY2_HOU[idx]) ? SEVENTY2_HOU[idx] : [h.hou];
+    var name = ["初","二","三"];
+    var html = '<div style="text-align:center;margin-bottom:12px;">'
+      + '<div style="font-size:13px;color:var(--text-sub);">'+h.term+' · 近似起日 '+(SOLAR_TERMS[idx]?SOLAR_TERMS[idx].m+"/"+SOLAR_TERMS[idx].d:"")+' · 每候约 5 天</div>'
+      + '</div>';
+    for(var k=0;k<list.length;k++){
+      var cur = (k===h.hi);
+      var box = 'border:1.5px solid '+(cur?'var(--pri)':'var(--card-border)')+';border-radius:12px;padding:10px 12px;margin-bottom:8px;'+(cur?'background:rgba(124,158,99,.07);':'');
+      html += '<div style="'+box+'">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+        + '<div style="font-size:14px;font-weight:700;color:'+(cur?'var(--pri)':'var(--text)')+';">'+["🌱","🌿","🍂"][k]+' '+name[k]+'候 · '+list[k].n+'</div>'
+        + (cur?'<span style="font-size:10px;background:var(--pri);color:#fff;border-radius:20px;padding:2px 8px;">当前</span>':'')
+        + '</div>'
+        + '<div style="font-size:12px;color:var(--text);line-height:1.7;margin-top:4px;">'+list[k].d+'</div>'
+        + '<div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:2px;">→ '+list[k].g+'</div>'
+        + '</div>';
+    }
+    html += '<div style="font-size:10px;color:var(--text-hint);text-align:center;margin-top:6px;">本候还剩 '+h.left+' 天 · 下候「'+(h.next?h.next.n:"")+'」 · 按近似节气日推算，仅供文化参考</div>';
+    var t = document.getElementById('houModalTitle'); if(t) t.textContent = '🌱 '+h.term+' · 三候';
+    var b = document.getElementById('houModalBody'); if(b) b.innerHTML = html;
+    window.__openModalById('houModal');
+  }catch(e){}
+};
+window.closeHouDetail = function(){ window.__closeModalById('houModal'); };
+
 function renderWidget_houToday(){
   var h=_houInfo();
   if(!h||!h.hou) return "";
-  return `<div class="widget" style="grid-column:1/-1;">
-    <div class="widget-title">🌱 今日一候 · ${h.term}${["初","二","三"][h.hi]}候</div>
+  return `<div class="widget" style="grid-column:1/-1;cursor:pointer;" onclick="window.openHouDetail()" title="点开看本节气三候全貌">
+    <div class="widget-title">🌱 今日一候 · ${h.term}${["初","二","三"][h.hi]}候 <span style="font-size:10px;color:var(--text-hint);font-weight:400;">· 点开看三候全貌</span></div>
     <div class="widget-body" style="padding:10px 12px;">
       <div style="font-size:14px;font-weight:700;color:var(--pri);margin-bottom:4px;">${h.hou.n}</div>
       <div style="font-size:12px;color:var(--text);line-height:1.7;">${h.hou.d}</div>

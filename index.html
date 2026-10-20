@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.45.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.46.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -879,6 +879,17 @@
       </div>
       <div id="glossaryList"></div>
     </div>
+  </div>
+</div>
+
+<!-- ===== 七十二候详情 Modal ===== -->
+<div class="modal-mask" id="houModal" onclick="if(event.target===this)window.closeHouDetail()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="houModalTitle">🌱 三候</h3>
+      <button class="modal-close" onclick="window.closeHouDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="houModalBody"></div>
   </div>
 </div>
 
