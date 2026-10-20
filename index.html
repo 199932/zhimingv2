@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.46.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.47.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -890,6 +890,42 @@
       <button class="modal-close" onclick="window.closeHouDetail()">✕</button>
     </div>
     <div class="modal-body" id="houModalBody"></div>
+  </div>
+</div>
+
+<!-- ===== 身边人 Modal ===== -->
+<div class="modal-mask" id="peopleModal" onclick="if(event.target===this)window._peopleClose()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="peopleModalTitle">👥 添加身边人</h3>
+      <button class="modal-close" onclick="window._peopleClose()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">称呼 *</div>
+        <input type="text" id="pplName" placeholder="如：老妈 / 阿珍 / 老张" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--card-border);border-radius:10px;background:var(--bg,#fff);color:var(--text,#222);font-size:14px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">关系</div>
+        <select id="pplRel" style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:10px;background:var(--bg,#fff);color:var(--text,#222);font-size:14px;">
+          <option value="家人">家人</option>
+          <option value="恋人">恋人</option>
+          <option value="朋友">朋友</option>
+          <option value="同事">同事</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div style="margin-bottom:6px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">生日（公历）</div>
+        <input type="date" id="pplBday" style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:10px;background:var(--bg,#fff);color:var(--text,#222);font-size:14px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-sub);margin-top:6px;"><input type="checkbox" id="pplNoYear">不知道年份（只记月日）</label>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">备注（忌口 / 喜好 / 想记的）</div>
+        <textarea id="pplNote" rows="3" placeholder="如：不吃香菜；喜欢茉莉花茶；腰不好别送按摩椅" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--card-border);border-radius:10px;background:var(--bg,#fff);color:var(--text,#222);font-size:14px;resize:vertical;"></textarea>
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="window._peopleSave()">保存</button>
+    </div>
   </div>
 </div>
 

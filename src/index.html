@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.46.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.47.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2422,6 +2422,42 @@ body{ padding-bottom:160px; }
   </div>
 </div>
 
+<!-- ===== 身边人 Modal ===== -->
+<div class="modal-mask" id="peopleModal" onclick="if(event.target===this)window._peopleClose()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="peopleModalTitle">👥 添加身边人</h3>
+      <button class="modal-close" onclick="window._peopleClose()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">称呼 *</div>
+        <input type="text" id="pplName" placeholder="如：老妈 / 阿珍 / 老张" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--card-border);border-radius:10px;background:var(--bg,#fff);color:var(--text,#222);font-size:14px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">关系</div>
+        <select id="pplRel" style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:10px;background:var(--bg,#fff);color:var(--text,#222);font-size:14px;">
+          <option value="家人">家人</option>
+          <option value="恋人">恋人</option>
+          <option value="朋友">朋友</option>
+          <option value="同事">同事</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div style="margin-bottom:6px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">生日（公历）</div>
+        <input type="date" id="pplBday" style="width:100%;padding:10px;border:1px solid var(--card-border);border-radius:10px;background:var(--bg,#fff);color:var(--text,#222);font-size:14px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-sub);margin-top:6px;"><input type="checkbox" id="pplNoYear">不知道年份（只记月日）</label>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">备注（忌口 / 喜好 / 想记的）</div>
+        <textarea id="pplNote" rows="3" placeholder="如：不吃香菜；喜欢茉莉花茶；腰不好别送按摩椅" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--card-border);border-radius:10px;background:var(--bg,#fff);color:var(--text,#222);font-size:14px;resize:vertical;"></textarea>
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="window._peopleSave()">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 占卜日记 Modal ===== -->
 <div class="modal-mask" id="diaryModal" onclick="if(event.target===this)closeDiaryModal()" style="z-index:210;">
   <div class="modal" style="max-width:680px;">
@@ -2510,7 +2546,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.46.0-20261020';
+const ZHIMING_BUILD = 'v2.47.0-20261021';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -22523,7 +22559,7 @@ function _lenormandAIEnhance(cards, spreadType){
   };
 
   /* ---- 数据保险箱：全量备份/恢复（纯本地的最后防线） ---- */
-  var _VAULT_KEYS = {profiles:"zhiming_v2_profiles", activeProfile:"zhiming_v2_active_profile", history:"zhiming_v2_history", diary:"zhiming_v2_diary", checkin:"zhiming_grow_ck_v1", archive:"zhiming_grow_arch_v1", judge:"zhiming_judge_v1", unlock:"zhiming_grow_ck_unlock", onboard:"zhiming_grow_seen_v1"};
+  var _VAULT_KEYS = {profiles:"zhiming_v2_profiles", activeProfile:"zhiming_v2_active_profile", history:"zhiming_v2_history", diary:"zhiming_v2_diary", checkin:"zhiming_grow_ck_v1", archive:"zhiming_grow_arch_v1", judge:"zhiming_judge_v1", unlock:"zhiming_grow_ck_unlock", onboard:"zhiming_grow_seen_v1", people:"zhiming_people_v1"};
   function _vaultCount(k){
     try{
       const raw=localStorage.getItem(_VAULT_KEYS[k]); if(!raw) return 0;
@@ -22750,6 +22786,113 @@ function _lenormandAIEnhance(cards, spreadType){
        <div class="hint" style="margin-top:8px;">※ 宜忌由干支哈希算法推演，仅供娱乐参考；真要紧的事，请以现实条件为准。</div>`);
   }
 
+  /* ---- 身边人 ---- */
+  const PPL_KEY = "zhiming_people_v1";
+  const PPL_ZODIAC = ["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+  function _pplLoad(){ try{ return JSON.parse(localStorage.getItem(PPL_KEY)||"[]"); }catch(e){ return []; } }
+  function _pplSave(o){ try{ localStorage.setItem(PPL_KEY, JSON.stringify(o)); }catch(e){} }
+  function _pplBdParts(bd){ const p=String(bd||"").split("-"); if(p.length<2) return null; const m=+p[p.length-2], d=+p[p.length-1]; if(!(m>=1&&m<=12&&d>=1&&d<=31)) return null; return {m:m,d:d}; }
+  function _pplCountdown(bd){
+    const p=_pplBdParts(bd); if(!p) return null;
+    const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    let t=new Date(now.getFullYear(),p.m-1,p.d);
+    if(t<today) t=new Date(now.getFullYear()+1,p.m-1,p.d);
+    return {left:Math.round((t-today)/86400000)};
+  }
+  function _pplRelColor(rel){
+    return {家人:"rgba(146,110,75,.15)",恋人:"rgba(214,106,120,.16)",朋友:"rgba(124,158,99,.16)",同事:"rgba(90,126,163,.16)",其他:"rgba(130,130,130,.14)"}[rel]||"rgba(130,130,130,.14)";
+  }
+  window._peopleOpen = function(id){
+    try{
+      const t=document.getElementById('peopleModalTitle');
+      const list=_pplLoad();
+      const x=id!=null?list.find(function(v){return v.id===id;}):null;
+      if(t) t.textContent = x?('👥 编辑 · '+(x.name||'')):'👥 添加身边人';
+      document.getElementById('pplName').value = x?(x.name||''):'';
+      document.getElementById('pplRel').value = x?(x.rel||'家人'):'家人';
+      document.getElementById('pplNoYear').checked = x?!!x.noyear:false;
+      document.getElementById('pplNote').value = x?(x.note||''):'';
+      const bi=document.getElementById('pplBday');
+      if(x&&x.bday){ bi.value = x.noyear?("2000-"+x.bday):x.bday; } else { bi.value=''; }
+      window._peopleEditId = (x?x.id:null);
+      window._openModalById('peopleModal');
+    }catch(e){}
+  };
+  window._peopleClose = function(){ window.__closeModalById('peopleModal'); };
+  window._peopleSave = function(){
+    try{
+      const name=(document.getElementById('pplName').value||'').trim();
+      if(!name){ try{ window._toast&&window._toast("先写个称呼"); }catch(e){} return; }
+      const rel=document.getElementById('pplRel').value;
+      const noyear=document.getElementById('pplNoYear').checked;
+      const rawBd=(document.getElementById('pplBday').value||'').trim();
+      const note=(document.getElementById('pplNote').value||'').trim();
+      let bd='';
+      if(rawBd){ const p=_pplBdParts(rawBd); if(p){ bd = noyear?(String(p.m).padStart(2,'0')+"-"+String(p.d).padStart(2,'0')):rawBd; } }
+      const list=_pplLoad();
+      if(window._peopleEditId!=null){
+        const x=list.find(function(v){return v.id===window._peopleEditId;});
+        if(x){ x.name=name; x.rel=rel; x.bday=bd; x.noyear=noyear&&!!bd; x.note=note; x.t=Date.now(); }
+      } else {
+        list.push({id:'p'+Date.now().toString(36), name:name, rel:rel, bday:bd, noyear:noyear&&!!bd, note:note, t:Date.now()});
+      }
+      _pplSave(list);
+      window._peopleEditId=null;
+      window._peopleClose();
+      window.renderGrow();
+      try{ window._toast&&window._toast("已保存 👥"); }catch(e){}
+    }catch(e){}
+  };
+  window._peopleDel = function(id){
+    try{
+      if(window._peopleDelArm!==id){
+        window._peopleDelArm=id;
+        setTimeout(function(){ if(window._peopleDelArm===id) window._peopleDelArm=null; },3000);
+        try{ window._toast&&window._toast("再点一次删除"); }catch(e){}
+        return;
+      }
+      window._peopleDelArm=null;
+      _pplSave(_pplLoad().filter(function(v){return v.id!==id;}));
+      window.renderGrow();
+      try{ window._toast&&window._toast("已删除"); }catch(e){}
+    }catch(e){}
+  };
+  function _secPeople(){
+    let list=[];
+    try{ list=_pplLoad(); }catch(e){}
+    list=list.slice().sort(function(a,b){
+      const ca=a.bday?(_pplCountdown(a.bday)||{left:9999}).left:9999;
+      const cb=b.bday?(_pplCountdown(b.bday)||{left:9999}).left:9999;
+      return ca-cb;
+    });
+    let rows="";
+    for(let i=0;i<list.length;i++){
+      const x=list[i];
+      const cd=x.bday?_pplCountdown(x.bday):null;
+      let bdTxt='';
+      if(cd){
+        const yp=x.bday.split('-');
+        const year=(yp.length===3&&!x.noyear)?(yp[0]+"年"):'';
+        const zod=(yp.length===3)?('属'+PPL_ZODIAC[(+yp[0]-4)%12]+'（按公历年近似）'):'';
+        bdTxt = '🎂 '+x.bday+(year?(' · '+year):'')+(zod?(' · '+zod):'')+' · ';
+        bdTxt += cd.left===0?'<b style="color:var(--pri);">今天生日！🎉</b>':(cd.left===1?'<b style="color:var(--pri);">明天生日！</b>':('还有 '+cd.left+' 天'));
+      } else { bdTxt='🎂 生日未记'; }
+      const note=x.note?('<div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:4px;">📝 '+_esc(x.note)+'</div>'):'';
+      rows+='<div style="border:1px solid var(--card-border);border-radius:12px;padding:10px 12px;margin-bottom:8px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--text);">'+_esc(x.name)
+        +'<span style="font-size:10px;border-radius:20px;padding:2px 8px;margin-left:6px;background:'+_pplRelColor(x.rel)+';color:var(--text-sub);">'+_esc(x.rel||'其他')+'</span></div>'
+        +'<div style="flex-shrink:0;"><span onclick="window._peopleOpen(\''+x.id+'\')" style="cursor:pointer;margin-right:6px;">✎</span><span onclick="window._peopleDel(\''+x.id+'\')" style="cursor:pointer;opacity:.55;">🗑</span></div>'
+        +'</div>'
+        +'<div style="font-size:12px;color:var(--text-sub);margin-top:4px;">'+bdTxt+'</div>'
+        +note+'</div>';
+    }
+    return _card("👥 身边人",
+      '<div class="hint">把重要的人记在这儿：生日、忌口、喜好。纯本地，只存在你自己的设备里。</div>'
+      +(rows?('<div style="margin-top:8px;">'+rows+'</div>'):'<div style="font-size:12px;color:var(--text-hint);margin-top:6px;">还没有记录——从最想记住的那个人开始。</div>')
+      +'<button class="btn-primary" style="margin-top:8px;" onclick="window._peopleOpen()">+ 添加身边人</button>');
+  }
+
   /* ---- 主渲染 ---- */
   window.renderGrow = function(){
     const body = document.getElementById("grow-body");
@@ -22767,7 +22910,7 @@ function _lenormandAIEnhance(cards, spreadType){
            打卡与吉日无需档案，现在就能用。
            <br><button class="btn-primary" onclick="window.openProfileModal&&window.openProfileModal()">去设置档案</button>
          </div></div>` +
-        _secCheckin(null) + (function(){ try{ return _secMoodCalendar(); }catch(e){ return ""; } })() + _secJiri(null) + vault;
+        _secCheckin(null) + (function(){ try{ return _secMoodCalendar(); }catch(e){ return ""; } })() + _secJiri(null) + (function(){ try{ return _secPeople(); }catch(e){ return ""; } })() + vault;
       return;
     }
     const _tryGC=(fn)=>{ try{ return fn(); }catch(e){ try{ console.warn("grow card:",e); }catch(_){} return ""; } };
@@ -22776,7 +22919,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secMoodCalendar()) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secJiri(r)) + vault;
+      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secMoodCalendar()) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secPeople()) + vault;
   };
 
   /* ---- 交互 ---- */
