@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.48.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.49.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2546,7 +2546,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.48.0-20261021';
+const ZHIMING_BUILD = 'v2.49.0-20261021';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -8521,6 +8521,20 @@ function switchTodayOffset(off){
   // 不侵入，保证输出无副作用；主要工作已在 PATCH 2/3 扩展了 TYPE_LABEL/HIST_TYPE_COLOR
   window._phase3_6patched = true;
 })();
+function _todayBirthday(){
+  try{
+    var l=JSON.parse(localStorage.getItem('zhiming_people_v1')||'[]');
+    if(!l.length) return '';
+    var now=new Date(), md=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    var hits=[];
+    for(var i=0;i<l.length;i++){
+      var p=l[i]||{}; var bd=String(p.bday||'');
+      if(bd.length>=5){ var mmdd=bd.slice(-5); if(mmdd===md&&p.name) hits.push(String(p.name)); }
+    }
+    return hits.join('、');
+  }catch(_){ return ''; }
+}
+try{ window._bdGo = function(){ try{ window.switchTab('grow'); }catch(_){} }; }catch(_){}
 function renderToday(){
   const wrap = document.getElementById("today-body");
   if (!wrap) return;
@@ -8580,6 +8594,7 @@ function renderToday(){
         <div class="tmc-ji"><div class="yj-t">❌ 忌</div><div class="yj-list">${jiList||'<span class="yj-tag">无</span>'}</div></div>
       </div>
     </div>
+    
     <div class="find-day-card" id="todayFindDayCard">
       <div class="fdc-title">🔍 找合适的日子</div>
       <div class="fdc-btns">
