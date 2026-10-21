@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.49.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.50.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2546,7 +2546,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.49.0-20261021';
+const ZHIMING_BUILD = 'v2.50.0-20261021';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -9531,7 +9531,7 @@ function _renderCalHouBar(y,m){
     for(let i=0;i<segs.length;i++){
       const g=segs[i];
       const isCur=(y===now.getFullYear()&&m===now.getMonth()+1&&tn>=y*10000+m*100+g.start&&tn<=y*10000+m*100+g.end);
-      html+='<span title="'+g.hou.d+'" style="font-size:11px;padding:3px 9px;border-radius:20px;'+(isCur?'background:var(--pri);color:#fff;font-weight:700;':'background:var(--sec,rgba(124,158,99,.12));color:var(--text-sub);')+'">'+g.term+'·'+["初","二","三"][g.hi]+'候 '+g.start+'~'+g.end+'</span>';
+      html+='<span title="'+g.hou.d+'" onclick="window.openHouDetail('+g.termIdx+','+g.hi+')" style="cursor:pointer;font-size:11px;padding:3px 9px;border-radius:20px;'+(isCur?'background:var(--pri);color:#fff;font-weight:700;':'background:var(--sec,rgba(124,158,99,.12));color:var(--text-sub);')+'">'+g.term+'·'+["初","二","三"][g.hi]+'候 '+g.start+'~'+g.end+'</span>';
     }
     html+='</div>';
     bar.innerHTML=html;
@@ -9741,7 +9741,7 @@ function openCalDayDetail(y,m,d){
       '</div>'+
       (chongsha?'<div class="cal-day-section"><div class="cds-title">🐉 冲煞生肖</div><div style="font-size:13px;">'+chongsha+'</div></div>':'')+
       (jqTip?'<div class="cal-day-section"><div class="cds-title">🌱 节气提示</div><div style="font-size:13px;">'+jqTip+'</div></div>':'')+
-      (function(){ try{ var hf=window._houOfDate; if(!hf) return ''; var ho=hf(y,m,d); if(!ho||!ho.hou) return ''; return '<div class="cal-day-section"><div class="cds-title">🌿 本日物候</div><div style="font-size:13px;">'+ho.term+["初","二","三"][ho.hi]+'候「'+ho.hou.n+'」</div><div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:2px;">'+ho.hou.d+'</div></div>'; }catch(_){ return ''; } })()+
+      (function(){ try{ var hf=window._houOfDate; if(!hf) return ''; var ho=hf(y,m,d); if(!ho||!ho.hou) return ''; return '<div class="cal-day-section" onclick="window.openHouDetail('+ho.termIdx+','+ho.hi+')" style="cursor:pointer;"><div class="cds-title">🌿 本日物候</div><div style="font-size:13px;">'+ho.term+["初","二","三"][ho.hi]+'候「'+ho.hou.n+'」 <span style="font-size:10px;color:var(--text-hint);">· 点开看三候全貌</span></div><div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:2px;">'+ho.hou.d+'</div></div>'; }catch(_){ return ''; } })()+
       '<div class="cal-day-section">'+
         '<div class="cds-title">✅ 宜 / ❌ 忌</div>'+
         '<div class="cal-day-yj">'+
@@ -16384,9 +16384,26 @@ function _houInfo(){
     return {term:r.term, hi:hi, hou:r.hou, next:h2n, left:Math.max(1,(hi+1)*5-r.diff)};
   }catch(_){ return null; }
 }
-window.openHouDetail = function(){
+window.openHouDetail = function(termIdx, hi){
   try{
-    var h = _houInfo();
+    var h = null;
+    if(typeof termIdx==='number' && termIdx>=0 && termIdx<24 && typeof hi==='number' && hi>=0 && hi<3){
+      var _st=SOLAR_TERMS[termIdx]||null;
+      var _ho=(SEVENTY2_HOU[termIdx]&&SEVENTY2_HOU[termIdx][hi])||null;
+      if(_st && _ho){
+        var _now=new Date();
+        var _start=new Date(_now.getFullYear(), _st.m-1, _st.d);
+        var _last=new Date(_now.getFullYear(), _st.m-1, _st.d);
+        _last.setDate(_last.getDate()+hi*5+4);
+        var _d0=new Date(_now.getFullYear(), _now.getMonth(), _now.getDate());
+        var _left=Math.round((_last-_d0)/86400000);
+        var _nHi=hi+1, _nIdx=termIdx;
+        if(_nHi>2){ _nHi=0; _nIdx=(termIdx+1)%24; }
+        var _next=(SEVENTY2_HOU[_nIdx]&&SEVENTY2_HOU[_nIdx][_nHi])||null;
+        h={term:_st.n, hi:hi, hou:_ho, left:_left, next:_next, termIdx:termIdx, passed:_left<0};
+      }
+    }
+    if(!h) h = _houInfo();
     if(!h || !h.hou){ try{ _alert2 && _alert2("候数据加载中，稍后再试"); }catch(e){} return; }
     var idx = -1;
     for(var i=0;i<SOLAR_TERMS.length;i++){ if(SOLAR_TERMS[i].n===h.term){ idx=i; break; } }
@@ -16407,7 +16424,7 @@ window.openHouDetail = function(){
         + '<div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:2px;">→ '+list[k].g+'</div>'
         + '</div>';
     }
-    html += '<div style="font-size:10px;color:var(--text-hint);text-align:center;margin-top:6px;">本候还剩 '+h.left+' 天 · 下候「'+(h.next?h.next.n:"")+'」 · 按近似节气日推算，仅供文化参考</div>';
+    html += '<div style="font-size:10px;color:var(--text-hint);text-align:center;margin-top:6px;">'+(h.passed?('该候已过 '+(-h.left)+' 天'):(h.left===0?'本候今天结束':'本候还剩 '+h.left+' 天'))+' · 下候「'+(h.next?h.next.n:"")+'」 · 按近似节气日推算，仅供文化参考</div>';
     var t = document.getElementById('houModalTitle'); if(t) t.textContent = '🌱 '+h.term+' · 三候';
     var b = document.getElementById('houModalBody'); if(b) b.innerHTML = html;
     window.__openModalById('houModal');
