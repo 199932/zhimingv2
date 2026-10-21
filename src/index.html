@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.47.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.48.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2546,7 +2546,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.47.0-20261021';
+const ZHIMING_BUILD = 'v2.48.0-20261021';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -9487,7 +9487,39 @@ function renderCalendar(y,m){
     for(let d=1; d<=rest; d++){
       box.appendChild(_buildCalCell(y, m+1>12?1:m+1, d, true, jqList, td_y,td_m,td_d));
     }
+    try{ _renderCalHouBar(y,m); }catch(_){}
   }catch(e){ try{ console && console.error(e);}catch(_){} }
+}
+function _renderCalHouBar(y,m){
+  try{
+    let bar=document.getElementById('calHouBar');
+    if(!bar){
+      bar=document.createElement('div');
+      bar.id='calHouBar';
+      const legend=document.querySelector('#sub-cal-view .cal-legend');
+      if(legend&&legend.parentNode) legend.parentNode.insertBefore(bar, legend); else return;
+    }
+    const daysInM=new Date(y,m,0).getDate();
+    const now=new Date();
+    const segs=[]; let curKey='';
+    for(let d=1;d<=daysInM;d++){
+      const hf=window._houOfDate; if(!hf){ break; }
+      const ho=hf(y,m,d);
+      if(!ho||!ho.hou){ continue; }
+      const key=ho.term+'#'+ho.hi;
+      if(key!==curKey){ segs.push({term:ho.term, hi:ho.hi, start:d, end:d, hou:ho.hou, termIdx:ho.termIdx}); curKey=key; }
+      else { const last=segs[segs.length-1]; last.end=d; }
+    }
+    const tn=now.getFullYear()*10000+ (now.getMonth()+1)*100+now.getDate();
+    let html='<div style="font-size:11px;color:var(--text-hint);margin:8px 0 4px;">🌿 本月物候</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    for(let i=0;i<segs.length;i++){
+      const g=segs[i];
+      const isCur=(y===now.getFullYear()&&m===now.getMonth()+1&&tn>=y*10000+m*100+g.start&&tn<=y*10000+m*100+g.end);
+      html+='<span title="'+g.hou.d+'" style="font-size:11px;padding:3px 9px;border-radius:20px;'+(isCur?'background:var(--pri);color:#fff;font-weight:700;':'background:var(--sec,rgba(124,158,99,.12));color:var(--text-sub);')+'">'+g.term+'·'+["初","二","三"][g.hi]+'候 '+g.start+'~'+g.end+'</span>';
+    }
+    html+='</div>';
+    bar.innerHTML=html;
+  }catch(e){}
 }
 try{ window.renderCalendar = renderCalendar; }catch(_){}
 function _buildCalCell(y,m,d, otherMonth, jqList, ty,tm,td){
@@ -9693,6 +9725,7 @@ function openCalDayDetail(y,m,d){
       '</div>'+
       (chongsha?'<div class="cal-day-section"><div class="cds-title">🐉 冲煞生肖</div><div style="font-size:13px;">'+chongsha+'</div></div>':'')+
       (jqTip?'<div class="cal-day-section"><div class="cds-title">🌱 节气提示</div><div style="font-size:13px;">'+jqTip+'</div></div>':'')+
+      (function(){ try{ var hf=window._houOfDate; if(!hf) return ''; var ho=hf(y,m,d); if(!ho||!ho.hou) return ''; return '<div class="cal-day-section"><div class="cds-title">🌿 本日物候</div><div style="font-size:13px;">'+ho.term+["初","二","三"][ho.hi]+'候「'+ho.hou.n+'」</div><div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:2px;">'+ho.hou.d+'</div></div>'; }catch(_){ return ''; } })()+
       '<div class="cal-day-section">'+
         '<div class="cds-title">✅ 宜 / ❌ 忌</div>'+
         '<div class="cal-day-yj">'+
@@ -16312,10 +16345,8 @@ const SEVENTY2_HOU=[
  [{n:"鹖鴠不鸣",d:"好斗的寒号鸟也不叫了，冷到沉默。",g:"冷到不想说话的时候，就安静待着。"},{n:"虎始交",d:"老虎开始求偶，极寒里有生机。",g:"极寒里也有生机，老虎比你先知道。"},{n:"荔挺出",d:"马蔺草感知阳气，独自抽芽。",g:"都缩着的时候，敢冒头的最亮眼。"}],
  [{n:"蚯蚓结",d:"蚯蚓在土里打结取暖。",g:"抱紧自己过冬，不丢人。"},{n:"麋角解",d:"麋鹿角脱落，旧岁卸载。",g:"卸载旧版本，是为了长新的。"},{n:"水泉动",d:"泉眼在冰下悄悄流动。",g:"冰面下的流动，就是你没放弃的那部分。"}],
 ];
-function _houInfo(){
+function _houOfDate(y,m,dd){
   try{
-    var now=new Date();
-    var m=now.getMonth()+1, dd=now.getDate(), y=now.getFullYear();
     var tn=m*100+dd, curIdx=-1;
     for(var i=0;i<SOLAR_TERMS.length;i++){ var t=SOLAR_TERMS[i]; if(t.m*100+t.d<=tn) curIdx=i; }
     if(curIdx<0) curIdx=11; /* 1月1-4日属冬至 */
@@ -16323,8 +16354,18 @@ function _houInfo(){
     var diff=Math.floor((new Date(y,m-1,dd)-new Date(y,cur.m-1,cur.d))/86400000);
     var hi=Math.max(0,Math.min(2,Math.floor(diff/5)));
     var hou=SEVENTY2_HOU[curIdx]&&SEVENTY2_HOU[curIdx][hi];
+    return {term:cur.n, hi:hi, hou:hou||null, diff:diff, termIdx:curIdx};
+  }catch(_){ return null; }
+}
+try{ window._houOfDate = window._houOfDate || _houOfDate; }catch(_){}
+function _houInfo(){
+  try{
+    var now=new Date();
+    var r=_houOfDate(now.getFullYear(), now.getMonth()+1, now.getDate());
+    if(!r) return null;
+    var hi=r.hi, curIdx=r.termIdx;
     var h2n=(SEVENTY2_HOU[curIdx]&&SEVENTY2_HOU[curIdx][hi+1])?(hi+1):(SEVENTY2_HOU[(curIdx+1)%24]&&SEVENTY2_HOU[(curIdx+1)%24][0]);
-    return {term:cur.n, hi:hi, hou:hou, next:h2n, left:Math.max(1,(hi+1)*5-diff)};
+    return {term:r.term, hi:hi, hou:r.hou, next:h2n, left:Math.max(1,(hi+1)*5-r.diff)};
   }catch(_){ return null; }
 }
 window.openHouDetail = function(){
