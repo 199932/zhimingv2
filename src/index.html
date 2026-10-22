@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.52.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.53.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2558,7 +2558,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.52.0-20261022';
+const ZHIMING_BUILD = 'v2.53.0-20261022';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -23060,95 +23060,260 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
 
 <script>
 /* ================= 养生调理（身体+风水） ================= */
-(function(){
-  var SYMPTOMS = [
+  (function(){
+    var st=document.createElement('style'); st.textContent=
+      '.ac-body{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.85}'
+      +'.ac-dim{fill:none;stroke:currentColor;stroke-width:1.3;opacity:.35}'
+      +'.ac-pt{fill:#e05252;stroke:#fff;stroke-width:2}'
+      +'.ac-hl{fill:#e05252;stroke:#fff;stroke-width:2.5}'
+      +'.ac-pulse{fill:none;stroke:#e05252;stroke-width:2;opacity:.8;animation:acupP 1.6s ease-out infinite}'
+      +'@keyframes acupP{0%{r:6;opacity:.85}100%{r:17;opacity:0}}'
+      +'.ac-lb{font-size:11px;font-weight:600;fill:currentColor;paint-order:stroke;stroke:rgba(128,128,128,.3);stroke-width:3px}'
+      +'.ac-tip{font-size:10px;fill:currentColor;opacity:.55}';
+    document.head.appendChild(st);
+
+    /* ---- 部位线稿 + 穴位坐标（viewBox 内手测） ---- */
+    var PARTS = {
+      /* 侧脸朝左 */
+      head:{vb:'0 0 210 205', art:
+        '<path class="ac-body" d="M104 12 C66 12 40 40 38 76 C37 92 39 100 45 104 L33 112 C30 114 32 118 36 118 L45 117 C44 124 46 130 52 134 C60 139 63 150 61 161 C60 172 68 181 80 182 L148 182 C156 168 154 156 161 146 C170 133 175 114 173 94 C171 46 146 12 104 12 Z"/>'
+        +'<path class="ac-body" d="M132 86 C142 80 154 82 152 96 C150 108 142 112 134 108"/>'
+        +'<path class="ac-dim" d="M58 44 C86 30 120 32 142 48"/>'
+        +'<path class="ac-dim" d="M52 92 L66 91"/>'
+        +'<path class="ac-dim" d="M78 182 L76 200 M132 182 L134 200"/>',
+        pts:{
+          baihui:{x:104,y:16,n:'百会',dy:-4},
+          taiyang:{x:56,y:80,n:'太阳',dy:-6},
+          jingming:{x:42,y:98,n:'睛明',dx:-6,an:'end',dy:14},
+          sibai:{x:56,y:114,n:'四白',dx:-8,an:'end',dy:14},
+          fengchi:{x:162,y:92,n:'风池',dx:6,dy:4}
+        }},
+      /* 前臂+手掌 掌面朝上 */
+      palm:{vb:'0 0 200 230', art:
+        '<path class="ac-body" d="M72 8 L128 8 C136 8 140 14 140 22 L138 104 C138 112 134 118 128 118 L72 118 C64 118 60 112 60 104 L62 22 C62 14 66 8 72 8 Z"/>'
+        +'<path class="ac-body" d="M62 116 C56 148 58 172 70 188 C82 202 116 204 128 188 C140 172 142 146 138 116"/>'
+        +'<rect class="ac-body" x="70" y="188" width="17" height="38" rx="8"/>'
+        +'<rect class="ac-body" x="90" y="192" width="17" height="36" rx="8"/>'
+        +'<rect class="ac-body" x="110" y="190" width="17" height="38" rx="8"/>'
+        +'<path class="ac-body" d="M130 150 C142 146 152 150 154 160 C155 168 148 174 140 172"/>'
+        +'<path class="ac-dim" d="M64 110 C88 116 112 116 136 110"/>'
+        +'<path class="ac-dim" d="M66 96 C88 101 112 101 134 96"/>'
+        +'<path class="ac-tip" d="M64 84 L136 84 M64 70 L136 70 M64 56 L136 56" stroke-dasharray="3 4"/>'
+        +'<text class="ac-tip" x="150" y="72">三横指</text>',
+        pts:{
+          neiguan:{x:100,y:70,n:'内关',dx:10,dy:4},
+          shenmen:{x:128,y:111,n:'神门',dx:8,dy:14},
+          laogong:{x:102,y:152,n:'劳宫',dx:10,dy:16}
+        }},
+      /* 手背朝上（拇指在左） */
+      dorsum:{vb:'0 0 200 230', art:
+        '<path class="ac-body" d="M72 222 L128 222 C136 222 140 216 140 208 L138 126 C138 118 134 112 128 112 L72 112 C64 112 60 118 60 126 L62 208 C62 216 66 222 72 222 Z"/>'
+        +'<path class="ac-body" d="M62 114 C56 82 58 58 70 42 C82 28 116 26 128 42 C140 58 142 80 138 114"/>'
+        +'<rect class="ac-body" x="66" y="6" width="17" height="40" rx="8" transform="rotate(6 74 26)"/>'
+        +'<rect class="ac-body" x="88" y="2" width="17" height="44" rx="8"/>'
+        +'<rect class="ac-body" x="109" y="4" width="17" height="42" rx="8" transform="rotate(-4 117 25)"/>'
+        +'<path class="ac-body" d="M72 74 C60 78 48 88 46 100 C45 110 52 116 60 112"/>'
+        +'<path class="ac-dim" d="M66 128 C88 122 112 122 134 128"/>'
+        +'<path class="ac-tip" d="M64 152 L136 152 M64 166 L136 166 M64 180 L136 180" stroke-dasharray="3 4"/>'
+        +'<text class="ac-tip" x="150" y="168">三横指</text>',
+        pts:{
+          zhigou:{x:100,y:166,n:'支沟',dx:10,dy:-6},
+          hegu:{x:70,y:104,n:'合谷',dx:-10,an:'end',dy:-10},
+          houxi:{x:128,y:112,n:'后溪',dx:8,dy:-6}
+        }},
+      /* 躯干正面 */
+      torso:{vb:'0 0 200 240', art:
+        '<path class="ac-body" d="M56 30 C70 24 88 22 100 22 C112 22 130 24 144 30 C150 52 152 80 150 108 C149 140 146 170 138 196 L62 196 C54 170 51 140 50 108 C48 80 50 52 56 30 Z"/>'
+        +'<path class="ac-dim" d="M62 44 C86 52 114 52 138 44"/>'
+        +'<circle class="ac-dim" cx="76" cy="98" r="4"/><circle class="ac-dim" cx="124" cy="98" r="4"/>'
+        +'<path class="ac-dim" d="M92 162 C97 158 103 158 108 162"/>'
+        +'<path class="ac-dim" d="M66 196 L66 216 M134 196 L134 216"/>',
+        pts:{
+          danzhong:{x:100,y:98,n:'膻中',dx:12,dy:-4},
+          zhongwan:{x:100,y:132,n:'中脘',dx:12,dy:-6},
+          tianshu:{x:76,y:162,n:'天枢',dx:-10,an:'end',dy:16},
+          guanyuan:{x:100,y:186,n:'关元',dx:12,dy:4}
+        }},
+      /* 右腿正面（内侧在左） */
+      leg:{vb:'0 0 170 260', art:
+        '<path class="ac-body" d="M46 12 L124 12 C130 40 130 58 122 76 C116 90 114 96 114 108 C114 118 110 124 104 126 L66 126 C60 124 56 118 56 108 C56 96 54 90 48 76 C40 58 40 40 46 12 Z"/>'
+        +'<path class="ac-body" d="M66 126 C64 150 66 176 64 200 C63 216 62 228 64 238 L106 238 C108 228 107 214 106 198 C104 176 106 150 104 126"/>'
+        +'<ellipse class="ac-dim" cx="85" cy="88" rx="12" ry="9"/>'
+        +'<path class="ac-tip" d="M60 196 L58 184 M64 196 L62 184 M68 196 L66 184 M72 196 L70 184" stroke-dasharray="0"/>'
+        +'<text class="ac-tip" x="76" y="182">踝上四横指</text>'
+        +'<path class="ac-dim" d="M50 22 L120 22"/>',
+        pts:{
+          xuehai:{x:60,y:64,n:'血海',dx:-8,an:'end',dy:-6},
+          zusanli:{x:114,y:104,n:'足三里',dx:8,dy:4},
+          sanyinjiao:{x:66,y:210,n:'三阴交',dx:-10,an:'end',dy:14},
+          xuanzhong:{x:106,y:210,n:'悬钟',dx:8,dy:16}
+        }},
+      /* 足底 */
+      foot:{vb:'0 0 150 220', art:
+        '<path class="ac-body" d="M75 8 C58 8 50 20 50 36 C50 56 44 78 42 104 C40 134 46 166 56 184 C64 198 86 198 94 184 C104 166 110 134 108 104 C106 78 100 56 100 36 C100 20 92 8 75 8 Z"/>'
+        +'<ellipse class="ac-dim" cx="58" cy="26" rx="8" ry="12"/>'
+        +'<ellipse class="ac-dim" cx="75" cy="22" rx="9" ry="13"/>'
+        +'<ellipse class="ac-dim" cx="92" cy="26" rx="8" ry="12"/>'
+        +'<path class="ac-dim" d="M52 130 C70 138 80 138 98 130"/>',
+        pts:{
+          yongquan:{x:75,y:70,n:'涌泉',dx:12,dy:-6}
+        }},
+      /* 背面头颈肩 */
+      neck:{vb:'0 0 220 170', art:
+        '<path class="ac-body" d="M110 8 C74 8 50 34 50 68 C50 84 56 96 64 104 L58 120 L162 120 L156 104 C164 96 170 84 170 68 C170 34 146 8 110 8 Z"/>'
+        +'<path class="ac-body" d="M58 120 C40 126 24 138 18 154 L202 154 C196 138 180 126 162 120"/>'
+        +'<path class="ac-dim" d="M110 60 L110 118"/>'
+        +'<path class="ac-dim" d="M96 62 C104 66 116 66 124 62"/>',
+        pts:{
+          dazhui:{x:110,y:64,n:'大椎',dx:10,dy:-8},
+          jianjing:{x:150,y:126,n:'肩井',dx:8,dy:14},
+          jianjingL:{x:70,y:126,n:'肩井（两侧各一）',dx:-10,an:'end',dy:26}
+        }}
+    };
+
+    window._acupSvg = function(p, k){
+      var P = PARTS[p]; if(!P) return '';
+      var s = '<svg viewBox="'+P.vb+'" xmlns="http://www.w3.org/2000/svg" style="width:min(100%,290px);max-height:250px;color:var(--text-sub);display:block;margin:0 auto;">';
+      s += P.art;
+      for(var key in P.pts){
+        var q = P.pts[key]; var hl = (key===k);
+        if(hl) s += '<circle class="ac-pulse" cx="'+q.x+'" cy="'+q.y+'" r="6"/>';
+        s += '<circle class="'+(hl?'ac-hl':'ac-pt')+'" cx="'+q.x+'" cy="'+q.y+'" r="'+(hl?6:4.5)+'"/>';
+        s += '<text class="ac-lb" x="'+(q.x+(q.dx||9))+'" y="'+(q.y+(q.dy||-8))+'" text-anchor="'+(q.an||'start')+'">'+q.n+'</text>';
+      }
+      s += '</svg>';
+      return s;
+    };
+
+    var SYMPTOMS = [
     {e:'🤕', n:'头痛', why:'受风、熬夜、紧张压力大时多发，先排除缺水和久盯屏幕',
      ac:[
-      {n:'太阳', f:'眉梢与外眼角之间，向后约一横指的凹陷处', h:'两手中指同时打圈按揉 2 分钟，力度由轻到中'},
-      {n:'风池', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'双手拇指抵住凹陷，向上顶住揉按 2 分钟'},
-      {n:'合谷', f:'虎口并拢，肌肉鼓起最高的那一点（用另一只手按）', h:'拇指指尖垂直下压，酸胀为宜，左右手各 2 分钟'}
+      {n:'太阳', p:'head', k:'taiyang', f:'眉梢与外眼角之间，向后约一横指的凹陷处', h:'两手中指同时打圈按揉 2 分钟，力度由轻到中'},
+      {n:'风池', p:'head', k:'fengchi', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'双手拇指抵住凹陷，向上顶住揉按 2 分钟'},
+      {n:'合谷', p:'dorsum', k:'hegu', f:'虎口并拢，肌肉鼓起最高的那一点（用另一只手按）', h:'拇指指尖垂直下压，酸胀为宜，左右手各 2 分钟'}
      ],
      eat:'一杯菊花薄荷茶；避开冰饮和酒', life:'放下屏幕闭眼 5 分钟，热毛巾敷后颈 10 分钟'},
     {e:'😴', n:'失眠', why:'越想睡越睡不着多半是心神不收，先从手上的穴位降心火',
      ac:[
-      {n:'神门', f:'小指一侧的腕横纹上，靠小指端的凹陷处', h:'拇指轻揉 2 分钟，节奏放慢，配合深呼吸'},
-      {n:'内关', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按住，缓缓揉按 2 分钟，左右手轮流'},
-      {n:'涌泉', f:'脚底前三分之一处，脚趾蜷起来时凹陷最明显的那个坑', h:'睡前热水泡脚后，用手心搓涌泉每只 100 下，搓到发热'}
+      {n:'神门', p:'palm', k:'shenmen', f:'小指一侧的腕横纹上，靠小指端的凹陷处', h:'拇指轻揉 2 分钟，节奏放慢，配合深呼吸'},
+      {n:'内关', p:'palm', k:'neiguan', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按住，缓缓揉按 2 分钟，左右手轮流'},
+      {n:'涌泉', p:'foot', k:'yongquan', f:'脚底前三分之一处，脚趾蜷起来时凹陷最明显的那个坑', h:'睡前热水泡脚后，用手心搓涌泉每只 100 下，搓到发热'}
      ],
      eat:'睡前 1 小时温牛奶或酸枣仁茶，别喝浓茶咖啡', life:'手机放到伸手够不着的地方，灯调暗'},
-    {e:'🧊', n:'肩颈酸', why:'低头族通病——脖子一直在替脑袋负重，先松筋再活动',
+    {e:'🧊', n:'肩颈酸', why:'低头久坐是头号原因，肩颈的筋一直绷着没松过',
      ac:[
-      {n:'风池', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'双手拇指按住，画圈揉 2 分钟，同时缓慢低头抬头'},
-      {n:'肩井', f:'脖子根部与肩膀最外端连线的中点', h:'对侧手三指拿捏，一捏一松 2 分钟，酸感明显才对'},
-      {n:'后溪', f:'握拳，小指一侧掌横纹的末端（拳头最高点）', h:'握拳用桌沿顶住按压 2 分钟，边按边慢慢转脖子'}
+      {n:'风池', p:'head', k:'fengchi', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'双手拇指抵住，向上顶住揉按 2 分钟'},
+      {n:'肩井', p:'neck', k:'jianjing', f:'脖子根到肩峰连线的中点，按下去很酸的那个点', h:'中指或拇指拿捏按压 2 分钟，两侧轮流'},
+      {n:'后溪', p:'dorsum', k:'houxi', f:'握拳，小指一侧掌横纹的尽头', h:'按揉 2 分钟，同时缓慢转动脖子'}
      ],
-     eat:'无需特殊饮食，热敷比吃更管用', life:'热毛巾敷肩颈 10 分钟；屏幕抬到平视高度，每小时起身转肩 20 圈'},
-    {e:'🫃', n:'胃胀', why:'吃快了、吃杂了、压力大都会让胃罢工，按穴位帮它蠕动起来',
+     eat:'热敷比按更管用：热毛巾敷肩颈 10 分钟', life:'屏幕抬到平视高度，每小时起身耸肩 10 次'},
+    {e:'🫃', n:'胃胀', why:'吃太快、吃太杂、久坐不动，气堵在胃里下不去',
      ac:[
-      {n:'中脘', f:'胸骨下端与肚脐连线的中点（肚脐上约四横指）', h:'掌根贴住，顺时针揉 3 分钟，力度温热渗透'},
-      {n:'足三里', f:'膝盖外侧凹陷往下四横指，胫骨外侧一横指处', h:'拇指或指节下压 2 分钟，酸胀感向下传为佳'},
-      {n:'内关', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按压 2 分钟，恶心胀气时按这里最快'}
+      {n:'中脘', p:'torso', k:'zhongwan', f:'肚脐正上方约四横指，胸骨下端与肚脐连线的中点', h:'掌心贴住顺时针揉 3 分钟'},
+      {n:'足三里', p:'leg', k:'zusanli', f:'外侧膝眼直下四横指，胫骨外一横指', h:'拇指重力点按，酸胀感向小腿放散为宜，每侧 2 分钟'},
+      {n:'内关', p:'palm', k:'neiguan', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按住缓缓揉 2 分钟，止呕止胀都靠它'}
      ],
-     eat:'陈皮 3 克泡水；少食多餐，豆类糯米先放一放', life:'饭后散步 15 分钟，别立刻躺'},
-    {e:'👀', n:'眼疲劳', why:'干、涩、胀是屏幕盯出来的，穴位只能救急，休息才是根治',
+     eat:'陈皮 3 克泡水；吃饭七分饱、少食多餐', life:'饭后散步 15 分钟，别立刻躺'},
+    {e:'👀', n:'眼疲劳', why:'盯屏幕太久，眼睛的肌肉僵了，血供也跟不上',
      ac:[
-      {n:'睛明', f:'内眼角稍上方的凹陷处', h:'两食指指腹轻压 1 分钟，力度很轻（不用力揉眼球）'},
-      {n:'四白', f:'瞳孔直下约一横指，颧骨上的小凹陷', h:'食指打圈按揉 1 分钟，眼部即刻放松'},
-      {n:'太阳', f:'眉梢与外眼角之间，向后约一横指的凹陷处', h:'中指按揉 2 分钟，闭眼效果更好'}
+      {n:'睛明', p:'head', k:'jingming', f:'内眼角稍上方的凹陷处', h:'两手中指指腹轻压 30 秒×3 次，手法要轻'},
+      {n:'四白', p:'head', k:'sibai', f:'瞳孔直下约一横指，颧骨上的小凹陷', h:'指腹打圈按揉 1 分钟'},
+      {n:'太阳', p:'head', k:'taiyang', f:'眉梢与外眼角之间，向后约一横指的凹陷处', h:'闭眼打圈按揉 2 分钟'}
      ],
-     eat:'枸杞菊花茶；眼睛干可吃点蓝莓胡萝卜', life:'20-20-20：每盯屏 20 分钟，看 6 米外 20 秒'},
-    {e:'😰', n:'焦虑心慌', why:'心跳快、胸口堵多半是交感神经太兴奋，把节奏降下来',
+     eat:'枸杞菊花茶一杯', life:'20-20-20 法则：每 20 分钟看 6 米外 20 秒'},
+    {e:'😰', n:'焦虑心慌', why:'心事压着、呼吸变浅，交感神经一直踩着油门',
      ac:[
-      {n:'内关', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按住缓缓揉 3 分钟——心慌急救第一穴'},
-      {n:'神门', f:'小指一侧的腕横纹上，靠小指端的凹陷处', h:'轻揉 2 分钟，配合慢呼吸'},
-      {n:'膻中', f:'两乳头连线的中点（胸口正中）', h:'中指轻揉或掌根从上往下推 2 分钟，胸闷能松开'}
+      {n:'内关', p:'palm', k:'neiguan', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按住，缓缓深呼吸配合按揉 2 分钟——心慌发作时按这只手最管用'},
+      {n:'神门', p:'palm', k:'shenmen', f:'小指一侧的腕横纹上，靠小指端的凹陷处', h:'轻揉 2 分钟，安神定志'},
+      {n:'膻中', p:'torso', k:'danzhong', f:'两乳连线的中点，胸口正中', h:'中指轻揉 1 分钟，或掌心从上往下推 20 次'}
      ],
-     eat:'玫瑰花 5 朵泡水；咖啡因先停一天', life:'4-7-8 呼吸：吸 4 秒、屏 7 秒、呼 8 秒，做 4 轮'},
-    {e:'🤧', n:'感冒初起', why:'刚打喷嚏、脖子发紧的那半天最关键——发汗散寒要趁早',
+     eat:'玫瑰花 5 朵泡水，疏肝理气', life:'4-7-8 呼吸：吸气 4 秒、屏息 7 秒、呼气 8 秒，做 4 轮'},
+    {e:'🤧', n:'感冒初起', why:'刚受寒打喷嚏、脖子发紧的窗口期，发发汗就能压回去',
      ac:[
-      {n:'大椎', f:'低头，脖子后最突出骨头的下方凹陷', h:'热毛巾敷 + 指腹按揉 3 分钟，微微出汗最好'},
-      {n:'风池', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'拇指按揉 2 分钟，头有轻微酸胀感'},
-      {n:'合谷', f:'虎口并拢，肌肉鼓起最高的那一点', h:'重压 2 分钟，左右手都按'}
+      {n:'大椎', p:'neck', k:'dazhui', f:'低头，脖子后面最突出的那节骨头下方的凹陷', h:'掌心搓热后捂住大椎反复搓 2 分钟，搓到发烫'},
+      {n:'风池', p:'head', k:'fengchi', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'拇指按揉 2 分钟，微微出汗为宜'},
+      {n:'合谷', p:'dorsum', k:'hegu', f:'虎口并拢，肌肉鼓起最高的那一点', h:'重力按压每侧 2 分钟'}
      ],
-     eat:'生姜 3 片+红糖煮水趁热喝，捂被发汗', life:'多喝温水早点睡，今天别再吹风淋雨'},
-    {e:'😪', n:'疲劳困倦', why:'累不是睡一觉就完——气血没跟上，穴位帮你提提气',
+     eat:'生姜 3 片+葱白煮水趁热喝，盖被发汗', life:'当天别再吹风洗头，早点睡'},
+    {e:'😪', n:'疲劳困倦', why:'熬夜透支+久坐脑供血不足，整个人像没充上电',
      ac:[
-      {n:'百会', f:'头顶正中，两耳尖连线与鼻梁延长线交点', h:'中指点按 1 分钟，瞬间清醒'},
-      {n:'足三里', f:'膝盖外侧凹陷往下四横指，胫骨外侧一横指处', h:'用力按 2 分钟——「常按足三里，胜吃老母鸡」'},
-      {n:'涌泉', f:'脚底前三分之一处，蜷脚时凹陷最明显处', h:'睡前搓 100 下到发热，第二天不容易困'}
+      {n:'百会', p:'head', k:'baihui', f:'头顶正中，两耳尖连线与头顶正中线交点', h:'中指按住点振 1 分钟，提神醒脑立竿见影'},
+      {n:'足三里', p:'leg', k:'zusanli', f:'外侧膝眼直下四横指，胫骨外一横指', h:'拇指重力点按每侧 2 分钟，健脾胃补气血'},
+      {n:'涌泉', p:'foot', k:'yongquan', f:'脚底前三分之一的凹陷处', h:'晚上搓 100 下引火归元，白天按 1 分钟提神'}
      ],
-     eat:'黄芪 5 克+红枣 2 颗泡水，补气提神', life:'中午眯 15 分钟（别超 30），晚上 11 点前睡'},
-    {e:'🥶', n:'手脚冰凉', why:'末梢循环差 + 阳气不足，从脚底和肚脐下引火归元',
+     eat:'黄芪 5 克+红枣 2 颗泡水', life:'中午眯 15 分钟，晚上 11 点前睡——穴位救不了熬夜'},
+    {e:'🥶', n:'手脚冰凉', why:'阳气不足或循环差，热量送不到手脚末梢',
      ac:[
-      {n:'涌泉', f:'脚底前三分之一处，蜷脚时凹陷最明显处', h:'睡前泡脚后搓 100 下，搓热为止'},
-      {n:'关元', f:'肚脐正下方四横指处', h:'掌根温揉 3 分钟（先搓热手掌再揉）'},
-      {n:'劳宫', f:'握拳，中指尖正对着掌心的位置', h:'一只手搓另一只手劳宫各 1 分钟，双手立刻回暖'}
+      {n:'涌泉', p:'foot', k:'yongquan', f:'脚底前三分之一的凹陷处', h:'睡前泡脚 15 分钟后，搓涌泉每只 100 下到发热'},
+      {n:'关元', p:'torso', k:'guanyuan', f:'肚脐正下方四横指', h:'掌心捂住顺时针揉 3 分钟，温补阳气'},
+      {n:'劳宫', p:'palm', k:'laogong', f:'握拳，中指尖正对着掌心的位置', h:'两手劳宫相对搓 1 分钟，或搓热后捂腰眼'}
      ],
-     eat:'桂圆红枣茶；冬天吃点羊肉韭菜', life:'睡前 40°C 温水泡脚 15 分钟，泡到额头微汗'},
-    {e:'🚻', n:'便秘', why:'肠道蠕动慢、喝水少是主因，穴位+揉腹比泻药温柔得多',
+     eat:'桂圆 3 颗+红枣 2 颗煮水，忌冰饮', life:'睡前 40°C 左右温水泡脚 15 分钟，泡到微微出汗就停'},
+    {e:'🚻', n:'便秘', why:'肠道蠕动慢+喝水少，便便在里头走不动',
      ac:[
-      {n:'天枢', f:'肚脐旁开三横指（左右各一）', h:'双手食指同时按揉 3 分钟，促进肠蠕动'},
-      {n:'支沟', f:'手背腕横纹向上四横指，两根骨头之间', h:'拇指按压 2 分钟——通便经验效穴'},
-      {n:'足三里', f:'膝盖外侧凹陷往下四横指，胫骨外侧一横指处', h:'按揉 2 分钟，调理肠胃整体功能'}
+      {n:'天枢', p:'torso', k:'tianshu', f:'肚脐旁开三横指，两侧各一', h:'食中指按住两侧天枢，顺时针方向揉腹 5 分钟'},
+      {n:'支沟', p:'dorsum', k:'zhigou', f:'手背腕横纹上四横指，两根骨头之间', h:'拇指重力按压每侧 2 分钟——通便经验穴'},
+      {n:'足三里', p:'leg', k:'zusanli', f:'外侧膝眼直下四横指，胫骨外一横指', h:'点按每侧 2 分钟，促进肠蠕动'}
      ],
-     eat:'晨起一大杯温水；火龙果、燕麦、酸奶轮着来', life:'掌心顺时针揉腹 5 分钟（围绕肚脐画大圈），每天固定时间蹲 5 分钟'},
-    {e:'🌙', n:'经期不适', why:'受凉和气滞最常见——保暖是第一位，穴位帮着顺一顺',
+     eat:'晨起一大杯温水；火龙果、西梅、燕麦都行', life:'固定时间蹲（早餐后最佳），5 分钟没感觉就起来别玩手机'},
+    {e:'🌙', n:'经期不适', why:'受凉、气滞血瘀，小腹坠胀腰发酸',
      ac:[
-      {n:'三阴交', f:'内踝尖向上四横指，小腿内侧骨后缘', h:'拇指按揉 3 分钟——妇科要穴（孕期禁按）'},
-      {n:'关元', f:'肚脐正下方四横指处', h:'掌根温揉 3 分钟，配合暖宝宝热敷'},
-      {n:'血海', f:'手掌盖住膝盖（右手按左膝），拇指指尖到达的位置', h:'按揉 2 分钟，血胀感缓解明显'}
+      {n:'三阴交', p:'leg', k:'sanyinjiao', f:'内踝尖直上四横指，胫骨内侧后缘', h:'拇指按揉每侧 3 分钟——妇科要穴，孕期禁按'},
+      {n:'关元', p:'torso', k:'guanyuan', f:'肚脐正下方四横指', h:'掌心捂住轻揉 3 分钟，暖宫止痛'},
+      {n:'血海', p:'leg', k:'xuehai', f:'膝盖内上方，掌心盖住膝盖时大拇指尖的位置', h:'按揉每侧 2 分钟'}
      ],
-     eat:'红糖姜茶趁热喝；冰饮咖啡这两天都别碰', life:'热敷小腹，腰上多裹一层，早点睡'},
-    {e:'😖', n:'落枕', why:'睡姿+受风让脖子一侧的肌肉锁死了，越猛转越糟',
+     eat:'红糖姜茶趁热喝，忌冰饮生冷', life:'热水袋敷小腹，腰酸就热敷后腰'},
+    {e:'😖', n:'落枕', why:'睡姿不对+颈部受凉，一侧的肌肉痉挛锁死了',
      ac:[
-      {n:'后溪', f:'握拳，小指一侧掌横纹的末端', h:'按压 2 分钟同时缓慢小幅度活动脖子'},
-      {n:'悬钟', f:'外踝尖向上四横指，小腿外侧骨前缘', h:'指节按 2 分钟，边按边轻轻转头'},
-      {n:'风池', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'轻揉 2 分钟，缓解颈部僵硬'}
+      {n:'后溪', p:'dorsum', k:'houxi', f:'握拳，小指一侧掌横纹的尽头', h:'重力按压同时缓慢转头，每侧 2 分钟——落枕速效穴'},
+      {n:'悬钟', p:'leg', k:'xuanzhong', f:'外踝尖直上四横指，腓骨前缘', h:'按揉每侧 2 分钟，配合缓慢活动颈部'},
+      {n:'风池', p:'head', k:'fengchi', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'拇指按揉 2 分钟松解痉挛'}
      ],
-     eat:'无需特殊饮食', life:'热敷脖子 15 分钟；枕头换矮一点的，今天别猛回头'}
-  ];
+     eat:'无需特别食补，热敷更直接：颈部热敷 15 分钟', life:'枕头换低一点的，48 小时内别猛甩头，不缓解再就医'}
+    ];
 
-  var GONG_POS = {1:{n:'正北',x:'坎',el:'水'},2:{n:'西南',x:'坤',el:'土'},3:{n:'正东',x:'震',el:'木'},4:{n:'东南',x:'巽',el:'木'},6:{n:'西北',x:'乾',el:'金'},7:{n:'正西',x:'兑',el:'金'},8:{n:'东北',x:'艮',el:'土'},9:{n:'正南',x:'离',el:'火'}};
+    function _healthSub(which){
+      var b=document.getElementById('health-body'), f=document.getElementById('health-fs');
+      var bt=document.getElementById('hst-body'), ft=document.getElementById('hst-fs');
+      if(!b||!f) return;
+      b.style.display = which==='body'?'':'none';
+      f.style.display = which==='fs'?'':'none';
+      if(bt){ bt.style.background = which==='body'?'var(--pri)':'var(--card)'; bt.style.color = which==='body'?'#fff':'var(--text-sub)'; bt.style.borderColor='var(--pri)'; bt.style.opacity = which==='body'?'1':'.8'; }
+      if(ft){ ft.style.background = which==='fs'?'var(--pri)':'var(--card)'; ft.style.color = which==='fs'?'#fff':'var(--text-sub)'; ft.style.borderColor='var(--pri)'; ft.style.opacity = which==='fs'?'1':'.8'; }
+    }
+    window._healthSub = _healthSub;
+
+    function renderBody(){
+      var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
+      var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🩺 哪儿不舒服？按按就能缓解</div><div class="widget-body" style="padding:12px;">';
+      h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+      SYMPTOMS.forEach(function(s,i){
+        h+='<div onclick="window._healthPick('+i+')" style="cursor:pointer;border:1.5px solid var(--card-border);border-radius:12px;padding:12px 4px;text-align:center;">'
+          +'<div style="font-size:22px;">'+s.e+'</div>'
+          +'<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:4px;">'+s.n+'</div></div>';
+      });
+      h+='</div><div style="font-size:11px;color:var(--text-hint);margin-top:10px;">点症状 → 看穴位图（红点闪烁就是要按的位置）+ 手法 + 食饮</div></div></div><div id="health-detail"></div>';
+      el.innerHTML=h; el.dataset.done='1';
+    }
+
+    window._healthPick = function(i){
+      var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
+      var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+s.e+' '+s.n+'</div><div class="widget-body" style="padding:14px;">'
+        +'<div style="font-size:12px;color:var(--text-hint);">'+s.why+'</div>';
+      s.ac.forEach(function(a,j){
+        h+='<div style="border:1.5px solid var(--card-border);border-radius:12px;padding:12px;margin-top:10px;">'
+          +'<div style="font-size:14px;font-weight:700;color:var(--pri);">穴位'+(j+1)+' · '+a.n+'</div>'
+          +'<div style="text-align:center;margin:8px 0 4px;">'+(window._acupSvg?window._acupSvg(a.p,a.k):'')+'</div>'
+          +'<div style="font-size:12.5px;color:var(--text);line-height:1.7;">📍 找：'+a.f+'</div>'
+          +'<div style="font-size:12.5px;color:var(--text-sub);margin-top:3px;line-height:1.7;">👉 按：'+a.h+'</div></div>';
+      });
+      h+='<div style="margin-top:12px;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'
+        +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;">🍵 '+s.eat+'</div>'
+        +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;margin-top:4px;">🛏️ '+s.life+'</div></div>'
+        +'</div></div>';
+      el.innerHTML=h;
+      try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_){}
+    };
   var DOOR_FS = {
     '休':{t:'休养生息位——这块地方适合休息放松', a:'把卧室或沙发朝向这边更安神；现在就做：睡前把手机充电挪到别的房间，让这块地方只留给休息'},
     '生':{t:'生机旺位——健康与财气都爱待在这里', a:'保持整洁最重要；现在就做：把这里擦干净，摆一盆绿萝或薄荷，别堆杂物'},
@@ -23189,51 +23354,6 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
       return fn({y:n.getFullYear(), m:n.getMonth()+1, d:n.getDate(), h:n.getHours(), minute:n.getMinutes(), dontSave:true});
     }catch(_){ return null; }
   }
-
-  window._healthSub = function(which){
-    var b=document.getElementById('health-body'), f=document.getElementById('health-fs');
-    var bt=document.getElementById('hst-body'), ft=document.getElementById('hst-fs');
-    if(!b||!f) return;
-    b.style.display = (which==='body') ? '' : 'none';
-    f.style.display = (which==='fs') ? '' : 'none';
-    if(bt){ bt.style.background = (which==='body')?'var(--pri)':'var(--card)'; bt.style.color = (which==='body')?'#fff':'var(--text-sub)'; bt.style.borderColor=(which==='body')?'var(--pri)':'var(--card-border)'; }
-    if(ft){ ft.style.background = (which==='fs')?'var(--pri)':'var(--card)'; ft.style.color = (which==='fs')?'#fff':'var(--text-sub)'; ft.style.borderColor=(which==='fs')?'var(--pri)':'var(--card-border)'; }
-    try{ if(which==='fs') window._renderHealthFS(); }catch(_){}
-  };
-
-  function renderBody(){
-    var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
-    var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🩺 哪儿不舒服？按按就能缓解</div><div class="widget-body" style="padding:12px;">';
-    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
-    for(var i=0;i<SYMPTOMS.length;i++){
-      var s=SYMPTOMS[i];
-      h+='<div onclick="window._healthPick('+i+')" style="cursor:pointer;border:1.5px solid var(--card-border);border-radius:12px;padding:12px 4px;text-align:center;background:var(--card);">'
-        +'<div style="font-size:22px;">'+s.e+'</div>'
-        +'<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:4px;">'+s.n+'</div></div>';
-    }
-    h+='</div></div></div><div id="health-detail"></div>';
-    el.innerHTML=h; el.dataset.done='1';
-  }
-
-  window._healthPick = function(i){
-    var s=SYMPTOMS[i]; var el=document.getElementById('health-detail');
-    if(!s||!el) return;
-    var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+s.e+' '+s.n+' · 自助调理</div><div class="widget-body" style="padding:14px;">';
-    h+='<div style="font-size:12px;color:var(--text-hint);line-height:1.7;">'+s.why+'</div>';
-    for(var j=0;j<s.ac.length;j++){
-      var a=s.ac[j];
-      h+='<div style="border:1.5px solid var(--card-border);border-radius:12px;padding:12px;margin-top:10px;">'
-        +'<div style="font-size:14px;font-weight:700;color:var(--pri);">穴位 '+(j+1)+' · '+a.n+'</div>'
-        +'<div style="font-size:12.5px;color:var(--text);margin-top:5px;line-height:1.7;">📍 找：'+a.f+'</div>'
-        +'<div style="font-size:12.5px;color:var(--text-sub);margin-top:3px;line-height:1.7;">👉 按：'+a.h+'</div></div>';
-    }
-    h+='<div style="margin-top:12px;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'
-      +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;">🍵 '+s.eat+'</div>'
-      +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;margin-top:4px;">🛏️ '+s.life+'</div></div>';
-    h+='</div></div>';
-    el.innerHTML=h;
-    try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_){}
-  };
 
   window._renderHealthFS = function(){
     var el=document.getElementById('health-fs'); if(!el) return;

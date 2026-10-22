@@ -1,4 +1,4 @@
-const CACHE = 'zhiming_v2_sw_v55';
+const CACHE = 'zhiming_v2_sw_v56';
 const PRECACHE = ['./', './index.html', './widget.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './donate-qr.png', './assets/app.js', './assets/style.css', './og-card.png'];
 
 self.addEventListener('install', e => {
