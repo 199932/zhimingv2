@@ -1,4 +1,4 @@
-const CACHE = 'zhiming_v2_sw_v54';
+const CACHE = 'zhiming_v2_sw_v55';
 const PRECACHE = ['./', './index.html', './widget.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './donate-qr.png', './assets/app.js', './assets/style.css', './og-card.png'];
 
 self.addEventListener('install', e => {
@@ -24,11 +24,15 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // 页面与静态资源 stale-while-revalidate：有缓存立即返回（秒开），后台静默更新供下次生效；无缓存走网络
-  const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
+  // 页面与 app.js network-first（保证版本一致、发版即生效）；其余静态资源 stale-while-revalidate 秒开
+  const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html') || url.pathname.includes('/assets/app.js');
   e.respondWith((async () => {
     const cached = await caches.match(req);
     if (cached) {
+      try {
+        const fresh = await fetch(req);
+        if (fresh && fresh.ok) { caches.open(CACHE).then(c => c.put(req, fresh.clone())).catch(() => {}); return fresh; }
+      } catch(_){}
       fetch(req).then(res => {
         if (res && res.ok) caches.open(CACHE).then(c => c.put(req, res.clone())).catch(() => {});
       }).catch(() => {});
