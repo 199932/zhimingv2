@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.53.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.54.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1083,6 +1083,188 @@
     document.head.appendChild(st);
 
     /* ---- 部位线稿 + 穴位坐标（viewBox 内手测） ---- */
+/* ---- 体质自测（九种体质简量表）+ 4-7-8 呼吸引导 ---- */
+    var CONST9 = {
+      pinghe:{n:'平和质',e:'🌤️',d:'气血调和、精力充沛，是最理想的体质底子。不需要特别进补，保持规律作息就好。',
+        eat:'饮食有节、四季均衡，少大寒大热的极端食物',life:['保持现有作息，别熬夜透支','换季适当锻炼，巩固状态'],
+        ac:[{p:'leg',k:'zusanli',n:'足三里'}],tip:'你的底子好，偶尔不适按对应症状的穴位就行，别过度保养'},
+      qixu:{n:'气虚质',e:'😮‍💨',d:'容易疲乏、气短懒言，说话声音偏低，免疫力偏弱、容易感冒，动一动就出汗。',
+        eat:'宜：山药、小米、黄芪泡水、南瓜；忌：冰饮耗气、生萝卜过量',life:['避免过度劳累和大汗淋漓','快走、八段锦等温和运动更合适，忌剧烈运动'],
+        ac:[{p:'leg',k:'zusanli',n:'足三里'},{p:'torso',k:'guanyuan',n:'关元'}],tip:'容易累的体质，按揉力度宜轻、时间可稍长，足三里常按能补气'},
+      yangxu:{n:'阳虚质',e:'🥶',d:'常年手脚偏凉、比别人怕冷，喜热饮热食，吃了凉的就肠胃不适，性格偏安静。',
+        eat:'宜：生姜、桂圆、羊肉、韭菜；忌：冷饮冰品、生冷瓜果过量',life:['睡前泡脚 15 分钟，泡到身体微热','上午晒背 15 分钟，补阳气最直接'],
+        ac:[{p:'torso',k:'guanyuan',n:'关元'},{p:'foot',k:'yongquan',n:'涌泉'}],tip:'手脚冰凉对你不是偶发——涌泉+关元建议常按，夏天也别贪凉'},
+      yinxu:{n:'阴虚质',e:'🔥',d:'手脚心发热、口干咽燥、眼睛常干涩，睡眠偏浅、容易心烦，形体偏瘦。',
+        eat:'宜：银耳、百合、梨、枸杞、鸭肉；忌：辛辣烧烤、熬夜后的浓茶咖啡',life:['尽量 23 点前睡——熬夜最伤阴','秋冬用加湿器，别让屋里太干'],
+        ac:[{p:'foot',k:'yongquan',n:'涌泉'},{p:'leg',k:'sanyinjiao',n:'三阴交'}],tip:'偏「干热」的底子，上火别喝凉茶硬压，滋阴（银耳百合）才是正路'},
+      tanshi:{n:'痰湿质',e:'🍚',d:'身体偏沉重、容易困倦，腹部松软易囤肉，舌苔厚腻、痰多，面部易出油。',
+        eat:'宜：薏米、赤小豆、冬瓜、陈皮；忌：甜腻、油炸、肥肉、暴饮暴食',life:['每餐七分饱，晚饭早一点','每天快走 30 分钟——动则生阳化湿'],
+        ac:[{p:'leg',k:'zusanli',n:'足三里'},{p:'torso',k:'zhongwan',n:'中脘'}],tip:'痰湿重的体质，按足三里帮脾胃运化，比喝去湿茶实在'},
+      shire:{n:'湿热质',e:'😖',d:'面部油腻、易生痤疮，口苦口臭，大便黏滞不爽，性格偏急躁。',
+        eat:'宜：绿豆、薏米、苦瓜、芹菜；忌：辛辣、酒、火锅烧烤、冰饮',life:['出汗后及时擦干，别湿着头发吹空调','夏天少在湿热环境久待'],
+        ac:[{p:'torso',k:'tianshu',n:'天枢'},{p:'dorsum',k:'zhigou',n:'支沟'}],tip:'湿热体质上火期间，冰饮只会越喝越闷——绿豆汤比冰可乐管用'},
+      xueyu:{n:'血瘀质',e:'🩸',d:'面色偏晦暗、易有淤青，偶有刺痛且位置固定，唇色偏暗，眼睛易有红丝。',
+        eat:'宜：山楂、黑木耳、玫瑰花茶、洋葱；忌：油腻寒凉、久坐不动',life:['每坐 1 小时起身活动 5 分钟','睡前热水泡脚促进循环'],
+        ac:[{p:'leg',k:'xuehai',n:'血海'},{p:'leg',k:'sanyinjiao',n:'三阴交'}],tip:'血得温则行——热敷和泡脚对你比按揉更见效，经期不适重点关注血海'},
+      qiyu:{n:'气郁质',e:'😔',d:'情绪容易低落或紧张焦虑，常不自觉叹气，胸闷、咽喉有异物感，睡眠质量受情绪影响大。',
+        eat:'宜：玫瑰花茶、陈皮、柑橘类；忌：睡前反复刷负面情绪内容',life:['把心事写下来，比闷着强','户外快走+晒太阳是最便宜的解郁药'],
+        ac:[{p:'torso',k:'danzhong',n:'膻中'},{p:'palm',k:'neiguan',n:'内关'}],tip:'情绪类不适先按内关+膻中，配合 4-7-8 呼吸很对症'},
+      tebing:{n:'特禀质',e:'🤧',d:'容易过敏：打喷嚏、起风团、皮肤易抓红，对季节变化和异物敏感。',
+        eat:'宜：清淡均衡、应季蔬果；忌：已知过敏原、酒、过敏期海鲜',life:['换季提前备好口罩','被褥常晒常洗，减少尘螨'],
+        ac:[{p:'head',k:'fengchi',n:'风池'},{p:'leg',k:'zusanli',n:'足三里'}],tip:'过敏体质重在扶正固表，足三里常按有助减少发作'}
+    };
+    var QUIZ15 = [
+      {q:'你容易感到疲乏、说话没力气吗？', t:'qixu'},
+      {q:'爬几层楼就容易气短心慌吗？', t:'qixu'},
+      {q:'你的手脚常年偏凉、比别人怕冷吗？', t:'yangxu'},
+      {q:'吃了凉的东西容易胃部不适或拉肚子吗？', t:'yangxu'},
+      {q:'你手脚心发热、经常口干咽燥吗？', t:'yinxu'},
+      {q:'你面颊容易潮红、眼睛常发干吗？', t:'yinxu'},
+      {q:'你感觉身体沉重、腹部松软容易发胖吗？', t:'tanshi'},
+      {q:'你面部或头发容易出油、舌苔厚腻吗？', t:'tanshi'},
+      {q:'你面部容易出油长痘、口苦口臭吗？', t:'shire'},
+      {q:'你的大便黏滞不爽、容易粘马桶吗？', t:'shire'},
+      {q:'你皮肤容易有淤青、面色偏暗吗？', t:'xueyu'},
+      {q:'你情绪容易低落、紧张，常不自觉叹气吗？', t:'qiyu'},
+      {q:'你咽喉总觉得有东西堵着、吐不出咽不下吗？', t:'qiyu'},
+      {q:'你容易打喷嚏、起风团或对东西过敏吗？', t:'tebing'},
+      {q:'你精力充沛、适应力强、睡眠质量好吗？', t:'pinghe'}
+    ];
+    var SCALE5 = ['没有','很少','有时','经常','总是'];
+
+    function _constCalc(ans){
+      var agg={};
+      for(var i=0;i<QUIZ15.length;i++){ var t=QUIZ15[i].t; if(!agg[t]) agg[t]={s:0,n:0}; agg[t].s+=ans[i]; agg[t].n++; }
+      var conv={};
+      for(var k in agg){ conv[k]=Math.round((agg[k].s-agg[k].n)/(agg[k].n*4)*100); }
+      var others=['qixu','yangxu','yinxu','tanshi','shire','xueyu','qiyu'].map(function(kk){return {k:kk,v:conv[kk]||0};}).sort(function(a,b){return b.v-a.v;});
+      var top=others[0];
+      if(conv.tebing>=40&&top.v<60) return {main:'tebing',conv:conv};
+      if(conv.pinghe>=60&&top.v<40) return {main:'pinghe',conv:conv};
+      if(top.v>=40){ var sub=(others[1]&&others[1].v>=40)?others[1].k:null; return {main:top.k,sub:sub,conv:conv}; }
+      return {main:top.k,soft:true,conv:conv};
+    }
+
+    function _constCardHTML(key, sub, soft, showSave){
+      var C=CONST9[key]; if(!C) return '';
+      var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+C.e+' 体质结果'+(soft?'（倾向）':'')+'</div><div class="widget-body" style="padding:16px 14px;">';
+      h+='<div style="text-align:center;margin:4px 0 12px;"><div style="font-size:36px;">'+C.e+'</div>'
+        +'<div style="font-size:20px;font-weight:800;color:var(--pri);margin-top:4px;">'+C.n+'</div>';
+      if(sub&&CONST9[sub]) h+='<div style="font-size:12px;color:var(--text-hint);margin-top:4px;">兼有 '+CONST9[sub].e+' '+CONST9[sub].n+' 倾向</div>';
+      if(soft) h+='<div style="font-size:12px;color:var(--text-hint);margin-top:4px;">整体偏平和，略有此体质倾向</div>';
+      h+='</div>';
+      h+='<div style="font-size:13px;color:var(--text);line-height:1.8;">'+C.d+'</div>';
+      h+='<div style="margin-top:12px;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'
+        +'<div style="font-size:12.5px;line-height:1.8;color:var(--text);">🍵 '+C.eat+'</div>';
+      for(var i=0;i<C.life.length;i++){ h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text);">✓ '+C.life[i]+'</div>'; }
+      h+='</div>';
+      h+='<div style="margin-top:14px;font-size:13.5px;font-weight:700;color:var(--text);">🎯 你的调理重点穴（日常保健）</div>';
+      for(var j=0;j<C.ac.length;j++){ var a=C.ac[j];
+        h+='<div style="border:1.5px solid var(--card-border);border-radius:12px;padding:10px;margin-top:8px;">'
+          +'<div style="text-align:center;font-size:13px;font-weight:600;color:var(--pri);">'+a.n+'</div>'
+          +'<div style="text-align:center;margin-top:2px;">'+(window._acupSvg?window._acupSvg(a.p,a.k):'')+'</div>'
+          +'<div style="text-align:center;font-size:11px;color:var(--text-hint);">每侧轻揉 2 分钟，酸胀为宜，天天按也不腻</div></div>';
+      }
+      h+='<div style="display:flex;gap:10px;margin-top:14px;">';
+      if(showSave) h+='<div onclick="window._constSave(\''+key+'\',\''+(sub||'')+'\')" style="flex:1;background:var(--pri);color:#fff;border-radius:12px;padding:12px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">保存结果</div>';
+      h+='<div onclick="window._constStart()" style="flex:1;border:1.5px solid var(--card-border);border-radius:12px;padding:12px;text-align:center;font-size:14px;color:var(--text-sub);cursor:pointer;">重测</div></div>';
+      h+='</div></div>';
+      return h;
+    }
+
+    window._constStart = function(){
+      window._constAnsArr=[];
+      var el=document.getElementById('constitution-area'); if(!el) return;
+      el.dataset.mode='quiz';
+      window._constRenderQ();
+    };
+    window._constRenderQ = function(){
+      var el=document.getElementById('constitution-area'); if(!el) return;
+      var i=window._constAnsArr.length;
+      if(i>=QUIZ15.length){ window._constResult(); return; }
+      var pct=Math.round(i/QUIZ15.length*100);
+      var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🎭 体质自测 · 第 '+(i+1)+' / '+QUIZ15.length+' 题</div><div class="widget-body" style="padding:16px 14px;">'
+        +'<div style="height:6px;border-radius:3px;background:var(--card-border);overflow:hidden;margin-bottom:16px;"><div style="height:100%;width:'+pct+'%;background:var(--pri);border-radius:3px;transition:width .3s;"></div></div>'
+        +'<div style="font-size:16px;font-weight:600;color:var(--text);line-height:1.6;margin-bottom:18px;">'+QUIZ15[i].q+'</div>';
+      for(var s=0;s<5;s++){
+        h+='<div onclick="window._constAns('+i+','+(s+1)+')" style="padding:13px;border:1.5px solid var(--card-border);border-radius:12px;margin-bottom:9px;text-align:center;font-size:14px;color:var(--text);cursor:pointer;">'+SCALE5[s]+'</div>';
+      }
+      if(i>0) h+='<div onclick="window._constBack()" style="text-align:center;font-size:12px;color:var(--text-hint);margin-top:6px;cursor:pointer;">← 上一题</div>';
+      h+='</div></div>';
+      el.innerHTML=h;
+      try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){}
+    };
+    window._constAns = function(i,v){ window._constAnsArr[i]=v; window._constRenderQ(); };
+    window._constBack = function(){ if(window._constAnsArr.length){ window._constAnsArr.pop(); window._constRenderQ(); } };
+    window._constResult = function(){
+      var r=_constCalc(window._constAnsArr||[]);
+      var el=document.getElementById('constitution-area'); if(!el) return;
+      el.innerHTML=_constCardHTML(r.main, r.sub, r.soft, true);
+      try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){}
+    };
+    window._constSave = function(t, sub){
+      try{ localStorage.setItem('zhiming_constitution_v1', JSON.stringify({t:t,sub:sub||'',at:Date.now()})); }catch(_){}
+      var el=document.getElementById('health-body');
+      if(el){ el.dataset.done=''; renderBody(); var d=document.getElementById('constitution-area'); if(d){ try{ d.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){} } }
+    };
+    window._constShow = function(t){
+      var el=document.getElementById('constitution-area'); if(!el||!CONST9[t]) return;
+      var saved=null; try{ saved=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_){}
+      el.innerHTML=_constCardHTML(t, saved&&saved.sub, false, false);
+      try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){}
+    };
+
+    /* ---- 4-7-8 呼吸引导 ---- */
+    window._breathOpen = function(){
+      if(document.getElementById('breath-ov')) return;
+      var ov=document.createElement('div');
+      ov.id='breath-ov';
+      ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(13,16,28,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:inherit;';
+      ov.innerHTML=
+        '<div id="breath-stage" style="position:relative;width:260px;height:260px;display:flex;align-items:center;justify-content:center;">'
+        +'<div style="position:absolute;width:230px;height:230px;border-radius:50%;border:1px solid rgba(124,158,99,.35);"></div>'
+        +'<div id="breath-ball" style="width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 35% 35%, #a8c98a, #7c9e63 72%);box-shadow:0 0 46px rgba(124,158,99,.5);transition:transform 4s cubic-bezier(.45,.05,.55,.95);"></div>'
+        +'</div>'
+        +'<div id="breath-label" style="margin-top:26px;font-size:20px;font-weight:700;letter-spacing:5px;color:#e8ecf4;">准备开始</div>'
+        +'<div id="breath-cnt" style="margin-top:10px;font-size:15px;opacity:.75;color:#e8ecf4;">跟着圆圈的节奏呼吸</div>'
+        +'<div id="breath-round" style="margin-top:6px;font-size:12px;opacity:.55;color:#e8ecf4;">第 1 / 4 轮</div>'
+        +'<div onclick="window._breathClose()" style="margin-top:32px;padding:10px 30px;border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:14px;cursor:pointer;opacity:.8;color:#e8ecf4;">随时退出</div>';
+      document.body.appendChild(ov);
+      window._breathRun(1);
+    };
+    window._breathRun = function(r){
+      var ov=document.getElementById('breath-ov'); if(!ov) return;
+      var label=document.getElementById('breath-label'), cnt=document.getElementById('breath-cnt'), rd=document.getElementById('breath-round'), ball=document.getElementById('breath-ball');
+      if(r>4){
+        if(label) label.textContent='完成 🌙';
+        if(cnt) cnt.textContent='放下手机，睡个好觉';
+        if(rd) rd.textContent='';
+        if(ball){ ball.style.transitionDuration='1.5s'; ball.style.transform='scale(1)'; }
+        return;
+      }
+      if(rd) rd.textContent='第 '+r+' / 4 轮';
+      var stages=[['吸气',4,'scale(1.55)'],['屏住',7,null],['呼气',8,'scale(1)']];
+      function phase(i){
+        if(!document.getElementById('breath-ov')) return;
+        var P=stages[i];
+        if(label) label.textContent=P[0];
+        var t0=Date.now();
+        var tick=setInterval(function(){
+          if(!document.getElementById('breath-ov')){ clearInterval(tick); return; }
+          var left=Math.ceil(P[1]-(Date.now()-t0)/1000);
+          if(cnt) cnt.textContent=Math.max(1,left)+' 秒';
+        },250);
+        if(P[2]&&ball){ ball.style.transitionDuration=P[1]+'s'; ball.style.transform=P[2]; }
+        setTimeout(function(){
+          clearInterval(tick);
+          if(!document.getElementById('breath-ov')) return;
+          if(i<2) phase(i+1);
+          else setTimeout(function(){ window._breathRun(r+1); },700);
+        }, P[1]*1000);
+      }
+      setTimeout(function(){ if(!document.getElementById('breath-ov')) return; phase(0); },900);
+    };
+    window._breathClose = function(){ var ov=document.getElementById('breath-ov'); if(ov) ov.remove(); };
     var PARTS = {
       /* 侧脸朝左 */
       head:{vb:'0 0 210 205', art:
@@ -1293,19 +1475,41 @@
     }
     window._healthSub = _healthSub;
 
-    function renderBody(){
+function renderBody(){
       var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
-      var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🩺 哪儿不舒服？按按就能缓解</div><div class="widget-body" style="padding:12px;">';
-      h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
-      SYMPTOMS.forEach(function(s,i){
-        h+='<div onclick="window._healthPick('+i+')" style="cursor:pointer;border:1.5px solid var(--card-border);border-radius:12px;padding:12px 4px;text-align:center;">'
+      var h='<div onclick="window._breathOpen()" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
+        +'<div style="font-size:30px;">😮‍💨</div>'
+        +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">4-7-8 呼吸 · 失眠速救</div>'
+        +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吸 4 秒 → 屏 7 秒 → 呼 8 秒，4 轮，困意自然来</div></div>'
+        +'<div style="font-size:16px;color:var(--pri);">▶</div></div></div>';
+      var saved=null;
+      try{ saved=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_){}
+      if(saved&&saved.t&&CONST9[saved.t]){
+        var C0=CONST9[saved.t];
+        h+='<div onclick="window._constShow(\''+saved.t+'\')" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
+          +'<div style="font-size:30px;">'+C0.e+'</div>'
+          +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">你的体质：'+C0.n+'</div>'
+          +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">点开看调理方案'+(saved.sub&&CONST9[saved.sub]?'（兼有'+CONST9[saved.sub].n+'）':'')+'</div></div>'
+          +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
+      } else {
+        h+='<div onclick="window._constStart()" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
+          +'<div style="font-size:30px;">🎭</div>'
+          +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">测测你的体质</div>'
+          +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">15 道题 · 约 2 分钟 · 测完养生建议更懂你</div></div>'
+          +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
+      }
+      h+='<div id="constitution-area" style="grid-column:1/-1;"></div>';
+      h+='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🩺 哪儿不舒服？按按就能缓解</div><div class="widget-body" style="padding:12px;">'
+        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+      for(var i=0;i<SYMPTOMS.length;i++){
+        var s=SYMPTOMS[i];
+        h+='<div onclick="window._healthPick('+i+')" style="cursor:pointer;border:1.5px solid var(--card-border);border-radius:12px;padding:12px 6px;text-align:center;">'
           +'<div style="font-size:22px;">'+s.e+'</div>'
           +'<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:4px;">'+s.n+'</div></div>';
-      });
-      h+='</div><div style="font-size:11px;color:var(--text-hint);margin-top:10px;">点症状 → 看穴位图（红点闪烁就是要按的位置）+ 手法 + 食饮</div></div></div><div id="health-detail"></div>';
+      }
+      h+='</div></div></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
     }
-
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
       var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+s.e+' '+s.n+'</div><div class="widget-body" style="padding:14px;">'
@@ -1320,7 +1524,16 @@
       h+='<div style="margin-top:12px;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'
         +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;">🍵 '+s.eat+'</div>'
         +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;margin-top:4px;">🛏️ '+s.life+'</div></div>'
-        +'</div></div>';
+      if(s.n==='失眠'||s.n==='焦虑心慌'){
+        h+='<div onclick="window._breathOpen()" style="margin-top:12px;background:rgba(124,158,99,.12);border-radius:12px;padding:12px;text-align:center;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--pri);">😮‍💨 打开 4-7-8 呼吸引导</div>';
+      }
+      try{
+        var _cs=null; try{ _cs=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_e2){}
+        if(_cs&&_cs.t&&CONST9[_cs.t]){
+          h+='<div style="margin-top:10px;font-size:12px;color:var(--text-hint);line-height:1.7;">💡 '+CONST9[_cs.t].e+' '+CONST9[_cs.t].n+'提醒：'+CONST9[_cs.t].tip+'</div>';
+        }
+      }catch(_e){}
+      h+='</div></div>';
       el.innerHTML=h;
       try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_){}
     };
