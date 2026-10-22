@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.51.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.52.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2288,6 +2288,18 @@ body{ padding-bottom:160px; }
   </div>
 </div>
 
+<div class="page" id="page-health">
+  <div class="section active" id="sec-health1">
+    <div style="display:flex;gap:8px;margin:0 0 12px;padding:0 2px;">
+      <button id="hst-body" onclick="window._healthSub('body')" style="flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--pri);background:var(--pri);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">🩺 身体调理</button>
+      <button id="hst-fs" onclick="window._healthSub('fs')" style="flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--card-border);background:var(--card);color:var(--text-sub);font-size:13px;font-weight:700;cursor:pointer;opacity:.8;">🧭 风水自查</button>
+    </div>
+    <div id="health-body"></div>
+    <div id="health-fs" style="display:none;"></div>
+    <div class="foot-disclaimer">※ 穴位按压与风水调适均为传统养生/民俗文化参考，不能替代就医诊断；急症或持续不适请及时就医</div>
+  </div>
+</div>
+
 <div class="copy-bar" id="copyBar" style="display:none;"><button class="copy-btn" id="copyBtn" onclick="window.copyResult()">📋 一键复制</button><button class="share-btn" id="shareBtn" onclick="window.onShareCardClick()">🖼 分享卡</button></div>
 <div class="disclaimer">本工具仅供娱乐参考，不构成任何人生建议</div>
 
@@ -2299,6 +2311,7 @@ body{ padding-bottom:160px; }
   <div class="btab" data-page="al" onclick="window.switchTab('al')"><div class="bi">❖</div><div class="bl">黄历</div></div>
   <div class="btab" id="tab-cal" data-page="cal" onclick="window.switchTab('cal')"><div class="bi">📅</div><div class="bl">日历</div></div>
   <div class="btab" data-page="grow" onclick="window.switchTab('grow')"><div class="bi">🌱</div><div class="bl">成长</div></div>
+  <div class="btab" data-page="health" onclick="window.switchTab('health')"><div class="bi">🩺</div><div class="bl">养生</div></div>
 </div>
 
 <!-- ===== 历史 Modal ===== -->
@@ -2546,7 +2559,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.51.0-20261022';
+const ZHIMING_BUILD = 'v2.52.0-20261022';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6582,6 +6595,10 @@ function switchTab(page){
     try{ const cb=document.getElementById("copyBar"); if(cb) cb.style.display="none"; }catch(_){}
     try{ if(typeof window.renderGrow === 'function') window.renderGrow(); }catch(e){ console.warn('renderGrow:',e); }
     try{ if(typeof window._growOnboardShow === 'function') window._growOnboardShow(); }catch(_e){}
+  }
+  else if (page==="health") {
+    document.body.classList.add("theme-today");
+    try{ if(typeof window.renderHealth === 'function') window.renderHealth(); }catch(e){ console.warn('renderHealth:',e); }
   }
   window.scrollTo(0,0);
 }
@@ -17693,7 +17710,253 @@ function generateShareCardImage(type, resultData){
   const built = buildShareCardHTML(type, resultData);
   const H = built.height || 1200;
   const innerHTML = built.html.replace(/\bdata:image\/svg\+xml[^"']*/g, m => encodeURIComponent(decodeURIComponent(m)));
-  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject width="100%" height="100%"><body xmlns="http://www.w3.org/1999/xhtml">${innerHTML}</body></foreignObject></svg>`;
+  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject width="100%" height="100%"><body xmlns="http://www.w3.org/1999/xhtml">${innerHTML}<script>
+<script>
+/* ================= 养生调理（身体+风水） ================= */
+(function(){
+  var SYMPTOMS = [
+    {e:'🤕', n:'头痛', why:'受风、熬夜、紧张压力大时多发，先排除缺水和久盯屏幕',
+     ac:[
+      {n:'太阳', f:'眉梢与外眼角之间，向后约一横指的凹陷处', h:'两手中指同时打圈按揉 2 分钟，力度由轻到中'},
+      {n:'风池', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'双手拇指抵住凹陷，向上顶住揉按 2 分钟'},
+      {n:'合谷', f:'虎口并拢，肌肉鼓起最高的那一点（用另一只手按）', h:'拇指指尖垂直下压，酸胀为宜，左右手各 2 分钟'}
+     ],
+     eat:'一杯菊花薄荷茶；避开冰饮和酒', life:'放下屏幕闭眼 5 分钟，热毛巾敷后颈 10 分钟'},
+    {e:'😴', n:'失眠', why:'越想睡越睡不着多半是心神不收，先从手上的穴位降心火',
+     ac:[
+      {n:'神门', f:'小指一侧的腕横纹上，靠小指端的凹陷处', h:'拇指轻揉 2 分钟，节奏放慢，配合深呼吸'},
+      {n:'内关', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按住，缓缓揉按 2 分钟，左右手轮流'},
+      {n:'涌泉', f:'脚底前三分之一处，脚趾蜷起来时凹陷最明显的那个坑', h:'睡前热水泡脚后，用手心搓涌泉每只 100 下，搓到发热'}
+     ],
+     eat:'睡前 1 小时温牛奶或酸枣仁茶，别喝浓茶咖啡', life:'手机放到伸手够不着的地方，灯调暗'},
+    {e:'🧊', n:'肩颈酸', why:'低头族通病——脖子一直在替脑袋负重，先松筋再活动',
+     ac:[
+      {n:'风池', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'双手拇指按住，画圈揉 2 分钟，同时缓慢低头抬头'},
+      {n:'肩井', f:'脖子根部与肩膀最外端连线的中点', h:'对侧手三指拿捏，一捏一松 2 分钟，酸感明显才对'},
+      {n:'后溪', f:'握拳，小指一侧掌横纹的末端（拳头最高点）', h:'握拳用桌沿顶住按压 2 分钟，边按边慢慢转脖子'}
+     ],
+     eat:'无需特殊饮食，热敷比吃更管用', life:'热毛巾敷肩颈 10 分钟；屏幕抬到平视高度，每小时起身转肩 20 圈'},
+    {e:'🫃', n:'胃胀', why:'吃快了、吃杂了、压力大都会让胃罢工，按穴位帮它蠕动起来',
+     ac:[
+      {n:'中脘', f:'胸骨下端与肚脐连线的中点（肚脐上约四横指）', h:'掌根贴住，顺时针揉 3 分钟，力度温热渗透'},
+      {n:'足三里', f:'膝盖外侧凹陷往下四横指，胫骨外侧一横指处', h:'拇指或指节下压 2 分钟，酸胀感向下传为佳'},
+      {n:'内关', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按压 2 分钟，恶心胀气时按这里最快'}
+     ],
+     eat:'陈皮 3 克泡水；少食多餐，豆类糯米先放一放', life:'饭后散步 15 分钟，别立刻躺'},
+    {e:'👀', n:'眼疲劳', why:'干、涩、胀是屏幕盯出来的，穴位只能救急，休息才是根治',
+     ac:[
+      {n:'睛明', f:'内眼角稍上方的凹陷处', h:'两食指指腹轻压 1 分钟，力度很轻（不用力揉眼球）'},
+      {n:'四白', f:'瞳孔直下约一横指，颧骨上的小凹陷', h:'食指打圈按揉 1 分钟，眼部即刻放松'},
+      {n:'太阳', f:'眉梢与外眼角之间，向后约一横指的凹陷处', h:'中指按揉 2 分钟，闭眼效果更好'}
+     ],
+     eat:'枸杞菊花茶；眼睛干可吃点蓝莓胡萝卜', life:'20-20-20：每盯屏 20 分钟，看 6 米外 20 秒'},
+    {e:'😰', n:'焦虑心慌', why:'心跳快、胸口堵多半是交感神经太兴奋，把节奏降下来',
+     ac:[
+      {n:'内关', f:'手腕横纹正中向上三横指，两条筋的中间', h:'拇指按住缓缓揉 3 分钟——心慌急救第一穴'},
+      {n:'神门', f:'小指一侧的腕横纹上，靠小指端的凹陷处', h:'轻揉 2 分钟，配合慢呼吸'},
+      {n:'膻中', f:'两乳头连线的中点（胸口正中）', h:'中指轻揉或掌根从上往下推 2 分钟，胸闷能松开'}
+     ],
+     eat:'玫瑰花 5 朵泡水；咖啡因先停一天', life:'4-7-8 呼吸：吸 4 秒、屏 7 秒、呼 8 秒，做 4 轮'},
+    {e:'🤧', n:'感冒初起', why:'刚打喷嚏、脖子发紧的那半天最关键——发汗散寒要趁早',
+     ac:[
+      {n:'大椎', f:'低头，脖子后最突出骨头的下方凹陷', h:'热毛巾敷 + 指腹按揉 3 分钟，微微出汗最好'},
+      {n:'风池', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'拇指按揉 2 分钟，头有轻微酸胀感'},
+      {n:'合谷', f:'虎口并拢，肌肉鼓起最高的那一点', h:'重压 2 分钟，左右手都按'}
+     ],
+     eat:'生姜 3 片+红糖煮水趁热喝，捂被发汗', life:'多喝温水早点睡，今天别再吹风淋雨'},
+    {e:'😪', n:'疲劳困倦', why:'累不是睡一觉就完——气血没跟上，穴位帮你提提气',
+     ac:[
+      {n:'百会', f:'头顶正中，两耳尖连线与鼻梁延长线交点', h:'中指点按 1 分钟，瞬间清醒'},
+      {n:'足三里', f:'膝盖外侧凹陷往下四横指，胫骨外侧一横指处', h:'用力按 2 分钟——「常按足三里，胜吃老母鸡」'},
+      {n:'涌泉', f:'脚底前三分之一处，蜷脚时凹陷最明显处', h:'睡前搓 100 下到发热，第二天不容易困'}
+     ],
+     eat:'黄芪 5 克+红枣 2 颗泡水，补气提神', life:'中午眯 15 分钟（别超 30），晚上 11 点前睡'},
+    {e:'🥶', n:'手脚冰凉', why:'末梢循环差 + 阳气不足，从脚底和肚脐下引火归元',
+     ac:[
+      {n:'涌泉', f:'脚底前三分之一处，蜷脚时凹陷最明显处', h:'睡前泡脚后搓 100 下，搓热为止'},
+      {n:'关元', f:'肚脐正下方四横指处', h:'掌根温揉 3 分钟（先搓热手掌再揉）'},
+      {n:'劳宫', f:'握拳，中指尖正对着掌心的位置', h:'一只手搓另一只手劳宫各 1 分钟，双手立刻回暖'}
+     ],
+     eat:'桂圆红枣茶；冬天吃点羊肉韭菜', life:'睡前 40°C 温水泡脚 15 分钟，泡到额头微汗'},
+    {e:'🚻', n:'便秘', why:'肠道蠕动慢、喝水少是主因，穴位+揉腹比泻药温柔得多',
+     ac:[
+      {n:'天枢', f:'肚脐旁开三横指（左右各一）', h:'双手食指同时按揉 3 分钟，促进肠蠕动'},
+      {n:'支沟', f:'手背腕横纹向上四横指，两根骨头之间', h:'拇指按压 2 分钟——通便经验效穴'},
+      {n:'足三里', f:'膝盖外侧凹陷往下四横指，胫骨外侧一横指处', h:'按揉 2 分钟，调理肠胃整体功能'}
+     ],
+     eat:'晨起一大杯温水；火龙果、燕麦、酸奶轮着来', life:'掌心顺时针揉腹 5 分钟（围绕肚脐画大圈），每天固定时间蹲 5 分钟'},
+    {e:'🌙', n:'经期不适', why:'受凉和气滞最常见——保暖是第一位，穴位帮着顺一顺',
+     ac:[
+      {n:'三阴交', f:'内踝尖向上四横指，小腿内侧骨后缘', h:'拇指按揉 3 分钟——妇科要穴（孕期禁按）'},
+      {n:'关元', f:'肚脐正下方四横指处', h:'掌根温揉 3 分钟，配合暖宝宝热敷'},
+      {n:'血海', f:'手掌盖住膝盖（右手按左膝），拇指指尖到达的位置', h:'按揉 2 分钟，血胀感缓解明显'}
+     ],
+     eat:'红糖姜茶趁热喝；冰饮咖啡这两天都别碰', life:'热敷小腹，腰上多裹一层，早点睡'},
+    {e:'😖', n:'落枕', why:'睡姿+受风让脖子一侧的肌肉锁死了，越猛转越糟',
+     ac:[
+      {n:'后溪', f:'握拳，小指一侧掌横纹的末端', h:'按压 2 分钟同时缓慢小幅度活动脖子'},
+      {n:'悬钟', f:'外踝尖向上四横指，小腿外侧骨前缘', h:'指节按 2 分钟，边按边轻轻转头'},
+      {n:'风池', f:'后脑勺正下方，两条大筋外侧的凹陷里', h:'轻揉 2 分钟，缓解颈部僵硬'}
+     ],
+     eat:'无需特殊饮食', life:'热敷脖子 15 分钟；枕头换矮一点的，今天别猛回头'}
+  ];
+
+  var GONG_POS = {1:{n:'正北',x:'坎',el:'水'},2:{n:'西南',x:'坤',el:'土'},3:{n:'正东',x:'震',el:'木'},4:{n:'东南',x:'巽',el:'木'},6:{n:'西北',x:'乾',el:'金'},7:{n:'正西',x:'兑',el:'金'},8:{n:'东北',x:'艮',el:'土'},9:{n:'正南',x:'离',el:'火'}};
+  var DOOR_FS = {
+    '休':{t:'休养生息位——这块地方适合休息放松', a:'把卧室或沙发朝向这边更安神；现在就做：睡前把手机充电挪到别的房间，让这块地方只留给休息'},
+    '生':{t:'生机旺位——健康与财气都爱待在这里', a:'保持整洁最重要；现在就做：把这里擦干净，摆一盆绿萝或薄荷，别堆杂物'},
+    '伤':{t:'易磕碰急躁——尖锐和冲撞之气偏重', a:'现在就做：检查这边的桌角、玻璃、地面障碍物，能挪的挪走、能贴防撞条就贴上'},
+    '杜':{t:'气口闭塞——东西容易在这里越堆越多', a:'现在就做：开窗通风 10 分钟，把门后、角落里的堆积物清掉，让气流动起来'},
+    '景':{t:'明亮文气位——适合学习、办公、待客', a:'现在就做：把台灯或书桌挪到这边，灯光调亮一档，读书工作效率会不一样'},
+    '死':{t:'沉寂堆积——整个家里最该动一动的地方', a:'现在就做：今天就清一次这里的杂物，清完开窗 10 分钟；放一盏小夜灯把这角照亮'},
+    '惊':{t:'口舌噪音位——待久了容易心神不宁', a:'现在就做：关掉不用的消息提醒音，这边别放会咔咔响的摆件；争吵的事换个地方谈'},
+    '开':{t:'事业门面位——宜入口、办公、见客', a:'现在就做：清空门口和过道，鞋别堵门，让气进得来；求职谈事前把这角整理一遍'}
+  };
+  var STAR_FS = {
+    '天蓬':'别把贵重物品放这里，出门前检查钱包手机',
+    '天芮':'病星在此——这别久待久坐，多通风勤打扫',
+    '天冲':'运动器材放这儿正合适，有劲往这使',
+    '天辅':'文昌气——书本、文具、工作资料放这儿',
+    '天禽':'中正平和，保持整洁即可',
+    '天心':'宜放药箱、常备用品，照顾健康的位置',
+    '天柱':'少放易碎品，说话声音也放轻些',
+    '天任':'宜放储物、零食粮食，稳稳当当',
+    '天英':'灯光要亮，别让这角阴着——该换灯泡就换'
+  };
+  var SHEN_FS = {
+    '值符':'贵气位——保持体面整洁，重要物品放这儿镇场',
+    '腾蛇':'线缆该整理了——缠绕的电线最容易让心也乱',
+    '太阴':'宜安静收纳，细软、证件、私人物品放这儿',
+    '六合':'适合双人座位、成对的物件，合影照片挂这儿',
+    '白虎':'格外注意磕碰和尖锐物，剪刀刀具收进抽屉',
+    '玄武':'防丢三落四——贵重物品别随手放这儿',
+    '九地':'适合收纳置物，箱子抽屉架子放这儿最稳',
+    '九天':'适合挂高处——保持开阔，别让低矮杂物压着'
+  };
+
+  function _qmNow(){
+    var fn = (typeof window.qimenCalc==='function') ? window.qimenCalc : (typeof qimenCalc==='function' ? qimenCalc : null);
+    if(!fn) return null;
+    try{
+      var n=new Date();
+      return fn({y:n.getFullYear(), m:n.getMonth()+1, d:n.getDate(), h:n.getHours(), minute:n.getMinutes(), dontSave:true});
+    }catch(_){ return null; }
+  }
+
+  window._healthSub = function(which){
+    var b=document.getElementById('health-body'), f=document.getElementById('health-fs');
+    var bt=document.getElementById('hst-body'), ft=document.getElementById('hst-fs');
+    if(!b||!f) return;
+    b.style.display = (which==='body') ? '' : 'none';
+    f.style.display = (which==='fs') ? '' : 'none';
+    if(bt){ bt.style.background = (which==='body')?'var(--pri)':'var(--card)'; bt.style.color = (which==='body')?'#fff':'var(--text-sub)'; bt.style.borderColor=(which==='body')?'var(--pri)':'var(--card-border)'; }
+    if(ft){ ft.style.background = (which==='fs')?'var(--pri)':'var(--card)'; ft.style.color = (which==='fs')?'#fff':'var(--text-sub)'; ft.style.borderColor=(which==='fs')?'var(--pri)':'var(--card-border)'; }
+    try{ if(which==='fs') window._renderHealthFS(); }catch(_){}
+  };
+
+  function renderBody(){
+    var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
+    var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🩺 哪儿不舒服？按按就能缓解</div><div class="widget-body" style="padding:12px;">';
+    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
+    for(var i=0;i<SYMPTOMS.length;i++){
+      var s=SYMPTOMS[i];
+      h+='<div onclick="window._healthPick('+i+')" style="cursor:pointer;border:1.5px solid var(--card-border);border-radius:12px;padding:12px 4px;text-align:center;background:var(--card);">'
+        +'<div style="font-size:22px;">'+s.e+'</div>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:4px;">'+s.n+'</div></div>';
+    }
+    h+='</div></div></div><div id="health-detail"></div>';
+    el.innerHTML=h; el.dataset.done='1';
+  }
+
+  window._healthPick = function(i){
+    var s=SYMPTOMS[i]; var el=document.getElementById('health-detail');
+    if(!s||!el) return;
+    var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+s.e+' '+s.n+' · 自助调理</div><div class="widget-body" style="padding:14px;">';
+    h+='<div style="font-size:12px;color:var(--text-hint);line-height:1.7;">'+s.why+'</div>';
+    for(var j=0;j<s.ac.length;j++){
+      var a=s.ac[j];
+      h+='<div style="border:1.5px solid var(--card-border);border-radius:12px;padding:12px;margin-top:10px;">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--pri);">穴位 '+(j+1)+' · '+a.n+'</div>'
+        +'<div style="font-size:12.5px;color:var(--text);margin-top:5px;line-height:1.7;">📍 找：'+a.f+'</div>'
+        +'<div style="font-size:12.5px;color:var(--text-sub);margin-top:3px;line-height:1.7;">👉 按：'+a.h+'</div></div>';
+    }
+    h+='<div style="margin-top:12px;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'
+      +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;">🍵 '+s.eat+'</div>'
+      +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;margin-top:4px;">🛏️ '+s.life+'</div></div>';
+    h+='</div></div>';
+    el.innerHTML=h;
+    try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_){}
+  };
+
+  window._renderHealthFS = function(){
+    var el=document.getElementById('health-fs'); if(!el) return;
+    var r=_qmNow();
+    if(!r||!r.bamen){
+      el.innerHTML='<div class="widget" style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-hint);">奇门局加载中，稍后再点开试试</div>';
+      return;
+    }
+    var html='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🧭 此时奇门 · '+(r.dun==='YANG'?'阳':'阴')+'遁'+r.juNum+'局</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div style="font-size:11px;color:var(--text-hint);margin-bottom:10px;">'+(r.jieqi||'')+' · '+(r.pillars?r.pillars.d:'')+'日 '+(r.pillars?r.pillars.h:'')+'时 · 时家奇门转盘 · 每两小时换局，转个方向问题也会变</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">';
+    var lu=[4,9,2,3,5,7,8,1,6];
+    for(var i=0;i<9;i++){
+      var g=lu[i];
+      if(g===5){
+        html+='<div style="border:1px dashed var(--card-border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 4px;">'
+          +'<div style="font-size:15px;font-weight:800;color:var(--pri);">'+(r.dun==='YANG'?'阳':'阴')+r.juNum+'</div>'
+          +'<div style="font-size:9px;color:var(--text-hint);margin-top:2px;">中五宫</div></div>';
+        continue;
+      }
+      var p=GONG_POS[g], door=r.bamen[g]||'', star=(r.tianpanXing&&r.tianpanXing[g])||'', shen=(r.bashen&&r.bashen[g])||'';
+      html+='<div onclick="window._fsPick('+g+')" style="cursor:pointer;border:1.5px solid var(--card-border);border-radius:10px;padding:8px 4px;text-align:center;">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text);">'+p.n+'</div>'
+        +'<div style="font-size:12px;font-weight:800;color:var(--pri);margin-top:2px;">'+(DOOR_FS[door]?door:'')+'门</div>'
+        +'<div style="font-size:9px;color:var(--text-hint);margin-top:1px;">'+(shen?shen.slice(0,2):'—')+' · '+(star?star.replace('天',''):'' )+'</div></div>';
+    }
+    html+='</div>'
+      +'<div style="font-size:11px;color:var(--text-sub);margin-top:10px;">👆 点任一方位：看这块地方有什么问题、现在怎么改</div>';
+    if((r.goodGe&&r.goodGe.length)||(r.badGe&&r.badGe.length)){
+      html+='<div style="margin-top:8px;font-size:11px;line-height:1.8;">';
+      if(r.goodGe&&r.goodGe.length) html+='<div style="color:var(--pri);">✦ 此局吉格：'+r.goodGe.join('、')+'</div>';
+      if(r.badGe&&r.badGe.length) html+='<div style="color:#b0713f;margin-top:2px;">△ 此局留意：'+r.badGe.join('、')+'</div>';
+      html+='</div>';
+    }
+    html+='</div></div><div id="fs-detail"></div>';
+    el.innerHTML=html;
+  };
+
+  window._fsPick = function(g){
+    var el=document.getElementById('fs-detail'); if(!el) return;
+    var r=_qmNow(); if(!r||!r.bamen) return;
+    var p=GONG_POS[g], door=r.bamen[g]||'', star=r.tianpanXing?r.tianpanXing[g]:'', shen=r.bashen?r.bashen[g]:'';
+    var df=DOOR_FS[door]||{t:'',a:'保持整洁即可'};
+    var sf=STAR_FS[star]||'', hf=SHEN_FS[shen]||'';
+    var tg=r.tianpanGan?r.tianpanGan[g]:'', dgp=r.dipan?r.dipan[g]:'';
+    var h='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🧭 '+p.n+' · '+p.x+'宫（'+p.el+'）</div>'
+      +'<div class="widget-body" style="padding:14px;">'
+      +'<div style="font-size:11.5px;color:var(--text-hint);line-height:1.7;">局盘：'+(shen||'—')+' · '+(star||'—')+' · '+door+'门 · 天盘'+(tg||'—')+'／地盘'+(dgp||'—')+'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:var(--pri);margin-top:10px;line-height:1.5;">'+door+'门 · '+df.t+'</div>';
+    if(sf) h+='<div style="font-size:12.5px;color:var(--text);margin-top:8px;line-height:1.7;">⭐ '+(star||'')+'：'+sf+'</div>';
+    if(hf) h+='<div style="font-size:12.5px;color:var(--text);margin-top:6px;line-height:1.7;">✦ '+(shen||'')+'：'+hf+'</div>';
+    h+='<div style="margin-top:12px;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--pri);">✊ 现在就做（5 分钟内见效）</div>'
+      +'<div style="font-size:13px;color:var(--text);line-height:1.8;margin-top:4px;">'+df.a+'</div></div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:8px;">奇门看宅为民俗用法，改的是「当下可用之气」——真正的居住问题请找专业机构</div>'
+      +'</div></div>';
+    el.innerHTML=h;
+    try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_){}
+  };
+
+  window.renderHealth = function(){
+    try{ renderBody(); }catch(_){}
+    try{ window._renderHealthFS(); }catch(_){}
+  };
+})();
+</script>
+</body></foreignObject></svg>`;
   const svgBlob = new Blob([svgStr], {type: "image/svg+xml;charset=utf-8"});
   const url = URL.createObjectURL(svgBlob);
   const img = new Image();
