@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.58.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.59.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2563,7 +2563,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.58.0-20261023';
+const ZHIMING_BUILD = 'v2.59.0-20261023';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -23180,6 +23180,33 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
       return {main:top.k,soft:true,conv:conv};
     }
 
+        function _baziCons(){
+      try{
+        var h=JSON.parse(localStorage.getItem('zhiming_v2_history')||'[]');
+        var rec=null;
+        for(var i=0;i<h.length;i++){ var r=h[i]&&h[i].result; if(h[i].type==='bazi'&&r&&r.wxScore&&r.dayGan){ rec=r; break; } }
+        if(!rec) return null;
+        var ws=rec.wxScore, order=['木','火','土','金','水'];
+        var sorted=order.map(function(k){ return {k:k,v:ws[k]||0}; }).sort(function(a,b){ return b.v-a.v; });
+        var total=0; order.forEach(function(k){ total+=(ws[k]||0); }); if(total<=0)total=1;
+        var dayGan=rec.dayGan;
+        var DG={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+        var yl=(rec.yueLing||'').charAt(0);
+        var season=({亥:'冬',子:'冬',丑:'冬',巳:'夏',午:'夏',未:'夏'})[yl]||'';
+        var t=null, why='';
+        var ws2=rec.wangshuai||'';
+        if(ws2.indexOf('弱')>=0){ t='qixu'; why='日主「'+dayGan+'」偏弱，先天底子偏虚，容易疲乏气短'; }
+        if(!t&&sorted[0].v/total>=0.42&&sorted[0].v>=sorted[1].v*1.3){
+          var MAP={'木':['qiyu','肝气偏亢，情绪易郁闷'],'火':['yinxu','火性炎上灼耗阴液'],'土':['tanshi','土厚湿困脾运易沉重'],'金':['yinxu','燥气偏盛易伤津'],'水':['yangxu','水性寒凉先天偏寒']};
+          t=MAP[sorted[0].k][0]; why='八字里「'+sorted[0].k+'」的力量最强（'+MAP[sorted[0].k][1]+'）';
+        }
+        if(!t&&rec.lack&&rec.lack.length){ var LMAP={'木':'qiyu','火':'yangxu','土':'qixu','金':'tebing','水':'yinxu'}; t=LMAP[rec.lack[0]]; why='八字五行缺「'+rec.lack[0]+'」'; }
+        if(!t&&season==='冬'&&(ws['火']||0)<=1){ t='yangxu'; why='生于冬月而火气不足，先天偏寒'; }
+        if(!t&&season==='夏'&&(ws['水']||0)<=1){ t='yinxu'; why='生于夏月而水气不足，先天偏燥'; }
+        if(!t){ t='pinghe'; why='八字五行流转相对均衡，先天底子不错'; }
+        return {t:t, why:why, dayGan:dayGan, maxK:sorted[0].k, season:season};
+      }catch(_){ return null; }
+    }
     function _constCardHTML(key, sub, soft, showSave){
       var C=CONST9[key]; if(!C) return '';
       var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+C.e+' 体质结果'+(soft?'（倾向）':'')+'</div><div class="widget-body" style="padding:16px 14px;">';
@@ -23203,6 +23230,24 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
       h+='<div style="display:flex;gap:10px;margin-top:14px;">';
       if(showSave) h+='<div onclick="window._constSave(\''+key+'\',\''+(sub||'')+'\')" style="flex:1;background:var(--pri);color:#fff;border-radius:12px;padding:12px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">保存结果</div>';
       h+='<div onclick="window._constStart()" style="flex:1;border:1.5px solid var(--card-border);border-radius:12px;padding:12px;text-align:center;font-size:14px;color:var(--text-sub);cursor:pointer;">重测</div></div>';
+      var _bz=_baziCons();
+      if(_bz){
+        var _same=_bz.t===key;
+        h+='<div style="margin-top:12px;background:rgba(93,124,180,.08);border-radius:12px;padding:12px;">'
+          +'<div style="font-size:12.5px;font-weight:700;color:var(--text);">☯ 命理侧参考 · 来自你的八字排盘</div>'
+          +'<div style="font-size:12.5px;color:var(--text-sub);line-height:1.7;margin-top:4px;">'+_bz.why+'——倾向「'+CONST9[_bz.t].n+'」</div>'
+          +(_same
+            ?'<div style="margin-top:6px;font-size:12px;color:var(--pri);font-weight:600;">✅ 与自测一致，互相印证——结果可信度高</div>'
+            :'<div style="margin-top:6px;font-size:12px;color:var(--text-hint);line-height:1.6;">⚠️ 与自测不一致很正常：自测测<b>当下状态</b>，命理看<b>先天底子</b>。以哪个为准你说了算，下方可直接微调。</div>')
+          +'</div>';
+      }
+      h+='<div style="margin-top:10px;font-size:12px;color:var(--text-hint);">觉得不对？直接选你觉得对的（手动为准）：</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px;">';
+      for(var _ck in CONST9){
+        h+='<div onclick="window._constManual(\''+_ck+'\')" style="cursor:pointer;border:1.5px solid '+(_ck===key?'var(--pri)':'var(--card-border)')+';border-radius:10px;padding:8px 2px;text-align:center;'+(_ck===key?'background:var(--pri-light);':'')+'">'
+          +'<div style="font-size:17px;">'+CONST9[_ck].e+'</div><div style="font-size:10px;color:var(--text-sub);margin-top:2px;">'+CONST9[_ck].n.slice(0,-1)+'</div></div>';
+      }
+      h+='</div>';
       h+='</div></div>';
       return h;
     }
@@ -23238,11 +23283,23 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
       try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){}
     };
     window._constSave = function(t, sub){
-      try{ localStorage.setItem('zhiming_constitution_v1', JSON.stringify({t:t,sub:sub||'',at:Date.now()})); }catch(_){}
+      var _bz=_baziCons();
+      try{ localStorage.setItem('zhiming_constitution_v1', JSON.stringify({t:t,sub:sub||'',at:Date.now(),src:'quiz',quizT:t,baziT:(_bz?_bz.t:'')})); }catch(_){}
       var el=document.getElementById('health-body');
       if(el){ el.dataset.done=''; renderBody(); var d=document.getElementById('constitution-area'); if(d){ try{ d.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){} } }
     };
-    window._constShow = function(t){
+    window._constManual = function(t){
+      if(!CONST9[t]) return;
+      var cur=null; try{ cur=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_){}
+      var obj={t:t, sub:(cur&&cur.sub)||'', at:Date.now(), src:'manual'};
+      if(cur){ obj.quizT=cur.quizT||(cur.src==='quiz'?cur.t:''); obj.baziT=cur.baziT||''; }
+      try{ localStorage.setItem('zhiming_constitution_v1', JSON.stringify(obj)); }catch(_){}
+      try{ if(window.showToast) window.showToast('✅ 已定为「'+CONST9[t].n+'」（手动）','ok',1400); }catch(_){}
+      var el=document.getElementById('health-body');
+      if(el){ el.dataset.done=''; renderBody(); }
+      window._constShow(t);
+    };
+        window._constShow = function(t){
       var el=document.getElementById('constitution-area'); if(!el||!CONST9[t]) return;
       var saved=null; try{ saved=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_){}
       el.innerHTML=_constCardHTML(t, saved&&saved.sub, false, false);
@@ -23582,18 +23639,19 @@ function renderBody(){
         +'<div style="font-size:16px;color:var(--pri);">▶</div></div></div>';
       var saved=null;
       try{ saved=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_){}
+      var _bz0=_baziCons();
       if(saved&&saved.t&&CONST9[saved.t]){
         var C0=CONST9[saved.t];
         h+='<div onclick="window._constShow(\''+saved.t+'\')" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
           +'<div style="font-size:30px;">'+C0.e+'</div>'
           +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">你的体质：'+C0.n+'</div>'
-          +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">点开看调理方案'+(saved.sub&&CONST9[saved.sub]?'（兼有'+CONST9[saved.sub].n+'）':'')+'</div></div>'
+          +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">点开看调理方案 · '+(saved.src==='manual'?'手动定':saved.src==='bazi'?'命理推':'自测')+(saved.sub&&CONST9[saved.sub]?'（兼有'+CONST9[saved.sub].n+'）':'')+'</div></div>'
           +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
       } else {
         h+='<div onclick="window._constStart()" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
           +'<div style="font-size:30px;">🎭</div>'
           +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">测测你的体质</div>'
-          +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">15 道题 · 约 2 分钟 · 测完养生建议更懂你</div></div>'
+          +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">'+(_bz0?'☯ 八字倾向 '+CONST9[_bz0.t].n+' · 15 题交叉验证更准':'15 道题 · 约 2 分钟 · 测完养生建议更懂你')+'</div></div>'
           +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
       }
       h+='<div id="constitution-area" style="grid-column:1/-1;"></div>';
