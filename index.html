@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.54.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.55.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1265,6 +1265,63 @@
       setTimeout(function(){ if(!document.getElementById('breath-ov')) return; phase(0); },900);
     };
     window._breathClose = function(){ var ov=document.getElementById('breath-ov'); if(ov) ov.remove(); };
+/* ---- 厨房应急：家里现成食材的 5 分钟调理方 ---- */
+    var KITCHEN = [
+      {e:'🤧', n:'受寒刚起', for:'打喷嚏、发冷、脖子发紧，感冒刚冒头', items:'生姜、葱白、红糖',
+       how:'姜 3 片+葱白 2 段+一勺红糖，煮水 5 分钟趁热喝，喝完盖被休息发发汗', warn:'高烧、喉咙剧痛、浑身酸痛别硬扛，该看医生看医生'},
+      {e:'🍚', n:'吃撑积食', for:'吃撑了、胃里顶、打嗝反酸', items:'山楂干、陈皮、白萝卜',
+       how:'山楂干 5 片或陈皮 1 块开水泡 10 分钟当茶喝；家里有白萝卜就煮碗萝卜水，喝完顺时针揉肚子 3 分钟', warn:'又吐又泻、肚子剧痛不是积食，尽快就医'},
+      {e:'🔥', n:'上火嗓子疼', for:'嗓子干疼、口苦、爆痘', items:'绿豆、雪梨、盐',
+       how:'绿豆一把煮汤放温喝；或雪梨去核加几粒冰糖蒸 15 分钟；淡盐水漱口一天 3 次', warn:'嗓子化脓、扁桃体肿大发白、发高烧——这是抗生素的事，别用食疗顶'},
+      {e:'💧', n:'拉肚子', for:'吃了不干净的东西、大便稀水样', items:'大米、苹果、糖和盐',
+       how:'大米干锅炒到焦黄，加水煮 10 分钟喝米汤（焦米汤止泻）；或苹果蒸熟吃果肉；温水加一小勺糖+一点点盐小口喝补水', warn:'一天超过 5 次、便血、发烧、头晕心慌——脱水不是小事，去医院'},
+      {e:'🌙', n:'睡不着', for:'躺下 1 小时还清醒、心里燥', items:'小米、牛奶、酸枣仁茶',
+       how:'睡前 1 小时小米粥小半碗或温牛奶 200ml；酸枣仁茶包开水泡 10 分钟（超市有售）', warn:'连续两周天天失眠，去看医生，别扛成慢性'},
+      {e:'👀', n:'眼睛干涩', for:'盯屏幕久了眼干、发烫、怕光', items:'枸杞、菊花',
+       how:'枸杞 10 粒+菊花 3 朵保温杯泡 10 分钟，边喝边用杯口蒸汽熏眼 1 分钟', warn:'视力突然下降或持续模糊，直接挂眼科'},
+      {e:'🚽', n:'拉不出来', for:'两三天没便意、肚子胀', items:'火龙果、香蕉、蜂蜜',
+       how:'晨起空腹温水冲一勺蜂蜜；红心火龙果半个或熟透的香蕉两根（生的反而加重）', warn:'超过 4 天+肚子绞痛，别再硬吃香蕉，就医'},
+      {e:'🩹', n:'姨妈疼', for:'经期小腹坠痛、怕冷', items:'红糖、姜、红枣、热水袋',
+       how:'红糖 2 块+姜 3 片+红枣 3 颗煮水 10 分钟，经前 2 天开始每天一杯；热水袋敷小腹', warn:'痛到冒冷汗、止痛药压不住，或一年比一年重——去查一下不亏'},
+      {e:'🥶', n:'手脚冰凉', for:'常年手脚冰、别人穿短袖你穿外套', items:'桂圆、红枣、生姜',
+       how:'桂圆 6 颗+红枣 3 颗煮水当茶喝；睡前 42 度左右热水泡脚 15 分钟，泡到微微出汗', warn:'伴随体重骤降、大量脱发，去查个甲状腺'},
+      {e:'🤢', n:'恶心晕车', for:'晕车晕船、闻到油腻想吐', items:'生姜、柠檬、话梅',
+       how:'鲜姜切薄片含在舌下，或柠檬切片闻味+泡水；话梅含着也顶用', warn:'反复呕吐超过一天或伴剧烈头痛，就医'},
+      {e:'😖', n:'口腔溃疡', for:'嘴里破洞、吃饭钻心疼', items:'蜂蜜、猕猴桃、盐',
+       how:'淡盐水漱口后，棉签蘸蜂蜜涂在破口上，一天 3 次；猕猴桃、西红柿补维 C', warn:'同一个位置超过两周不愈合，去口腔科'},
+      {e:'🍺', n:'宿醉难受', for:'喝酒第二天头疼、胃里烧', items:'蜂蜜、香蕉、西红柿',
+       how:'蜂蜜水大杯慢喝；香蕉一根补钾；西红柿榨汁也管用', warn:'吐血、意识不清，立刻就医别等'}
+    ];
+    var KMAP = {1:4, 3:1, 4:5, 6:0, 8:8, 9:6, 10:7};
+    window._kitchenShow = function(){
+      var el=document.getElementById('health-detail'); if(!el) return;
+      var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🥣 厨房应急 · 家里现成的东西</div><div class="widget-body" style="padding:12px;">';
+      for(var i=0;i<KITCHEN.length;i++){ var k=KITCHEN[i];
+        h+='<div onclick="window._kitchenPick('+i+')" style="cursor:pointer;border:1.5px solid var(--card-border);border-radius:12px;padding:12px;margin-bottom:8px;">'
+          +'<div style="display:flex;align-items:center;gap:10px;">'
+          +'<div style="font-size:22px;">'+k.e+'</div>'
+          +'<div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:700;color:var(--text);">'+k.n+'</div>'
+          +'<div style="font-size:11.5px;color:var(--text-hint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+k.items+'</div></div>'
+          +'<div style="color:var(--pri);flex-shrink:0;">›</div></div></div>';
+      }
+      h+='</div></div>';
+      el.innerHTML=h;
+      try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){}
+    };
+    window._kitchenPick = function(i){
+      var k=KITCHEN[i]; if(!k) return;
+      var el=document.getElementById('health-detail'); if(!el) return;
+      el.innerHTML='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+k.e+' '+k.n+' · 厨房应急</div><div class="widget-body" style="padding:16px 14px;">'
+        +'<div style="font-size:12px;color:var(--text-hint);margin-bottom:12px;">适合：'+k.for+'</div>'
+        +'<div style="font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:6px;">🥣 家里找这些</div>'
+        +'<div style="font-size:13px;color:var(--text);line-height:1.9;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'+k.items+'</div>'
+        +'<div style="font-size:13.5px;font-weight:700;color:var(--text);margin:12px 0 6px;">🔪 怎么做（5 分钟内）</div>'
+        +'<div style="font-size:13px;color:var(--text);line-height:1.9;">'+k.how+'</div>'
+        +'<div style="margin-top:12px;background:rgba(212,124,74,.12);border-radius:12px;padding:12px;font-size:12px;color:var(--text);line-height:1.7;">⚠️ '+k.warn+'</div>'
+        +'<div onclick="window._kitchenShow()" style="margin-top:14px;border:1.5px solid var(--card-border);border-radius:12px;padding:12px;text-align:center;font-size:14px;color:var(--text-sub);cursor:pointer;">← 其他场景</div>'
+        +'</div></div>';
+      try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){}
+    };
     var PARTS = {
       /* 侧脸朝左 */
       head:{vb:'0 0 210 205', art:
@@ -1507,7 +1564,13 @@ function renderBody(){
           +'<div style="font-size:22px;">'+s.e+'</div>'
           +'<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:4px;">'+s.n+'</div></div>';
       }
-      h+='</div></div></div><div id="health-detail"></div>';
+      h+='</div></div></div>';
+      h+='<div onclick="window._kitchenShow()" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
+        +'<div style="font-size:30px;">🥣</div>'
+        +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
+        +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
+        +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
+      h+='<div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
     }
     window._healthPick = function(i){
@@ -1526,6 +1589,10 @@ function renderBody(){
         +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;margin-top:4px;">🛏️ '+s.life+'</div></div>'
       if(s.n==='失眠'||s.n==='焦虑心慌'){
         h+='<div onclick="window._breathOpen()" style="margin-top:12px;background:rgba(124,158,99,.12);border-radius:12px;padding:12px;text-align:center;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--pri);">😮‍💨 打开 4-7-8 呼吸引导</div>';
+      }
+      if(KMAP[i]!==undefined){
+        var _kk=KITCHEN[KMAP[i]];
+        h+='<div onclick="window._kitchenPick('+KMAP[i]+')" style="margin-top:12px;background:rgba(124,158,99,.12);border-radius:12px;padding:12px;text-align:center;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--pri);">🥣 厨房应急：'+_kk.n+'——家里找 '+_kk.items.split('、')[0]+'</div>';
       }
       try{
         var _cs=null; try{ _cs=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_e2){}
