@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.59.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.60.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2563,7 +2563,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.59.0-20261023';
+const ZHIMING_BUILD = 'v2.60.0-20261023';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -23180,7 +23180,46 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
       return {main:top.k,soft:true,conv:conv};
     }
 
-        function _baziCons(){
+        window._shichenName = function(h){ var T=[['子','胆经当令，宜熟睡'],['丑','肝经当令，深睡养肝'],['寅','肺经当令'],['卯','大肠经当令，宜喝温水'],['辰','胃经当令，早餐吃热'],['巳','脾经当令，头脑清明'],['午','心经当令，宜小憩'],['未','小肠经当令'],['申','膀胱经当令，多喝水'],['酉','肾经当令，宜收敛'],['戌','心包经当令，宜散步'],['亥','三焦经当令，宜安睡']]; var x=T[Math.floor(((h+1)%24)/2)]||['','']; return x[0]+'时（'+x[1]+'）'; };
+    window._nowDo = function(hour){
+      try{
+        hour=(hour===undefined)?new Date().getHours():hour;
+        var now=new Date();
+        var today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+        var week=(function(){ var d=new Date(now); d.setDate(d.getDate()-7); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+        var acts=[];
+        var diary=[]; try{ diary=JSON.parse(localStorage.getItem('zhiming_v2_diary')||'[]'); }catch(_){}
+        var cst=null; try{ cst=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_){}
+        if(hour>=22||hour<1){
+          var beds=diary.filter(function(e){ return e.bed&&e.date&&e.date>=week; }).map(function(e){ var h=parseInt(e.bed,10)||0; if(h<12)h+=24; return h; });
+          var late=beds.filter(function(h){ return h>=24; }).length;
+          var moodLow=diary.slice(-3).filter(function(e){ return e.mood!==undefined&&e.mood!==null&&e.mood<=1; }).length;
+          var why='现在是'+window._shichenName(hour)+'，'+(beds.length>0?('最近 '+beds.length+' 天里有 '+late+' 天零点后才睡'):'夜里 11 点到 1 点是养阴黄金档')+(moodLow>0?'，情绪也偏沉':'');
+          acts.push({s:62+late*9+(moodLow>0?6:0), k:'breath', big:hour>=23?'放下手机，准备睡觉':'该收尾了，准备睡', why:why, btn:'😮‍💨 先做 4 轮 4-7-8 呼吸', alts:['手机别带上床','被子盖好肚子']});
+        }
+        if(hour>=8&&hour<22){
+          var log=[]; try{ log=JSON.parse(localStorage.getItem('zhiming_symlog_v1')||'[]'); }catch(_){}
+          var ym=today.slice(0,7), by={};
+          log.forEach(function(x){ if(x.date&&x.date.slice(0,7)===ym){ by[x.n]=(by[x.n]||0)+1; } });
+          var top=null; for(var n in by){ if(!top||by[n]>top.c) top={n:n,c:by[n]}; }
+          if(top&&top.c>=2){
+            var idx=-1; for(var j=0;j<SYMPTOMS.length;j++){ if(SYMPTOMS[j].n===top.n){ idx=j; break; } }
+            if(idx>=0) acts.push({s:30+top.c*6, k:'sym', idx:idx, big:top.n+'总找你？趁不疼先练手法', why:'这个月你已经关注 '+top.c+' 次——抽 5 分钟按一按，下次发作就不慌', btn:SYMPTOMS[idx].e+' 看穴位手法', alts:[]});
+          }
+        }
+        if(cst&&cst.t&&CONST9[cst.t]&&((hour>=11&&hour<13)||(hour>=17&&hour<19))){
+          var TAB={'qixu':'七分饱，别喝冰的','yangxu':'这顿忌生冷，配杯姜茶','yinxu':'少辛辣烧烤，炖汤更合适','tanshi':'七分饱少甜腻，饭后走 10 分钟','shire':'忌辛辣火锅酒，备点绿豆汤','xueyu':'别久坐，饭后活动 5 分钟','qiyu':'慢慢吃，饭后别闷着刷手机','tebing':'避开你的过敏原','pinghe':'均衡就好，七分饱'};
+          acts.push({s:50, k:'kitchen', big:'这顿饭：'+TAB[cst.t], why:'你是'+CONST9[cst.t].n+'底子——吃对这一顿，比按什么穴都实在', btn:'🥣 顺手看看厨房应急', alts:[]});
+        }
+        if(hour>=6&&hour<10) acts.push({s:34, k:'none', big:'出太阳的话，晒背 15 分钟', why:window._shichenName(hour).slice(0,2)+'阳气升发——要晒到背，隔玻璃不算数', btn:'', alts:['起床先喝杯温水']});
+        if(hour>=12&&hour<14) acts.push({s:52, k:'none', big:'午间眯 15-20 分钟', why:'午时心经当令，小睡养心——比刷手机划算得多', btn:'', alts:[]});
+        if(hour>=20&&hour<22){ var boost=(cst&&(cst.t==='yangxu'||cst.t==='xueyu'))?18:0; acts.push({s:50+boost, k:'none', big:'睡前泡脚 15 分钟', why:'水温 42 度左右，泡到身体微微发热'+(boost?'——你是'+CONST9[cst.t].n+'，泡脚对你格外对症':''), btn:'', alts:[]}); }
+        if(!cst) acts.push({s:18, k:'quiz', big:'花 2 分钟测下体质', why:'测完，上面所有建议都会按你的底子调整', btn:'🎭 开始测', alts:[]});
+        acts.sort(function(a,b){ return b.s-a.s; });
+        return {hour:hour, sc:window._shichenName(hour), top:acts[0]||null, alts:acts.slice(1,3)};
+      }catch(_){ return {hour:hour, sc:'', top:null, alts:[]}; }
+    };
+    function _baziCons(){
       try{
         var h=JSON.parse(localStorage.getItem('zhiming_v2_history')||'[]');
         var rec=null;
@@ -23632,7 +23671,23 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
 
 function renderBody(){
       var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
-      var h='<div onclick="window._breathOpen()" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
+      var h='';
+      var _nd=window._nowDo();
+      if(_nd&&_nd.top){
+        var tp=_nd.top, tpBtn='';
+        if(tp.k==='breath') tpBtn='<div onclick="window._breathOpen()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+        else if(tp.k==='sym') tpBtn='<div onclick="window._healthPick('+tp.idx+')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+        else if(tp.k==='kitchen') tpBtn='<div onclick="window._kitchenShow()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+        else if(tp.k==='quiz') tpBtn='<div onclick="window._constStart()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+        h+='<div class="widget" style="grid-column:1/-1;"><div class="widget-body" style="padding:14px;border:1.5px solid var(--pri);">'
+          +'<div style="font-size:11.5px;color:var(--text-hint);">🎯 此刻最该做 · '+_nd.sc+'</div>'
+          +'<div style="font-size:16px;font-weight:800;color:var(--text);margin-top:6px;">'+tp.big+'</div>'
+          +'<div style="font-size:12.5px;color:var(--text-sub);line-height:1.7;margin-top:4px;">'+tp.why+'</div>'
+          +tpBtn
+          +(_nd.alts.length?'<div style="margin-top:8px;font-size:11.5px;color:var(--text-hint);">备选：'+_nd.alts.map(function(a){ return a.big; }).join(' · ')+'</div>':'')
+          +'</div></div>';
+      }
+      h+='<div onclick="window._breathOpen()" class="widget" style="grid-column:1/-1;cursor:pointer;><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
         +'<div style="font-size:30px;">😮‍💨</div>'
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">4-7-8 呼吸 · 失眠速救</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吸 4 秒 → 屏 7 秒 → 呼 8 秒，4 轮，困意自然来</div></div>'
