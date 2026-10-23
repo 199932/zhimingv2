@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.57.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.58.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2563,7 +2563,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.57.0-20261023';
+const ZHIMING_BUILD = 'v2.58.0-20261023';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -23357,6 +23357,12 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
         +'</div></div>';
       try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){}
     };
+    var SYMLOG_KEY='zhiming_symlog_v1';
+    function _symToday(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function _symlogHit(n){ try{ var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var t=_symToday(); var has=false; for(var i=0;i<a.length;i++){ if(a[i].date===t&&a[i].n===n){ has=true; break; } } if(!has){ a.push({date:t,n:n}); localStorage.setItem(SYMLOG_KEY,JSON.stringify(a)); } return a; }catch(_){ return []; } }
+    function _symlogLine(n){ try{ var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var t=_symToday(), ym=t.slice(0,7); var cnt=0, last=null; a.forEach(function(x){ if(x.n===n){ if(x.date&&x.date.slice(0,7)===ym)cnt++; if(!last||x.date>last)last=x.date; } }); if(cnt===0) return ''; var rel=''; if(last===t) rel='今天'; else if(last){ var _d=Math.round((new Date(t)-new Date(last))/86400000); if(_d>=1) rel=_d+' 天前'; } return '<div style="margin-top:8px;font-size:12px;color:var(--text-sub);background:var(--track-bg,rgba(0,0,0,.03));border-radius:8px;padding:6px 10px;display:inline-block;">📅 本月关注 '+cnt+' 次'+(rel?' · 上次 '+rel:'')+'</div>'; }catch(_){ return ''; } }
+    function _symlogSumHTML(){ try{ var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var ym=_symToday().slice(0,7); var by={}; a.forEach(function(x){ if(x.date&&x.date.slice(0,7)===ym){ by[x.n]=(by[x.n]||0)+1; } }); var arr=Object.keys(by).map(function(k){ return {n:k,c:by[k]}; }).sort(function(p,q){ return q.c-p.c; }).slice(0,3); if(!arr.length) return ''; return '👀 本月你关注过：'+arr.map(function(x){ return x.n+' '+x.c+' 次'; }).join(' · '); }catch(_){ return ''; } }
+    window._symlogRefresh=function(){ try{ var el=document.getElementById('symlogSum'); if(el) el.textContent=_symlogSumHTML(); }catch(_){} };
     var PARTS = {
       /* 侧脸朝左 */
       head:{vb:'0 0 210 205', art:
@@ -23600,6 +23606,7 @@ function renderBody(){
           +'<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:4px;">'+s.n+'</div></div>';
       }
       h+='</div></div></div>';
+      h+='<div id="symlogSum" style="grid-column:1/-1;font-size:12px;color:var(--text-sub);margin-top:-6px;">'+_symlogSumHTML()+'</div>';
       h+='<div onclick="window._kitchenShow()" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
         +'<div style="font-size:30px;">🥣</div>'
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
@@ -23610,8 +23617,9 @@ function renderBody(){
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
+      try{ _symlogHit(s.n); }catch(_e10){}
       var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+s.e+' '+s.n+'</div><div class="widget-body" style="padding:14px;">'
-        +'<div style="font-size:12px;color:var(--text-hint);">'+s.why+'</div>';
+        +'<div style="font-size:12px;color:var(--text-hint);">'+s.why+'</div>'+_symlogLine(s.n);
       s.ac.forEach(function(a,j){
         h+='<div style="border:1.5px solid var(--card-border);border-radius:12px;padding:12px;margin-top:10px;">'
           +'<div style="font-size:14px;font-weight:700;color:var(--pri);">穴位'+(j+1)+' · '+a.n+'</div>'
@@ -23637,6 +23645,7 @@ function renderBody(){
       }catch(_e){}
       h+='</div></div>';
       el.innerHTML=h;
+      try{ window._symlogRefresh(); }catch(_e12){}
       try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_){}
     };
   var DOOR_FS = {
