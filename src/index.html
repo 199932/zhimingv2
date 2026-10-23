@@ -1097,6 +1097,11 @@ body.theme-dark .term {
 .diary-streak-card .big{font-size:32px;font-weight:800;letter-spacing:1px;}
 .diary-streak-card .sub{font-size:12px;opacity:.9;}
 .diary-heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:10px 0;}
+.diary-heat-cell{position:relative;}
+.dc-sleep-dot{position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;box-shadow:0 0 0 1.5px rgba(255,255,255,.55);}
+.sleep-chip{padding:6px 10px;border-radius:16px;border:1.5px solid var(--input-border);background:var(--input-bg);font-size:12px;color:var(--text);cursor:pointer;}
+.sleep-chip.on,.sleep-q.on{border-color:var(--pri)!important;background:var(--pri-light)!important;}
+.sleep-q{width:36px;height:36px;border-radius:50%;border:2px solid var(--input-border);background:var(--input-bg);font-size:18px;cursor:pointer;}
 .diary-heat-cell{aspect-ratio:1;border-radius:4px;font-size:10px;display:flex;align-items:center;justify-content:center;color:#fff;text-shadow:0 0 2px rgba(0,0,0,.5);}
 .diary-entries{margin-top:14px;border-top:1px dashed var(--line);padding-top:8px;}
 .diary-row{display:flex;gap:8px;padding:8px 4px;border-bottom:1px solid var(--line);align-items:center;}
@@ -1582,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.56.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.57.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2558,7 +2563,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.56.0-20261023';
+const ZHIMING_BUILD = 'v2.57.0-20261023';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -10040,6 +10045,7 @@ function renderDiaryHeatmap(y,m){
     const firstDay=new Date(y,m-1,1); const wd=(firstDay.getDay()+6)%7;
     const dim=new Date(y,m,0).getDate();
     const list=__dm().reduce((o,e)=>{o[e.date]=(o[e.date]||0)+(e.mood||0);return o;},{});
+    const sleepMap={}; __dm().forEach(e=>{ if(e.bed) sleepMap[e.date]=e.bed; });
     box.innerHTML='';
     const pads=[]; for(let i=0;i<wd;i++) pads.push({d:null});
     const days=[]; for(let d=1; d<=dim; d++) days.push({d});
@@ -10054,12 +10060,15 @@ function renderDiaryHeatmap(y,m){
         const m0=list[k]||0; const idx=Math.max(0,Math.min(scale.length-1, m0));
         e.style.background=m0?scale[idx]:'#f3f4f6';
         e.textContent=String(c.d);
+        const _sb=sleepMap[k];
+        if(_sb){ const _dt=document.createElement('span'); _dt.className='dc-sleep-dot'; _dt.style.background=window._sleepColor(_sb); _dt.title='昨晚 '+_sb+' 睡'; e.appendChild(_dt); }
       }
       box.appendChild(e);
     }
     const sdk=document.getElementById('diary-streak-days'); if(sdk) sdk.textContent=calcDiaryStreak()+' 天';
     const totalMonth=dim; const hit = Object.keys(list).filter(k=>k.startsWith(y+'-'+String(m).padStart(2,'0'))).length;
     const heat=document.getElementById('diary-monthly-heat'); if(heat) heat.textContent = Math.round(100*hit/totalMonth)+'%';
+    try{ const _ss=document.getElementById('sleepStats'); if(_ss){ const _ym=y+'-'+String(m).padStart(2,'0'); const _mos=__dm().filter(e=>e.bed&&e.date&&e.date.startsWith(_ym)); if(_mos.length){ let _sum=0,_late=0; _mos.forEach(e=>{ let _h=parseInt(e.bed,10)||0; if(_h<12)_h+=24; _sum+=_h; if(_h>=24)_late++; }); const _avgM=Math.round(_sum/_mos.length*60); const _ah=Math.floor(_avgM/60)%24, _am=_avgM%60; _ss.textContent='😴 睡眠 '+_mos.length+' 天 · 平均就寝 '+String(_ah).padStart(2,'0')+':'+String(_am).padStart(2,'0')+(_late>0?(' · 零点后 '+_late+' 天'):' · 暂无零点后入睡'); } else { _ss.textContent='😴 本月还没记过睡眠——点「✨ 今天打卡」顺手记昨晚几点睡的'; } } }catch(_e9){}
     const rec=document.getElementById('diaryRecentList'); if(rec){
       const r7 = __dm().slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
       rec.innerHTML='';
@@ -10076,7 +10085,12 @@ function renderDiaryHeatmap(y,m){
 try{window.renderDiaryHeatmap=renderDiaryHeatmap;}catch(_){}
 function renderDiaryDashboard(){try{ const d=new Date(); renderDiaryHeatmap(d.getFullYear(), d.getMonth()+1); }catch(_){}}
 try{window.renderDiaryDashboard=renderDiaryDashboard;}catch(_){}
+let __sleepPick={bed:null,q:null};
+window._sleepChip=function(el,bed){ try{ __sleepPick.bed=bed; var row=document.getElementById("sleepPickRow"); if(row){ row.querySelectorAll(".sleep-chip").forEach(function(c){c.classList.remove("on");}); } el.classList.add("on"); }catch(_){} };
+window._sleepQ=function(el,q){ try{ __sleepPick.q=q; var row=document.getElementById("sleepQRow"); if(row){ row.querySelectorAll(".sleep-q").forEach(function(c){c.classList.remove("on");}); } el.classList.add("on"); }catch(_){} };
+window._sleepColor=function(bed){ try{ var h=parseInt(bed,10)||0; if(h<12)h+=24; return h<23?"#7c9e63":(h<24?"#a8c98a":(h<25?"#d4a94e":"#d4754e")); }catch(_){ return "#7c9e63"; } };
 function openDiaryCheckin(){try{
+  try{ __sleepPick={bed:null,q:null}; ["sleepPickRow","sleepQRow"].forEach(function(id){ var r=document.getElementById(id); if(r){ r.querySelectorAll(".on").forEach(function(c){c.classList.remove("on");}); } }); }catch(_){ }
   var b=document.getElementById('diaryCheckinBox'); if(!b)return;
   // [Chrome83] 暴力修复: 先挪到 body，再用 setProperty 写 fixed + 999999 z-index
   try{ if(b.parentNode !== document.body){ document.body.appendChild(b); } }catch(_){}
@@ -10114,9 +10128,9 @@ function __pickMood(btn,m){try{
   __moodCur=m; (document.querySelectorAll('#moodPicker button')||[]).forEach(b=>b.classList.remove('on')); btn.classList.add('on');
 }catch(_){}}
 try{window.__pickMood=__pickMood;}catch(_){}
-function saveDiaryEntry(emoji, mood, note, tags){
+function saveDiaryEntry(emoji, mood, note, tags, extra){
   try{
-    const a=__dm(); a.push({date:__todayStr(), mood:mood||0, note:note||'', tags:tags||[], ts:Date.now()});
+    const a=__dm(); const _ent={date:__todayStr(), mood:(mood==null)?undefined:mood, note:note||'', tags:tags||[], ts:Date.now()}; if(extra){ for(var _k in extra){ _ent[_k]=extra[_k]; } } a.push(_ent);
     const seen={}; a.slice().reverse().forEach(e=>{seen[e.date]=seen[e.date]||e;});
     const b=Object.values(seen).sort((x,y)=>x.date.localeCompare(y.date));
     __dw(b); return true;
@@ -10124,14 +10138,15 @@ function saveDiaryEntry(emoji, mood, note, tags){
 }
 try{window.saveDiaryEntry=saveDiaryEntry;}catch(_){}
 function confirmDiaryCheckin(){try{
-  if(!__moodCur){ _alert2('请先选一个心情'); return; }
+  if(!__moodCur && !(__sleepPick&&__sleepPick.bed)){ _alert2('心情或睡眠，至少记一个'); return; }
   const note=document.getElementById('diaryNote').value.trim();
   const tags=[];
   try{ const t=document.getElementById('today-tarot-card'); if(t&&t.textContent) tags.push('塔罗日签'); }catch(_){}
   try{ if(window._todayWuxing) tags.push('五行:'+window._todayWuxing); }catch(_){}
-  saveDiaryEntry(__DIARY_MOOD[__moodCur].e, __moodCur, note, tags);
+  var _sl=(__sleepPick&&__sleepPick.bed)?{bed:__sleepPick.bed,sq:__sleepPick.q||null}:undefined;
+  saveDiaryEntry((__DIARY_MOOD[__moodCur]||{}).e, __moodCur, note, tags, _sl);
   document.getElementById('diaryCheckinBox').style.display='none';
-  if(typeof window.showToast==='function') window.showToast('✨ 已记下此刻心情，愿你顺遂','ok',1400);
+  if(typeof window.showToast==='function') window.showToast(__moodCur?'✨ 已记下此刻心情，愿你顺遂':'😴 昨晚的睡眠记下了','ok',1400);
   renderDiaryDashboard();
 }catch(_){}}
 try{window.confirmDiaryCheckin=confirmDiaryCheckin;}catch(_){}
@@ -20226,6 +20241,7 @@ window.onShareCardClick = window.onShareCardClick || function(){};
       <button class="diary-btn-secondary" style="padding:5px 10px;border-radius:8px;font-size:12px;" onclick="window.openDiaryCheckin()">✨ 今天打卡</button>
     </div>
     <div id="diaryHeatmap" class="diary-heatmap"></div>
+    <div id="sleepStats" style="font-size:12px;color:var(--text-sub);margin:2px 0 10px;"></div>
     <div class="diary-entries">
       <div style="font-size:12px;font-weight:600;color:var(--text-hint);margin-bottom:4px;">最近 7 条笔记</div>
       <div id="diaryRecentList"></div>
@@ -20247,6 +20263,27 @@ window.onShareCardClick = window.onShareCardClick || function(){};
       <button data-m="3" onclick="window.__pickMood(this,3)">😟</button>
       <button data-m="4" onclick="window.__pickMood(this,4)">😡</button>
       <button data-m="5" onclick="window.__pickMood(this,5)">🤔</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-hint);margin:12px 0 6px;">😴 昨晚几点睡的？(可不选，只记睡眠也行)</div>
+    <div id="sleepPickRow" style="display:flex;flex-wrap:wrap;gap:6px;">
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'21:00')">21:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'21:30')">21:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'22:00')">22:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'22:30')">22:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'23:00')">23:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'23:30')">23:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'00:00')">00:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'00:30')">00:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'01:00')">01:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'01:30')">01:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'02:00')">02:00</button>
+    </div>
+    <div id="sleepQRow" style="display:flex;gap:8px;margin-top:8px;">
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,1)" title="很差">😤</button>
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,2)" title="较差">😕</button>
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,3)" title="一般">😐</button>
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,4)" title="不错">🙂</button>
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,5)" title="很好">🥰</button>
     </div>
     <div id="diaryPrompt" style="margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--pri-light);font-size:12px;line-height:1.7;color:var(--pri-dark);"></div>
     <textarea id="diaryNote" rows="3" placeholder="（可选）照着上面的问题写两句，或者写任何你想记下的……" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);resize:none;font-size:13px;box-sizing:border-box;"></textarea>

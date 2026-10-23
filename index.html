@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.56.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.57.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -994,6 +994,7 @@
       <button class="diary-btn-secondary" style="padding:5px 10px;border-radius:8px;font-size:12px;" onclick="window.openDiaryCheckin()">✨ 今天打卡</button>
     </div>
     <div id="diaryHeatmap" class="diary-heatmap"></div>
+    <div id="sleepStats" style="font-size:12px;color:var(--text-sub);margin:2px 0 10px;"></div>
     <div class="diary-entries">
       <div style="font-size:12px;font-weight:600;color:var(--text-hint);margin-bottom:4px;">最近 7 条笔记</div>
       <div id="diaryRecentList"></div>
@@ -1015,6 +1016,27 @@
       <button data-m="3" onclick="window.__pickMood(this,3)">😟</button>
       <button data-m="4" onclick="window.__pickMood(this,4)">😡</button>
       <button data-m="5" onclick="window.__pickMood(this,5)">🤔</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-hint);margin:12px 0 6px;">😴 昨晚几点睡的？(可不选，只记睡眠也行)</div>
+    <div id="sleepPickRow" style="display:flex;flex-wrap:wrap;gap:6px;">
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'21:00')">21:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'21:30')">21:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'22:00')">22:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'22:30')">22:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'23:00')">23:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'23:30')">23:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'00:00')">00:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'00:30')">00:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'01:00')">01:00</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'01:30')">01:30</button>
+      <button type="button" class="sleep-chip" onclick="window._sleepChip(this,'02:00')">02:00</button>
+    </div>
+    <div id="sleepQRow" style="display:flex;gap:8px;margin-top:8px;">
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,1)" title="很差">😤</button>
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,2)" title="较差">😕</button>
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,3)" title="一般">😐</button>
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,4)" title="不错">🙂</button>
+      <button type="button" class="sleep-q" onclick="window._sleepQ(this,5)" title="很好">🥰</button>
     </div>
     <div id="diaryPrompt" style="margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--pri-light);font-size:12px;line-height:1.7;color:var(--pri-dark);"></div>
     <textarea id="diaryNote" rows="3" placeholder="（可选）照着上面的问题写两句，或者写任何你想记下的……" style="width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);resize:none;font-size:13px;box-sizing:border-box;"></textarea>
