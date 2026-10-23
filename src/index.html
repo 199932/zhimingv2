@@ -1582,7 +1582,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.55.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.56.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2558,7 +2558,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.55.0-20261023';
+const ZHIMING_BUILD = 'v2.56.0-20261023';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -16410,6 +16410,7 @@ function _houInfo(){
     return {term:r.term, hi:hi, hou:r.hou, next:h2n, left:Math.max(1,(hi+1)*5-r.diff)};
   }catch(_){ return null; }
 }
+var HOU_Y=[['宜早睡养阳，羊肉萝卜汤走起来','宜囤菜晒背，晒 15 分钟补阳气','宜热水泡脚，姜枣茶暖到手脚'],['宜糯米红枣粥，把脾胃固住','宜八段锦微微出汗，忌大汗淋漓','宜银耳百合润燥，暖气房多喝温水'],['宜韭菜豆芽助生发，晨起梳头 100 下','宜伸懒腰拉拉筋，少吃酸多吃甜','宜踏青慢走，春捂别急着减衣'],['宜山药小米健脾，春捂捂到清明','宜菊花枸杞清肝火，饮食少酸多甜','宜早睡早起，雨天记得关节保暖'],['宜雪梨汤润燥防春咳，梳头升阳气','宜踏青放风筝，出门疏肝解郁','宜菠菜荠菜尝鲜，熬夜最伤肝要少'],['宜早睡早起，鸡蛋青菜搭均衡','宜按揉虎口降肝火，大事化小','宜午休 20 分钟，饮食平和不过寒过热'],['宜踏青吸氧，青团浅尝两三个就够','宜菊花茶清目，花粉季出门戴口罩','宜慢跑到微汗，湿气重的人少吃甜腻'],['宜香椿尝鲜，谷雨茶正好清火','宜户外拉伸晒背，防柳絮戴口罩','宜睡前泡脚祛湿，久坐最容易生湿'],['宜午睡 30 分钟养心，苦瓜莲子清心火','宜红豆薏米祛湿，吃得比平时淡一点','宜番茄时鲜补维 C，晚睡早起午间补觉'],['宜苦味菜清心火，冬瓜汤利水湿','宜绿豆汤防暑，冰饮别猛灌','宜慢跑微汗就好，心烦时深呼吸三组'],['宜冬瓜薏米汤，午休对抗夏乏','宜饮食清淡，出汗后先擦干再吹风','宜静坐调息，梅雨季除湿防霉'],['宜午间小睡养心，苦味入菜正当时','宜温水洗澡，空调 26 度别贪凉','宜荷叶粥清暑，冷饮最伤脾胃要少'],['宜酸梅汤生津，少量多次补水','宜早晚凉爽时散步，正午少出门','宜绿豆百合汤，心静自然凉不是虚话'],['宜姜茶护中焦，空调房盖住膝盖','宜红豆薏米水，出汗后补点淡盐水','宜雨天防湿气，睡觉盖好肚子'],['宜贴秋膘适度，百合银耳先润燥','宜早睡早起，秋梨炖汤润喉','宜登山慢走，情绪防悲秋多晒太阳'],['宜鸭肉滋阴，比平时早睡 1 小时','宜桂花茶暖胃，早晚添件薄外套','宜南瓜山药养胃，少辛辣多吃酸'],['宜白露茶润燥，薄外套随身带','宜龙眼莲子安神，睡前泡脚','宜芝麻核桃润肺，秋燥咳嗽早防护'],['宜平补肠胃，芋头莲藕正当季','宜早卧早起，护住脖颈和腰腹','宜蜂蜜芝麻润肠，温水多喝几口'],['宜枸杞菊花明目，晨起温水润喉','宜山药板栗健脾，泡脚泡到微热','宜登高望远，添衣护膝暖足'],['宜萝卜牛肉汤，护好膝盖和脚踝','宜晚上 9 点后就放松，柿子别空腹吃','宜早睡藏阳气，陈皮水理气'],['宜当归生姜炖汤，晨起别摸黑出门','宜黑豆黑芝麻入肾，黑色食物正当令','宜温补不过猛，火锅适可而止'],['宜羊肉萝卜锅，室内加湿防干燥','宜晒太阳防情绪低落，有心事多倾诉','宜热粥暖身，睡前泡脚 15 分钟'],['宜早卧晚起等日光，冰糖炖梨润燥','宜黑豆黑米粥，运动忌大汗淋漓','宜温水泡脚通经络，围巾护住头颈'],['宜饺子应景，艾叶泡脚温经散寒','宜桂圆红枣茶，午间晒背 20 分钟','宜静养少熬夜，数九天护好阳气']];
 window.openHouDetail = function(termIdx, hi){
   try{
     var h = null;
@@ -16452,6 +16453,13 @@ window.openHouDetail = function(termIdx, hi){
     }
     html += '<div style="font-size:10px;color:var(--text-hint);text-align:center;margin-top:6px;">'+(h.passed?('该候已过 '+(-h.left)+' 天'):(h.left===0?'本候今天结束':'本候还剩 '+h.left+' 天'))+' · 下候「'+(h.next?h.next.n:"")+'」 · 按近似节气日推算，仅供文化参考</div>';
     var t = document.getElementById('houModalTitle'); if(t) t.textContent = '🌱 '+h.term+' · 三候';
+    var _yy=null;
+    if(typeof termIdx==='number'&&termIdx>=0&&termIdx<24&&typeof hi==='number'&&hi>=0&&hi<3){ _yy=((HOU_Y[termIdx]&&HOU_Y[termIdx][hi])||null); }
+    if(_yy){
+      html+='<div style="margin-top:12px;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'
+        +'<div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:4px;">🌿 本候宜 · 候着天时养生</div>'
+        +'<div style="font-size:13px;color:var(--text);line-height:1.8;">'+_yy+'</div></div>';
+    }
     var b = document.getElementById('houModalBody'); if(b) b.innerHTML = html;
     window.__openModalById('houModal');
   }catch(e){}
