@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.60.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.61.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1748,6 +1748,107 @@ function renderBody(){
       try{ window._symlogRefresh(); }catch(_e12){}
       try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_){}
     };
+  var FSCHECK = [
+   {k:'mirror',e:'🪞',n:'镜对床',q:'卧室镜子（含电视屏、柜镜）正对床',imp:'半夜醒容易惊到自己，睡眠变浅',fix:'睡前用布挡住或换个角度——柜镜贴磨砂贴最快',fix2:'镜子挪到侧面照墙'},
+   {k:'beam',e:'🏢',n:'横梁压顶',q:'床、沙发或书桌正上方有横梁',imp:'潜意识有压迫感，久了肩颈发紧',fix:'床头或桌位挪出梁下；动不了就挂床幔缓冲',fix2:'梁下改放矮柜、绿植'},
+   {k:'doorbed',e:'🚪',n:'门冲床',q:'卧室门正对床',imp:'开关门的风声直冲，睡不安稳',fix:'挂半帘或放个屏风挡一下',fix2:'床挪个角度，错开正对线'},
+   {k:'headboard',e:'🛏️',n:'床头无靠',q:'床头悬空或靠窗',imp:'睡里没安全感，浅眠易醒',fix:'床头加块实木板或高柜贴实',fix2:'换到实墙那面睡'},
+   {k:'stove',e:'🍳',n:'开门见灶',q:'进大门正对厨房灶台',imp:'油烟视线直冲，古人叫财不入库',fix:'厨房门挂个帘',fix2:'灶台前加扇矮屏'},
+   {k:'wc',e:'🚽',n:'厕冲床门',q:'卫生间门正对床或大门',imp:'湿气异味直冲休息区',fix:'厕所门常闭，门上挂帘',fix2:'查地漏防返味，床错开正对线'},
+   {k:'clutter',e:'📦',n:'杂物堆积',q:'玄关、角落或阳台堆着杂物',imp:'气口被堵，人也容易心堵',fix:'今天清一角，10 分钟；设个「暂存箱」定期清空',fix2:'一年没用的，送人或处理掉'},
+   {k:'light',e:'💡',n:'光线偏暗',q:'客厅或书桌白天也昏暗',imp:'情绪容易压着，效率也低',fix:'灯泡换亮一档，桌面加盏台灯',fix2:'白天窗帘全开，桌子挪近窗'},
+   {k:'plant',e:'🥀',n:'绿植枯黄',q:'家里摆着枯了半死的植物',imp:'枯败之气，看着也丧',fix:'今天扔掉或剪掉枯枝',fix2:'换好养的：绿萝、虎皮兰'},
+   {k:'elec',e:'📱',n:'床头电子堆',q:'床头堆着手机、充电器、路由器',imp:'半夜通知加蓝光，睡不踏实',fix:'充电位挪到 3 米外',fix2:'手机 22:30 后自动勿扰'}
+  ];
+  var GONG_POS={1:{n:'坎',x:1,el:'水'},2:{n:'坤',x:2,el:'土'},3:{n:'震',x:3,el:'木'},4:{n:'巽',x:4,el:'木'},5:{n:'中',x:5,el:'土'},6:{n:'乾',x:6,el:'金'},7:{n:'兑',x:7,el:'金'},8:{n:'艮',x:8,el:'土'},9:{n:'离',x:9,el:'火'}};
+  function _fsState(){ try{ return JSON.parse(localStorage.getItem('zhiming_fscheck_v1')||'null'); }catch(_){ return null; } }
+  window._fsCheckRender = function(){
+    var el=document.getElementById('fs-check-area'); if(!el) return;
+    var st=_fsState();
+    if(!st){
+      el.innerHTML='<div class="widget" style="grid-column:1/-1;cursor:pointer;" onclick="window._fsCheckStart()"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
+        +'<div style="font-size:30px;">🏠</div>'
+        +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">宅况自查 · 10 项过一遍</div>'
+        +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">床、镜、梁、门……有问题的生成今晚动手清单，每条 5 分钟能落地</div></div>'
+        +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
+      return;
+    }
+    var probs=FSCHECK.filter(function(x){ return st.ans&&st.ans[x.k]===1; });
+    var doneN=probs.filter(function(x){ return st.done&&st.done[x.k]; }).length;
+    var _dg=st.at?Date.now()-st.at:0; var ago=(_dg<60000)?'刚刚自查':(_dg<86400000?'今天自查':Math.round(_dg/86400000)+' 天前自查');
+    var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🏠 宅况动手清单 · '+ago+'</div><div class="widget-body" style="padding:12px;">';
+    if(probs.length===0){
+      h+='<div style="text-align:center;padding:10px 0;"><div style="font-size:28px;">🌟</div><div style="font-size:14px;font-weight:700;color:var(--text);margin-top:6px;">十项全过，家里没踩雷</div><div style="font-size:12px;color:var(--text-hint);margin-top:4px;">保持整洁通风就行——隔一两个月可以再查一遍</div></div>';
+    } else {
+      var pct=probs.length?Math.round(100*doneN/probs.length):100;
+      h+='<div style="font-size:12px;color:var(--text-sub);margin-bottom:6px;">发现 '+probs.length+' 项 · 已改善 '+doneN+' 项</div>'
+        +'<div style="height:6px;border-radius:3px;background:var(--card-border);overflow:hidden;margin-bottom:12px;"><div style="height:100%;width:'+pct+'%;background:var(--pri);border-radius:3px;"></div></div>';
+      probs.forEach(function(x){
+        var ok=st.done&&st.done[x.k];
+        h+='<div style="border:1.5px solid '+(ok?'var(--pri)':'var(--card-border)')+';border-radius:12px;padding:12px;margin-bottom:8px;'+(ok?'background:var(--pri-light);opacity:.75;':'')+'">'
+          +'<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:20px;">'+x.e+'</div><div style="font-size:13.5px;font-weight:700;color:var(--text);flex:1;">'+x.n+(ok?' · ✅ 已改善':'')+'</div>'
+          +(ok?'':'<div onclick="window._fsDone(\''+x.k+'\')" style="font-size:11.5px;padding:5px 12px;border-radius:999px;background:var(--pri);color:#fff;font-weight:600;cursor:pointer;">做完了</div>')+'</div>'
+          +'<div style="font-size:11.5px;color:var(--text-hint);margin-top:4px;">影响：'+x.imp+'</div>'
+          +'<div style="font-size:12.5px;color:var(--text);line-height:1.7;margin-top:6px;">🔧 现在就做：'+x.fix+'</div>'
+          +'<div style="font-size:11.5px;color:var(--text-sub);line-height:1.6;margin-top:2px;">进阶：'+x.fix2+'</div>'
+          +'</div>';
+      });
+    }
+    h+='<div onclick="window._fsReset()" style="margin-top:6px;text-align:center;font-size:12px;color:var(--text-hint);cursor:pointer;">↻ 重新自查一遍</div>';
+    h+='</div></div>';
+    el.innerHTML=h;
+  };
+  window._fsCheckStart = function(){
+    var el=document.getElementById('fs-check-area'); if(!el) return;
+    var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🏠 宅况自查 · 逐项过一遍</div><div class="widget-body" style="padding:12px;">'
+      +'<div style="font-size:11.5px;color:var(--text-hint);margin-bottom:10px;">想不起来就起来走一圈再答，选「有」的会进动手清单</div>';
+    FSCHECK.forEach(function(x,i){
+      h+='<div style="border:1.5px solid var(--card-border);border-radius:12px;padding:10px 12px;margin-bottom:8px;">'
+        +'<div style="display:flex;align-items:center;gap:8px;"><div style="font-size:18px;">'+x.e+'</div>'
+        +'<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text);">'+x.n+'</div><div style="font-size:11.5px;color:var(--text-hint);">'+x.q+'？</div></div>'
+        +'<div style="display:flex;gap:6px;">'
+        +'<div id="fsn-'+x.k+'" onclick="window._fsAns(\''+x.k+'\',0)" style="font-size:11px;padding:5px 10px;border-radius:999px;border:1.5px solid var(--card-border);cursor:pointer;color:var(--text-sub);">没问题</div>'
+        +'<div id="fsy-'+x.k+'" onclick="window._fsAns(\''+x.k+'\',1)" style="font-size:11px;padding:5px 10px;border-radius:999px;border:1.5px solid var(--card-border);cursor:pointer;color:var(--text-sub);">有</div>'
+        +'</div></div></div>';
+    });
+    h+='<div onclick="window._fsSave()" style="margin-top:12px;background:var(--pri);color:#fff;border-radius:12px;padding:12px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;">生成我的动手清单</div>';
+    h+='</div></div>';
+    el.innerHTML=h;
+    try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){}
+  };
+  window._fsAns = function(k,v){
+    try{
+      var el1=document.getElementById('fsy-'+k), el0=document.getElementById('fsn-'+k); if(!el1||!el0) return;
+      el1.style.background=(v===1)?'rgba(212,117,78,.18)':''; el1.style.borderColor=(v===1)?'var(--pri, #7c9e63)':'var(--card-border)'; el1.style.fontWeight=(v===1)?'700':'400';
+      el0.style.background=(v===0)?'var(--pri-light)':''; el0.style.borderColor=(v===0)?'var(--pri, #7c9e63)':'var(--card-border)'; el0.style.fontWeight=(v===0)?'700':'400';
+      el1.dataset.v=v; el0.dataset.v=(v===0)?0:'';
+    }catch(_){}
+  };
+  window._fsSave = function(){
+    var ans={}, any=false;
+    FSCHECK.forEach(function(x){ var el=document.getElementById('fsy-'+x.k); var v=el&&el.dataset&&el.dataset.v==='1'; ans[x.k]=v?1:0; if(v)any=true; });
+    var prev=_fsState();
+    var st={ans:ans, done:prev&&prev.ans?_carry(prev,ans):{}, at:Date.now()};
+    try{ localStorage.setItem('zhiming_fscheck_v1', JSON.stringify(st)); }catch(_){}
+    window._fsCheckRender();
+    try{ if(window.showToast) window.showToast(any?'📋 清单生成——今晚动手，做完记得点「做完了」':'🌟 十项全过，继续保持','ok',1600); }catch(_){}
+  };
+  function _carry(prev,ans){
+    var done={};
+    FSCHECK.forEach(function(x){ if(ans[x.k]===1&&prev.done&&prev.done[x.k]) done[x.k]=true; });
+    return done;
+  }
+  window._fsDone = function(k){
+    var st=_fsState(); if(!st) return;
+    st.done=st.done||{}; st.done[k]=true;
+    try{ localStorage.setItem('zhiming_fscheck_v1', JSON.stringify(st)); }catch(_){}
+    window._fsCheckRender();
+    try{ if(window.showToast) window.showToast('✨ 又改善一处——家里和你都会舒服一点','ok',1400); }catch(_){}
+  };
+  window._fsReset = function(){
+    try{ localStorage.removeItem('zhiming_fscheck_v1'); }catch(_){}
+    window._fsCheckStart();
+  };
   var DOOR_FS = {
     '休':{t:'休养生息位——这块地方适合休息放松', a:'把卧室或沙发朝向这边更安神；现在就做：睡前把手机充电挪到别的房间，让这块地方只留给休息'},
     '生':{t:'生机旺位——健康与财气都爱待在这里', a:'保持整洁最重要；现在就做：把这里擦干净，摆一盆绿萝或薄荷，别堆杂物'},
@@ -1824,8 +1925,9 @@ function renderBody(){
       if(r.badGe&&r.badGe.length) html+='<div style="color:#b0713f;margin-top:2px;">△ 此局留意：'+r.badGe.join('、')+'</div>';
       html+='</div>';
     }
-    html+='</div></div><div id="fs-detail"></div>';
+    html+='</div></div><div id="fs-detail"></div><div id="fs-check-area"></div>';
     el.innerHTML=html;
+    try{ window._fsCheckRender(); }catch(_e13){}
   };
 
   window._fsPick = function(g){
