@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.61.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.62.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2563,7 +2563,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.61.0-20261023';
+const ZHIMING_BUILD = 'v2.62.0-20261024';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -22017,6 +22017,60 @@ function _lenormandAIEnhance(cards, spreadType){
     window._mcalYM={y:y,m:m};
     window.renderGrow();
   };
+  function _secWeekReview(){
+    let diary=[]; try{ diary=JSON.parse(localStorage.getItem('zhiming_v2_diary')||'[]'); }catch(e){}
+    let symlog=[]; try{ symlog=JSON.parse(localStorage.getItem('zhiming_symlog_v1')||'[]'); }catch(e){}
+    let cst=null; try{ cst=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(e){}
+    const now=new Date();
+    const fmt=(d)=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const d7=new Date(now); d7.setDate(d7.getDate()-7);
+    const d14=new Date(now); d14.setDate(d14.getDate()-14);
+    const k7=fmt(d7), k14=fmt(d14), kToday=fmt(now);
+    const wk=diary.filter(e=>e.date&&e.date>=k7&&e.date<=kToday);
+    const pv=diary.filter(e=>e.date&&e.date>=k14&&e.date<k7);
+    const bedMin=(b)=>{ const m=/^(\d{1,2}):(\d{2})$/.exec(b||''); if(!m) return null; let h=parseInt(m[1],10); if(h<12)h+=24; return h*60+parseInt(m[2],10); };
+    const avgBed=(arr)=>{ const ms=arr.map(e=>bedMin(e.bed)).filter(x=>x!==null); if(!ms.length) return null; return Math.round(ms.reduce((a,b)=>a+b,0)/ms.length); };
+    const hm=(min)=>{ if(min===null||min===undefined) return '—'; let m=min; const day=Math.floor(m/1440); m=m%1440; return (m<300?'次日':'')+String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
+    const bedAvg=avgBed(wk), bedPrev=avgBed(pv);
+    const lateN=wk.filter(e=>{ const m=bedMin(e.bed); return m!==null&&m>=1440; }).length;
+    const moods=wk.filter(e=>e.mood!==undefined&&e.mood!==null);
+    const moodAvg=moods.length?(moods.reduce((a,e)=>a+e.mood,0)/moods.length):null;
+    const worst=moods.slice().sort((a,b)=>a.mood-b.mood)[0], best=moods.slice().sort((a,b)=>b.mood-a.mood)[0];
+    const symNow={}, symPrev={};
+    symlog.forEach(x=>{ if(!x.date) return; if(x.date>=k7&&x.date<=kToday) symNow[x.n]=(symNow[x.n]||0)+1; else if(x.date>=k14&&x.date<k7) symPrev[x.n]=(symPrev[x.n]||0)+1; });
+    let topSym=null; for(const n in symNow){ if(!topSym||symNow[n]>topSym.c) topSym={n:n,c:symNow[n]}; }
+    const hasAny=wk.length>0||topSym;
+    let h='<div class="card"><div class="card-title">📊 近 7 天观察</div><div style="font-size:12px;color:var(--text-sub);line-height:1.9;">';
+    if(!hasAny){
+      h+='这周还没记什么——先记一笔昨晚几点睡的，观察自己从一条记录开始。';
+    } else {
+      let lines=[];
+      if(bedAvg!==null){
+        let t='睡眠：记录 '+wk.filter(e=>e.bed).length+' 晚，平均 '+hm(bedAvg)+' 睡';
+        if(lateN>0) t+='，零点后 '+lateN+' 天';
+        if(bedPrev!==null){ const df=bedAvg-bedPrev; t+=df>15?'，比上周晚了 '+df+' 分钟':(df<-15?'，比上周早了 '+(-df)+' 分钟——在变好':'，和上周差不多'); }
+        lines.push(t);
+      }
+      if(moodAvg!==null){
+        let t='情绪：平均 '+moodAvg.toFixed(1)+' 分（满分 5）';
+        if(best&&worst&&best.mood>worst.mood) t+='，最好在 '+(best.date||'').slice(5)+'（'+best.mood+' 分），最低在 '+(worst.date||'').slice(5)+'（'+worst.mood+' 分）';
+        lines.push(t);
+      }
+      if(topSym){ lines.push('身体：「'+topSym.n+'」这周被关注 '+topSym.c+' 次'+(symPrev[topSym.n]?'（上周 '+symPrev[topSym.n]+' 次）':'')+'——养生 Tab 里有对应的手法，趁不疼先练'); }
+      if(cst&&cst.t) lines.push('底子：'+(({'qixu':'气虚','yangxu':'阳虚','yinxu':'阴虚','tanshi':'痰湿','shire':'湿热','xueyu':'血瘀','qiyu':'气郁','tebing':'特禀','pinghe':'平和'})[cst.t]||'')+'体质'+(cst.at?('，上次测于 '+String(cst.at).slice(5,10)):'')+'——距现在越久越建议重测');
+      if(!lines.length) lines.push('这周只记了零星几条——多记几天，这里会越来越懂你。');
+      h+=lines.map(x=>'· '+x).join('<br>');
+      let tip='';
+      if(lateN>=3&&moodAvg!==null&&moodAvg<2.5) tip='睡得晚的那几天情绪也跟着沉——它们是连着的，这周试试把就寝提前半小时。';
+      else if(lateN>=3) tip='零点后睡 '+lateN+' 天——这周先盯一件事：23:30 前放下手机。';
+      else if(moodAvg!==null&&moodAvg<2.5) tip='情绪整体偏沉——给自己安排一件小确幸，哪怕是晒十分钟太阳。';
+      else if(topSym&&topSym.c>=3) tip='「'+topSym.n+'」出现得有点勤——如果下周还是这样，认真对待一下。';
+      else if(lateN===0&&bedAvg!==null&&moodAvg!==null&&moodAvg>=3.5) tip='睡得稳、心情也稳——这就是观察自己的意义：看得见的平稳。';
+      if(tip) h+='<div style="margin-top:8px;background:rgba(124,158,99,.09);border-radius:10px;padding:9px 11px;font-size:12.5px;color:var(--pri);font-weight:600;">💡 '+tip+'</div>';
+    }
+    h+='</div></div>';
+    return h;
+  }
   function _secMoodCalendar(){
     const data = _ck();
     const now=new Date();
@@ -23055,7 +23109,7 @@ function _lenormandAIEnhance(cards, spreadType){
            打卡与吉日无需档案，现在就能用。
            <br><button class="btn-primary" onclick="window.openProfileModal&&window.openProfileModal()">去设置档案</button>
          </div></div>` +
-        _secCheckin(null) + (function(){ try{ return _secMoodCalendar(); }catch(e){ return ""; } })() + _secJiri(null) + (function(){ try{ return _secPeople(); }catch(e){ return ""; } })() + vault;
+        _secCheckin(null) + (function(){ try{ return _secMoodCalendar(); }catch(e){ return ""; } })() + (function(){ try{ return _secWeekReview(); }catch(e){ return ""; } })() + _secJiri(null) + (function(){ try{ return _secPeople(); }catch(e){ return ""; } })() + vault;
       return;
     }
     const _tryGC=(fn)=>{ try{ return fn(); }catch(e){ try{ console.warn("grow card:",e); }catch(_){} return ""; } };
@@ -23064,7 +23118,7 @@ function _lenormandAIEnhance(cards, spreadType){
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
        </div>` +
-      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secMoodCalendar()) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secPeople()) + vault;
+      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secMoodCalendar()) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secPeople()) + vault;
   };
 
   /* ---- 交互 ---- */
