@@ -23118,6 +23118,7 @@ function _lenormandAIEnhance(cards, spreadType){
            <button id="gst-tools" onclick="window._growSub('tools')" style="flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--card-border);background:var(--card);color:var(--text-sub);font-size:13px;font-weight:700;cursor:pointer;opacity:.8;">🧰 工具</button>
          </div><div id="g-n-today">${hToday}</div><div id="g-n-tools">${hTools}</div>`;
       })();
+      try{ window._growSubInit(); }catch(e){}
       return;
     }
     const _tryGC=(fn)=>{ try{ return fn(); }catch(e){ try{ console.warn("grow card:",e); }catch(_){} return ""; } };
