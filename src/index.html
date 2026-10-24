@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.62.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.63.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2563,7 +2563,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.62.0-20261024';
+const ZHIMING_BUILD = 'v2.63.0-20261024';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -23109,7 +23109,15 @@ function _lenormandAIEnhance(cards, spreadType){
            打卡与吉日无需档案，现在就能用。
            <br><button class="btn-primary" onclick="window.openProfileModal&&window.openProfileModal()">去设置档案</button>
          </div></div>` +
-        _secCheckin(null) + (function(){ try{ return _secMoodCalendar(); }catch(e){ return ""; } })() + (function(){ try{ return _secWeekReview(); }catch(e){ return ""; } })() + _secJiri(null) + (function(){ try{ return _secPeople(); }catch(e){ return ""; } })() + vault;
+        (function(){
+        const _nf=(fn)=>{ try{ return fn(); }catch(e){ return ""; } };
+        const hToday=_nf(function(){ return _secCheckin(null); }) + _nf(function(){ return _secWeekReview(); }) + _nf(function(){ return _secMoodCalendar(); });
+        const hTools=_nf(function(){ return _secJiri(null); }) + _nf(function(){ return _secPeople(); }) + vault;
+        return `<div style="display:flex;gap:8px;margin-bottom:10px;">
+           <button id="gst-today" onclick="window._growSub('today')" style="flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--card-border);background:var(--card);color:var(--text-sub);font-size:13px;font-weight:700;cursor:pointer;opacity:.8;">📝 今日</button>
+           <button id="gst-tools" onclick="window._growSub('tools')" style="flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--card-border);background:var(--card);color:var(--text-sub);font-size:13px;font-weight:700;cursor:pointer;opacity:.8;">🧰 工具</button>
+         </div><div id="g-n-today">${hToday}</div><div id="g-n-tools">${hTools}</div>`;
+      })();
       return;
     }
     const _tryGC=(fn)=>{ try{ return fn(); }catch(e){ try{ console.warn("grow card:",e); }catch(_){} return ""; } };
@@ -23117,11 +23125,45 @@ function _lenormandAIEnhance(cards, spreadType){
     body.innerHTML =
       `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
          <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
-       </div>` +
-      _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secMoodCalendar()) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secAnnual(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secPeople()) + vault;
+       </div>`;
+      const _gTab=(id,ico,txt)=>`<button id="${id}" onclick="window._growSub('${id==='gst-today'?'today':(id==='gst-pan'?'pan':'tools')}')" style="flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--card-border);background:var(--card);color:var(--text-sub);font-size:13px;font-weight:700;cursor:pointer;opacity:.8;">${ico} ${txt}</button>`;
+      const _gBox=(id)=>`<div id="${id}"></div>`;
+      const _gFill=(id,html)=>{ const el=document.getElementById(id); if(el) el.innerHTML=html; };
+      body.innerHTML =
+        `<div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;">
+           <span style="font-size:13px;font-weight:700;color:var(--text-sub);">🌱 ${_esc(p.emoji||"👤")} ${_esc(p.name||"我")}的成长中心</span>
+         </div>
+         <div style="display:flex;gap:8px;margin-bottom:10px;">
+           ${_gTab('gst-today','📝','今日')} ${_gTab('gst-pan','🔭','命盘')} ${_gTab('gst-tools','🧰','工具')}
+         </div>` +
+        _gBox('g-p-today') + _gBox('g-p-pan') + _gBox('g-p-tools');
+      _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMoodCalendar()));
+      _gFill('g-p-pan', _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secAnnual(r)));
+      _gFill('g-p-tools', _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secPeople()) + vault);
+      try{ window._growSubInit(); }catch(e){}
+      return;
   };
 
   /* ---- 交互 ---- */
+  window._growSub = function(which){
+    try{ sessionStorage.setItem('zhiming_grow_sub', which); }catch(e){}
+    ['today','pan','tools'].forEach(function(k){
+      var p1=document.getElementById('g-p-'+k), p2=document.getElementById('g-n-'+(k==='today'?'today':'tools'));
+      var btn=document.getElementById('gst-'+k);
+      var show = (k===which);
+      if(p1&&k!=='pan') p1.style.display=show?'':'none';
+      if(p1&&k==='pan') p1.style.display=show?'':'none';
+      if(p2) p2.style.display=show?'':'none';
+      if(btn){ btn.style.background=show?'var(--pri)':'var(--card)'; btn.style.color=show?'#fff':'var(--text-sub)'; btn.style.opacity=show?'1':'.8'; }
+    });
+    try{ var el=document.getElementById('grow-body'); if(el) el.scrollIntoView({block:'start'}); }catch(e){}
+  };
+  window._growSubInit = function(){
+    var saved='today'; try{ saved=sessionStorage.getItem('zhiming_grow_sub')||'today'; }catch(e){}
+    if(!document.getElementById('g-p-pan')&&!document.getElementById('g-n-today')) return;
+    if(saved==='pan'&&!document.getElementById('g-p-pan')) saved='today';
+    window._growSub(saved);
+  };
   window._growSetMood = function(m){
     window._growDraft = Object.assign(window._growDraft||{}, {mood:m});
     document.querySelectorAll("#grow-body .mood-opt").forEach((el,i)=>el.classList.toggle("on", i===m-1));
