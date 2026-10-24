@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.65.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.66.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1968,6 +1968,7 @@ body{ padding-bottom:160px; }
     <div class="subtab" data-sec="wu7" role="tab" aria-selected="false">🎡 转盘</div>
     <div class="subtab" data-sec="wu8" role="tab" aria-selected="false">🎲 占星骰子</div>
     <div class="subtab" data-sec="wu9" role="tab" aria-selected="false">🃏 雷诺曼</div>
+    <div class="subtab" data-sec="wu10" role="tab" aria-selected="false">★ 本命星盘</div>
   </div>
   <div class="section active" id="sec-wu1">
     <div class="profile-badge-mini" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(107,92,165,0.08);border:1px solid rgba(107,92,165,0.15);border-radius:10px;margin-bottom:12px;font-size:12px;color:var(--text-sub);">
@@ -2025,7 +2026,20 @@ body{ padding-bottom:160px; }
     <button class="btn-secondary" style="margin-top:8px;width:100%;" onclick="window.generateShareCardImage('tarot')">📤 生成分享卡</button>
     <div class="foot-disclaimer">※ 塔罗占卜仅供娱乐参考与自我觉察之用</div>
   </div>
-  <div class="section" id="sec-wu2">
+  <div class="section" id="sec-wu10">
+  <div class="card">
+    <div class="card-title">★ 本命星盘 · 你的星座不止一个</div>
+    <div style="font-size:12.5px;color:var(--text-sub);margin-bottom:10px;line-height:1.7;">大家平时说的「你什么星座」只是太阳。月亮管情绪底色，上升管给人的第一印象——三个一起看才像你。全离线排盘，数据不出本机。</div>
+    <div class="form-row"><label>出生日期</label><input type="date" id="chart-date"></div>
+    <div class="form-row"><label>出生时间</label><div style="flex:1;"><input type="time" id="chart-time" value="12:00" style="width:100%;"><div style="font-size:11px;color:var(--text-hint);margin-top:3px;">不知道就留 12:00——上升星座会不准，太阳月亮不受影响</div></div></div>
+    <div class="form-row"><label>出生城市</label><select id="chart-city" style="flex:1;"></select></div>
+    <button class="btn-primary" onclick="window._chartGo()">★ 排我的星盘</button>
+  </div>
+  <div class="result" id="chart-result" aria-live="polite"></div>
+  <div class="foot-disclaimer">※ 星盘为天文历算+占星惯例解读，仅供自我觉察与娱乐参考</div>
+</div>
+
+<div class="section" id="sec-wu2">
     <div class="profile-badge-mini" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(107,92,165,0.08);border:1px solid rgba(107,92,165,0.15);border-radius:10px;margin-bottom:12px;font-size:12px;color:var(--text-sub);">
       <span style="font-size:14px;">👤</span>
       <span class="wu-pf-name">未选择档案</span>
@@ -2563,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.65.0-20261024';
+const ZHIMING_BUILD = 'v2.66.0-20261025';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24137,6 +24151,502 @@ function renderBody(){
     try{ window._renderHealthFS(); }catch(_){}
   };
 })();
+</script>
+<script>
+/* ============ 本命星盘 · 纯本地天文历算 v1 ============ */
+(function(){
+  'use strict';
+  var DEG=Math.PI/180, RAD=180/Math.PI;
+  function norm360(x){ x=x%360; return x<0?x+360:x; }
+  function sinD(x){ return Math.sin(x*DEG); }
+  function cosD(x){ return Math.cos(x*DEG); }
+  function tanD(x){ return Math.tan(x*DEG); }
+
+  /* ---- 儒略日（北京时间输入）---- */
+  function jd(y,m,d,hr,tz){ // tz: 本地时区 UTC 偏移小时
+    if(m<=2){ y-=1; m+=12; }
+    var A=Math.floor(y/100), B=2-A+Math.floor(A/4);
+    var t=(d+(hr-(tz||8))/24); // 本地时→UT
+    return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+t+B-1524.5;
+  }
+
+  /* ---- 太阳黄经（Meeus 低阶，误差<0.01°）---- */
+  function sunLon(jdv){
+    var T=(jdv-2451545.0)/36525;
+    var L0=norm360(280.46646+36000.76983*T+0.0003032*T*T);
+    var M=357.52911+35999.05029*T-0.0001537*T*T;
+    var C=(1.914602-0.004817*T-0.000014*T*T)*sinD(M)+(0.019993-0.000101*T)*sinD(2*M)+0.000289*sinD(3*M);
+    var trueLon=L0+C;
+    var omega=125.04-1934.136*T;
+    return norm360(trueLon-0.00569-0.00478*sinD(omega)); // 视黄经
+  }
+  /* ---- 月亮黄经（主项，误差~0.25°，占星够用）---- */
+  function moonLon(jdv){
+    var T=(jdv-2451545.0)/36525;
+    var Lp=218.3164477+481267.88123421*T-0.0015786*T*T+T*T*T/538841-T*T*T*T/65194000;
+    var D=297.8501921+445267.1114034*T-0.0018819*T*T;
+    var M=357.5291092+35999.0502909*T-0.0001536*T*T;
+    var Mp=134.9633964+477198.8675055*T+0.0087414*T*T;
+    var F=93.2720950+483202.0175233*T-0.0036539*T*T;
+    var lon=Lp
+      +6.288774*sinD(Mp)
+      +1.274027*sinD(2*D-Mp)
+      +0.658314*sinD(2*D)
+      +0.213618*sinD(2*Mp)
+      -0.185116*sinD(M)
+      -0.114332*sinD(2*F)
+      +0.058793*sinD(2*D-2*Mp)
+      +0.057066*sinD(2*D-M-Mp)
+      +0.053322*sinD(2*D+Mp)
+      +0.045758*sinD(2*D-M)
+      -0.040923*sinD(M-Mp)
+      -0.034720*sinD(D)
+      -0.030383*sinD(M+Mp)
+      +0.015327*sinD(2*D-2*F)
+      -0.012528*sinD(Mp+2*F)
+      +0.010980*sinD(Mp-2*F);
+    return norm360(lon);
+  }
+
+  /* ---- Standish/JPL 开普勒式行星黄经（水~冥，误差 arcmin 级 1800-2050）---- */
+  function sunXyz(jdv){
+    var T=(jdv-2451545.0)/36525;
+    var L0=norm360(280.46646+36000.76983*T+0.0003032*T*T);
+    var M=357.52911+35999.05029*T-0.0001537*T*T;
+    var C=(1.914602-0.004817*T-0.000014*T*T)*sinD(M)+(0.019993-0.000101*T)*sinD(2*M)+0.000289*sinD(3*M);
+    var trueLon=L0+C;
+    var e=0.016708634-0.000042037*T-0.0000001267*T*T;
+    var v=M+C; // 真近点角(度)
+    var R=1.000001018*(1-e*e)/(1+e*cosD(v)); // 日地距离 AU
+    return {x:R*cosD(trueLon), y:R*sinD(trueLon), z:0};
+  }
+  function planetGeo(p,jdv){
+    var T=(jdv-2451545.0)/36525;
+    var pl=planetHelio(p,T);
+    var sx=sunXyz(jdv);
+    var gx=pl.xyz.x-sx.x, gy=pl.xyz.y-sx.y, gz=pl.xyz.z-sx.z;
+    return {lon:norm360(Math.atan2(gy,gx)*RAD), lat:Math.atan2(gz,Math.sqrt(gx*gx+gy*gy))*RAD};
+  }
+  // [a, e, I, L, long.peri, long.node] + 每世纪变化率
+  var PL=[
+    {n:'水星', a:[0.38709843,0.00000000], e:[0.20563661,0.00002123], i:[7.00559432,-0.00590158], L:[252.25090655,149472.67486623], w:[77.45779628,0.16047689], O:[48.33076593,-0.12534081]},
+    {n:'金星', a:[0.72332102,-0.00000026], e:[0.00676399,-0.00005107], i:[3.39777545,-0.00043494], L:[181.97970850,58517.81560260], w:[131.76755713,0.00268329], O:[76.67984255,-0.27769418]},
+    {n:'火星', a:[1.52371243,0.00000097], e:[0.09304629,0.00009149], i:[1.85049132,-0.00744237], L:[-4.55343205,19139.85484390], w:[-23.94362959,0.44242249], O:[49.55953891,-0.29257343]},
+    {n:'木星', a:[5.20248019,-0.00002864], e:[0.04853590,0.00018026], i:[1.30275485,-0.00187714], L:[34.40438346,3034.74612775], w:[14.72847983,0.21252668], O:[100.47390909,0.20469106]},
+    {n:'土星', a:[9.54149883,-0.00003065], e:[0.05550825,-0.00032044], i:[2.48599187,0.00193609], L:[49.94432729,1222.49362201], w:[92.59887831,-0.41897216], O:[113.66242448,-0.28867794]},
+    {n:'天王星', a:[19.18797948,-0.00020455], e:[0.04685740,-0.00001550], i:[0.77263783,-0.00242939], L:[313.23218413,428.48202785], w:[170.95427630,0.40805281], O:[74.01692503,0.04240589]},
+    {n:'海王星', a:[30.06952752,0.00006447], e:[0.00895439,0.00000818], i:[1.77004347,0.00035372], L:[-55.12002969,218.45945325], w:[44.96476227,-0.32241464], O:[131.78422574,-0.00508664]},
+    {n:'冥王星', a:[39.48686035,-0.00031596], e:[0.24885238,0.00005170], i:[17.14104260,0.00004818], L:[238.92903833,145.20780515], w:[224.06891629,-0.04062942], O:[110.30393684,-0.01183482]}
+  ];
+  function planetHelio(p,T){
+    var a=p.a[0]+p.a[1]*T, e=p.e[0]+p.e[1]*T, I=p.i[0]+p.i[1]*T;
+    var L=p.L[0]+p.L[1]*T, wbar=p.w[0]+p.w[1]*T, O=p.O[0]+p.O[1]*T;
+    var w=wbar-O, M=norm360(L-wbar);
+    if(M>180) M-=360;
+    var E=M+(e*RAD)*sinD(M); // 初值（弧度迭代用弧度）
+    var Er=M*DEG;
+    for(var k=0;k<8;k++){
+      var dE=(Er-e*Math.sin(Er)-M*DEG)/(1-e*Math.cos(Er));
+      Er-=dE; if(Math.abs(dE)<1e-9) break;
+    }
+    var xv=a*(Math.cos(Er)-e), yv=a*Math.sqrt(1-e*e)*Math.sin(Er);
+    var v=Math.atan2(yv,xv)*RAD, r=Math.sqrt(xv*xv+yv*yv);
+    // 黄道坐标（日心）
+    var xu=r*(cosD(O)*cosD(v+w)-sinD(O)*sinD(v+w)*cosD(I));
+    var yu=r*(sinD(O)*cosD(v+w)+cosD(O)*sinD(v+w)*cosD(I));
+    var zu=r*(sinD(v+w)*sinD(I));
+    return {xyz:{x:xu,y:yu,z:zu}, r:r};
+  }
+
+  /* ---- 全盘计算 ---- */
+  function calcChart(jdv){
+    var out={};
+    out['太阳']=sunLon(jdv);
+    out['月亮']=moonLon(jdv);
+    out['水星']=planetGeo(PL[0],jdv).lon;
+    out['金星']=planetGeo(PL[1],jdv).lon;
+    out['火星']=planetGeo(PL[2],jdv).lon;
+    out['木星']=planetGeo(PL[3],jdv).lon;
+    out['土星']=planetGeo(PL[4],jdv).lon;
+    out['天王星']=planetGeo(PL[5],jdv).lon;
+    out['海王星']=planetGeo(PL[6],jdv).lon;
+    out['冥王星']=planetGeo(PL[7],jdv).lon;
+    return out;
+  }
+  function retroList(jdv){
+    var names=['水星','金星','火星','木星','土星','天王星','海王星','冥王星'];
+    var ret={};
+    names.forEach(function(n,i){
+      var l1=planetGeo(PL[i],jdv-1).lon, l2=planetGeo(PL[i],jdv+1).lon;
+      var d=l2-l1; if(d>180)d-=360; if(d<-180)d+=360;
+      ret[n]=d<0;
+    });
+    return ret;
+  }
+
+  /* ---- 上升点与宫位（整宫制）---- */
+  function ascendLon(jdv,lat,lonEast,hourLocal,tz){
+    // 本地时→UT
+    var ut=hourLocal-tz; if(ut<0){ ut+=24; } if(ut>=24){ ut-=24; }
+    var d=jdv-2451545.0;
+    var lst=norm360(100.46061837+0.98564736628*d+lonEast+15*ut); // 平恒星时(度)
+    var T=(jdv-2451545.0)/36525;
+    var eps=23.4392911-0.0130042*T-0.00000016*T*T;
+    var asc=Math.atan2(cosD(lst), -(sinD(lst)*cosD(eps)+tanD(lat)*sinD(eps)))*RAD;
+    return norm360(asc);
+  }
+
+  /* ---- 星座表 ---- */
+  var SIGNS=[
+    {n:'白羊',e:'♈',key:'aries'},{n:'金牛',e:'♉',key:'taurus'},{n:'双子',e:'♊',key:'gemini'},
+    {n:'巨蟹',e:'♋',key:'cancer'},{n:'狮子',e:'♌',key:'leo'},{n:'处女',e:'♍',key:'virgo'},
+    {n:'天秤',e:'♎',key:'libra'},{n:'天蝎',e:'♏',key:'scorpio'},{n:'射手',e:'♐',key:'sagittarius'},
+    {n:'摩羯',e:'♑',key:'capricorn'},{n:'水瓶',e:'♒',key:'aquarius'},{n:'双鱼',e:'♓',key:'pisces'}
+  ];
+  function signOf(lon){
+    var s=Math.floor(norm360(lon)/30);
+    var deg=norm360(lon)-s*30;
+    return {idx:s, name:SIGNS[s].n, sym:SIGNS[s].e, deg:deg};
+  }
+
+  /* ---- 城市（经度东正，时区按 UTC 偏移小时）---- */
+  var CITIES=[ /* [名, 东经, 北纬, 时区UTC偏移] */
+    ['北京',116.41,39.90,8],['上海',121.47,31.23,8],['广州',113.26,23.13,8],['深圳',114.06,22.54,8],['杭州',120.16,30.27,8],
+    ['成都',104.07,30.57,8],['重庆',106.55,29.56,8],['武汉',114.31,30.59,8],['西安',108.94,34.34,8],['南京',118.80,32.06,8],
+    ['苏州',120.58,31.30,8],['天津',117.20,39.08,8],['长沙',112.94,28.23,8],['郑州',113.63,34.75,8],['青岛',120.38,36.07,8],
+    ['合肥',117.28,31.82,8],['福州',119.30,26.07,8],['厦门',118.09,24.48,8],['济南',117.12,36.65,8],['沈阳',123.43,41.81,8],
+    ['大连',121.62,38.91,8],['哈尔滨',126.63,45.80,8],['长春',125.32,43.88,8],['石家庄',114.51,38.04,8],['太原',112.55,37.87,8],
+    ['昆明',102.83,24.88,8],['贵阳',106.63,26.65,8],['南宁',108.37,22.82,8],['南昌',115.86,28.68,8],['海口',110.32,20.03,8],
+    ['兰州',103.83,36.06,8],['西宁',101.78,36.62,8],['银川',106.23,38.49,8],['乌鲁木齐',87.62,43.83,8],['呼和浩特',111.75,40.84,8],
+    ['拉萨',91.11,29.65,8],['香港',114.17,22.32,8],['澳门',113.55,22.20,8],['台北',121.56,25.03,8],['高雄',120.31,22.62,8],
+    ['东京',139.69,35.68,9],['首尔',126.98,37.57,9],['新加坡',103.82,1.35,8],['曼谷',100.50,13.76,7],['吉隆坡',101.69,3.14,8],
+    ['悉尼',151.21,-33.87,10],['墨尔本',144.96,-37.81,10],['奥克兰',174.76,-36.85,12],['伦敦',-0.13,51.51,0],['巴黎',2.35,48.86,1],
+    ['柏林',13.40,52.52,1],['莫斯科',37.62,55.76,3],['迪拜',55.27,25.20,4],['纽约',-74.01,40.71,-5],['洛杉矶',-118.24,34.05,-8],
+    ['旧金山',-122.42,37.77,-8],['西雅图',-122.33,47.61,-8],['芝加哥',-87.63,41.88,-6],['多伦多',-79.38,43.65,-5],['温哥华',-123.12,49.28,-8]
+  ];
+
+  /* ---- 相位 ---- */
+  var ASPECTS=[{n:'合相',ang:0,orb:8,c:'#49B3FC'},{n:'六合',ang:60,orb:3,c:'#61AB83'},{n:'刑相',ang:90,orb:6,c:'#F58323'},{n:'三合',ang:120,orb:5,c:'#61AB83'},{n:'冲相',ang:180,orb:6,c:'#F58323'}];
+  function calcAspects(lons){
+    var keys=Object.keys(lons), out=[];
+    for(var i=0;i<keys.length;i++) for(var j=i+1;j<keys.length;j++){
+      var d=Math.abs(lons[keys[i]]-lons[keys[j]]); if(d>180)d=360-d;
+      for(var k=0;k<ASPECTS.length;k++){
+        if(Math.abs(d-ASPECTS[k].ang)<=ASPECTS[k].orb){ out.push({a:keys[i],b:keys[j],t:ASPECTS[k].n,c:ASPECTS[k].c}); break; }
+      }
+    }
+    return out;
+  }
+
+  /* ---- 月相（日月黄经差）---- */
+  function moonPhase(jdv){
+    var d=norm360(moonLon(jdv)-sunLon(jdv));
+    var names=[['新月',0],['娥眉月',45],['上弦月',90],['盈凸月',135],['满月',180],['亏凸月',225],['下弦月',270],['残月',315]];
+    var best=0,bd=999;
+    names.forEach(function(x,i){ var dd=Math.abs(((d-x[1]+540)%360)-180); if(dd<bd){bd=dd;best=i;} });
+    // 更准确：直接区间
+    var idx=Math.floor(((d+22.5)%360)/45)%8;
+    return {name:names[idx][0], ang:d};
+  }
+
+  /* ---- 三件套解读（人话）---- */
+  var CORE={
+    太阳:{hint:'你的主引擎',t:[
+      '开路先锋，说了就想干','稳字当头，回报看得见才动','好奇心是燃料，两个世界来回跳','安全感优先，护自己人也护窝',
+      '存在感要足，被看见才有劲','细节控，把事做对比做快重要','天平不肯偏，两边都要顾','深水系，认定了不撒手',
+      '远方和自由，一个都不能少','爬坡型选手，慢但不停','逻辑怪，人间清醒','共情天赋，边界要自己搭']},
+    月亮:{hint:'你的情绪开关',t:[
+      '情绪来得快去得也快，得有出口','慌的时候靠熟悉的味道回血','心里的事必须说出来才踏实','一有情绪就想缩回壳里',
+      '要被哄，也要被真心夸','越乱越焦虑，收拾桌子就是收拾心','不吵架，但冷战憋不住话','记性太好，委屈都存档',
+      '闷了就要出门走走','情绪往心里压，慢慢消化','朋友是情绪的解药','眼泪是排水口，哭完就好']},
+    上升:{hint:'你给人的第一面',t:[
+      '看起来风风火火，先干再说','稳重组，慢热但靠谱','话多机灵，社交没门槛','温和客气，自带安全距离',
+      '气场足，进屋就被注意','低调精致，看着省心','好相处，谁都能聊两句','安静神秘，眼睛会观察',
+      '自来熟，笑起来没心没肺','话少人狠，稳如老山','人群中清醒抽离的那位','软乎乎，谁都以为你好说话']}
+  };
+  /* ---- 行星含义 × 星座风味（模板拼句）---- */
+  var PL_MEAN={
+    太阳:'活出自我的方式',月亮:'安放情绪的方式',水星:'脑子转的方式',金星:'表达喜欢的方式',
+    火星:'使劲的方式',木星:'运气藏在哪里',土星:'该补的功课',天王星:'反骨藏在哪',海王星:'梦想的方向',冥王星:'重生的功课'
+  };
+  var SIGN_FLAVOR=[
+    '直接了当，先冲再说','慢慢来，抓到手才安心','边聊边学，灵活变通','照顾式，图个踏实',
+    '体面大气，玩就玩真的','精细打磨，越抠越有味','权衡配合，双赢才出手','深潜专一，爱恨都彻底',
+    '视野拉满，远方优先','一步一垒，时间换空间','另辟蹊径，规矩是用来改的','随波生力，凭感觉成事'
+  ];
+  /* ---- 12 宫含义（月亮过宫提醒）---- */
+  var HOUSE_MEAN=[
+    ['第1宫','自己','今天主角是你，自己的事优先'],
+    ['第2宫','钱和值钱的东西','适合理钱、谈价，别乱花'],
+    ['第3宫','沟通和学习','聊天、写作、跑腿都顺'],
+    ['第4宫','家和归属','适合宅家、联系家人'],
+    ['第5宫','玩和创作','去做开心的事，恋爱脑也在线'],
+    ['第6宫','日常和身体','适合整理、锻炼、调作息'],
+    ['第7宫','关系和合作','适合谈合作、经营关系'],
+    ['第8宫','深水区','适合算清旧账、断舍离'],
+    ['第9宫','远方和学习','适合学习、规划出行'],
+    ['第10宫','事业和目标','适合推进正事、露脸'],
+    ['第11宫','朋友和圈子','适合约人、混圈子'],
+    ['第12宫','休息和内在','适合独处充电，别硬撑']
+  ];
+
+  /* ---- 主入口：生成星盘 ---- */
+  window._chartCityNames=function(){ return CITIES.map(function(c){ return c[0]; }); };
+  window._chartCalc=function(y,m,d,h,mi,cityIdx){
+    var c=CITIES[cityIdx]; if(!c) return null;
+    var jdv=jd(y,m,d,h+mi/60,c[3]);
+    var lons=calcChart(jdv);
+    var asc=ascendLon(jdv,c[2],c[1],h+mi/60,c[3]);
+    var ascSign=signOf(asc);
+    var lonsAll={}; var k;
+    for(k in lons) lonsAll[k]=lons[k];
+    lonsAll['上升点']=asc;
+    var aspects=calcAspects(lons);
+    // 宫位：整宫制，上升所在星座为第1宫
+    var houses={};
+    for(k in lonsAll){
+      var s=signOf(lonsAll[k]).idx;
+      var hidx=((s-ascSign.idx)+12)%12+1;
+      houses[k]=hidx;
+    }
+    return {
+      jdv:jdv, lons:lonsAll, asc:asc, ascIdx:ascSign.idx,
+      houses:houses, aspects:aspects, retro:retroList(jdv), phase:moonPhase(jdv),
+      city:c[0], utcOff:c[2]
+    };
+  };
+
+  window._chartSignOf=signOf;
+  window._chartSIGNS=SIGNS;
+  window._chartCities=CITIES;
+  window._chartCore=CORE;
+  window._chartPlMean=PL_MEAN;
+  window._chartSignFlavor=SIGN_FLAVOR;
+  window._chartHouseMean=HOUSE_MEAN;
+  window._chartMoonPhase=moonPhase;
+  window._chartSunSignToday=function(){ var jdv=jd(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate(),12,true); return signOf(sunLon(jdv)); };
+  window._chartMoonToday=function(){ var now=new Date(); var jdv=jd(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours()+now.getMinutes()/60,true); return signOf(moonLon(jdv)); };
+  window._chartRetroToday=function(){ var now=new Date(); var jdv=jd(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours()+now.getMinutes()/60,true); return retroList(jdv); };
+
+  /* ---- SVG 星盘图 ---- */
+  window._chartSvg=function(ch){
+    var CX=300, CY=300, R_OUT=286, R_SIGN=238, R_PL=170, R_IN=112;
+    var s='<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 600 600" style="width:100%;height:auto;display:block;max-width:520px;margin:0 auto;background:#FFFFFF" role="img" aria-label="本命星盘图">';
+    // 外圈+内圈
+    s+='<circle cx="300" cy="300" r="'+R_OUT+'" fill="none" stroke="#B0B7C0" stroke-width="1.5"/>';
+    s+='<circle cx="300" cy="300" r="'+R_SIGN+'" fill="none" stroke="#EBEDF1" stroke-width="1"/>';
+    s+='<circle cx="300" cy="300" r="'+R_IN+'" fill="none" stroke="#EBEDF1" stroke-width="1"/>';
+    // 12 宫扇区（整宫制：上升星座起点在左侧 9 点钟方向，黄经逆时针增）
+    for(var i=0;i<12;i++){
+      // 宫 i+1 的起始黄经 = ascIdx*30 + i*30；屏幕角：9点钟为黄经 ascIdx*30 处
+      var lonStart=(ch.ascIdx*30+i*30)%360;
+      var a1=180-(lonStart-ch.ascIdx*30); // 以上升点为 0 向逆时针
+      var ang1=(270 - ((lonStart-ch.ascIdx*30)+90))*DEG; // 屏幕角（上升点在左侧）
+      var x1=CX+R_OUT*Math.cos(ang1), y1=CY+R_OUT*Math.sin(ang1);
+      var x2=CX+R_SIGN*Math.cos(ang1), y2=CY+R_SIGN*Math.sin(ang1);
+      var x3=CX+R_SIGN*Math.cos(ang1+30*DEG), y3=CY+R_SIGN*Math.sin(ang1+30*DEG);
+      var x4=CX+R_OUT*Math.cos(ang1+30*DEG), y4=CY+R_OUT*Math.sin(ang1+30*DEG);
+      s+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x4.toFixed(1)+'" y2="'+y4.toFixed(1)+'" stroke="#EBEDF1" stroke-width="1"/>';
+      s+='<line x1="'+x2.toFixed(1)+'" y1="'+y2.toFixed(1)+'" x2="'+x3.toFixed(1)+'" y2="'+y3.toFixed(1)+'" stroke="#EBEDF1" stroke-width="1"/>';
+      // 宫号
+      var am=ang1+15*DEG, xt=CX+(R_SIGN+22)*Math.cos(am), yt=CY+(R_SIGN+22)*Math.sin(am);
+      s+='<text x="'+xt.toFixed(1)+'" y="'+(yt+4).toFixed(1)+'" font-size="12" fill="#838A95" text-anchor="middle">'+(i+1)+'</text>';
+      // 星座符号（黄经所在星座）
+      var sgIdx=((ch.ascIdx+i)%12);
+      var sx=CX+(R_SIGN-18)*Math.cos(am), sy=CY+(R_SIGN-18)*Math.sin(am);
+      s+='<text x="'+sx.toFixed(1)+'" y="'+(sy+6).toFixed(1)+'" font-size="17" fill="#1A2029" text-anchor="middle">'+window._chartSIGNS[sgIdx].e+'</text>';
+    }
+    // 相位线
+    ch.aspects.forEach(function(a){
+      var la=ch.lons[a.a], lb=ch.lons[a.b];
+      var aa=(270-((la-ch.ascIdx*30)%360+360)%360)*DEG;
+      var ab=(270-((lb-ch.ascIdx*30)%360+360)%360)*DEG;
+      s+='<line x1="'+(CX+R_PL*Math.cos(aa)).toFixed(1)+'" y1="'+(CY+R_PL*Math.sin(aa)).toFixed(1)+'" x2="'+(CX+R_PL*Math.cos(ab)).toFixed(1)+'" y2="'+(CY+R_PL*Math.sin(ab)).toFixed(1)+'" stroke="'+a.c+'" stroke-width="1" opacity="0.45" vector-effect="non-scaling-stroke"/>';
+    });
+    // 行星标记（错位防重叠：同 4° 内的行星错开半径）
+    var keys=Object.keys(ch.lons).filter(function(k){return k!=='上升点';});
+    var placed=[];
+    keys.sort(function(p,q){return ch.lons[p]-ch.lons[q];});
+    keys.forEach(function(n){
+      var lon=ch.lons[n];
+      var ang=(270-((lon-ch.ascIdx*30)%360+360)%360)*DEG;
+      var r=R_PL;
+      placed.forEach(function(p){ var dd=Math.abs(((p.lon-lon)%360+360)%360); if(dd<10&&Math.abs(p.r-r)<1) r=p.r-34; });
+      placed.push({lon:lon,r:r});
+      var x=CX+r*Math.cos(ang), y=CY+r*Math.sin(ang);
+      var sym={太阳:'☉',月亮:'☽',水星:'☿',金星:'♀',火星:'♂',木星:'♃',土星:'♄',天王星:'♅',海王星:'♆',冥王星:'♇'}[n]||'?';
+      var col=ch.retro&&ch.retro[n]?'#F58323':'#1A2029';
+      s+='<text x="'+x.toFixed(1)+'" y="'+(y+6).toFixed(1)+'" font-size="19" fill="'+col+'" text-anchor="middle">'+sym+'</text>';
+      var xt=CX+(r-24)*Math.cos(ang), yt=CY+(r-24)*Math.sin(ang);
+      var sg=window._chartSignOf(lon);
+      s+='<text x="'+xt.toFixed(1)+'" y="'+(yt+4).toFixed(1)+'" font-size="10" fill="#838A95" text-anchor="middle">'+sg.deg.toFixed(0)+'°'+sg.name+'</text>';
+    });
+    // 中心三件套
+    var sun=window._chartSignOf(ch.lons['太阳']), moon=window._chartSignOf(ch.lons['月亮']);
+    var ascS=window._chartSignOf(ch.asc);
+    s+='<text x="300" y="272" font-size="13" fill="#1A2029" text-anchor="middle" font-weight="500">☉ '+sun.name+' · ☽ '+moon.name+'</text>';
+    s+='<text x="300" y="296" font-size="13" fill="#1A2029" text-anchor="middle" font-weight="500">↑ '+ascS.name+'</text>';
+    s+='<text x="300" y="322" font-size="11" fill="#838A95" text-anchor="middle">'+ch.city+' · 整宫制</text>';
+    s+='</svg>';
+    return s;
+  };
+})();
+
+/* ============ 星盘 UI ============ */
+(function(){
+  'use strict';
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+  window._chartGo=function(){
+    try{
+      var dv=document.getElementById('chart-date').value;
+      var tv=document.getElementById('chart-time').value||'12:00';
+      var ci=parseInt(document.getElementById('chart-city').value,10)||0;
+      if(!dv){ window.showToast&&window.showToast('先填出生日期','err',1500); return; }
+      var p=dv.split('-'), t=tv.split(':');
+      var y=parseInt(p[0],10), m=parseInt(p[1],10), d=parseInt(p[2],10);
+      var h=parseInt(t[0],10), mi=parseInt(t[1],10);
+      if(!y||!m||!d){ window.showToast&&window.showToast('日期不对，再看看','err',1500); return; }
+      var ch=window._chartCalc(y,m,d,h,mi,ci);
+      if(!ch){ window.showToast&&window.showToast('城市没选中','err',1500); return; }
+      try{ localStorage.setItem('zhiming_chart_v1',JSON.stringify({y:y,m:m,d:d,h:h,mi:mi,city:ci})); }catch(_e){}
+      window._chartRender(ch);
+    }catch(e){ window.showToast&&window.showToast('排盘出错了，改下时间试试','err',1800); }
+  };
+
+  window._chartRender=function(ch){
+    var el=document.getElementById('chart-result'); if(!el) return;
+    var SIGNS=window._chartSIGNS, signOf=window._chartSignOf;
+    var CORE=window._chartCore, PLM=window._chartPlMean, FLA=window._chartSignFlavor;
+    var sun=signOf(ch.lons['太阳']), moon=signOf(ch.lons['月亮']), asc=signOf(ch.asc);
+    var h='';
+    // 三件套
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:10px;">';
+    [['太阳',sun,'太阳',CORE.太阳],['月亮',moon,'月亮',CORE.月亮],['上升',asc,'上升点',CORE.上升]].forEach(function(x){
+      var si=sun.idx; // 占位
+      var coreIdx={太阳:sun.idx,月亮:moon.idx,上升:asc.idx}[x[0]];
+      h+='<div style="background:#F9FAFB;border:1px solid #EBEDF1;border-radius:12px;padding:12px;">'
+        +'<div style="font-size:13px;color:#1A2029;font-weight:500;">'+x[2]+' · '+x[1].name+' '+x[1].deg.toFixed(0)+'° <span style="color:#F58323;font-size:11px;">'+(ch.retro&&ch.retro[x[0]]?'逆行':'')+'</span></div>'
+        +'<div style="font-size:11px;color:#838A95;margin-top:2px;">'+x[3].hint+'</div>'
+        +'<div style="font-size:12.5px;color:#1A2029;margin-top:6px;line-height:1.7;">'+x[3].t[coreIdx]+'</div></div>';
+    });
+    h+='</div>';
+    // SVG
+    h+='<div style="margin-top:14px;">'+window._chartSvg(ch)+'</div>';
+    // 行星落座
+    h+='<div style="margin-top:14px;background:#F9FAFB;border:1px solid #EBEDF1;border-radius:12px;padding:12px;">';
+    h+='<div style="font-size:12px;color:#838A95;margin-bottom:8px;">行星落座 · 每颗星管一件事</div>';
+    Object.keys(ch.lons).forEach(function(n){
+      var isAsc=(n==='上升点');
+      var sg=signOf(ch.lons[n]);
+      var hx=ch.houses[n];
+      var hm=window._chartHouseMean[hx-1];
+      var retroMark=(ch.retro&&ch.retro[n])?'<span style="color:#F58323;font-size:11px;"> 逆行</span>':'';
+      var line;
+      if(isAsc){
+        line='你出门在外的壳——别人第一眼看到的你，落在<span style="color:#1A2029;font-weight:500;">'+sg.name+'</span>：'+FLA[sg.idx];
+      } else {
+        line=PLM[n]+'，落在'+sg.name+'：'+FLA[sg.idx];
+      }
+      h+='<div style="padding:7px 0;border-bottom:1px solid #EBEDF1;">'
+        +'<div style="font-size:12.5px;color:#1A2029;"><span style="font-weight:500;">'+n+'</span> '+sg.name+' '+sg.deg.toFixed(0)+'° · '+hm[0]+'（'+hm[1]+'）'+retroMark+'</div>'
+        +'<div style="font-size:12px;color:#838A95;margin-top:2px;">'+line+'</div></div>';
+    });
+    h+='</div>';
+    // 相位
+    var hard=ch.aspects.filter(function(a){return a.t==='刑相'||a.t==='冲相';});
+    var soft=ch.aspects.filter(function(a){return a.t==='三合'||a.t==='六合';});
+    if(hard.length||soft.length){
+      h+='<div style="margin-top:12px;background:#F9FAFB;border:1px solid #EBEDF1;border-radius:12px;padding:12px;">';
+      h+='<div style="font-size:12px;color:#838A95;margin-bottom:6px;">行星之间的劲：顺的资源与要费的劲</div>';
+      soft.slice(0,3).forEach(function(a){ h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;">· '+a.a+' '+a.t+' '+a.b+'——这两件事互相搭手，用起来顺</div>'; });
+      hard.slice(0,3).forEach(function(a){ h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;">· '+a.a+' '+a.t+' '+a.b+'——这里常年有张力，是你的功课，练到了就是别人没有的韧劲</div>'; });
+      h+='</div>';
+    }
+    // 今日天象（联动本命）
+    h+=window._chartTodayHTML(ch);
+    el.innerHTML=h;
+    try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_e){}
+  };
+
+  /* 今日天象卡：独立可用（无本命数据也能显示） */
+  window._chartTodayHTML=function(ch){
+    var signOf=window._chartSignOf;
+    var moonT=window._chartMoonToday();
+    var sunT=window._chartSunSignToday();
+    var ph=window._chartMoonPhase(window._chartJdNow());
+    var rt=window._chartRetroToday();
+    var h='';
+    h+='<div style="margin-top:12px;background:#E9F6FF;border:1px solid #C8E8FE;border-radius:12px;padding:12px;">';
+    h+='<div style="font-size:13px;color:#1A2029;font-weight:500;">今日天象 · 星星在干嘛</div>';
+    h+='<div style="font-size:12.5px;color:#1A2029;margin-top:6px;line-height:1.9;">';
+    h+='· 月相：<span style="font-weight:500;">'+ph.name+'</span>'+(ph.name==='新月'?'——适合起头，许个愿种颗子':ph.name==='满月'?'——事情见分晓，看清结果':(ph.name==='上弦月'||ph.name==='盈凸月')?'——推进期，该干的往前推':(ph.name==='下弦月'||ph.name==='残月')?'——收尾放手，别硬撑着加码':'——蓄力期，慢慢来');
+    h+='<br>· 月亮今天在<span style="font-weight:500;">'+moonT.name+'</span>';
+    if(ch){
+      var hx=ch.houses['月亮'];
+      // 今日月亮落本命第几宫：用本命上升算
+      var mLon=window._chartMoonLonNow();
+      var off=((Math.floor(mLon/30)-ch.ascIdx)+12)%12;
+      var hm=window._chartHouseMean[off];
+      h+='——过境你的<span style="font-weight:500;">'+hm[0]+'（'+hm[1]+'）</span>：'+hm[2];
+    } else {
+      h+='——情绪的底色偏这边的调子';
+    }
+    h+='<br>· 太阳在<span style="font-weight:500;">'+sunT.name+'</span>——本月大家的主题季';
+    var rets=Object.keys(rt).filter(function(k){return rt[k];});
+    if(rets.length){ h+='<br>· <span style="color:#F58323;">逆行中：'+rets.join('、')+'</span>'+(rt['水星']?'——水逆别慌，适合回头改方案、修旧物，别签新约别换手机':(rets.indexOf('水星')>=0?'':'——影响偏慢，照常过')); }
+    else { h+='<br>· 主星都在顺行，往前冲没有阻逆'; }
+    h+='</div>';
+    if(!ch){ h+='<div style="font-size:11.5px;color:#838A95;margin-top:6px;">填好出生信息排了盘，这里会加上「过境你第几宫」的专属提醒</div>'; }
+    h+='</div>';
+    return h;
+  };
+
+  window._chartJdNow=function(){
+    var n=new Date();
+    var y=n.getFullYear(),m=n.getMonth()+1,d=n.getDate();
+    var hr=n.getHours()+n.getMinutes()/60+n.getSeconds()/3600;
+    if(m<=2){ y-=1; m+=12; }
+    var A=Math.floor(y/100), B=2-A+Math.floor(A/4);
+    return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+(d+(hr-8)/24)+B-1524.5;
+  };
+  window._chartMoonLonNow=function(){
+    var jdv=window._chartJdNow();
+    var T=(jdv-2451545.0)/36525;
+    var Lp=218.3164477+481267.88123421*T-0.0015786*T*T+T*T*T/538841-T*T*T*T/65194000;
+    var D=297.8501921+445267.1114034*T-0.0018819*T*T;
+    var M=357.5291092+35999.0502909*T-0.0001536*T*T;
+    var Mp=134.9633964+477198.8675055*T+0.0087414*T*T;
+    var F=93.2720950+483202.0175233*T-0.0036539*T*T;
+    function sd(x){ return Math.sin(x*Math.PI/180); }
+    var lon=Lp+6.288774*sd(Mp)+1.274027*sd(2*D-Mp)+0.658314*sd(2*D)+0.213618*sd(2*Mp)-0.185116*sd(M)-0.114332*sd(2*F)+0.058793*sd(2*D-2*Mp)+0.057066*sd(2*D-M-Mp)+0.053322*sd(2*D+Mp)+0.045758*sd(2*D-M)-0.040923*sd(M-Mp)-0.034720*sd(D)-0.030383*sd(M+Mp)+0.015327*sd(2*D-2*F)-0.012528*sd(Mp+2*F)+0.010980*sd(Mp-2*F);
+    lon=lon%360; if(lon<0)lon+=360;
+    return lon;
+  };
+
+  /* 首次进入自动重排 */
+  window._chartInit=function(){
+    try{
+      var sel=document.getElementById('chart-city');
+      if(sel&&sel.options.length===0&&typeof window._chartCityNames==='function'){
+        var cn=window._chartCityNames();
+        for(var ci=0;ci<cn.length;ci++){ var op=document.createElement('option'); op.value=String(ci); op.textContent=cn[ci]; sel.appendChild(op); }
+      }
+      var sv=JSON.parse(localStorage.getItem('zhiming_chart_v1')||'null');
+      if(sv&&sv.y){
+        var dd=String(sv.d).padStart(2,'0'), mm=String(sv.m).padStart(2,'0');
+        document.getElementById('chart-date').value=sv.y+'-'+mm+'-'+dd;
+        document.getElementById('chart-time').value=String(sv.h).padStart(2,'0')+':'+String(sv.mi).padStart(2,'0');
+        document.getElementById('chart-city').value=sv.city;
+        var ch=window._chartCalc(sv.y,sv.m,sv.d,sv.h,sv.mi,sv.city);
+        if(ch) window._chartRender(ch);
+      }
+    }catch(_e){}
+  };
+})();
+
+try{ window._chartInit(); }catch(_e){}
 </script>
 </body>
 </html>
