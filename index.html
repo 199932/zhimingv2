@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.63.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.64.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1777,6 +1777,15 @@ function renderBody(){
     var doneN=probs.filter(function(x){ return st.done&&st.done[x.k]; }).length;
     var _dg=st.at?Date.now()-st.at:0; var ago=(_dg<60000)?'刚刚自查':(_dg<86400000?'今天自查':Math.round(_dg/86400000)+' 天前自查');
     var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🏠 宅况动手清单 · '+ago+'</div><div class="widget-body" style="padding:12px;">';
+    var _days=Math.floor(_dg/86400000);
+    var _todo=probs.length-doneN;
+    if(_days>=7&&_todo>0){
+      h+='<div style="margin-bottom:10px;background:rgba(212,117,78,.1);border:1px solid rgba(212,117,78,.25);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.7;color:var(--text);"><b>⏰ 上次自查是 '+_days+' 天前</b>，还有 '+_todo+' 项没确认「做完了」。改了就点一下——环境变没变，<b onclick="window._fsReset()" style="color:var(--pri);cursor:pointer;text-decoration:underline;">重测一遍</b>最诚实。</div>';
+    } else if(_days>=30&&_todo===0&&probs.length>0){
+      h+='<div style="margin-bottom:10px;background:rgba(124,158,99,.1);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.7;color:var(--text);">✅ 上次的清单全部改完——一个多月过去，家里又变样没？<b onclick="window._fsReset()" style="color:var(--pri);cursor:pointer;text-decoration:underline;">重测一遍（2 分钟）</b></div>';
+    } else if(_days>=30&&probs.length===0){
+      h+='<div style="margin-bottom:10px;background:rgba(124,158,99,.1);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.7;color:var(--text);">🌟 一个多月前查过十项全过——隔一阵子重查一遍是好习惯。</div>';
+    }
     if(probs.length===0){
       h+='<div style="text-align:center;padding:10px 0;"><div style="font-size:28px;">🌟</div><div style="font-size:14px;font-weight:700;color:var(--text);margin-top:6px;">十项全过，家里没踩雷</div><div style="font-size:12px;color:var(--text-hint);margin-top:4px;">保持整洁通风就行——隔一两个月可以再查一遍</div></div>';
     } else {
@@ -1797,6 +1806,26 @@ function renderBody(){
     h+='<div onclick="window._fsReset()" style="margin-top:6px;text-align:center;font-size:12px;color:var(--text-hint);cursor:pointer;">↻ 重新自查一遍</div>';
     h+='</div></div>';
     el.innerHTML=h;
+  };
+  window._fsNudge = function(){
+    try{
+      var st=_fsState(); if(!st||!st.at) return;
+      var days=Math.floor((Date.now()-st.at)/86400000);
+      if(days<7) return;
+      var probs=FSCHECK.filter(function(x){ return st.ans&&st.ans[x.k]===1; });
+      var doneN=probs.filter(function(x){ return st.done&&st.done[x.k]; }).length;
+      var todo=probs.length-doneN;
+      var today=new Date(); var tk=today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+      var last=''; try{ last=localStorage.getItem('zhiming_fsnudge_date')||''; }catch(e){}
+      if(last===tk) return;
+      try{ localStorage.setItem('zhiming_fsnudge_date', tk); }catch(e){}
+      setTimeout(function(){
+        try{
+          if(todo>0&&window.showToast) window.showToast('🏠 宅况清单还有 '+todo+' 项没确认——养生 › 风水自查里点「做完了」','ok',2600);
+          else if(probs.length>0&&todo===0&&days>=30&&window.showToast) window.showToast('🏠 宅况一个多月没复查了——养生 › 风水自查重测一遍（2 分钟）','ok',2600);
+        }catch(e){}
+      },1800);
+    }catch(e){}
   };
   window._fsCheckStart = function(){
     var el=document.getElementById('fs-check-area'); if(!el) return;
