@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.64.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.65.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1443,8 +1443,44 @@
     var SYMLOG_KEY='zhiming_symlog_v1';
     function _symToday(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
     function _symlogHit(n){ try{ var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var t=_symToday(); var has=false; for(var i=0;i<a.length;i++){ if(a[i].date===t&&a[i].n===n){ has=true; break; } } if(!has){ a.push({date:t,n:n}); localStorage.setItem(SYMLOG_KEY,JSON.stringify(a)); } return a; }catch(_){ return []; } }
-    function _symlogLine(n){ try{ var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var t=_symToday(), ym=t.slice(0,7); var cnt=0, last=null; a.forEach(function(x){ if(x.n===n){ if(x.date&&x.date.slice(0,7)===ym)cnt++; if(!last||x.date>last)last=x.date; } }); if(cnt===0) return ''; var rel=''; if(last===t) rel='今天'; else if(last){ var _d=Math.round((new Date(t)-new Date(last))/86400000); if(_d>=1) rel=_d+' 天前'; } return '<div style="margin-top:8px;font-size:12px;color:var(--text-sub);background:var(--track-bg,rgba(0,0,0,.03));border-radius:8px;padding:6px 10px;display:inline-block;">📅 本月关注 '+cnt+' 次'+(rel?' · 上次 '+rel:'')+'</div>'; }catch(_){ return ''; } }
-    function _symlogSumHTML(){ try{ var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var ym=_symToday().slice(0,7); var by={}; a.forEach(function(x){ if(x.date&&x.date.slice(0,7)===ym){ by[x.n]=(by[x.n]||0)+1; } }); var arr=Object.keys(by).map(function(k){ return {n:k,c:by[k]}; }).sort(function(p,q){ return q.c-p.c; }).slice(0,3); if(!arr.length) return ''; return '👀 本月你关注过：'+arr.map(function(x){ return x.n+' '+x.c+' 次'; }).join(' · '); }catch(_){ return ''; } }
+    window._symlogEffect=function(n,eff){
+      try{
+        var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var t=_symToday();
+        for(var i=a.length-1;i>=0;i--){ if(a[i].date===t&&a[i].n===n){ a[i].effect=eff; break; } }
+        localStorage.setItem(SYMLOG_KEY,JSON.stringify(a));
+        try{ if(window.showToast) window.showToast(eff==='ok'?'✅ 记下了——管用的手法，下次接着用':(eff==='no'?'❌ 记下了——老不管用的话，下次换个法子':'⏭️ 好的，改天试了再回来记','ok',1800)); }catch(_){}
+        try{ window._symlogRefresh(); }catch(_){}
+        try{ document.querySelectorAll('[data-syme="'+n+'"]').forEach(function(x){ x.dispatchEvent(new CustomEvent('syme-changed')); }); }catch(_){}
+
+      }catch(_){}
+    };    window._symlogEffectM=function(n,method,eff){
+      try{
+        var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var t=_symToday();
+        var hit=false;
+        for(var i=a.length-1;i>=0;i--){ if(a[i].date===t&&a[i].n===n){ a[i].effect=eff; a[i].method=method; hit=true; break; } }
+        if(!hit){ a.push({date:t,n:n,effect:eff,method:method}); }
+        localStorage.setItem(SYMLOG_KEY,JSON.stringify(a));
+        try{ if(window.showToast) window.showToast(eff==='ok'?('✅ 记下了——「'+method+'」对你管用'):('❌ 记下了——「'+method+'」这次没用'),'ok',1800); }catch(_){}
+        try{ window._symlogRefresh(); }catch(_){}
+        try{ if(typeof window._healthPick==='function'&&window._lastPick!==undefined) window._healthPick(window._lastPick); }catch(_){}
+      }catch(_){}
+    };
+    function _symlogLine(n){ try{ var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var t=_symToday(), ym=t.slice(0,7); var cnt=0, last=null; a.forEach(function(x){ if(x.n===n){ if(x.date&&x.date.slice(0,7)===ym)cnt++; if(!last||x.date>last)last=x.date; } }); if(cnt===0) return ''; var rel=''; if(last===t) rel='今天'; else if(last){ var _d=Math.round((new Date(t)-new Date(last))/86400000); if(_d>=1) rel=_d+' 天前'; } var todayHit=false; a.forEach(function(x){ if(x.date===t&&x.n===n) todayHit=true; });
+        var base='<div style="margin-top:8px;font-size:12px;color:var(--text-sub);background:var(--track-bg,rgba(0,0,0,.03));border-radius:8px;padding:6px 10px;display:inline-block;">📅 本月关注 '+cnt+' 次'+(rel?' · 上次 '+rel:'')+'</div>';
+        if(!todayHit) return base;
+        var effNow=''; a.forEach(function(x){ if(x.date===t&&x.n===n&&x.effect) effNow=x.effect; });
+        var lab={ok:'✅ 管用',no:'❌ 没缓解',skip:'⏭️ 还没试'};
+        var btns=['ok','no','skip'].map(function(k){
+          var on=(effNow===k);
+          return '<div data-syme-btn="'+k+'" onclick="window._symlogEffect(\''+n+'\',\''+k+'\')" style="font-size:11px;padding:5px 10px;border-radius:999px;border:1.5px solid '+(on?'var(--pri, #7c9e63)':'var(--card-border)')+';background:'+(on?'var(--pri-light, rgba(124,158,99,.12))':'transparent')+';color:'+(on?'var(--pri, #7c9e63)':'var(--text-sub)')+';font-weight:'+(on?'700':'400')+';cursor:pointer;white-space:nowrap;">'+lab[k]+'</div>';
+        }).join('');
+        return base+'<div style="margin-top:6px;font-size:12px;color:var(--text-sub);">这次的手法怎么样？<div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">'+btns+'</div></div>';
+      }catch(_){ return ''; } }
+    function _symlogSumHTML(){ try{ var a=JSON.parse(localStorage.getItem(SYMLOG_KEY)||'[]'); var ym=_symToday().slice(0,7); var by={}; a.forEach(function(x){ if(x.date&&x.date.slice(0,7)===ym){ by[x.n]=(by[x.n]||0)+1; } }); var arr=Object.keys(by).map(function(k){ return {n:k,c:by[k]}; }).sort(function(p,q){ return q.c-p.c; }).slice(0,3); if(!arr.length) return ''; var _line='👀 本月你关注过：'+arr.map(function(x){ var okN=0,eN=0; a.forEach(function(y){ if(y.date&&y.date.slice(0,7)===ym&&y.n===x.n){ if(y.effect==='ok')okN++; if(y.effect) eN++; } }); return x.n+' '+x.c+' 次'+(eN>0?'（手法管用 '+okN+'/'+eN+'）':''); }).join(' · ');
+          var by={}; a.forEach(function(y){ if(y.date&&y.date.slice(0,7)===ym&&y.method&&y.effect){ if(!by[y.method]) by[y.method]={ok:0,t:0}; by[y.method].t++; if(y.effect==='ok') by[y.method].ok++; } });
+          var mk=Object.keys(by).sort(function(p,q){ return (by[q].ok/by[q].t)-(by[p].ok/by[p].t); });
+          if(mk.length){ var best=mk[0]; _line+='<br>📈 这个月最管用的招：「'+best+'」'+by[best].ok+'/'+by[best].t+' 次——下次难受先想起它'+(by[best].ok===0?'（暂时一次都没灵，换别的试试）':''); }
+          return _line; }catch(_){ return ''; } }
     window._symlogRefresh=function(){ try{ var el=document.getElementById('symlogSum'); if(el) el.textContent=_symlogSumHTML(); }catch(_){} };
     var PARTS = {
       /* 侧脸朝左 */
@@ -1717,7 +1753,7 @@ function renderBody(){
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
-      try{ _symlogHit(s.n); }catch(_e10){}
+      window._lastPick=i; try{ _symlogHit(s.n); }catch(_e10){}
       var h='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">'+s.e+' '+s.n+'</div><div class="widget-body" style="padding:14px;">'
         +'<div style="font-size:12px;color:var(--text-hint);">'+s.why+'</div>'+_symlogLine(s.n);
       s.ac.forEach(function(a,j){
@@ -1725,7 +1761,10 @@ function renderBody(){
           +'<div style="font-size:14px;font-weight:700;color:var(--pri);">穴位'+(j+1)+' · '+a.n+'</div>'
           +'<div style="text-align:center;margin:8px 0 4px;">'+(window._acupSvg?window._acupSvg(a.p,a.k):'')+'</div>'
           +'<div style="font-size:12.5px;color:var(--text);line-height:1.7;">📍 找：'+a.f+'</div>'
-          +'<div style="font-size:12.5px;color:var(--text-sub);margin-top:3px;line-height:1.7;">👉 按：'+a.h+'</div></div>';
+          +'<div style="font-size:12.5px;color:var(--text-sub);margin-top:3px;line-height:1.7;">👉 按：'+a.h+'</div>'
+          +'<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--card-border);display:flex;align-items:center;gap:8px;"><span style="font-size:11.5px;color:var(--text-hint);flex:1;">试过这招了？记一下效果，下次就知道靠不靠谱</span>'
+          +'<div onclick="window._symlogEffectM(\''+s.n+'\',\''+a.n+'\',\'ok\')" style="font-size:11px;padding:5px 10px;border-radius:999px;border:1.5px solid var(--card-border);cursor:pointer;color:var(--text-sub);white-space:nowrap;">管用</div>'
+          +'<div onclick="window._symlogEffectM(\''+s.n+'\',\''+a.n+'\',\'no\')" style="font-size:11px;padding:5px 10px;border-radius:999px;border:1.5px solid var(--card-border);cursor:pointer;color:var(--text-sub);white-space:nowrap;">没用</div></div></div>';
       });
       h+='<div style="margin-top:12px;background:rgba(124,158,99,.09);border-radius:12px;padding:12px;">'
         +'<div style="font-size:12.5px;color:var(--text);line-height:1.8;">🍵 '+s.eat+'</div>'
