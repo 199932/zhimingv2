@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.66.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.67.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2443,14 +2443,17 @@ function renderBody(){
         +'<div style="font-size:12px;color:#838A95;margin-top:2px;">'+line+'</div></div>';
     });
     h+='</div>';
-    // 相位
+    // 相位（句式池：hash+组内序号轮转，同盘内相邻必不同款）
+    function pickLine(arr,str,idx){ var x=7; for(var i=0;i<str.length;i++){ x=(x*31+str.charCodeAt(i))>>>0; } return arr[(x+idx)%arr.length].replace('{A}',str.a).replace('{B}',str.b); }
+    var SOFT=['{A}和{B}互相搭手，这块用起来顺','{A}的资源正好接住{B}的场，天生一对','{A}和{B}商量得来，这条线是你现成的路'];
+    var HARD=['{A}和{B}常年拔河——两边要的不一样，练的是协调','{A}跟{B}这一对是你的功课，练到了就是别人没有的韧劲','{A}和{B}卡壳的时候别硬顶，换个姿势就过去了'];
     var hard=ch.aspects.filter(function(a){return a.t==='刑相'||a.t==='冲相';});
     var soft=ch.aspects.filter(function(a){return a.t==='三合'||a.t==='六合';});
     if(hard.length||soft.length){
       h+='<div style="margin-top:12px;background:#F9FAFB;border:1px solid #EBEDF1;border-radius:12px;padding:12px;">';
       h+='<div style="font-size:12px;color:#838A95;margin-bottom:6px;">行星之间的劲：顺的资源与要费的劲</div>';
-      soft.slice(0,3).forEach(function(a){ h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;">· '+a.a+' '+a.t+' '+a.b+'——这两件事互相搭手，用起来顺</div>'; });
-      hard.slice(0,3).forEach(function(a){ h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;">· '+a.a+' '+a.t+' '+a.b+'——这里常年有张力，是你的功课，练到了就是别人没有的韧劲</div>'; });
+      soft.slice(0,3).forEach(function(a,ai){ h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;">· '+a.a+' '+a.t+' '+a.b+'——'+pickLine(SOFT,a,ai)+'</div>'; });
+      hard.slice(0,3).forEach(function(a,ai){ h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;">· '+a.a+' '+a.t+' '+a.b+'——'+pickLine(HARD,a,ai)+'</div>'; });
       h+='</div>';
     }
     // 今日天象（联动本命）
@@ -2512,6 +2515,44 @@ function renderBody(){
     var lon=Lp+6.288774*sd(Mp)+1.274027*sd(2*D-Mp)+0.658314*sd(2*D)+0.213618*sd(2*Mp)-0.185116*sd(M)-0.114332*sd(2*F)+0.058793*sd(2*D-2*Mp)+0.057066*sd(2*D-M-Mp)+0.053322*sd(2*D+Mp)+0.045758*sd(2*D-M)-0.040923*sd(M-Mp)-0.034720*sd(D)-0.030383*sd(M+Mp)+0.015327*sd(2*D-2*F)-0.012528*sd(Mp+2*F)+0.010980*sd(Mp-2*F);
     lon=lon%360; if(lon<0)lon+=360;
     return lon;
+  };
+
+  /* 骰子×本命盘：结合用户星盘的个性化解读（无盘时返回引导） */
+  var HOUSE_SHORT=['自我','钱和拥有','沟通学习','家和归属','恋爱创造','日常与健康','合作婚姻','深度共享','远方成长','事业目标','朋友圈子','休息内在'];
+  window._chartPersonalize=function(pName,sName,hN){
+    try{
+      var sv=JSON.parse(localStorage.getItem('zhiming_chart_v1')||'null');
+      if(!sv||!sv.y) return {ok:false,html:''};
+      var ch=window._chartCalc(sv.y,sv.m,sv.d,sv.h,sv.mi,sv.city);
+      if(!ch) return {ok:false,html:''};
+      var signOf=window._chartSignOf;
+      function sNameOfIdx(i){ return signOf(((i%12)+12)%12*30+15).name; }
+      var parts=[];
+      // 1. 行星本命落座对照
+      if(ch.lons[pName]){
+        var myP=signOf(ch.lons[pName]);
+        if(myP.name===sName){
+          parts.push('· '+sName+'正是你'+pName+'本来的位置——这件事按你的本性来，不用演。');
+        } else {
+          var sIdx=-1; for(var i=0;i<12;i++){ if(sNameOfIdx(i)===sName){ sIdx=i; break; } }
+          parts.push('· 你的'+pName+'本命在'+myP.name+'，这次骰子让你借'+sName+'的路子走一段——'+(sIdx>=0?FLA[sIdx]:'换个风味试试'));
+        }
+      }
+      // 2. 骰子星座命中三件套
+      var sunS=signOf(ch.lons['太阳']).name, moonS=signOf(ch.lons['月亮']).name, ascS=signOf(ch.asc).name;
+      if(sName===sunS) parts.push('· '+sName+'是你的太阳星座——这事儿碰到你的主场了，该出手。');
+      else if(sName===moonS) parts.push('· '+sName+'是你的月亮星座——情绪会被牵动，先照顾好感受再动手。');
+      else if(sName===ascS) parts.push('· '+sName+'是你的上升星座——别人对你的第一印象会放大这件事，注意门面。');
+      // 3. 宫位×本命宫头
+      var ascIdx=signOf(ch.asc).idx;
+      var hsName=sNameOfIdx(ascIdx+hN-1);
+      var hm0=HOUSE_SHORT[hN-1]||'这件事';
+      parts.push('· 你本命第'+hN+'宫在'+hsName+'——'+hm0+'的事，带点'+hsName+'的路子更容易顺。');
+      if(!parts.length) return {ok:false,html:''};
+      var cityName=(typeof window._chartCityNames==='function')?(window._chartCityNames()[sv.city]||sv.city):sv.city;
+      var title='<div style="font-size:12px;color:#1A2029;font-weight:500;margin-bottom:4px;">对着你的盘说（'+cityName+'）</div>';
+      return {ok:true,html:title+parts.join('<br>')};
+    }catch(_e){ return {ok:false,html:''}; }
   };
 
   /* 首次进入自动重排 */
