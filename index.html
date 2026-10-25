@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.67.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.67.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2526,23 +2526,25 @@ function renderBody(){
       var ch=window._chartCalc(sv.y,sv.m,sv.d,sv.h,sv.mi,sv.city);
       if(!ch) return {ok:false,html:''};
       var signOf=window._chartSignOf;
+      var FLA=window._chartSignFlavor||[]; // 自取：FLA 是 _chartRender 内部变量，跨函数不可见
+      var sClean=String(sName).replace(/座$/,''); // 骰子叫「双子座」，引擎叫「双子」——统一
       function sNameOfIdx(i){ return signOf(((i%12)+12)%12*30+15).name; }
       var parts=[];
       // 1. 行星本命落座对照
       if(ch.lons[pName]){
         var myP=signOf(ch.lons[pName]);
-        if(myP.name===sName){
+        if(myP.name===sClean){
           parts.push('· '+sName+'正是你'+pName+'本来的位置——这件事按你的本性来，不用演。');
         } else {
-          var sIdx=-1; for(var i=0;i<12;i++){ if(sNameOfIdx(i)===sName){ sIdx=i; break; } }
+          var sIdx=-1; for(var i=0;i<12;i++){ if(sNameOfIdx(i)===sClean){ sIdx=i; break; } }
           parts.push('· 你的'+pName+'本命在'+myP.name+'，这次骰子让你借'+sName+'的路子走一段——'+(sIdx>=0?FLA[sIdx]:'换个风味试试'));
         }
       }
       // 2. 骰子星座命中三件套
       var sunS=signOf(ch.lons['太阳']).name, moonS=signOf(ch.lons['月亮']).name, ascS=signOf(ch.asc).name;
-      if(sName===sunS) parts.push('· '+sName+'是你的太阳星座——这事儿碰到你的主场了，该出手。');
-      else if(sName===moonS) parts.push('· '+sName+'是你的月亮星座——情绪会被牵动，先照顾好感受再动手。');
-      else if(sName===ascS) parts.push('· '+sName+'是你的上升星座——别人对你的第一印象会放大这件事，注意门面。');
+      if(sClean===sunS) parts.push('· '+sName+'是你的太阳星座——这事儿碰到你的主场了，该出手。');
+      else if(sClean===moonS) parts.push('· '+sName+'是你的月亮星座——情绪会被牵动，先照顾好感受再动手。');
+      else if(sClean===ascS) parts.push('· '+sName+'是你的上升星座——别人对你的第一印象会放大这件事，注意门面。');
       // 3. 宫位×本命宫头
       var ascIdx=signOf(ch.asc).idx;
       var hsName=sNameOfIdx(ascIdx+hN-1);
