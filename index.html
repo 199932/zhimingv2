@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.69.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.69.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2850,9 +2850,52 @@ try{ window._chartInit(); }catch(_e){}
       +'<button class="btn-secondary" style="flex:1;min-width:120px;" onclick="try{ window._breathOpen&&window._breathOpen(); }catch(_e){}">🫁 做 4-7-8 呼吸</button>'
       +'<button class="btn-secondary" style="flex:1;min-width:120px;" onclick="try{ window.switchTab&&window.switchTab(\'grow\'); }catch(_e){}">📔 记情绪/睡眠</button>'
       +'</div>');
+    // v2 段：明日预告 + 今晚行运
+    try{ var v2=window._sleepRitualV2(); if(v2) parts.push(v2); }catch(_e){}
     // 收尾
     parts.push('<div style="margin-top:10px;font-size:12.5px;color:#838A95;text-align:center;">'+BYE[Math.floor(Date.now()/86400000)%BYE.length]+' 晚安。</div>');
     return '<div style="font-size:12px;color:#838A95;margin-bottom:6px;">睡前三分钟 · 今天到这</div>'+parts.join('');
+  };
+
+  /* v2 段：明日预告 + 今晚行运（插在记录回放后、按钮前） */
+  window._sleepRitualV2=function(){
+    var out=[], now=new Date();
+    // 明日节气/候
+    try{
+      var tm=new Date(now); tm.setDate(tm.getDate()+1);
+      var h1=(typeof window._houOfDate==='function')?window._houOfDate(now.getFullYear(),now.getMonth()+1,now.getDate()):null;
+      var h2=(typeof window._houOfDate==='function')?window._houOfDate(tm.getFullYear(),tm.getMonth()+1,tm.getDate()):null;
+      if(h1&&h2){
+        var hn1=(h1.hou&&h1.hou.n)||'', hn2=(h2.hou&&h2.hou.n)||'';
+        var gw=(h2.hou&&h2.hou.g)||'';
+        if(h2.term!==h1.term) out.push('明天入'+h2.term+(hn2?'，进新候「'+hn2+'」':'——新的节气，新的十五天')+(gw&&hn2?'——'+gw:''));
+        else if(hn2&&hn2!==hn1) out.push('明天进新候：「'+hn2+'」——'+gw);
+        else if(hn2) out.push('明天还是「'+hn2+'」——'+gw);
+      }
+    }catch(_e){}
+    // 明日月相
+    try{
+      if(typeof window._chartMoonPhase==='function'&&typeof window._chartJdNow==='function'){
+        var p2=window._chartMoonPhase(window._chartJdNow()+1);
+        var extra=p2.name==='满月'?'——明天月最圆':(p2.name==='新月'?'——明天适合从头开始':(p2.name==='盈凸月'?'——月亮在变圆的路上':''));
+        out.push('明天月相：'+p2.name+extra);
+      }
+    }catch(_e){}
+    // 今晚行运相位（需要 TA 的盘）
+    try{
+      var sv=JSON.parse(localStorage.getItem('zhiming_chart_v1')||'null');
+      if(sv&&sv.y&&typeof window._chartCalc==='function'&&typeof window._chartTransit==='function'){
+        var ch=window._chartCalc(sv.y,sv.m,sv.d,sv.h,sv.mi,sv.city);
+        var tr=ch?window._chartTransit(ch):null;
+        if(tr&&tr.aspects&&tr.aspects.length){
+          var REL={'合':'劲拧在一起','冲':'两头拉扯','刑':'有点别扭','拱':'顺水推舟','六合':'顺手搭桥'};
+          var a=tr.aspects[0];
+          var rel=REL[(a.t||'').replace(/相$/,'')]||a.t;
+          out.push('今晚行运：'+a.a+' '+a.t+' 你的本命'+a.b+'——'+rel+'，别跟它较劲');
+        }
+      }
+    }catch(_e){}
+    return out.length?'<div style="margin-top:10px;padding-top:9px;border-top:1px dashed #E3E6EC;font-size:12.5px;color:#1A2029;line-height:2;">'+out.map(function(l){return '· '+l;}).join('<br>')+'</div>':'';
   };
 
   window._sleepRitualInit=function(){
