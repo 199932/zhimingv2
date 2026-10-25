@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.67.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.68.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.67.1-20261025';
+const ZHIMING_BUILD = 'v2.68.0-20261025';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24438,8 +24438,36 @@ function renderBody(){
   window._chartMoonToday=function(){ var now=new Date(); var jdv=jd(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours()+now.getMinutes()/60,true); return signOf(moonLon(jdv)); };
   window._chartRetroToday=function(){ var now=new Date(); var jdv=jd(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours()+now.getMinutes()/60,true); return retroList(jdv); };
 
+  /* ---- 行运：今日十星 × 本命十星 交叉相位（行运用窄容许度） ---- */
+  var TRANSIT_ORBS=[{n:'合相',ang:0,orb:6,c:'#49B3FC'},{n:'六合',ang:60,orb:2.5,c:'#61AB83'},{n:'刑相',ang:90,orb:4,c:'#F58323'},{n:'三合',ang:120,orb:4,c:'#61AB83'},{n:'冲相',ang:180,orb:4,c:'#F58323'}];
+  function calcCrossAspects(lonsA,lonsB,tab){
+    var out=[];
+    for(var a in lonsA) for(var b in lonsB){
+      var d=Math.abs(lonsA[a]-lonsB[b]); if(d>180)d=360-d;
+      for(var k=0;k<tab.length;k++){
+        if(Math.abs(d-tab[k].ang)<=tab[k].orb){ out.push({a:a,b:b,t:tab[k].n,c:tab[k].c,diff:Math.abs(d-tab[k].ang)}); break; }
+      }
+    }
+    out.sort(function(x,y){ return x.diff-y.diff; });
+    return out;
+  }
+  window._chartTransit=function(ch){
+    try{
+      var now=new Date();
+      var tj=jd(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours()+now.getMinutes()/60,true);
+      var tl=calcChart(tj);
+      var tr=retroList(tj);
+      var bl={}; for(var k in ch.lons) if(k!=='上升点') bl[k]=ch.lons[k];
+      var asp=calcCrossAspects(tl,bl,TRANSIT_ORBS);
+      var ascIdx=window._chartSignOf(ch.asc).idx;
+      var houses={};
+      for(var n in tl){ houses[n]=(((window._chartSignOf(tl[n]).idx-ascIdx)%12)+12)%12+1; }
+      return {todayLons:tl,todayRetro:tr,aspects:asp,todayHouses:houses};
+    }catch(_e){ return null; }
+  };
+
   /* ---- SVG 星盘图 ---- */
-  window._chartSvg=function(ch){
+  window._chartSvg=function(ch,trans){
     var CX=300, CY=300, R_OUT=286, R_SIGN=238, R_PL=170, R_IN=112;
     var s='<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 600 600" style="width:100%;height:auto;display:block;max-width:520px;margin:0 auto;background:#FFFFFF" role="img" aria-label="本命星盘图">';
     // 外圈+内圈
@@ -24491,6 +24519,19 @@ function renderBody(){
       var sg=window._chartSignOf(lon);
       s+='<text x="'+xt.toFixed(1)+'" y="'+(yt+4).toFixed(1)+'" font-size="10" fill="#838A95" text-anchor="middle">'+sg.deg.toFixed(0)+'°'+sg.name+'</text>';
     });
+    // 今日行运外环（小蓝字，trans 非空时）
+    if(trans&&trans.todayLons){
+      var tkeys=Object.keys(trans.todayLons);
+      tkeys.sort(function(p,q){return trans.todayLons[p]-trans.todayLons[q];});
+      var tR=262, TSYM={太阳:'☉',月亮:'☽',水星:'☿',金星:'♀',火星:'♂',木星:'♃',土星:'♄',天王星:'♅',海王星:'♆',冥王星:'♇'};
+      tkeys.forEach(function(n){
+        var lon=trans.todayLons[n];
+        var ang=(270-((lon-ch.ascIdx*30)%360+360)%360)*DEG;
+        var x=CX+tR*Math.cos(ang), y=CY+tR*Math.sin(ang);
+        s+='<text x="'+x.toFixed(1)+'" y="'+(y+5).toFixed(1)+'" font-size="13" fill="#49B3FC" text-anchor="middle">'+(TSYM[n]||'?')+'</text>';
+      });
+      s+='<text x="300" y="52" font-size="11" fill="#49B3FC" text-anchor="middle">外环小蓝字 = 今天的天上的星星</text>';
+    }
     // 中心三件套
     var sun=window._chartSignOf(ch.lons['太阳']), moon=window._chartSignOf(ch.lons['月亮']);
     var ascS=window._chartSignOf(ch.asc);
@@ -24579,8 +24620,63 @@ function renderBody(){
     }
     // 今日天象（联动本命）
     h+=window._chartTodayHTML(ch);
+    // 今日行运（懒加载展开）
+    window._chartCurrent=ch; window._chartCurrentSv=null;
+    h+='<button class="btn-secondary" id="chartTransitBtn" style="width:100%;margin-top:12px;" onclick="window._chartTransitToggle()">🛰 今日行运 · 天上的星星在戳你哪里</button>';
+    h+='<div id="chartTransitBox" style="display:none;margin-top:10px;background:#F4F8FF;border:1px solid #C8E8FE;border-radius:12px;padding:12px;"></div>';
     el.innerHTML=h;
     try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_e){}
+  };
+
+  /* 今日行运区：今天天上的星星 × 你的盘 */
+  var TRANSIT_ACT={太阳:'主角光环和精力',月亮:'情绪和心气',水星:'沟通、消息、来回的确认',金星:'关系、钱、审美',火星:'行动力和脾气',木星:'机会和运气',土星:'压力和慢功',天王星:'突变和意外',海王星:'迷雾和灵感',冥王星:'深层的翻新'};
+  window._chartTransitHTML=function(ch,sv){
+    var T=window._chartTransit(ch);
+    if(!T) return '<div style="font-size:12px;color:var(--text-hint);">行运算不出来，回头再试。</div>';
+    var signOf=window._chartSignOf;
+    var h='';
+    // 今日快星落你宫位
+    h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.9;margin-top:2px;">';
+    ['太阳','水星','金星','火星'].forEach(function(n){
+      var hi=T.todayHouses[n], hm=HOUSE_SHORT[hi-1]||'';
+      var rt=T.todayRetro[n]?'（逆行）':'';
+      h+='· '+n+rt+'今天过你第'+hi+'宫（'+hm+'）<br>';
+    });
+    h+='</div>';
+    // 行运相位（最紧前5）
+    var PHR={ '合相':function(t,b){ return '正叠在你的'+b+'上——'+(TRANSIT_ACT[t]||'这股劲')+'会被放大，留意'+b+'那头的反应'; },
+      '刑相':function(t,b){ return '在戳你的'+b+'——'+(TRANSIT_ACT[t]||'这股劲')+'的事容易别扭，别硬顶，留点缓冲'; },
+      '冲相':function(t,b){ return '跟你的'+b+'对峙——'+(TRANSIT_ACT[t]||'这股劲')+'推着你表态，慢慢来不丢人'; },
+      '三合':function(t,b){ return '给你的'+b+'搭手——'+(TRANSIT_ACT[t]||'这股劲')+'的事顺水，借势走'; },
+      '六合':function(t,b){ return '给你的'+b+'递了根梯子——'+(TRANSIT_ACT[t]||'这股劲')+'有顺手的机会，够一下就够得着'; } };
+    if(T.aspects.length){
+      h+='<div style="margin-top:8px;">';
+      T.aspects.slice(0,5).forEach(function(a){
+        var f=PHR[a.t]; var txt=f?f(a.a,a.b):(a.a+'与你的'+a.b+a.t);
+        var col=(a.t==='刑相'||a.t==='冲相')?'#F58323':(a.t==='合相'?'#49B3FC':'#61AB83');
+        h+='<div style="font-size:12.5px;line-height:1.8;color:#1A2029;">· <span style="color:'+col+';font-weight:500;">'+a.a+' '+a.t+' '+a.b+'</span>——'+txt+'</div>';
+      });
+      h+='</div>';
+    } else {
+      h+='<div style="font-size:12.5px;color:#838A95;margin-top:6px;">今天的星星跟你的盘都相安无事——难得的平静日。</div>';
+    }
+    // 双环 SVG
+    h+='<div style="margin-top:12px;">'+window._chartSvg(ch,T)+'</div>';
+    return h;
+  };
+  window._chartTransitToggle=function(){
+    try{
+      var box=document.getElementById('chartTransitBox');
+      if(!box) return;
+      if(box.style.display==='none'){
+        box.style.display='block';
+        if(!box.dataset.done&&window._chartCurrent){ box.innerHTML=window._chartTransitHTML(window._chartCurrent,window._chartCurrentSv); box.dataset.done='1'; }
+        var b=document.getElementById('chartTransitBtn'); if(b) b.textContent='🛰 收起行运';
+      } else {
+        box.style.display='none';
+        var b2=document.getElementById('chartTransitBtn'); if(b2) b2.textContent='🛰 今日行运 · 天上的星星在戳你哪里';
+      }
+    }catch(_e){}
   };
 
   /* 今日天象卡：独立可用（无本命数据也能显示） */
