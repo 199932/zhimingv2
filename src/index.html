@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.68.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.69.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.68.1-20261025';
+const ZHIMING_BUILD = 'v2.69.0-20261025';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24905,6 +24905,107 @@ function renderBody(){
 })();
 
 try{ window._chartInit(); }catch(_e){}
+</script>
+<script>
+/* ============ 睡前仪式 · 深夜时段感知 ============ */
+(function(){
+  'use strict';
+  function esc(x){ return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+  var KE_HOUR={ /* 时辰人话 */
+    亥:'亥时 · 人定——天地都在收，你也该收了',
+    子:'子时 · 夜半——胆经当令，最好已经躺下了',
+    丑:'丑时了——肝在加班，你还陪着呢'
+  };
+  var MOON_TXT={ '满月':'今晚月亮很圆——睡不着不全怪你', '新月':'今晚没月亮——正好睡个黑甜觉', '娥眉月':'今晚一弯月牙', '残月':'今晚一弯月牙', '上弦月':'今晚半个月亮', '下弦月':'今晚半个月亮', '盈凸月':'今晚月亮挺亮，窗帘拉严点', '亏凸月':'今晚月亮挺亮，窗帘拉严点' };
+  var MOOD_EMO={1:['😄','开心'],2:['😐','平静'],3:['😟','忧虑'],4:['😡','愤怒']};
+  var BYE=['手机放下，明天的事明天说。','今天的烦恼过不了夜——这是规矩。','眼睛闭上，世界先关机。','枕头上没有解决不了的事，只有睡饱了才想得出办法。'];
+
+  window._sleepRitualToggle=function(){
+    try{
+      var box=document.getElementById('sleepRitualBox');
+      if(!box) return;
+      if(box.style.display==='none'){
+        box.style.display='block';
+        if(!box.dataset.done){ box.innerHTML=window._sleepRitualHTML(); box.dataset.done='1'; }
+        var b=document.getElementById('sleepBannerTxt'); if(b) b.textContent='收起';
+        box.scrollIntoView({behavior:'smooth',block:'nearest'});
+      } else {
+        box.style.display='none';
+        var b2=document.getElementById('sleepBannerTxt'); if(b2) b2.textContent='打开';
+      }
+    }catch(_e){}
+  };
+
+  window._sleepRitualHTML=function(){
+    var now=new Date(), h=now.getHours();
+    var ke=(h>=23||h<1)?'子':(h>=1&&h<3?'丑':(h>=21&&h<23?'亥':'亥'));
+    var parts=[];
+    parts.push('<div style="font-size:13px;font-weight:500;color:#1A2029;">'+(KE_HOUR[ke]||KE_HOUR['亥'])+'</div>');
+    // 月相
+    try{
+      var ph=window._chartMoonPhase(window._chartJdNow());
+      parts.push('<div style="font-size:12.5px;color:#1A2029;margin-top:6px;">· '+(MOON_TXT[ph.name]||('今晚'+ph.name))+'</div>');
+    }catch(_e){}
+    // 今日记录回放
+    try{
+      var t=todayStr();
+      var diary=[]; try{ diary=JSON.parse(localStorage.getItem('zhiming_v2_diary')||'[]'); }catch(_){}
+      var td=null; for(var i=0;i<diary.length;i++){ if(diary[i].date===t){ td=diary[i]; break; } }
+      var symlog=[]; try{ symlog=JSON.parse(localStorage.getItem('zhiming_symlog_v1')||'[]'); }catch(_){}
+      var symT=symlog.filter(function(e){ return e.date===t; });
+      var lines=[];
+      if(td&&td.mood&&MOOD_EMO[td.mood]){ lines.push('今天你的情绪：'+MOOD_EMO[td.mood][0]+' '+MOOD_EMO[td.mood][1]); }
+      else { lines.push('今天的情绪还没记——顺手一笔，周报会好看'); }
+      if(td&&td.bed){ lines.push('昨晚 '+td.bed+' 睡的——今晚争取比它早一点'); }
+      else { lines.push('睡前把大概入睡时间记上，明早补也行'); }
+      if(symT.length){
+        var ok=symT.filter(function(e){ return e.effect==='ok'; }).length;
+        lines.push('今天记了 '+symT.length+' 条不舒服'+(ok?('，其中 '+ok+' 条用了招、'+ok+' 条管用'):''));
+      } else { lines.push('今天没记什么不舒服——挺好，保持'); }
+      parts.push('<div style="margin-top:8px;font-size:12.5px;color:#1A2029;line-height:1.9;">'+lines.map(function(l){ return '· '+l; }).join('<br>')+'</div>');
+    }catch(_e){}
+    // 按钮
+    parts.push('<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">'
+      +'<button class="btn-secondary" style="flex:1;min-width:120px;" onclick="try{ window._breathOpen&&window._breathOpen(); }catch(_e){}">🫁 做 4-7-8 呼吸</button>'
+      +'<button class="btn-secondary" style="flex:1;min-width:120px;" onclick="try{ window.switchTab&&window.switchTab(\'grow\'); }catch(_e){}">📔 记情绪/睡眠</button>'
+      +'</div>');
+    // 收尾
+    parts.push('<div style="margin-top:10px;font-size:12.5px;color:#838A95;text-align:center;">'+BYE[Math.floor(Date.now()/86400000)%BYE.length]+' 晚安。</div>');
+    return '<div style="font-size:12px;color:#838A95;margin-bottom:6px;">睡前三分钟 · 今天到这</div>'+parts.join('');
+  };
+
+  window._sleepRitualInit=function(){
+    try{
+      if(document.getElementById('sleepBanner')) return;
+      var now=new Date(), h=now.getHours()+now.getMinutes()/60;
+      var night=(h>=22.5||h<2); // 22:30-2:00 深夜时段
+      if(!night) return;
+      var t=todayStr();
+      var flag=null; try{ flag=localStorage.getItem('zhiming_sleep_banner_date'); }catch(_){}
+      if(flag===t) return; // 当日已出现
+      try{ localStorage.setItem('zhiming_sleep_banner_date',t); }catch(_){}
+      var page=document.getElementById('page-today');
+      var sec=document.getElementById('sec-today1');
+      if(!page||!sec) return;
+      var wrap=document.createElement('div');
+      wrap.id='sleepBanner';
+      wrap.innerHTML='<div style="margin:10px 12px 0;background:linear-gradient(135deg,#1A2540,#2A3A5C);border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;">'
+        +'<span style="font-size:18px;">🌙</span>'
+        +'<div style="flex:1;font-size:13px;color:#E8ECF4;font-weight:500;">夜深了 · 睡前三分钟</div>'
+        +'<button class="btn-secondary" id="sleepBannerTxt" style="padding:5px 14px;font-size:12px;" onclick="window._sleepRitualToggle()">打开</button>'
+        +'</div>'
+        +'<div id="sleepRitualBox" style="display:none;margin:8px 12px 0;background:#F9FAFB;border:1px solid #EBEDF1;border-radius:12px;padding:14px;"></div>';
+      page.insertBefore(wrap,sec);
+    }catch(_e){}
+  };
+  try{ window._sleepRitualInit; }catch(_e){}
+})();
+try{ window._sleepRitualInit(); }catch(_e){}
+setTimeout(function(){ try{ window._sleepRitualInit(); }catch(_e){} }, 1800);
+
 </script>
 </body>
 </html>
