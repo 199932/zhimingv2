@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.68.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.68.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2653,22 +2653,130 @@ function renderBody(){
     }catch(_e){ return {ok:false,html:''}; }
   };
 
+  /* ===== 八字档案：表单持久化 + 星盘自动带档 ===== */
+  var BAZI_KEY='zhiming_bazi_v1';
+  window._baziSaveProfile=function(){
+    try{
+      var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+      var y=parseInt(g('bz-year'),10), m=parseInt(g('bz-month'),10), d=parseInt(g('bz-day'),10);
+      var h=parseInt(g('bz-hour'),10), mi=parseInt(g('bz-minute'),10);
+      if(!y||!m||!d||y<1900||y>2100) return false;
+      var cityName='', lng=116.407, lat=39.904;
+      var sel=document.getElementById('bz-city');
+      if(sel&&sel.selectedIndex>=0){
+        var opt=sel.options[sel.selectedIndex];
+        cityName=(opt.textContent||'').trim();
+        if(sel.value&&sel.value!=='__custom__'){ lng=parseFloat(sel.value)||lng; lat=parseFloat(opt.getAttribute('data-lat'))||lat; }
+      }
+      var cityIdx=-1;
+      if(typeof window._chartCityNames==='function'){
+        var names=window._chartCityNames(), clean=cityName.replace(/市$/,'');
+        for(var i=0;i<names.length;i++){ if(names[i]===clean||names[i]===cityName){ cityIdx=i; break; } }
+      }
+      localStorage.setItem(BAZI_KEY,JSON.stringify({y:y,m:m,d:d,h:isNaN(h)?12:h,mi:isNaN(mi)?0:mi,cityIdx:cityIdx,cityName:cityName,lng:lng,lat:lat,at:Date.now()}));
+      return true;
+    }catch(_e){ return false; }
+  };
+  window._baziLoadProfile=function(){ try{ return JSON.parse(localStorage.getItem(BAZI_KEY)||'null'); }catch(_e){ return null; } };
+  function _baziBindAndRestore(){
+    try{
+      var ids=['bz-year','bz-month','bz-day','bz-hour','bz-minute'];
+      ids.forEach(function(id){
+        var e=document.getElementById(id);
+        if(e&&!e.dataset.baziBind){ e.addEventListener('change',function(){ window._baziSaveProfile(); }); e.dataset.baziBind='1'; }
+      });
+      var sel=document.getElementById('bz-city');
+      if(sel&&!sel.dataset.baziBind){ sel.addEventListener('change',function(){ setTimeout(function(){ window._baziSaveProfile(); },60); }); sel.dataset.baziBind='1'; }
+      var sv=window._baziLoadProfile();
+      if(sv&&sv.y){ // 回填八字表单（存档比默认值可信）
+        var set=function(id,v){ var e=document.getElementById(id); if(e&&v!=null&&!isNaN(v)) e.value=v; };
+        set('bz-year',sv.y); set('bz-month',sv.m); set('bz-day',sv.d); set('bz-hour',sv.h); set('bz-minute',sv.mi);
+        var sel2=document.getElementById('bz-city');
+        if(sel2&&sv.lng&&!isNaN(sv.lng)){
+          for(var oi=0;oi<sel2.options.length;oi++){ if(sel2.options[oi].value===String(sv.lng)){ sel2.value=String(sv.lng); try{ onCityChange&&onCityChange(); }catch(_x){} break; } }
+        }
+      }
+    }catch(_e){}
+  }
+
+  /* 带档检查（幂等）：星盘无存档且表单空 → 从八字档案带+自动排 */
+  window._chartEnsureFromBazi=function(){
+    try{
+      var dv=document.getElementById('chart-date');
+      if(!dv||dv.value) return; // 表单已有值（排过/手填）就不动
+      var sv=JSON.parse(localStorage.getItem('zhiming_chart_v1')||'null');
+      if(sv&&sv.y){ window._chartInit(); return; }
+      var bz=window._baziLoadProfile&&window._baziLoadProfile();
+      if(!bz||!bz.y) return;
+      var clean=(bz.cityName||'').replace(/市$/,'');
+      var bIdx=-1;
+      if(typeof window._chartCityNames==='function'){
+        var n2=window._chartCityNames();
+        for(var bi=0;bi<n2.length;bi++){ if(n2[bi]===clean||n2[bi]===bz.cityName){ bIdx=bi; break; } }
+      }
+      var city=bIdx>=0?bIdx:0;
+      var dd=String(bz.d).padStart(2,'0'), mm=String(bz.m).padStart(2,'0');
+      dv.value=bz.y+'-'+mm+'-'+dd;
+      document.getElementById('chart-time').value=String(bz.h).padStart(2,'0')+':'+String(bz.mi).padStart(2,'0');
+      document.getElementById('chart-city').value=String(city);
+      var ch=window._chartCalc(bz.y,bz.m,bz.d,bz.h,bz.mi,city);
+      if(ch){
+        window._chartRender(ch);
+        var el=document.getElementById('chart-result');
+        if(el) el.insertAdjacentHTML('afterbegin','<div style="background:#EFFAF1;border:1px solid #BFE5C8;border-radius:10px;padding:9px 12px;font-size:12px;color:#2E7D45;margin-bottom:10px;">✓ 出生信息从你的八字档案带过来了，不用重填——想改就改上面表单再排</div>');
+      }
+    }catch(_e){}
+  };
+
   /* 首次进入自动重排 */
   window._chartInit=function(){
     try{
+      _baziBindAndRestore(); // 八字档案：绑存档监听+回填八字表单
       var sel=document.getElementById('chart-city');
       if(sel&&sel.options.length===0&&typeof window._chartCityNames==='function'){
         var cn=window._chartCityNames();
         for(var ci=0;ci<cn.length;ci++){ var op=document.createElement('option'); op.value=String(ci); op.textContent=cn[ci]; sel.appendChild(op); }
       }
       var sv=JSON.parse(localStorage.getItem('zhiming_chart_v1')||'null');
+      var fromBazi=false;
+      if((!sv||!sv.y)){ // 星盘无存档 → 从八字档案带
+        var bz=window._baziLoadProfile&&window._baziLoadProfile();
+        if(bz&&bz.y){
+          var clean=(bz.cityName||'').replace(/市$/,'');
+          var bIdx=-1;
+          if(typeof window._chartCityNames==='function'){
+            var n2=window._chartCityNames();
+            for(var bi=0;bi<n2.length;bi++){ if(n2[bi]===clean||n2[bi]===bz.cityName){ bIdx=bi; break; } }
+          }
+          sv={y:bz.y,m:bz.m,d:bz.d,h:bz.h,mi:bz.mi,city:bIdx>=0?bIdx:0};
+          fromBazi=true;
+        }
+      }
       if(sv&&sv.y){
         var dd=String(sv.d).padStart(2,'0'), mm=String(sv.m).padStart(2,'0');
         document.getElementById('chart-date').value=sv.y+'-'+mm+'-'+dd;
         document.getElementById('chart-time').value=String(sv.h).padStart(2,'0')+':'+String(sv.mi).padStart(2,'0');
         document.getElementById('chart-city').value=sv.city;
         var ch=window._chartCalc(sv.y,sv.m,sv.d,sv.h,sv.mi,sv.city);
-        if(ch) window._chartRender(ch);
+        if(ch){
+          window._chartRender(ch);
+          if(fromBazi){ // 提示：出生信息从八字档案带过来
+            var el=document.getElementById('chart-result');
+            if(el) el.insertAdjacentHTML('afterbegin','<div style="background:#EFFAF1;border:1px solid #BFE5C8;border-radius:10px;padding:9px 12px;font-size:12px;color:#2E7D45;margin-bottom:10px;">✓ 出生信息从你的八字档案带过来了，不用重填——想改就改上面表单再排</div>');
+          }
+        }
+      }
+    }catch(_e){}
+    // subtab 点击再检一次（八字排盘多发生在 init 之后）
+    try{
+      var st=document.querySelector('[data-sec="wu10"]');
+      if(st&&!st.dataset.chartBind){ st.addEventListener('click',function(){ setTimeout(function(){ try{ window._chartEnsureFromBazi(); }catch(_e){} },250); }); st.dataset.chartBind='1'; }
+      // 程序调用 switchSec('wu','wu10') 也覆盖（wrapper 一次）
+      if(typeof window.switchSec==='function'&&!window.switchSec._chartWrapped){
+        var _ss=window.switchSec;
+        var wrapped=function(p,s){ var r=_ss.apply(this,arguments); if(s==='wu10'||(arguments.length===1&&p==='wu10')){ setTimeout(function(){ try{ window._chartEnsureFromBazi(); }catch(_e){} },250); } return r; };
+        wrapped._chartWrapped='1';
+        window.switchSec=wrapped;
       }
     }catch(_e){}
   };
