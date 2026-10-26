@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.71.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.72.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2500,6 +2500,8 @@ function renderBody(){
     }
     // 东西对照（八字五行 × 星盘四元素）
     h+=window._chartBaziHTML(ch);
+    // 流年天象（木星土星落宫=年度主题）
+    h+=window._chartYearHTML(ch);
     // 今日天象（联动本命）
     h+=window._chartTodayHTML(ch);
     // 今日行运（懒加载展开）
@@ -2568,6 +2570,35 @@ function renderBody(){
         }
         h+='<div style="margin-top:8px;padding:8px 10px;background:#FFFFFF;border-radius:8px;font-size:12.5px;color:#4A3B2C;line-height:1.8;">'+msg+'</div>';
       }catch(_e3){}
+      h+='</div>';
+      return h;
+    }catch(_e){ return ''; }
+  };
+
+  /* 流年天象：木星土星落在你本命哪个宫——年度主题 */
+  window._chartYearHTML=function(ch){
+    try{
+      var T=window._chartTransit(ch);
+      if(!T||!T.todayHouses) return '';
+      var jh=T.todayHouses['木星'], sh=T.todayHouses['土星'];
+      if(!jh||!sh) return '';
+      var JUP={1:'做自己就是运气——「你是谁」本身就在加分',2:'进财年——值钱的人和事在靠近',3:'学习和沟通顺风——想说的话有人听',4:'家宅有喜——住处和家人是今年的福地',5:'恋爱和创作年——尽情表达别省着',6:'工作顺手，身体也愿意配合',7:'关系贵人年——关键人物会现身',8:'他人资源年——学会借力',9:'远方与视野——出去走走有收获',10:'事业高光年——被看见的一年',11:'圈子人脉——同频的人聚过来',12:'休整蓄力——安静下来反而顺'};
+      var SAT={1:'重塑自己——怎么呈现自己，重新定一遍',2:'金钱纪律——该省的省，该赚的赚明白',3:'认真学习——欠的基本功补上',4:'扛起家里的事——该你担的跑不掉',5:'认真对待热爱——玩也要玩出名堂',6:'管好身体作息——体检、睡觉、运动安排上',7:'关系考验——扛过去的都是真关系',8:'债务和共享资源要清——别糊弄',9:'深耕专业——熬得住就是护城河',10:'事业爬坡吃重——但每一步都算数',11:'圈子洗牌——留下值得的',12:'和过去和解——翻篇是最好的收尾'};
+      var ret=T.todayRetro||{};
+      var h='';
+      h+='<div style="margin-top:12px;background:#F0F7F0;border:1px solid #CDE5CD;border-radius:12px;padding:12px;">';
+      h+='<div style="font-size:13px;color:#1A2029;font-weight:500;">流年天象 · 今年的主题</div>';
+      h+='<div style="margin-top:8px;padding:8px 10px;background:#FFFFFF;border-radius:8px;">';
+      h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;"><span style="font-weight:500;">🍀 木星在你的第'+jh+'宫</span>'+(ret['木星']?'<span style="color:#8A6D3B;font-size:11px;">（逆行中——机会来得慢，别急）</span>':'')+'<br><span style="color:#5a7a5a;">'+(JUP[jh]||'')+'</span></div>';
+      h+='</div>';
+      h+='<div style="margin-top:6px;padding:8px 10px;background:#FFFFFF;border-radius:8px;">';
+      h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;"><span style="font-weight:500;">🪨 土星在你的第'+sh+'宫</span>'+(ret['土星']?'<span style="color:#8A6D3B;font-size:11px;">（逆行中——功课重考，不算挂科）</span>':'')+'<br><span style="color:#6a6a5a;">'+(SAT[sh]||'')+'</span></div>';
+      h+='</div>';
+      if(jh===sh){
+        h+='<div style="margin-top:8px;font-size:12px;color:#838A95;">木星土星同宫——机会和功课在同一个地方，今年专注这一件事就够。</div>';
+      } else {
+        h+='<div style="margin-top:8px;font-size:12px;color:#838A95;">一句话：第'+jh+'宫是今年的顺风区，第'+sh+'宫是今年的作业——顺风的抓紧，作业别拖。</div>';
+      }
       h+='</div>';
       return h;
     }catch(_e){ return ''; }
