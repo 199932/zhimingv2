@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.70.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.70.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2546,10 +2546,14 @@ function renderBody(){
     try{
       var wk=''; var lastKey=null, prevRet=null;
       var WKREL={'合':'顺','冲':'顶','刑':'拧','拱':'顺','六合':'帮'};
+      var tension=0, flow=0, seen7=0;
       for(var d7=0;d7<8;d7++){
         var tr2=window._chartTransit(ch,d7);
         if(!tr2||!tr2.aspects||!tr2.aspects.length) continue;
+        seen7++;
         var a2=tr2.aspects[0];
+        var tt2=(a2.t||'').replace(/相$/,'');
+        if(tt2==='刑'||tt2==='冲') tension++; else if(tt2==='合'||tt2==='拱'||tt2==='六合') flow++;
         var key=a2.a+'|'+a2.b+'|'+a2.t;
         var isNew=(d7>0&&lastKey!==null&&key!==lastKey);
         var dayLbl=d7===0?'今天':(d7===1?'明天':'周'+'日一二三四五六'[new Date(Date.now()+d7*86400000).getDay()]);
@@ -2561,11 +2565,22 @@ function renderBody(){
         if(prevRet){ for(var rn in rr){ if(rr[rn]!==prevRet[rn]){ wk+='<div style="padding:1px 0 3px 42px;font-size:11.5px;color:#8A6D3B;">· '+rn+(rr[rn]?'开始逆行——计划易变，别赶在那几天定大事':'恢复顺行——拖着的那件事重新动起来')+'</div>'; } } }
         prevRet=rr; lastKey=key;
       }
-      if(wk) h+='<div style="margin-top:12px;background:#F6F4FF;border:1px solid #E0DBF5;border-radius:12px;padding:12px;">'
+      if(wk){
+        /* 本周关键词：按 7 天相位张力归纳一句 */
+        var wSum='';
+        if(seen7===0) wSum='难得的平静周——天上没星星戳你，适合养精蓄锐。';
+        else if(tension>=4) wSum='这周是拧巴的一周——别硬来，让子弹飞一会儿。';
+        else if(flow>=5) wSum='这周顺水——想干的事抓紧办。';
+        else if(tension>=2&&flow>=2) wSum='张弛都有——顶的那几天别定大事，顺的那几天抓紧推进。';
+        else if(tension>=1) wSum='小有摩擦——顶和拧的日子别赶事，别的一天正常过。';
+        else wSum='平稳的一周——按部就班就好。';
+        h+='<div style="margin-top:12px;background:#F6F4FF;border:1px solid #E0DBF5;border-radius:12px;padding:12px;">'
         +'<div style="font-size:13px;color:#1A2029;font-weight:500;">未来7天 · 你的个人星历</div>'
+        +(wSum?'<div style="margin-top:6px;padding:7px 10px;background:#FFFFFF;border-radius:8px;font-size:12.5px;color:#4A3B8C;font-weight:500;">📌 本周关键词：'+wSum+'</div>':'')
         +'<div style="margin-top:4px;">'+wk+'</div>'
         +'<div style="margin-top:6px;font-size:11.5px;color:#838A95;">每天取对你盘面最紧的一个相位；●新 = 今天刚开始的相位</div>'
         +'</div>';
+      }
     }catch(_e){}
     return h;
   };
