@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.72.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.73.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -3064,6 +3064,73 @@ try{ window._chartInit(); }catch(_e){}
 try{ window._sleepRitualInit(); }catch(_e){}
 setTimeout(function(){ try{ window._sleepRitualInit(); }catch(_e){} }, 1800);
 
+</script>
+<script>
+/* ============ 塔罗日记 · 抽牌自动记录 ============ */
+(function(){
+  var KEY='zhiming_tarot_diary_v1';
+
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(_e){ return []; } }
+  function save(a){ try{ localStorage.setItem(KEY,JSON.stringify(a)); }catch(_e){} }
+
+  /* 抽牌时记录（drawTarot 解读渲染前调用） */
+  window._tarotDiaryLog=function(cards, question, spread){
+    try{
+      var arr=load();
+      var D=window.TAROT_DATA||null;
+      var cs=[];
+      (cards||[]).forEach(function(c){
+        var t=D?D[c.id]:null;
+        cs.push({n:(t&&t.name)||('牌'+c.id), r:!!c.reversed, k:t?(c.reversed?t.keywords_r:t.keywords_u):''});
+      });
+      arr.push({t:Date.now(), q:(question||'').slice(0,40), sp:(spread&&spread.name)||'', cs:cs});
+      while(arr.length>60) arr.shift();
+      save(arr);
+    }catch(_e){}
+  };
+
+  /* 列表渲染 */
+  window._tarotDiaryHTML=function(){
+    var arr=load();
+    if(!arr.length) return '';
+    var h='';
+    h+='<div style="margin-top:14px;background:#F9FAFB;border:1px solid #EBEDF1;border-radius:12px;padding:12px;">';
+    h+='<div style="font-size:13px;color:#1A2029;font-weight:500;">📔 塔罗日记 <span style="color:#838A95;font-weight:400;font-size:11.5px;">（最近'+Math.min(arr.length,10)+'次，共'+arr.length+'条，只存本机）</span></div>';
+    var last=arr.slice(-10).reverse();
+    last.forEach(function(e){
+      var d=new Date(e.t);
+      var ds=(d.getMonth()+1)+'月'+d.getDate()+'日 '+(d.getHours()<10?'0':'')+d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes();
+      var names=e.cs.map(function(c){ return c.n+(c.r?'(逆)':''); }).join(' · ');
+      var ks=e.cs.map(function(c){ return c.k; }).filter(function(x){ return x; }).slice(0,3).join('，');
+      h+='<div style="padding:8px 0;border-bottom:1px dashed #ECEAF1;">';
+      h+='<div style="font-size:12px;color:#838A95;">'+ds+' · '+(e.sp||'抽牌')+(e.q?' · 「'+e.q+'」':'')+'</div>';
+      h+='<div style="font-size:12.5px;color:#1A2029;margin-top:2px;">'+names+'</div>';
+      if(ks) h+='<div style="font-size:11.5px;color:#8A6D3B;margin-top:2px;">'+ks+'</div>';
+      h+='</div>';
+    });
+    h+='<div style="margin-top:8px;font-size:11.5px;color:#838A95;">每次抽牌自动记下——过阵子回头看，同一张牌反复出现的次数，就是你的「牌感」。</div>';
+    h+='</div>';
+    return h;
+  };
+
+  /* 挂载：tarot-result 后 */
+  window._tarotDiaryInit=function(){
+    try{
+      var ref=document.getElementById('tarot-result');
+      if(!ref) return;
+      var box=document.getElementById('tarotDiaryBox');
+      if(!box){
+        box=document.createElement('div');
+        box.id='tarotDiaryBox';
+        ref.parentNode.insertBefore(box, ref.nextSibling);
+      }
+      box.innerHTML=window._tarotDiaryHTML();
+    }catch(_e){}
+  };
+})();
+
+try{ window._tarotDiaryInit(); }catch(_e){}
+setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
 </script>
 </body>
 </html>
