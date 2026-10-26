@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.70.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.71.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2498,6 +2498,8 @@ function renderBody(){
       hard.slice(0,3).forEach(function(a,ai){ h+='<div style="font-size:12.5px;color:#1A2029;line-height:1.8;">· '+a.a+' '+a.t+' '+a.b+'——'+pickLine(HARD,a,ai)+'</div>'; });
       h+='</div>';
     }
+    // 东西对照（八字五行 × 星盘四元素）
+    h+=window._chartBaziHTML(ch);
     // 今日天象（联动本命）
     h+=window._chartTodayHTML(ch);
     // 今日行运（懒加载展开）
@@ -2508,7 +2510,70 @@ function renderBody(){
     try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_e){}
   };
 
-  /* 今日行运区：今天天上的星星 × 你的盘 */
+  /* 八字×星盘对照：五行分布 vs 四元素分布 + 互译结论 */
+  window._chartBaziHTML=function(ch){
+    try{
+      var signOf=window._chartSignOf;
+      var ELEM=['火','土','风','水'];
+      var elCount={'火':0,'土':0,'风':0,'水':0};
+      for(var k in ch.lons){ elCount[ELEM[signOf(ch.lons[k]).idx%4]]++; }
+      if(ch.asc) elCount[ELEM[signOf(ch.asc).idx%4]]++;
+      var domE='火', domN=-1, tot=0;
+      for(var e2 in elCount){ tot+=elCount[e2]; if(elCount[e2]>domN){ domN=elCount[e2]; domE=e2; } }
+      // 八字侧
+      var wxScore=null, dayWX='', bzTxt='';
+      var GAN_WX={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+      var p=(typeof window._baziLoadProfile==='function')?window._baziLoadProfile():null;
+      if(p&&p.y&&typeof window.baziCalc==='function'){
+        var rr=window.baziCalc({year:p.y,month:p.m,day:p.d,hour:p.h||12,minute:p.mi||0,gender:'男',cityLng:p.lng||0});
+        if(rr&&rr.wxScore){ wxScore=rr.wxScore; dayWX=GAN_WX[rr.dayGan]||''; }
+      }
+      if(!tot) return '';
+      var bar=function(n,v,max,color){ var w=max>0?Math.max(6,Math.round(v/max*100)):6; return '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;"><span style="width:30px;font-size:11.5px;color:#838A95;flex-shrink:0;">'+n+'</span><div style="flex:1;height:8px;background:#F0F1F5;border-radius:4px;overflow:hidden;"><div style="width:'+w+'%;height:100%;background:'+color+';border-radius:4px;"></div></div><span style="width:26px;font-size:11px;color:#838A95;text-align:right;flex-shrink:0;">'+v+'</span></div>'; };
+      var h='';
+      h+='<div style="margin-top:14px;background:#FFF9F0;border:1px solid #F5E3C8;border-radius:12px;padding:12px;">';
+      h+='<div style="font-size:13px;color:#1A2029;font-weight:500;">东西对照 · 五行 × 四元素</div>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;">';
+      // 左：五行
+      h+='<div>';
+      h+='<div style="font-size:11.5px;color:#838A95;margin-bottom:4px;">八字五行'+(dayWX?'（日主'+dayWX+'）':'')+'</div>';
+      if(wxScore){
+        var wxOrder=['木','火','土','金','水'], wxMax=0;
+        wxOrder.forEach(function(w){ if(wxScore[w]>wxMax) wxMax=wxScore[w]; });
+        var WXCOL={'木':'#5BA47C','火':'#D96C4F','土':'#B08D4E','金':'#B8BCC4','水':'#5B8DB8'};
+        wxOrder.forEach(function(w){ h+=bar(w,wxScore[w],wxMax,WXCOL[w]); });
+      } else {
+        h+='<div style="font-size:11.5px;color:#B0B5BE;padding:8px 0;">还没填八字档案——去中式页排一次，这边自动带上。</div>';
+      }
+      h+='</div>';
+      // 右：四元素
+      h+='<div>';
+      h+='<div style="font-size:11.5px;color:#838A95;margin-bottom:4px;">星盘四元素（10星+上升）</div>';
+      var ELORDER=['火','土','风','水'], ELCOL={'火':'#D96C4F','土':'#B08D4E','风':'#7BA7D9','水':'#5B8DB8'};
+      var elMax=0; ELORDER.forEach(function(e3){ if(elCount[e3]>elMax) elMax=elCount[e3]; });
+      ELORDER.forEach(function(e3){ h+=bar(e3,elCount[e3],elMax,ELCOL[e3]); });
+      h+='</div>';
+      h+='</div>';
+      // 互译结论
+      try{
+        var msg='';
+        var MAP={'火':'火','水':'水','土':'土','金':'风','木':'风'};
+        if(wxScore&&dayWX){
+          var mE=MAP[dayWX]||'';
+          if(mE&&mE===domE) msg='东西两边指向同一处：八字日主是'+dayWX+'，星盘里'+domE+'元素也最重——'+({'火':'干劲和表现欲是天生的，别憋着','土':'稳和实在写进骨子里，慢就是你的快','风':'脑子转得快、需要新鲜感，别把自己关起来','水':'感受力是你的天线，情绪不是弱点'})[domE]+'。';
+          else if(mE) msg='两套说法不一样：八字日主'+dayWX+'（偏'+mE+'），星盘却是'+domE+'重——可能外看是'+domE+'的样子，内核还是'+dayWX+'的那股劲。';
+          else msg='八字日主'+dayWX+'，星盘'+domE+'元素最重——两套系统各自看着。';
+        } else {
+          msg='星盘里'+domE+'元素最重（'+domN+'颗）——'+({'火':'点火就着的行动派','土':'落地的实干派','风':'停不下来的思考派','水':'跟着感觉走的感受派'})[domE]+'。填上八字档案，能看东西两边怎么互证。';
+        }
+        h+='<div style="margin-top:8px;padding:8px 10px;background:#FFFFFF;border-radius:8px;font-size:12.5px;color:#4A3B2C;line-height:1.8;">'+msg+'</div>';
+      }catch(_e3){}
+      h+='</div>';
+      return h;
+    }catch(_e){ return ''; }
+  };
+
+  /* 今日天象区：今天天上的星星 × 你的盘 */
   var TRANSIT_ACT={太阳:'主角光环和精力',月亮:'情绪和心气',水星:'沟通、消息、来回的确认',金星:'关系、钱、审美',火星:'行动力和脾气',木星:'机会和运气',土星:'压力和慢功',天王星:'突变和意外',海王星:'迷雾和灵感',冥王星:'深层的翻新'};
   window._chartTransitHTML=function(ch,sv){
     var T=window._chartTransit(ch);
