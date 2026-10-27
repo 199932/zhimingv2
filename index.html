@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.73.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.74.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -3131,6 +3131,139 @@ setTimeout(function(){ try{ window._sleepRitualInit(); }catch(_e){} }, 1800);
 
 try{ window._tarotDiaryInit(); }catch(_e){}
 setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
+</script>
+<script>
+/* ============ 合盘速览 · 身边人×星盘 ============ */
+(function(){
+  var SIGNS=['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
+  var ELEM=[0,1,2,3,0,1,2,3,0,1,2,3];
+  var ELEM_NAME=['火','土','风','水'];
+
+  function signIdx(lon){ return Math.floor((((lon%360)+360)%360)/30); }
+  function ang(a,b){ var d=Math.abs(a-b)%360; return d>180?360-d:d; }
+  function asp(a,b){
+    var d=ang(a,b);
+    if(d<=8||d>=352) return {k:'conj',name:'合'};
+    if(Math.abs(d-60)<=6) return {k:'sext',name:'六合'};
+    if(Math.abs(d-90)<=8) return {k:'sq',name:'刑'};
+    if(Math.abs(d-120)<=8) return {k:'tri',name:'拱'};
+    if(Math.abs(d-180)<=8) return {k:'opp',name:'冲'};
+    return null;
+  }
+
+  /* TA 侧：bday 有年→太阳+月亮（正午估算）；只有月日→太阳（太阳位置与年份基本无关） */
+  window._synPerson=function(x){
+    try{
+      var bd=(x&&x.bday)||'';
+      var p=bd.split('-');
+      if(p.length<2) return null;
+      var hasYear=p.length>=3&&parseInt(p[0],10)>1900;
+      var m=hasYear?parseInt(p[1],10):parseInt(p[0],10);
+      var d=hasYear?parseInt(p[2],10):parseInt(p[1],10);
+      if(!m||!d||m<1||m>12||d<1||d>31) return null;
+      var y=hasYear?parseInt(p[0],10):2000;
+      var c=window._chartCalc?window._chartCalc(y,m,d,12,0,0):null;
+      if(!c||!c.lons) return null;
+      var sun=c.lons['太阳'], moon=c.lons['月亮'];
+      if(sun==null) return null;
+      return {sun:sun, sunSign:SIGNS[signIdx(sun)],
+              moon:(hasYear&&moon!=null)?moon:null,
+              moonSign:(hasYear&&moon!=null)?SIGNS[signIdx(moon)]:null,
+              hasYear:hasYear};
+    }catch(_e){ return null; }
+  };
+
+  /* 我的盘：八字共享档案 */
+  function myChart(){
+    try{
+      var p=(typeof window._baziLoadProfile==='function')?window._baziLoadProfile():null;
+      if(!p||!p.y) return null;
+      var c=window._chartCalc(p.y,p.m,p.d,p.h||12,p.mi||0,(p.cityIdx||0));
+      if(!c||!c.lons) return null;
+      return {sun:c.lons['太阳'], moon:c.lons['月亮'], asc:c.lons['上升点']};
+    }catch(_e){ return null; }
+  }
+
+  /* 人话 */
+  window._synReadout=function(ta,me){
+    var out=[];
+    var s1=signIdx(ta.sun), s2=signIdx(me.sun);
+    if(s1===s2){
+      out.push('你们都是'+SIGNS[s1]+'——同一个频道，脾气像照镜子，懂对方也容易一起轴。');
+    }else if(ELEM[s1]===ELEM[s2]){
+      out.push('TA是'+SIGNS[s1]+'（'+ELEM_NAME[ELEM[s1]]+'），你是'+SIGNS[s2]+'（'+ELEM_NAME[ELEM[s2]]+'）——同元素，互相带得动，节奏天然合拍。');
+    }else{
+      var a=asp(ta.sun,me.sun);
+      if(a&&a.k==='opp') out.push('TA是'+SIGNS[s1]+'，你是'+SIGNS[s2]+'——对宫搭档：一个敢冲一个想稳，互补，但容易互相拽。');
+      else if(a&&a.k==='sq') out.push('TA是'+SIGNS[s1]+'，你是'+SIGNS[s2]+'——画风容易顶：不是不对付，是路数不同，别硬改对方。');
+      else out.push('TA是'+SIGNS[s1]+'（'+ELEM_NAME[ELEM[s1]]+'），你是'+SIGNS[s2]+'（'+ELEM_NAME[ELEM[s2]]+'）——属性不同，正好补你看不到的角落。');
+    }
+    if(me.moon!=null&&ta.moon!=null){
+      var a2=asp(ta.sun,me.moon);
+      if(a2){
+        if(a2.k==='conj') out.push('TA的太阳正合你的月亮——TA的性格刚好是你心里想要的，待着舒服。');
+        else if(a2.k==='opp') out.push('TA的太阳冲你的月亮——TA的行事风格偶尔搅到你的情绪，说开就好。');
+        else if(a2.k==='sq') out.push('TA的太阳刑你的月亮——TA说话直，容易戳到你的情绪点，慢半拍回应会好很多。');
+        else if(a2.k==='tri') out.push('TA的太阳拱你的月亮——天然的情绪默契，不用解释太多。');
+        else if(a2.k==='sext') out.push('TA的太阳六合你的月亮——相处轻松顺手。');
+      }
+      var m1=signIdx(ta.moon), m2=signIdx(me.moon);
+      if(m1===m2||ELEM[m1]===ELEM[m2]){
+        out.push('TA的月亮（'+SIGNS[m1]+'）和你的月亮（'+SIGNS[m2]+'）同属'+ELEM_NAME[ELEM[m1]]+'——情绪频道对得上，累了的时候互相懂。');
+      }else{
+        var a3=asp(ta.moon,me.moon);
+        if(a3&&(a3.k==='opp'||a3.k==='sq')) out.push('TA的月亮（'+SIGNS[m1]+'）和你的月亮（'+SIGNS[m2]+'）相位偏硬——一个要聊开一个要安静，吵完先给台阶再讲道理。');
+      }
+    }else if(me.moon!=null&&!ta.hasYear){
+      var a4=asp(ta.sun,me.moon);
+      if(a4&&a4.k==='conj') out.push('TA的太阳正合你的月亮——TA的性格刚好是你心里想要的。');
+      else if(a4&&a4.k==='opp') out.push('TA的太阳冲你的月亮——相处中TA的作风偶尔搅到你的情绪。');
+    }
+    if(me.asc!=null&&ta.sun!=null){
+      var a5=asp(ta.sun,me.asc);
+      if(a5&&a5.k==='conj') out.push('TA的太阳正合你的上升——TA一出现就在你的主场频道，第一眼就投缘。');
+    }
+    if(!ta.hasYear) out.push('（只记了月日，先看太阳——生日补上年份，月亮的关系也能看）');
+    return out;
+  };
+
+  /* 身边人卡合盘行 */
+  window._synRowSafe=function(x){
+    try{
+      if(!x||!x.bday) return '';
+      var ta=window._synPerson(x);
+      if(!ta) return '';
+      var id=String(x.id).replace(/[^a-zA-Z0-9_-]/g,'');
+      var label='🔭 '+ta.sunSign+(ta.hasYear&&ta.moonSign?(' · 月亮'+ta.moonSign):'')+' 合盘 ▾';
+      return '<div style="margin-top:6px;">'
+        +'<span onclick="window._synToggle(\''+id+'\')" style="cursor:pointer;display:inline-block;font-size:10px;border-radius:20px;padding:2px 8px;background:rgba(122,162,247,.15);color:#7AA2F7;">'+label+'</span>'
+        +'<div id="synbox_'+id+'" style="display:none;margin-top:6px;background:var(--card-bg,rgba(255,255,255,.04));border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.7;color:var(--text-sub);"></div>'
+        +'</div>';
+    }catch(_e){ return ''; }
+  };
+
+  window._synToggle=function(id){
+    try{
+      var box=document.getElementById('synbox_'+id);
+      if(!box) return;
+      if(box.style.display!=='none'){ box.style.display='none'; return; }
+      var person=null;
+      try{
+        var raw=JSON.parse(localStorage.getItem('zhiming_people_v1')||'[]');
+        for(var i=0;i<raw.length;i++) if(String(raw[i].id)===String(id)) person=raw[i];
+      }catch(_e){}
+      if(!person){ box.innerHTML='没找到这条记录'; box.style.display='block'; return; }
+      var ta=window._synPerson(person);
+      var me=myChart();
+      if(!ta){ box.innerHTML='生日没读出来，编辑补一下'; box.style.display='block'; return; }
+      if(!me){ box.innerHTML='先去星盘页排自己的盘，再回来看合盘'; box.style.display='block'; return; }
+      var lines=window._synReadout(ta,me);
+      box.innerHTML='<b style="color:var(--text);">🔭 '+person.name+' × 你</b><br>'+lines.join('<br>');
+      box.style.display='block';
+    }catch(_e){}
+  };
+})();
+
 </script>
 </body>
 </html>
