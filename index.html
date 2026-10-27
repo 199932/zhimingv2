@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.74.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.74.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -3041,7 +3041,7 @@ try{ window._chartInit(); }catch(_e){}
       var now=new Date(), h=now.getHours()+now.getMinutes()/60;
       var night=(h>=22.5||h<2); // 22:30-2:00 深夜时段
       if(!night) return;
-      var t=todayStr();
+      var t=todayStr()+(h>=22.5?'-n':'-d'); // 时段分桶:当晚/凌晨各一次,凌晨出现不挡当晚
       var flag=null; try{ flag=localStorage.getItem('zhiming_sleep_banner_date'); }catch(_){}
       if(flag===t) return; // 当日已出现
       try{ localStorage.setItem('zhiming_sleep_banner_date',t); }catch(_){}
@@ -3063,6 +3063,13 @@ try{ window._chartInit(); }catch(_e){}
 })();
 try{ window._sleepRitualInit(); }catch(_e){}
 setTimeout(function(){ try{ window._sleepRitualInit(); }catch(_e){} }, 1800);
+(function(){ // 白天打开挂到深夜:22:30 精定补跑
+  try{
+    var n=new Date(), tg=new Date(n); tg.setHours(22,30,30,0);
+    var dl=tg-n;
+    if(dl>0&&dl<86400000){ setTimeout(function(){ try{ window._sleepRitualInit(); }catch(_e){} }, dl); }
+  }catch(_e){}
+})();
 
 </script>
 <script>
