@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.74.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.75.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.74.1-20261027';
+const ZHIMING_BUILD = 'v2.75.0-20261028';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24803,7 +24803,116 @@ function renderBody(){
         +'</div>';
       }
     }catch(_e){}
+    /* 年度星历入口（7天星历块之后，不论7天有无数据） */
+    h+='<button class="btn-secondary" id="chartYearBtn" style="width:100%;margin-top:10px;" onclick="window._chartYearToggle()">📅 未来 12 个月 · 年度星历 ▾</button>'
+      +'<div id="chartYearBox" style="display:none;margin-top:10px;background:#F6F4FF;border:1px solid #E0DBF5;border-radius:12px;padding:12px;"></div>';
     return h;
+  };
+  /* ---- 未来 12 个月 · 年度星历：逐日扫 365 天相位/逆行 → 月桶聚合 → 12 张月卡（注意：v2.72 已有 _chartYearHTML=流年天象，此处用 12 后缀避免覆盖） ---- */
+  window._chartYear12HTML=function(ch){
+    try{
+      var YREL={'合':'劲拧在一起','冲':'两头拉扯','刑':'有点别扭','拱':'顺水推舟','六合':'顺手搭桥'};
+      var now=new Date();
+      var buckets={}; var order=[];
+      var prevKey=null, prevRet={};
+      var step=1, N=366;
+      for(var d=0;d<N;d+=step){
+        var tr=window._chartTransit(ch,d);
+        if(!tr) continue;
+        var dt=new Date(now.getTime()+d*86400000);
+        var mk=dt.getFullYear()+'年'+(dt.getMonth()+1)+'月';
+        if(!buckets[mk]){ buckets[mk]={tension:0,flow:0,seen:0,act:{},events:[]}; order.push(mk); }
+        var B=buckets[mk];
+        // 相位主线
+        var a1=(tr.aspects&&tr.aspects[0])||null;
+        if(a1){
+          B.seen++;
+          var tt=(a1.t||'').replace(/相$/,'');
+          if(tt==='刑'||tt==='冲') B.tension++; else if(tt==='合'||tt==='拱'||tt==='六合') B.flow++;
+          B.act[a1.a]=(B.act[a1.a]||0)+1;
+          var key=a1.a+'|'+a1.b+'|'+a1.t;
+          if(prevKey!==null&&key!==prevKey){
+            B.events.push({w:1,day:dt.getDate(),txt:'新主线 · '+a1.a+' '+tt+' 你的'+a1.b+'——'+(YREL[tt]||tt)});
+          }
+          prevKey=key;
+        }
+        // 逆行变化
+        var rr=tr.todayRetro||{};
+        for(var pn in rr){
+          if(prevRet[pn]!==undefined&&rr[pn]!==prevRet[pn]){
+            B.events.push({w:0,day:dt.getDate(),txt:pn+(rr[pn]?'开始逆行——计划易变，别赶在这几天定大事':'顺行了——之前悬着的事能往下推了'),hot:rr[pn]?1:0});
+          }
+          prevRet[pn]=rr[pn];
+        }
+      }
+      if(!order.length) return '<div style="font-size:12.5px;color:#838A95;">年度星历暂时算不出来——过会儿再展开试试。</div>';
+      var h='<div style="font-size:13px;color:#1A2029;font-weight:500;">未来 12 个月 · 你的年度星历</div>'
+        +'<div style="margin:4px 0 8px;font-size:11.5px;color:#838A95;">每月取主线相位与逆行变化归纳；点击月份可展开逐条。</div>';
+      var grid='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:8px;">';
+      order.forEach(function(mk){
+        var B=buckets[mk], dd=0, bestAct=null, bestC=0;
+        for(var pn in B.act){ dd+=B.act[pn]; if(B.act[pn]>bestC){bestC=B.act[pn];bestAct=pn;} }
+        var th='';
+        if(B.seen===0) th='天上星星没戳你——养精蓄锐的一个月。';
+        else if(B.tension>B.seen*0.45) th='拧巴的一个月——让子弹飞一会儿，别硬来。';
+        else if(B.flow>B.seen*0.55) th='顺水的一个月——想干的事抓紧办。';
+        else if(B.tension>B.seen*0.2&&B.flow>B.seen*0.2) th='张弛都有——顶的那几天别定大事。';
+        else if(B.tension>B.seen*0.2) th='小有摩擦——赶事前多看两眼。';
+        else th='平稳的一月——按部就班就好。';
+        B.events.sort(function(x,y){return x.w-y.w||x.day-y.day;});
+        var evs=B.events.slice(0,3);
+        var evH=evs.map(function(e){
+          return '<div style="font-size:11.5px;color:'+(e.hot?'#8A6D3B':'#4A3B8C')+';line-height:1.55;">'+e.day+'日 · '+e.txt+'</div>';
+        }).join('');
+        if(B.events.length>3) evH+='<div style="font-size:11px;color:#838A95;">+'+(B.events.length-3)+' 条，点开看全</div>';
+        var actTip=(bestAct&&bestC>=dd*0.3&&dd>0)?'<div style="font-size:11px;color:#838A95;margin-top:3px;">这月常戳你的是'+bestAct+(TRANSIT_ACT&&TRANSIT_ACT[bestAct]?'——主题跟'+TRANSIT_ACT[bestAct]+'有关':'')+'</div>':'';
+        grid+='<div class="zyCard" data-mk="'+mk+'" style="background:#FFFFFF;border:1px solid #E6E2F4;border-radius:10px;padding:9px 10px;cursor:pointer;">'
+          +'<div style="font-size:12.5px;color:#1A2029;font-weight:600;">📅 '+mk+'</div>'
+          +'<div style="font-size:11.5px;color:#4A3B8C;margin-top:3px;line-height:1.5;">'+th+'</div>'
+          +actTip
+          +'<div style="margin-top:5px;display:none;" class="zyEv">'+evH+'</div>'
+          +'</div>';
+      });
+      h+=grid+'</div>';
+      return h;
+    }catch(_e){ return '<div style="font-size:12.5px;color:#838A95;">年度星历生成失败——不影响其他功能。</div>'; }
+  };
+  /* 年度星历月卡点击展开/收起——document 级事件委托,对 innerHTML 重渲染免疫 */
+  /* 注意:build.js 会把本块同时拼进 app.js 和 index.html 内联(双份执行),addEventListener 必须幂等防重复注册 */
+  if(!window.__zyDelegBound){
+    window.__zyDelegBound=true;
+    document.addEventListener('click',function(e){
+      try{
+        var t=e.target; if(!t||!t.closest) return;
+        var card=t.closest('.zyCard'); if(!card) return;
+        var ev=card.querySelector('.zyEv'); if(!ev) return;
+        ev.style.display=(ev.style.display==='none')?'block':'none';
+      }catch(_e){}
+    });
+  }
+  window._chartYearToggle=function(){
+    try{
+      var box=document.getElementById('chartYearBox');
+      if(!box) return;
+      var btn=document.getElementById('chartYearBtn');
+      if(box.style.display==='none'){
+        box.style.display='block';
+        if(btn) btn.textContent='📅 收起年度星历';
+        if(!box.dataset.done&&window._chartCurrent){
+          box.innerHTML='<div style="font-size:12.5px;color:#838A95;">⏳ 正在算一年的星星……</div>';
+          setTimeout(function(){
+            try{
+              var ch=window._chartCurrent;
+              box.innerHTML=window._chartYear12HTML(ch);
+              box.dataset.done='1';
+            }catch(_e){ box.innerHTML='<div style="font-size:12.5px;color:#838A95;">年度星历生成失败。</div>'; }
+          },60);
+        }
+      } else {
+        box.style.display='none';
+        if(btn) btn.textContent='📅 未来 12 个月 · 年度星历 ▾';
+      }
+    }catch(_e){}
   };
   window._chartTransitToggle=function(){
     try{
