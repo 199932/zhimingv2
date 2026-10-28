@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.76.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.77.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.76.0-20261028';
+const ZHIMING_BUILD = 'v2.77.0-20261028';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -19661,9 +19661,16 @@ function _ymdFromDate(d){
 }
 function _ganZhiOfDay(d){
   try{
-    if(typeof solarToLunar === 'function'){
-      var lunar = solarToLunar(d.getFullYear(), d.getMonth()+1, d.getDate()) || {};
-      return {gz:(lunar.gzDay||''), yearGZ:(lunar.gzYear||''), wx:''};
+    /* 复用黄历模块 dayGanZhiIdxFromDate(锚点 jdn-11=甲子);旧实现依赖不存在的 solarToLunar/lunar.gzDay——幽灵接口,日干支自上线起为空 */
+    if(typeof dayGanZhiIdxFromDate === 'function'){
+      var idx = dayGanZhiIdxFromDate(d.getFullYear(), d.getMonth()+1, d.getDate(), 12);
+      var _g=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+      var _z=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+      var gz = _g[idx%10]+_z[idx%12];
+      /* 年干支用公历年简化(立春分界误差可接受,仅用于五行生克) */
+      var yGan=_g[((d.getFullYear()-4)%10+10)%10];
+      var yZhi=_z[((d.getFullYear()-4)%12+12)%12];
+      return {gz:gz, yearGZ:yGan+yZhi, wx:''};
     }
   }catch(_){}
   return {gz:'',yearGZ:'',wx:''};
@@ -19682,6 +19689,33 @@ function _dayYiJi(d){
   }catch(_){}
   return {yi:yi||'诸事皆宜', ji:ji||'诸事不宜'};
 }
+/* ---- 择日·当日吉时：五鼠遁推时辰干支,按「天干五合>时生日干>同五行」排序取Top3 ---- */
+function _dayGoodHours(dayGan){
+  var wxM={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+  var sheng={'木':'火','火':'土','土':'金','金':'水','水':'木'};
+  var he={'甲':'己','己':'甲','乙':'庚','庚':'乙','丙':'辛','辛':'丙','丁':'壬','壬':'丁','戊':'癸','癸':'戊'};
+  var wuShu={'甲':'甲','己':'甲','乙':'丙','庚':'丙','丙':'戊','辛':'戊','丁':'庚','壬':'庚','戊':'壬','癸':'壬'};
+  var ganList=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  var zhi=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  var zhiHour={'子':'23–1点','丑':'1–3点','寅':'3–5点','卯':'5–7点','辰':'7–9点','巳':'9–11点','午':'11–13点','未':'13–15点','申':'15–17点','酉':'17–19点','戌':'19–21点','亥':'21–23点'};
+  var zhiTip={'子':'夜深了别安排','丑':'在睡觉','寅':'在睡觉','卯':'刚起','辰':'早饭前后','巳':'上午精神好','午':'午间正忙','未':'午后犯困','申':'下午顺当','酉':'傍晚收工','戌':'晚饭后','亥':'该睡了'};
+  try{
+    var start=wuShu[dayGan]||'甲'; var si=ganList.indexOf(start); if(si<0) si=0;
+    var dayW=wxM[dayGan]||'土';
+    var good=[];
+    for(var h=0;h<12;h++){
+      var hGan=ganList[(si+h)%10]; var hW=wxM[hGan];
+      var tag=null,w=0;
+      if(he[dayGan]===hGan){ tag='与你日干相合'; w=3; }
+      else if(sheng[hW]===dayW){ tag='时辰助你'; w=2; }
+      else if(hW===dayW){ tag='同气'; w=1; }
+      if(tag&&zhi[h]!=='子'&&zhi[h]!=='丑'&&zhi[h]!=='寅'){ good.push({zhi:zhi[h],range:zhiHour[zhi[h]],tag:tag,w:w,tip:zhiTip[zhi[h]]}); }
+    }
+    good.sort(function(a,b){return b.w-a.w;});
+    return good.slice(0,3);
+  }catch(_){ return []; }
+}
+window._dayGoodHours = _dayGoodHours;
 function dayPickerScore(taskName, ymdStr){
   taskName = taskName || '搬家';
   var d;
@@ -19725,12 +19759,12 @@ function dayPickerScore(taskName, ymdStr){
   var score = wxScore + yjScore + fangScore + gapScore;
   score = Math.max(0, Math.min(100, score));
   var reasons = [];
-  if(wxScore>0){ reasons.push('五行匹配+'+wxScore+'分：日支/年支'+(dayWX||'?')+'对任务「'+taskName+'」有利'); }
-  if(wxScore<0){ reasons.push('五行冲克'+wxScore+'分：年支对任务不利，需多加留意'); }
-  if(yjScore>=20){ reasons.push('黄历宜忌+'+yjScore+'分：当日宜事项覆盖「'+taskName+'」相关'); }
-  else if(yjScore<=5){ reasons.push('黄历宜忌+'+yjScore+'分：当日忌项或诸事不宜，建议换日'); }
-  if(gapScore>=20){ reasons.push('日期距离+'+gapScore+'分：距今'+diffDays+'天，时机适中'); }
-  if(!reasons.length){ reasons.push('综合评分：适合执行「'+taskName+'」的普通日子'); }
+  if(wxScore>0){ reasons.push('五行相合：这天的干支「'+(dayWX||'?')+'」跟'+taskName+'对路'); }
+  if(wxScore<0){ reasons.push('五行犯克：年柱跟这天相冲，多留意'); }
+  if(yjScore>=20){ reasons.push('黄历有宜：当日宜项覆盖「'+taskName+'」相关'); }
+  else if(yjScore<=5){ reasons.push('黄历有忌：这天忌相关事，建议换日'); }
+  if(gapScore>=20){ reasons.push('时机适中：距今 '+diffDays+' 天，不长不短'); }
+  if(!reasons.length){ reasons.push('综合来看：适合执行「'+taskName+'」的普通日子'); }
   return {score:score, reasons:reasons.slice(0,3)};
 }
 window.dayPickerScore = dayPickerScore;
@@ -19781,6 +19815,21 @@ function renderDayPickerResult(top3){
     var _gc = item.score>=65?'#3E9B6B':item.score>=50?'#C08A2D':'#B0563A';
     html += '<div class="day-card"><div class="day-card-head">'+(i===0?'🥇 ':i===1?'🥈 ':'🥉 ')+item.ymd+' '+week+(gzStr?' · '+gzStr:'')+' · <span style="color:'+_gc+';font-weight:700;">'+_g+'</span> <b style="color:#58A77A;">'+item.score+'分</b></div>';
     html += '<div class="day-score-bar"><div class="day-score-fill" style="width:'+item.score+'%;"></div></div>';
+    // 宜忌一行（增强可信度）
+    try{
+      var _yj=_dayYiJi(d);
+      if(_yj){ html += '<div style="margin:6px 0 2px;font-size:12px;line-height:1.7;"><span style="color:#3E9B6B;">宜</span> '+String(_yj.yi).slice(0,24)+(String(_yj.yi).length>24?'…':'')+' <span style="color:#B0563A;margin-left:6px;">忌</span> '+String(_yj.ji).slice(0,16)+(String(_yj.ji).length>16?'…':'')+'</div>'; }
+    }catch(_e){}
+    // 当日吉时（五鼠遁推算,排除深夜时段）
+    try{
+      var _dg=gzStr?gzStr.charAt(0):'';
+      var _gh=_dg?_dayGoodHours(_dg):[];
+      if(_gh.length){
+        var _ghH='<b style="color:var(--pri,#58A77A);">⏰ 当日吉时</b> ';
+        for(var gi=0;gi<_gh.length;gi++){ _ghH+='<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;background:var(--card,#F6F6F6);border-radius:8px;font-size:12px;">'+_gh[gi].zhi+'时 '+_gh[gi].range+' <span style="color:#8A8F98;font-size:11px;">('+_gh[gi].tag+')</span></span>'; }
+        html += '<div style="margin:4px 0 2px;font-size:12px;line-height:1.9;">'+_ghH+'</div>';
+      }
+    }catch(_e){}
     html += '<ul>';
     for(var k=0;k<item.reasons.length;k++){ html += '<li>'+item.reasons[k]+'</li>'; }
     html += '</ul></div>';
