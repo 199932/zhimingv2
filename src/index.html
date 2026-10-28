@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.77.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.78.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.77.0-20261028';
+const ZHIMING_BUILD = 'v2.78.0-20261029';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -22224,6 +22224,94 @@ function _lenormandAIEnhance(cards, spreadType){
   }
   window._secMoodCalendar = _secMoodCalendar;
 
+  /* ---- 月度复盘「X月的你」：四类数据月度收口+节气钩子（自给自足，不依赖周报内部工具） ---- */
+  function _secMonthReview(){
+    let diary=[]; try{ diary=JSON.parse(localStorage.getItem('zhiming_v2_diary')||'[]'); }catch(e){}
+    let symlog=[]; try{ symlog=JSON.parse(localStorage.getItem('zhiming_symlog_v1')||'[]'); }catch(e){}
+    let tarot=[]; try{ tarot=JSON.parse(localStorage.getItem('zhiming_tarot_diary_v1')||'[]'); }catch(e){}
+    const now=new Date();
+    const y=now.getFullYear(), m=now.getMonth();
+    const mName=(m+1)+'月';
+    const fmt=(d)=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const mStart=fmt(new Date(y,m,1)), mEnd=fmt(new Date(y,m+1,0));
+    const pmStart=fmt(new Date(y,m-1,1)), pmEnd=fmt(new Date(y,m,0));
+    const bedMin=(b)=>{ const mm=/^(\d{1,2}):(\d{2})$/.exec(b||''); if(!mm) return null; let hh=parseInt(mm[1],10); if(hh<12)hh+=24; return hh*60+parseInt(mm[2],10); };
+    const hm=(v)=>{ const t=Math.round(v); const hh=Math.floor((t%1440)/60), mi=t%60; return (hh>=24?(hh-24):hh)+':'+String(mi).padStart(2,'0'); };
+    /* 本月数据切片 */
+    const md=diary.filter(e=>e.date&&e.date>=mStart&&e.date<=mEnd);
+    const pmd=diary.filter(e=>e.date&&e.date>=pmStart&&e.date<=pmEnd);
+    const beds=md.filter(e=>e.bed&&bedMin(e.bed)!==null).map(e=>bedMin(e.bed));
+    const pBeds=pmd.filter(e=>e.bed&&bedMin(e.bed)!==null).map(e=>bedMin(e.bed));
+    const moods=md.filter(e=>typeof e.mood==='number');
+    const msym=symlog.filter(x=>x.date&&x.date>=mStart&&x.date<=mEnd);
+    const mtd=tarot.filter(e=>{ if(!e.t) return false; const dd=new Date(e.t); return dd.getFullYear()===y&&dd.getMonth()===m; });
+    const hasAny = beds.length>0||moods.length>0||msym.length>0||mtd.length>0;
+    let h='<div class="card"><div class="card-title">🗓 '+mName+'的你 <span style="font-size:11px;color:var(--text-hint);font-weight:400;">月度复盘</span></div><div style="font-size:12px;color:var(--text-sub);line-height:2;">';
+    if(!hasAny){
+      h+=mName+'还没留下记录——睡眠、情绪、不舒服、抽塔罗，记一条，月底的你就有的看。';
+    } else {
+      const days=new Set(md.map(e=>e.date)).size;
+      const parts=[];
+      if(beds.length) parts.push('睡眠 '+beds.length+' 晚');
+      if(moods.length) parts.push('情绪 '+moods.length+' 笔');
+      if(msym.length) parts.push('不适 '+msym.length+' 次');
+      if(mtd.length) parts.push('塔罗 '+mtd.length+' 抽');
+      h+='这个月你留了 <b>'+days+'</b> 天的痕：'+parts.join(' · ')+'。';
+      const lines=[];
+      /* 睡眠 */
+      if(beds.length){
+        const avg=beds.reduce((a,b)=>a+b,0)/beds.length;
+        const late=beds.filter(v=>v>=24*60+30).length; /* 0:30 后算熬夜 */
+        let t='· 睡眠：平均 '+hm(avg)+' 睡';
+        if(pBeds.length>=3){ const pAvg=pBeds.reduce((a,b)=>a+b,0)/pBeds.length; const diff=Math.round((pAvg-avg)/60*10)/10; t+= diff>=0.5?('，比上月早约 '+(diff>=1?Math.round(diff)+' 小时':Math.round(diff*60)+' 分钟')) : diff<=-0.5?('，比上月晚约 '+(Math.abs(diff)>=1?Math.round(Math.abs(diff))+' 小时':Math.round(Math.abs(diff)*60)+' 分钟')) : '，跟上月差不多'; }
+        if(late>0) t+='；过了 0:30 才睡的有 '+late+' 晚';
+        lines.push(t);
+      }
+      /* 情绪 */
+      if(moods.length){
+        const avg=moods.reduce((a,b)=>a+b.mood,0)/moods.length;
+        const sorted=moods.slice().sort((a,b)=>b.mood-a.mood);
+        const best=sorted[0], worst=sorted[sorted.length-1];
+        let t='· 心情：平均 '+avg.toFixed(1)+'/5';
+        if(worst.mood<best.mood) t+='；最好 '+best.date.slice(5)+'，最低在 '+worst.date.slice(5);
+        lines.push(t);
+      }
+      /* 身体+手法战绩 */
+      if(msym.length){
+        const cnt={}; msym.forEach(x=>{ cnt[x.n]=(cnt[x.n]||0)+1; });
+        let topN=null; for(const nn in cnt){ if(!topN||cnt[nn]>topN.c) topN={n:nn,c:cnt[nn]}; }
+        const oks=msym.filter(x=>x.effect==='ok'&&x.method);
+        let t='· 身体：「'+topN.n+'」出现 '+topN.c+' 次';
+        if(oks.length){ const mcnt={}; oks.forEach(x=>{ mcnt[x.method]=(mcnt[x.method]||0)+1; }); let topM=null; for(const mm2 in mcnt){ if(!topM||mcnt[mm2]>topM.c) topM={m:mm2,c:mcnt[mm2]}; } t+='；最管用的招是「'+topM.m+'」（'+topM.c+' 次见效）'; }
+        lines.push(t);
+      }
+      /* 塔罗回声 */
+      if(mtd.length){
+        const pc={}; let rev=0, tot=0;
+        mtd.forEach(e=>{ (e.cs||[]).forEach(c=>{ tot++; if(c.r)rev++; pc[c.n]=(pc[c.n]||0)+1; }); });
+        let topP=null; for(const pn in pc){ if(!topP||pc[pn]>topP.c) topP={n:pn,c:pc[pn]}; }
+        let t='· 塔罗：抽了 '+mtd.length+' 次'+(tot?'，共 '+tot+' 张牌':'');
+        if(topP&&topP.c>=2) t+='；「'+topP.n+'」出现 '+topP.c+' 次，值得想想它在提醒什么';
+        if(tot>=4) t+='；逆位率 '+Math.round(rev/tot*100)+'%';
+        lines.push(t);
+      }
+      /* 节气钩子（近似日期，±1天；自给自足——不依赖别的模块局部变量） */
+      try{
+        const _MQ={1:[{d:5,n:'小寒'},{d:20,n:'大寒'}],2:[{d:4,n:'立春'},{d:19,n:'雨水'}],3:[{d:5,n:'惊蛰'},{d:20,n:'春分'}],4:[{d:5,n:'清明'},{d:20,n:'谷雨'}],5:[{d:5,n:'立夏'},{d:21,n:'小满'}],6:[{d:6,n:'芒种'},{d:21,n:'夏至'}],7:[{d:7,n:'小暑'},{d:22,n:'大暑'}],8:[{d:8,n:'立秋'},{d:23,n:'处暑'}],9:[{d:8,n:'白露'},{d:23,n:'秋分'}],10:[{d:8,n:'寒露'},{d:23,n:'霜降'}],11:[{d:7,n:'立冬'},{d:22,n:'小雪'}],12:[{d:7,n:'大雪'},{d:22,n:'冬至'}]};
+        const jqs=_MQ[m+1]||[];
+        if(jqs.length){
+          const names=jqs.map(j=>j.n+'（'+(m+1)+'月'+j.d+'日前后）').join('、');
+          lines.push('· 节气：'+mName+'走过 '+names+'——换季记得照看自己');
+        }
+      }catch(_e){}
+      h+=lines.length?'<div style="margin-top:4px;">'+lines.join('<br>')+'</div>':'';
+      h+='<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--card-border);font-size:11.5px;color:var(--text-hint);">复盘只看本机记录，不上传。留痕越多，月底越懂自己。</div>';
+    }
+    h+='</div></div>';
+    return h;
+  }
+  window._secMonthReview = _secMonthReview;
+
   /* ---- 本周节律小结：连续打卡满 7 天解锁（永久） ---- */
   function _streakDays(data){
     let n=0; const d=new Date();
@@ -23193,7 +23281,7 @@ function _lenormandAIEnhance(cards, spreadType){
          </div></div>` +
         (function(){
         const _nf=(fn)=>{ try{ return fn(); }catch(e){ return ""; } };
-        const hToday=_nf(function(){ return _secCheckin(null); }) + _nf(function(){ return _secWeekReview(); }) + _nf(function(){ return _secMoodCalendar(); });
+        const hToday=_nf(function(){ return _secCheckin(null); }) + _nf(function(){ return _secWeekReview(); }) + _nf(function(){ return _secMonthReview(); }) + _nf(function(){ return _secMoodCalendar(); });
         const hTools=_nf(function(){ return _secJiri(null); }) + _nf(function(){ return _secPeople(); }) + vault;
         return `<div style="display:flex;gap:8px;margin-bottom:10px;">
            <button id="gst-today" onclick="window._growSub('today')" style="flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--card-border);background:var(--card);color:var(--text-sub);font-size:13px;font-weight:700;cursor:pointer;opacity:.8;">📝 今日</button>
@@ -23220,7 +23308,7 @@ function _lenormandAIEnhance(cards, spreadType){
            ${_gTab('gst-today','📝','今日')} ${_gTab('gst-pan','🔭','命盘')} ${_gTab('gst-tools','🧰','工具')}
          </div>` +
         _gBox('g-p-today') + _gBox('g-p-pan') + _gBox('g-p-tools');
-      _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMoodCalendar()));
+      _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMonthReview()) + _tryGC(()=>_secMoodCalendar()));
       _gFill('g-p-pan', _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secAnnual(r)));
       _gFill('g-p-tools', _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secPeople()) + vault);
       try{ window._growSubInit(); }catch(e){}
