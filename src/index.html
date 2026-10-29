@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.80.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.81.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.80.0-20261029';
+const ZHIMING_BUILD = 'v2.81.0-20261030';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -22195,6 +22195,64 @@ function _lenormandAIEnhance(cards, spreadType){
     h+='</div></div>';
     return h;
   }
+  /* ---- 你和月亮：月相×你的心情/睡眠对照（纯本地统计,满月前后3天 vs 平时） ---- */
+  function _secMoonYou(){
+    try{
+      const now=new Date();
+      const mp=_moonPhase(now);
+      const mi=MOON_INFO[mp.idx]||MOON_INFO[0];
+      const toFull=mp.p<=0.5?(0.5-mp.p)*29.5306:(1.5-mp.p)*29.5306;
+      const toNew=(1-mp.p)*29.5306;
+      const moonLine=mi.e+' <b style="color:var(--text);">'+mi.n+'</b>'+(toFull<0.8?' · 满月就是今晚':(toFull<15?' · 距满月还有 '+Math.round(toFull)+' 天':' · 距新月还有 '+Math.round(toNew)+' 天'));
+      /* 数据采集：mood 来自成长打卡(1-5)，bed 来自今日页心情打卡 */
+      let bedSrc=[]; try{ bedSrc=JSON.parse(localStorage.getItem(DIARY_KEY)||'[]'); }catch(_){}
+      const ckD=(function(){ try{ return JSON.parse(localStorage.getItem("zhiming_grow_ck_v1")||"{}"); }catch(_c){ return {}; } })();
+      const grp={fm:{mood:[],bed:[]},ot:{mood:[],bed:[]}};
+      const put=function(ds,g,mood,bed){
+        const p=String(ds).split('-'); if(p.length<3) return;
+        const d=new Date(+p[0],+p[1]-1,+p[2]); if(isNaN(d.getTime())) return;
+        const age=_moonPhase(d).age;
+        if(age>=12.2&&age<=17.3) g='fm';
+        if(mood!=null) grp[g].mood.push(mood);
+        if(bed!=null){
+          const m2=/^(\d{1,2}):(\d{2})/.exec(String(bed));
+          if(m2) grp[g].bed.push(((+m2[1]*60)+(+m2[2])-1200+1440)%1440);
+        }
+      };
+      Object.keys(ckD).forEach(function(k){ const v=ckD[k]; if(v&&v.m) put(k,'ot',v.m,null); });
+      bedSrc.forEach(function(e){ if(e&&e.date&&e.bed) put(e.date,'ot',null,e.bed); });
+      const avg=function(a){ return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:null; };
+      const fmt=function(mins){ const t=(Math.round(mins)+1200)%1440; return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); };
+      const fM=avg(grp.fm.mood), oM=avg(grp.ot.mood);
+      const fB=avg(grp.fm.bed),  oB=avg(grp.ot.bed);
+      const fN=grp.fm.mood.length, oN=grp.ot.mood.length;
+      const fBN=grp.fm.bed.length, oBN=grp.ot.bed.length;
+      const rows=[]; let concl='';
+      if(fM!=null&&oM!=null&&fN>=4&&oN>=4){
+        const df=Math.round((fM-oM)*10)/10;
+        if(df<=-0.5) rows.push('😔 近满月的 '+fN+' 天，心情平均 '+fM.toFixed(1)+'/5，比平时低 '+Math.abs(df));
+        else if(df>=0.5) rows.push('😄 反直觉——近满月的 '+fN+' 天心情平均 '+fM.toFixed(1)+'/5，比平时高 '+df);
+      }
+      if(fB!=null&&oB!=null&&fBN>=4&&oBN>=4){
+        const db=Math.round(fB-oB);
+        if(db>=25) rows.push('🌙 近满月的 '+fBN+' 天平均 '+fmt(fB)+' 才睡，比平时晚约 '+db+' 分钟');
+        else if(db<=-25) rows.push('🌅 近满月的 '+fBN+' 天平均 '+fmt(fB)+' 睡，反而比平时早约 '+Math.abs(db)+' 分钟');
+      }
+      if(rows.length){
+        concl=rows.map(function(r){ return '<div style="margin:2px 0;">'+r+'</div>'; }).join('');
+        concl+='<div style="margin-top:4px;color:var(--pri);font-weight:600;">'+(toFull<3||toFull<0.8?'月亮快圆了——留意接下来几天的自己，今晚别硬熬夜。':(toNew<3?'月亮快空了——适合收尾、休息，别安排大事。':'顺其自然就好。'))+'</div>';
+      }else if(fN>=4&&oN>=4){
+        concl='<div style="color:var(--text-sub);">对照下来，月亮对你影响不大——睡不好别赖月亮，该多少睡多少。</div>';
+      }else{
+        concl='<div style="color:var(--text-sub);">攒够「近满月 / 平时」各 4 天心情或睡眠记录，自动出你的月亮对照——现在 '+fN+' 天 / '+oN+' 天。</div>';
+      }
+      return '<div class="card"><div class="card-title">🌙 你和月亮</div>'
+        +'<div style="font-size:12.5px;color:var(--text-sub);line-height:1.8;">今晚：'+moonLine+'</div>'
+        +'<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border,#eee);font-size:12.5px;line-height:1.8;">'+concl+'</div>'
+        +'<div style="font-size:10px;color:var(--text-hint);margin-top:6px;">近满月=满月前后3天 · 心情来自成长打卡/睡眠来自今日页记录 · 纯本地统计</div>'
+        +'</div>';
+    }catch(_e){ return ''; }
+  }
   function _secMoodCalendar(){
     const data = _ck();
     const now=new Date();
@@ -23324,7 +23382,7 @@ function _lenormandAIEnhance(cards, spreadType){
          </div></div>` +
         (function(){
         const _nf=(fn)=>{ try{ return fn(); }catch(e){ return ""; } };
-        const hToday=_nf(function(){ return _secCheckin(null); }) + _nf(function(){ return _secWeekReview(); }) + _nf(function(){ return _secMonthReview(); }) + _nf(function(){ return _secMoodCalendar(); });
+        const hToday=_nf(function(){ return _secCheckin(null); }) + _nf(function(){ return _secWeekReview(); }) + _nf(function(){ return _secMonthReview(); }) + _nf(function(){ return _secMoonYou(); }) + _nf(function(){ return _secMoodCalendar(); });
         const hTools=_nf(function(){ return _secJiri(null); }) + _nf(function(){ return _secPeople(); }) + vault;
         return `<div style="display:flex;gap:8px;margin-bottom:10px;">
            <button id="gst-today" onclick="window._growSub('today')" style="flex:1;padding:9px 0;border-radius:12px;border:1.5px solid var(--card-border);background:var(--card);color:var(--text-sub);font-size:13px;font-weight:700;cursor:pointer;opacity:.8;">📝 今日</button>
@@ -23351,7 +23409,7 @@ function _lenormandAIEnhance(cards, spreadType){
            ${_gTab('gst-today','📝','今日')} ${_gTab('gst-pan','🔭','命盘')} ${_gTab('gst-tools','🧰','工具')}
          </div>` +
         _gBox('g-p-today') + _gBox('g-p-pan') + _gBox('g-p-tools');
-      _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMonthReview()) + _tryGC(()=>_secMoodCalendar()));
+      _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMonthReview()) + _tryGC(()=>_secMoonYou()) + _tryGC(()=>_secMoodCalendar()));
       _gFill('g-p-pan', _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secAnnual(r)));
       _gFill('g-p-tools', _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secPeople()) + vault);
       try{ window._growSubInit(); }catch(e){}
