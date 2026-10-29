@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.78.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.79.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -3212,6 +3212,41 @@ setTimeout(function(){ try{ window._sleepRitualInit(); }catch(_e){} }, 1800);
     var h='';
     h+='<div style="margin-top:14px;background:#F9FAFB;border:1px solid #EBEDF1;border-radius:12px;padding:12px;">';
     h+='<div style="font-size:13px;color:#1A2029;font-weight:500;">📔 塔罗日记 <span style="color:#838A95;font-weight:400;font-size:11.5px;">（最近'+Math.min(arr.length,10)+'次，共'+arr.length+'条，只存本机）</span></div>';
+    /* ---- 同牌回声：频次榜+人话点拨（正逆分开计数,逆位过半显示逆位关键词） ---- */
+    try{
+      var tot=0, rev=0; var pc={}, pu={}, pr={};
+      arr.forEach(function(e){ (e.cs||[]).forEach(function(c){ tot++; if(c.r){rev++; pr[c.n]=(pr[c.n]||0)+1;} else { pu[c.n]=(pu[c.n]||0)+1; } pc[c.n]=(pc[c.n]||0)+1; }); });
+      if(tot>=4){
+        var topN=[]; for(var pn in pc){ if(pc[pn]>=2) topN.push({n:pn,c:pc[pn]}); }
+        topN.sort(function(a,b){ return b.c-a.c; });
+        var revPct=Math.round(rev/tot*100);
+        var echo='<div style="margin-top:10px;padding:10px;background:#FFF9F0;border:1px solid #F2E3C8;border-radius:10px;">';
+        echo+='<div style="font-size:12.5px;color:#7A5B22;font-weight:600;">🔁 同牌回声</div>';
+        echo+='<div style="font-size:11.5px;color:#838A95;margin-top:2px;">最近 '+arr.length+' 次抽牌共 '+tot+' 张 · 逆位率 '+revPct+'%</div>';
+        if(topN.length){
+          topN.slice(0,4).forEach(function(t){
+            var td=null;
+            try{
+              if(typeof window.TAROT_DATA!=='undefined'&&window.TAROT_DATA&&window.TAROT_DATA.length){
+                for(var i=0;i<window.TAROT_DATA.length;i++){ if(window.TAROT_DATA[i].name===t.n){ td=window.TAROT_DATA[i]; break; } }
+              }
+            }catch(_te){}
+            var kw='';
+            if(td){
+              var useR = (pr[t.n]||0) > (pu[t.n]||0); /* 该牌逆位更多→给逆位关键词 */
+              var ks=(useR?(td.keywords_r||[]):(td.keywords_u||[])).slice(0,2);
+              if(ks.length) kw=' · <span style="color:#8A6D3B;">'+ks.join(' · ')+(useR?'（逆位倾向）':'')+'</span>';
+            }
+            echo+='<div style="font-size:12px;color:#1A2029;margin-top:5px;"><b>'+t.n+'</b> ×'+t.c+'（'+(pu[t.n]||0)+'正'+(pr[t.n]||0)+'逆）'+kw+'</div>';
+          });
+          echo+='<div style="font-size:11px;color:#9A8468;margin-top:7px;">反复出现的牌，往往是你心里反复出现的课题。</div>';
+        } else {
+          echo+='<div style="font-size:11.5px;color:#838A95;margin-top:4px;">暂时没有重复的牌——每张都是新消息。</div>';
+        }
+        echo+='</div>';
+        h+=echo;
+      }
+    }catch(_ee){}
     var last=arr.slice(-10).reverse();
     last.forEach(function(e){
       var d=new Date(e.t);
