@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.79.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.80.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.79.0-20261029';
+const ZHIMING_BUILD = 'v2.80.0-20261029';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -8645,6 +8645,7 @@ function renderToday(){
       </div>
     </div>
     ${(function(){ var _b=null; try{ _b=window._bdReminder?window._bdReminder():_bdReminder(); }catch(_){ _b=null; } if(!_b) return ''; if(_b.mode==='today'){ return '<div style="margin-top:10px;padding:10px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(233,88,138,.12),rgba(107,92,165,.10));border:1px solid rgba(233,88,138,.25);font-size:13px;font-weight:600;color:#8a4a76;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="window._bdGo()"><span>🎂 今天是 '+_b.names+' 的生日</span><span style="font-size:11px;font-weight:400;">去看看 →</span></div>'; } return '<div style="margin-top:10px;padding:10px 14px;border-radius:14px;background:rgba(124,158,99,.07);border:1px dashed rgba(124,158,99,.4);font-size:12.5px;font-weight:500;color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onclick="window._bdGo()"><span>⏳ '+_b.days+' 天后是 '+_b.names+' 的生日</span><span style="font-size:11px;font-weight:400;">去看看 →</span></div>'; })()}
+    ${(window._shishenTodayHTML?window._shishenTodayHTML(almDate):'')}
     
     <div class="find-day-card" id="todayFindDayCard">
       <div class="fdc-title">🔍 找合适的日子</div>
@@ -19689,6 +19690,48 @@ function _dayYiJi(d){
   }catch(_){}
   return {yi:yi||'诸事皆宜', ji:ji||'诸事不宜'};
 }
+/* ---- 十神日记：今天宇宙给你发的牌（用户日主×今日日干→十神→人话攻略；自给自足算法） ---- */
+window._shishenTodayHTML=function(almDate){
+  try{
+    var _bz=null; try{ _bz=JSON.parse(localStorage.getItem('zhiming_bazi_v1')||'null'); }catch(_e){}
+    if(!_bz||!_bz.y||!_bz.m||!_bz.d) return '';
+    /* memo：档案不变只算一次日干 */
+    var _sig=_bz.y+'-'+_bz.m+'-'+_bz.d+'-'+(_bz.h||12);
+    if(typeof window._ssDayGanMemo==='undefined'||window._ssDayGanMemo.sig!==_sig){
+      var _r=null;
+      try{
+        if(typeof baziCalc==='function') _r=baziCalc({year:_bz.y,month:_bz.m,day:_bz.d,hour:_bz.h||12,minute:_bz.mi||0,gender:_bz.gender||'male',cityLng:_bz.lng||116.4,dontSave:true});
+      }catch(_e2){}
+      if(!_r||!_r.pillars||!_r.pillars[2]||!_r.pillars[2].gz) return '';
+      window._ssDayGanMemo={sig:_sig, dayGan:_r.pillars[2].gz.charAt(0)};
+    }
+    var dayG=window._ssDayGanMemo.dayGan;
+    var dd=(almDate instanceof Date)?almDate:new Date();
+    var _idx=dayGanZhiIdxFromDate(dd.getFullYear(), dd.getMonth()+1, dd.getDate(), dd.getHours());
+    var otherG=GAN[_idx%10];
+    /* 十神（自给自足,不依赖排盘闭包） */
+    var WX={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+    var YY={'甲':1,'乙':0,'丙':1,'丁':0,'戊':1,'己':0,'庚':1,'辛':0,'壬':1,'癸':0};
+    var SH={'木':'火','火':'土','土':'金','金':'水','水':'木'};
+    var KE={'木':'土','土':'水','水':'火','火':'金','金':'木'};
+    var dw=WX[dayG], ow=WX[otherG], sy=YY[dayG], oy=YY[otherG], ss='';
+    if(dw===ow) ss=(sy===oy?'比肩':'劫财');
+    else if(SH[dw]===ow) ss=(sy===oy?'食神':'伤官');
+    else if(KE[dw]===ow) ss=(sy===oy?'偏财':'正财');
+    else if(KE[ow]===dw) ss=(sy===oy?'七杀':'正官');
+    else if(SH[ow]===dw) ss=(sy===oy?'偏印':'正印');
+    if(!ss) return '';
+    var NICK={'比肩':'同频日','劫财':'管住手','食神':'享受日','伤官':'锋利日','偏财':'活水日','正财':'稳收日','七杀':'硬仗日','正官':'规矩日','偏印':'充电日','正印':'贵人日'};
+    var TIP={'比肩':'适合约人、搭伙干活；主意多但别太轴，听听别人的','劫财':'花销冲动大，大额支出先放24小时；帮朋友可以别垫钱','食神':'吃顿好的、做点喜欢的事；写东西聊创意都顺，今天适合输出','伤官':'脑子和嘴都利，创意好；但容易说话冲，别跟人抬杠','偏财':'机会多但都是过路的，抓一个就够；小钱可试手气，别上头','正财':'处理账务、谈钱、踏实干活都顺；今天的积累明天都算数','七杀':'压力找上门，别平均用力——挑一件最硬的打完就赢；早点睡','正官':'流程、审批、见领导长辈都顺；想立规矩做承诺，今天是好日子','偏印':'适合独处、啃难懂的东西；容易想太多，想的和事实核一下再说','正印':'有人愿意帮你、教你；学习、求教、签长期的事都好，别逞强单干'};
+    var SS2C={'比肩':'比劫','劫财':'比劫','食神':'食伤','伤官':'食伤','偏财':'财','正财':'财','七杀':'官杀','正官':'官杀','偏印':'印','正印':'印'};
+    var REL={'比劫':'同气——身边都是跟你像的人','食伤':'你生它——你的能量往外走','财':'你克它——主动权在你手里','官杀':'它克你——顺势别硬刚','印':'它生你——今天的日子在喂你'};
+    var rel=REL[SS2C[ss]]||'';
+    return '<div style="margin:8px 0;padding:10px 12px;background:linear-gradient(135deg,#FFF9F0,#FDF6E8);border:1px solid #F2E3C8;border-radius:12px;line-height:1.75;">'
+      +'<div style="font-size:12.5px;color:#5A4A2A;">🎴 今天对你：<b style="color:#7A5B22;">'+ss+'日</b>（'+NICK[ss]+'）—— '+TIP[ss]+'</div>'
+      +'<div style="font-size:11px;color:#9A8468;margin-top:2px;">你的'+dayG+'（'+WX[dayG]+'）× 今日'+otherG+'（'+WX[otherG]+'）· '+rel+'</div>'
+      +'</div>';
+  }catch(_e){ return ''; }
+};
 /* ---- 择日·当日吉时：五鼠遁推时辰干支,按「天干五合>时生日干>同五行」排序取Top3 ---- */
 function _dayGoodHours(dayGan){
   var wxM={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
