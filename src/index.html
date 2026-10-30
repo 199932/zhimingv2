@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.81.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.82.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.81.1-20261030';
+const ZHIMING_BUILD = 'v2.82.0-20261030';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -22068,6 +22068,78 @@ function _lenormandAIEnhance(cards, spreadType){
       ${ss?`<div style="margin-top:10px;font-weight:700;font-size:13px;">🎁 你的天赋神煞</div>${ss}`:""}`);
   }
 
+  /* ---- 人生4160格:80年x52周,大运分线,心情年轮染色(纯本地) ---- */
+  var _lifeGridBound=false;
+  function _lifeGridInfo4(i, birth, dlist, birthY){
+    try{
+      const row=Math.floor(i/52), col=i%52;
+      const yr=birthY+row;
+      const d=new Date(birth.getTime()+i*7*86400000);
+      const age=Math.floor((d-birth)/31557600000);
+      const dd=(dlist||[]).find(function(x){ return yr>=x.startYear&&yr<=x.endYear; });
+      return '第 '+(i+1)+' 周 · '+d.getFullYear()+' 年 '+(d.getMonth()+1)+' 月 · 你 '+(age<0?0:age)+' 岁'+(dd?(' · 大运「'+dd.gz+'」'+dd.startYear+'–'+dd.endYear):'');
+    }catch(_e){ return '第 '+(i+1)+' 周'; }
+  }
+  function _secLifeGrid(r, p){
+    try{
+      if(!p||!p.year||!p.month||!p.day) return '';
+      const birth=new Date(+p.year, +p.month-1, +p.day);
+      if(isNaN(birth.getTime())) return '';
+      const now=new Date();
+      const livedDays=Math.floor((now-birth)/86400000);
+      if(livedDays<0) return '';
+      const livedW=Math.min(livedDays>=0?Math.floor(livedDays/7):0, 4159);
+      const ckD=(function(){ try{ return JSON.parse(localStorage.getItem('zhiming_grow_ck_v1')||'{}'); }catch(_c){ return {}; } })();
+      const byYear={};
+      Object.keys(ckD).forEach(function(k){ const v=ckD[k]; if(v&&v.m){ const y=k.slice(0,4); (byYear[y]=byYear[y]||[]).push(v.m); } });
+      const ym={};
+      Object.keys(byYear).forEach(function(y){ if(byYear[y].length>=8){ const a=byYear[y].reduce(function(x,z){return x+z;},0)/byYear[y].length; ym[y]=(a>=3.8)?'#61AB83':((a<=2.8)?'#F58323':null); } });
+      const dlist=(r&&r.dayun&&r.dayun.list)||[];
+      const startYears={}; dlist.forEach(function(d){ startYears[d.startYear]=d.gz; });
+      const birthY=+p.year;
+      const curD=dlist.find(function(d){ return now.getFullYear()>=d.startYear&&now.getFullYear()<=d.endYear; });
+      let cells='';
+      for(let row=0;row<80;row++){
+        for(let col=0;col<52;col++){
+          const i=row*52+col;
+          const x=(56+col*10).toFixed(1), y=(30+row*7.4).toFixed(1);
+          if(i<livedW){ const c=ym[String(birthY+row)]; cells+='<rect data-i="'+i+'" x="'+x+'" y="'+y+'" width="8.4" height="5.6" rx="1.2" fill="'+(c||'#838A95')+'"/>'; }
+          else if(i===livedW){ cells+='<rect data-i="'+i+'" x="'+x+'" y="'+(30+row*7.4-0.6).toFixed(1)+'" width="9.2" height="6.8" rx="1.4" fill="#49B3FC"/>'; }
+          else { cells+='<rect data-i="'+i+'" x="'+x+'" y="'+y+'" width="8.4" height="5.6" rx="1.2" fill="#FFFFFF" stroke="#EBEDF1" stroke-width="1"/>'; }
+        }
+        if(startYears[birthY+row]!=null){
+          cells+='<line x1="54" x2="584" y1="'+(30+row*7.4-1.6).toFixed(1)+'" y2="'+(30+row*7.4-1.6).toFixed(1)+'" stroke="#C8E8FE" stroke-width="1" stroke-dasharray="3,3"/>'
+            +'<text x="546" y="'+(30+row*7.4-3).toFixed(1)+'" font-size="9" fill="#9A8468">'+(birthY+row)+' '+startYears[birthY+row]+'</text>';
+        }
+      }
+      const sub=(curD?('大运「'+curD.gz+'」'+curD.startYear+'–'+curD.endYear+' · '):'')+'已走过 '+livedW+' 格 · 当前第 '+(livedW+1)+' 格亮着 · 全图 4160 格（80 年 × 52 周）';
+      const ticks=[0,20,40,60,78].map(function(a){ return '<text x="54" y="'+(30+a*7.4-3).toFixed(1)+'" font-size="10" fill="#9A8468">'+birthY+' · '+a+'岁</text>'; }).join('');
+      return '<div class="card"><div class="card-title">▦ 人生 4160 格</div>'
+        +'<div style="font-size:11px;color:var(--text-hint);line-height:1.7;margin-bottom:4px;">每格一周 · 灰=已走过 · 蓝=正在过的这周 · 绿/橙=你打卡出的好/难年份 · 虚线=大运换挡 · 点格子看那一周</div>'
+        +'<div style="-webkit-overflow-scrolling:touch;"><svg id="lifeGridSvg" viewBox="0 0 600 636" style="width:100%;height:auto;display:block;" preserveAspectRatio="xMidYMid meet">'
+        +ticks+cells+'</svg></div>'
+        +'<div id="lifeGridInfo" style="font-size:12px;color:var(--text-sub);margin-top:8px;line-height:1.7;">'+sub+'</div>'
+        +'</div>';
+    }catch(_e){ return ''; }
+  }
+  if(!_lifeGridBound){
+    _lifeGridBound=true;
+    document.addEventListener('click', function(ev){
+      try{
+        const t=(ev.target&&ev.target.closest)?ev.target.closest('rect[data-i]'):null;
+        if(!t) return;
+        const svg=t.closest('svg#lifeGridSvg');
+        if(!svg) return;
+        const info=document.getElementById('lifeGridInfo');
+        if(!info) return;
+        const i=+t.getAttribute('data-i');
+        const bp=(typeof window.getActiveProfile==='function')?window.getActiveProfile():null;
+        const birth=bp?new Date(+bp.year, +bp.month-1, +bp.day):null;
+        const dlist=(window._growBaziCache&&window._growBaziCache.r&&window._growBaziCache.r.dayun&&window._growBaziCache.r.dayun.list)||[];
+        info.textContent=_lifeGridInfo4(i, birth, dlist, bp?+bp.year:0);
+      }catch(_e){}
+    });
+  }
   function _secDayun(r, p){
     const list = (r.dayun&&r.dayun.list)||[];
     const nowY = new Date().getFullYear();
@@ -23413,7 +23485,7 @@ function _lenormandAIEnhance(cards, spreadType){
          </div>` +
         _gBox('g-p-today') + _gBox('g-p-pan') + _gBox('g-p-tools');
       _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMonthReview()) + _tryGC(()=>_secMoonYou()) + _tryGC(()=>_secMoodCalendar()));
-      _gFill('g-p-pan', _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secAnnual(r)));
+      _gFill('g-p-pan', _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secLifeGrid(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secAnnual(r)));
       _gFill('g-p-tools', _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secPeople()) + vault);
       try{ window._growSubInit(); }catch(e){}
       return;
