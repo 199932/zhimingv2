@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.81.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.81.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.81.0-20261030';
+const ZHIMING_BUILD = 'v2.81.1-20261030';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -19726,9 +19726,12 @@ window._shishenTodayHTML=function(almDate){
     var SS2C={'比肩':'比劫','劫财':'比劫','食神':'食伤','伤官':'食伤','偏财':'财','正财':'财','七杀':'官杀','正官':'官杀','偏印':'印','正印':'印'};
     var REL={'比劫':'同气——身边都是跟你像的人','食伤':'你生它——你的能量往外走','财':'你克它——主动权在你手里','官杀':'它克你——顺势别硬刚','印':'它生你——今天的日子在喂你'};
     var rel=REL[SS2C[ss]]||'';
+    var ACT={'比肩':{yi:'约人协作、定共同计划',ji:'固执己见、一个人硬扛'},'劫财':{yi:'记账查漏、出力帮人',ji:'大额支出、借钱垫钱'},'食神':{yi:'好好吃饭、做点喜欢的事、输出创意',ji:'加班硬熬'},'伤官':{yi:'写东西、提创意、复盘挑刺',ji:'跟人抬杠、口舌之争'},'偏财':{yi:'小成本试机会、谈灵活合作',ji:'押上全部、贪多求快'},'正财':{yi:'处理账务、谈钱谈薪、踏实积累',ji:'投机跟风'},'七杀':{yi:'挑最硬的事打完、出出汗',ji:'硬扛硬刚、熬夜'},'正官':{yi:'走流程、见领导长辈、立规矩做承诺',ji:'走捷径、打擦边球'},'偏印':{yi:'独处学习、啃难懂的东西',ji:'想太多内耗、轻信小道消息'},'正印':{yi:'学习求教、签长期的事、休息调养',ji:'逞强单干'}};
+    var act=ACT[ss]||{yi:'',ji:''};
     return '<div style="margin:8px 0;padding:10px 12px;background:linear-gradient(135deg,#FFF9F0,#FDF6E8);border:1px solid #F2E3C8;border-radius:12px;line-height:1.75;">'
       +'<div style="font-size:12.5px;color:#5A4A2A;">🎴 今天对你：<b style="color:#7A5B22;">'+ss+'日</b>（'+NICK[ss]+'）—— '+TIP[ss]+'</div>'
-      +'<div style="font-size:11px;color:#9A8468;margin-top:2px;">你的'+dayG+'（'+WX[dayG]+'）× 今日'+otherG+'（'+WX[otherG]+'）· '+rel+'</div>'
+      +'<div style="font-size:12px;margin-top:4px;"><span style="color:#3E9B6B;font-weight:700;">✅ 今天宜</span> <span style="color:#5A4A2A;">'+act.yi+'</span>　<span style="color:#C0392B;font-weight:700;">⚠️ 少碰</span> <span style="color:#5A4A2A;">'+act.ji+'</span></div>'
+      +'<div style="font-size:11px;color:#9A8468;margin-top:4px;">你的'+dayG+'（'+WX[dayG]+'）× 今日'+otherG+'（'+WX[otherG]+'）· '+rel+'</div>'
       +'</div>';
   }catch(_e){ return ''; }
 };
