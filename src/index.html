@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.83.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.84.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.83.0-20261030';
+const ZHIMING_BUILD = 'v2.84.0-20261030';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -22202,6 +22202,82 @@ function _lenormandAIEnhance(cards, spreadType){
       }catch(_e){}
     });
   }
+  /* ---- 拖动你的一生:scrubbing时间轴,大运换挡+流年干支随手指流动(纯本地) ---- */
+  const _TS_GAN=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+  const _TS_ZHI=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+  const _TS_SX=["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+  function _tsYearGZ(y){
+    const g=_TS_GAN[((y-4)%10+10)%10], z=_TS_ZHI[((y-4)%12+12)%12];
+    return g+z+"年 · 属"+_TS_SX[((y-4)%12+12)%12];
+  }
+  function _secTimeSweep(r, p){
+    try{
+      if(!p||!p.year) return '';
+      const birthY=+p.year;
+      const endY=birthY+79;
+      const nowY=new Date().getFullYear();
+      const list=(r.dayun&&r.dayun.list)||[];
+      const total=endY-birthY+1;
+      let band='';
+      list.forEach(function(d){
+        const a=Math.max(d.startYear,birthY), b=Math.min(d.endYear,endY);
+        if(b<a) return;
+        const w=((b-a+1)/total*100).toFixed(2);
+        band+='<div style="flex:'+w+';min-width:0;background:var(--line,#E5E7EB);border-right:1px solid var(--bg,#FFFFFF);position:relative;" title="'+_esc(d.gz)+'"></div>';
+      });
+      const flagPos=(((nowY-birthY)/(total-1))*100).toFixed(2);
+      return '<div class="card"><div class="card-title">⏳ 拖动你的一生</div>'
+        +'<div style="font-size:11px;color:var(--text-hint);line-height:1.7;margin-bottom:6px;">按住下面的轴左右拖——年份、大运、流年跟着手指流动。换运那道杠出现时，就是十年的气候变了。</div>'
+        +'<div id="tsInfo"></div>'
+        +'<div style="position:relative;margin-top:10px;">'
+        +'<div id="tsFlag" style="position:absolute;top:-14px;left:'+flagPos+'%;transform:translateX(-50%);font-size:11px;color:#1A2029;white-space:nowrap;">📍今年</div>'
+        +'<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;margin-bottom:2px;">'+band+'</div>'
+        +'<input id="tsRange" type="range" min="'+birthY+'" max="'+endY+'" step="1" value="'+nowY+'" style="width:100%;margin:0;accent-color:#1A2029;">'
+        +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-hint);"><span>'+birthY+' 出生</span><span>'+endY+' · 80 岁</span></div>'
+        +'</div></div>';
+    }catch(_e){ return ''; }
+  }
+  function _tsRender(y, r, p){
+    try{
+      const info=document.getElementById('tsInfo');
+      if(!info) return;
+      const birthY=+p.year;
+      const sui=y-birthY+1;
+      const list=(r.dayun&&r.dayun.list)||[];
+      let dy=null, prev=null;
+      for(let i=0;i<list.length;i++){ if(y>=list[i].startYear&&y<=list[i].endYear){ dy=list[i]; prev=list[i-1]||null; break; } }
+      let rows='';
+      if(y===birthY){ rows+='<div style="font-size:12px;color:#838A95;">你来到这个世界的那一年。</div>'; }
+      else if(y>new Date().getFullYear()){ rows+='<div style="font-size:12px;color:#838A95;">还没发生的一年——推演只是想象，别当预告。</div>'; }
+      if(dy){
+        const enter=(prev&&y===dy.startYear);
+        rows+='<div style="font-size:20px;font-weight:600;color:#1A2029;line-height:1.3;">'+y+' <span style="font-size:13px;font-weight:400;color:#838A95;">· '+sui+' 岁</span></div>'
+          +'<div style="font-size:14px;color:#1A2029;margin-top:2px;">'+(enter?'⬇ 换运 · 进入 ':'当前大运 ')+_esc(dy.gz)+'运</div>'
+          +'<div style="font-size:12px;color:var(--text-sub);margin-top:1px;">'+dy.startYear+'–'+dy.endYear+'（'+dy.startSui+'~'+dy.endSui+' 岁）</div>';
+      } else {
+        rows+='<div style="font-size:20px;font-weight:600;color:#1A2029;">'+y+' <span style="font-size:13px;font-weight:400;color:#838A95;">· '+sui+' 岁</span></div>';
+      }
+      rows+='<div style="font-size:12px;color:var(--text-sub);margin-top:4px;">流年：'+_tsYearGZ(y)+'</div>';
+      info.innerHTML=rows;
+      const flag=document.getElementById('tsFlag');
+      if(flag){
+        const total=+p.year+79-birthY+1;
+        flag.style.left=(((y-birthY)/(total-1))*100).toFixed(2)+'%';
+        flag.textContent=(y===new Date().getFullYear())?'📍今年':(y<new Date().getFullYear()?'⏪ 过往':'还没来 ⏩');
+      }
+    }catch(_e){}
+  }
+  if(!window._tsBound){
+    window._tsBound=true;
+    let _tsCtx=null;
+    window._tsArm=function(r,p){ _tsCtx={r:r,p:p}; const rg=document.getElementById('tsRange'); if(rg&&_tsCtx) _tsRender(+rg.value,r,p); };
+    document.addEventListener('input', function(ev){
+      try{
+        if(!ev.target||ev.target.id!=='tsRange'||!_tsCtx) return;
+        _tsRender(+ev.target.value, _tsCtx.r, _tsCtx.p);
+      }catch(_e){}
+    });
+  }
   if(!_lifeGridBound){
     _lifeGridBound=true;
     document.addEventListener('click', function(ev){
@@ -23565,7 +23641,8 @@ function _lenormandAIEnhance(cards, spreadType){
          </div>` +
         _gBox('g-p-today') + _gBox('g-p-pan') + _gBox('g-p-tools');
       _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMonthReview()) + _tryGC(()=>_secMoonYou()) + _tryGC(()=>_secMoodCalendar()));
-      _gFill('g-p-pan', _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secLifeGrid(r, p)) + _tryGC(()=>_secYearShape(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secAnnual(r)));
+      _gFill('g-p-pan', _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secLifeGrid(r, p)) + _tryGC(()=>_secYearShape(r, p)) + _tryGC(()=>_secTimeSweep(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secAnnual(r)));
+      window._tsArm&&window._tsArm(r, p);
       _gFill('g-p-tools', _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secPeople()) + vault);
       try{ window._growSubInit(); }catch(e){}
       return;
