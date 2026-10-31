@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.89.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.89.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2579,7 +2579,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.89.0-20261031';
+const ZHIMING_BUILD = 'v2.89.1-20261031';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24422,6 +24422,7 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
       o.start(t0); o.stop(t0+d+0.05);
     });
   }
+  window._wuTone = _wuTone;
   var _wuSeqOn=false, _wuSeqTimer=null;
   window._wuStop=function(){
     _wuSeqOn=false;
