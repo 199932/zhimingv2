@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.88.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.89.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1708,6 +1708,117 @@
     }
     window._healthSub = _healthSub;
 
+  /* ---- 五音疗愈:WebAudio纯合成,宫商角徵羽×五脏×体质/时辰推荐(纯本地零加载) ---- */
+  var WUYIN={
+    gong:{n:'宫',  wx:'土', fq:261.63, organ:'脾', c:'#C9A24B', desc:'沉稳如大地，安中气'},
+    shang:{n:'商', wx:'金', fq:293.66, organ:'肺', c:'#A8B0BA', desc:'清肃如金石，降浮火'},
+    jue:{n:'角',  wx:'木', fq:329.63, organ:'肝', c:'#7CA86B', desc:'舒展如春枝，解郁结'},
+    zhi:{n:'徵',  wx:'火', fq:392.00, organ:'心', c:'#C86B52', desc:'温动如夏火，补元气'},
+    yu:{n:'羽',  wx:'水', fq:440.00, organ:'肾', c:'#5B7FA6', desc:'收藏如冬水，滋阴神'}
+  };
+  var WUYIN_ORDER=['gong','shang','jue','zhi','yu'];
+  var TZ2YIN={
+    '阳虚':{k:'zhi', why:'阳虚怕冷——徵音属火，温补阳气'},
+    '气虚':{k:'gong', why:'气虚乏力——宫音属土，补中益气'},
+    '阴虚':{k:'yu', why:'阴虚燥热——羽音属水，滋阴降火'},
+    '痰湿':{k:'gong', why:'痰湿身重——宫音属土，健脾化痰'},
+    '湿热':{k:'shang', why:'湿热黏腻——商音属金，清肃降浊'},
+    '血瘀':{k:'jue', why:'血瘀滞涩——角音属木，行气活血'},
+    '气郁':{k:'jue', why:'气郁胸闷——角音属木，疏肝解郁'},
+    '特禀':{k:'shang', why:'特禀敏感——商音属金，固表养肺'}
+  };
+  function _wuShichen(){
+    var h=new Date().getHours();
+    var zhi=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'][Math.floor(((h+1)%24)/2)];
+    var wx=(zhi==='子'||zhi==='亥')?'水':(zhi==='寅'||zhi==='卯')?'木':(zhi==='巳'||zhi==='午')?'火':(zhi==='申'||zhi==='酉')?'金':'土';
+    return {zhi:zhi, wx:wx};
+  }
+  function _wuRecommend(){
+    try{
+      var t=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null');
+      if(t&&t.t&&TZ2YIN[t.t]){ return {k:TZ2YIN[t.t].k, why:TZ2YIN[t.t].why+'（体质：'+t.t+'）'}; }
+    }catch(_e){}
+    var sc=_wuShichen();
+    for(var i=0;i<WUYIN_ORDER.length;i++){
+      var k=WUYIN_ORDER[i];
+      if(WUYIN[k].wx===sc.wx){ return {k:k, why:'现在'+sc.zhi+'时（'+sc.wx+'气当令）——顺势听'+WUYIN[k].n+'音，同气相求'}; }
+    }
+    return {k:'gong', why:'听宫音安神'};
+  }
+  function _wuCtx(){
+    try{
+      if(!window._wuAC) window._wuAC=new (window.AudioContext||window.webkitAudioContext)();
+      if(window._wuAC.state==='suspended') window._wuAC.resume();
+      return window._wuAC;
+    }catch(_e){ return null; }
+  }
+  function _wuTone(k, dur, when){
+    var ac=_wuCtx(); if(!ac) return;
+    var w=WUYIN[k]; var t0=(when||ac.currentTime)+0.02;
+    try{ var hb=document.getElementById('wuHi'); if(hb&&dur!==0.01) hb.textContent='刚敲了：'+w.n+'音 · '+w.wx+' · 入'+w.organ+'——'+w.desc; }catch(_e){}
+    var d=dur||2.2;
+    [[1,0.22],[2,0.06],[3,0.025]].forEach(function(h,hi){
+      var o=ac.createOscillator(), g=ac.createGain();
+      o.type='sine'; o.frequency.value=w.fq*h[0];
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(h[1], t0+0.06);
+      g.gain.setValueAtTime(h[1]*0.85, t0+d*0.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+d);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t0); o.stop(t0+d+0.05);
+    });
+  }
+  var _wuSeqOn=false, _wuSeqTimer=null;
+  window._wuStop=function(){
+    _wuSeqOn=false;
+    if(_wuSeqTimer){ clearTimeout(_wuSeqTimer); _wuSeqTimer=null; }
+    var b=document.getElementById('wuSeqBtn');
+    if(b){ b.textContent='🈴 五音连播 · 顺序滋养五脏'; b.classList.remove('active'); }
+  };
+  window._wuSeq=function(){
+    if(_wuSeqOn){ window._wuStop(); return; }
+    _wuSeqOn=true;
+    var b=document.getElementById('wuSeqBtn');
+    if(b){ b.textContent='⏸ 连播中 · 点停'; b.classList.add('active'); }
+    var i=0;
+    var step=function(){
+      if(!_wuSeqOn) return;
+      var k=WUYIN_ORDER[i%5];
+      _wuTone(k, 2.0);
+      var hb=document.getElementById('wuHi');
+      if(hb) hb.textContent='正在播：'+WUYIN[k].n+'音 · '+WUYIN[k].organ+' · '+WUYIN[k].desc;
+      i++;
+      _wuSeqTimer=setTimeout(step, 2100);
+    };
+    step();
+  };
+  window._musicRender=function(){
+    var area=document.getElementById('health-music');
+    if(!area) return;
+    var rec=_wuRecommend();
+    var recW=WUYIN[rec.k];
+    var btns=WUYIN_ORDER.map(function(k){
+      var w=WUYIN[k];
+      return '<div onclick="window._wuTone(\''+k+'\',2.2)" style="flex:1;text-align:center;padding:10px 0;border-radius:12px;background:'+w.c+'22;border:1.5px solid '+w.c+';cursor:pointer;" title="'+w.desc+'">'
+        +'<div style="font-size:19px;font-weight:700;color:'+w.c+';">'+w.n+'</div>'
+        +'<div style="font-size:10px;color:var(--text-hint);">'+w.wx+' · '+w.organ+'</div>'
+        +'</div>';
+    }).join('');
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🎵 五音 · 宫商角徵羽</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div style="background:var(--pri-light, #f2f5ee);border-radius:10px;padding:10px 12px;">'
+      +'<div style="font-size:13.5px;font-weight:700;color:var(--text);">此刻最该听：'+recW.n+'音 <span style="font-size:11px;color:var(--text-hint);font-weight:400;">('+recW.wx+' · 入'+recW.organ+')</span></div>'
+      +'<div style="font-size:12px;color:var(--text-sub);margin-top:2px;">'+rec.why+'</div>'
+      +'<button id="wuRecBtn" class="switch-btn active" onclick="window._wuTone(\''+rec.k+'\',4)" style="margin-top:8px;width:100%;">▶ 听 '+recW.n+'音 · 4 秒长鸣</button>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:10px;">'+btns+'</div>'
+      +'<div id="wuHi" style="font-size:11px;color:var(--text-hint);margin-top:6px;text-align:center;min-height:14px;">点一个音试试——手指敲磬的感觉</div>'
+      +'<button id="wuSeqBtn" class="switch-btn" onclick="window._wuSeq()" style="margin-top:6px;width:100%;">🈴 五音连播 · 顺序滋养五脏</button>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:6px;text-align:center;">※ 声音是本机实时合成的（WebAudio），不联网、不加载任何音频文件；音量随手机媒体音量</div>'
+      +'</div></div>';
+    /* 点钮时更新提示行 */
+  };
 function renderBody(){
       var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
       var h='';
@@ -1764,8 +1875,9 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-detail"></div>';
+      h+='<div id="health-music"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
+      try{ window._musicRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
