@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.85.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.86.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.85.0-20261031';
+const ZHIMING_BUILD = 'v2.86.0-20261031';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24594,6 +24594,13 @@ function renderBody(){
     '金克木':'床头或桌旁加一盆水养植物或深蓝物件——金生水、水生木，顺过来。',
     '木克土':'这宫多铺暖色织物或一盏暖灯——木生火、火生土，借火通关。'
   };
+  var FS_ADJ={
+    'nw':['n','w','c'], 'n':['nw','ne','c'], 'ne':['n','e','c'],
+    'w':['nw','sw','c'], 'c':['nw','n','ne','w','e','sw','s','se'],
+    'e':['ne','se','c'], 'sw':['w','s','c'], 's':['sw','se','c'], 'se':['s','e','c']
+  };
+  function _fsRoomOf(k){ for(var i=0;i<FS_ROOMS.length;i++){ if(FS_ROOMS[i].k===k) return FS_ROOMS[i]; } return null; }
+  function _fsCellOf(k){ for(var i=0;i<FS_CELLS.length;i++){ if(FS_CELLS[i].k===k) return FS_CELLS[i]; } return null; }
   function _fsMapData(){ try{ return JSON.parse(localStorage.getItem('zhiming_fengshui_map_v1')||'{}'); }catch(_e){ return {}; } }
   window._fsMapRender=function(){
     var area=document.getElementById('fs-map-area');
@@ -24628,22 +24635,59 @@ function renderBody(){
       }
       var label=room?(room.ic+' '+room.n):'点击设置';
       var sub=room?(room.e?(room.e+' / '+cell.el):' '):cell.el;
+      var hasDoor=!!data[cell.k+':door'];
+      var doorFill=hasDoor?'#D4754E':'#FFFFFF', doorStroke=hasDoor?'#D4754E':'#C3C8CF';
       svg+='<g class="fs-cell" data-ck="'+cell.k+'" style="cursor:pointer;">'
         +'<rect x="'+x+'" y="'+y+'" width="'+W+'" height="'+H+'" rx="10" fill="'+fill+'" '+(tag==='⚠'?'stroke="#C25E3A" stroke-width="2"':'')+'/>'
         +'<text x="'+(x+8)+'" y="'+(y+16)+'" font-size="10" fill="#6B7280">'+cell.n+'</text>'
         +'<text x="'+(x+W/2)+'" y="'+(y+46)+'" font-size="15" font-weight="600" fill="#1A2029" text-anchor="middle">'+label+'</text>'
         +'<text x="'+(x+W/2)+'" y="'+(y+66)+'" font-size="10" fill="'+tcol+'" text-anchor="middle">'+(tag?tag+' ':'')+sub+'</text>'
+        +'<circle class="fs-door" data-ck="'+cell.k+'" cx="'+(x+W-16)+'" cy="'+(y+12)+'" r="14" fill="transparent" style="cursor:pointer;"/>'
+        +'<circle cx="'+(x+W-16)+'" cy="'+(y+12)+'" r="9" fill="'+doorFill+'" stroke="'+doorStroke+'" stroke-width="1.5" pointer-events="none"/>'
+        +'<text x="'+(x+W-16)+'" y="'+(y+15.5)+'" font-size="8" fill="'+(hasDoor?'#FFFFFF':'#9CA3AF')+'" text-anchor="middle" pointer-events="none">门</text>'
         +'</g>';
     });
     svg+='</svg>';
-    var verdict = usedN===0 ? '先把家里的房间摆进去——点格子切换类型'
-      : (warnN===0 ? '九宫没有相冲——这图先存着，换季回来看一眼' : '有 '+warnN+' 处可以调，动手清单在下面');
+    /* ---- 气口诊断:门(木)vs宫五行,门冲厕/门冲灶特殊覆盖 ---- */
+    var gates=[], dual=[];
+    FS_CELLS.forEach(function(cell){
+      if(!data[cell.k+':door']) return;
+      var rk=data[cell.k]||''; var room=_fsRoomOf(rk);
+      var line='🚪 大门在'+cell.n+'：';
+      if(room&&room.k==='toilet'){ gates.push(line+'门开在卫生间——气口对污秽，进门设个鞋柜或玄关帘挡一下，厕门随手常闭'); return; }
+      if(room&&room.k==='kitch'){ gates.push(line+'门开在厨房——气口对灶火，灶台挂半幅帘子，别让门风直吹灶'); return; }
+      if(!cell.el){ gates.push(line+'保持门口亮和净就行'); return; }
+      if(cell.el==='木'){ gates.push(line+'门为木、位也木——气口同气，顺'); return; }
+      var gA=cell.el+'克木', gB='木克'+cell.el;
+      if(FS_KE[gA]){ gates.push(line+cell.el+'位克门木——门口放一盆水养植物或深蓝脚垫，金生水、水生木，顺过来'); return; }
+      if(FS_KE[gB]){ gates.push(line+'门木克'+cell.el+'位——门口放一盆水养植物缓冲'); return; }
+      var sA=cell.el+'生木', sB='木生'+cell.el;
+      gates.push(line+(FS_SHENG[sA]?sA:sB)+'——气口顺，保持明亮整洁');
+    });
+    /* ---- 厨卫相邻:水火相冲(4/8邻) ---- */
+    FS_CELLS.forEach(function(cell){
+      if(!data[cell.k]||data[cell.k]!=='kitch') return;
+      (FS_ADJ[cell.k]||[]).forEach(function(nk){
+        if(data[nk]==='toilet'){
+          var nc=_fsCellOf(nk);
+          var dup=dual.some(function(d){ return d.key===nk+'|'+cell.k; });
+          if(!dup) dual.push({key:cell.k+'|'+nk, txt:'⚠ 水火贴身：'+room_name(cell.k)+'（'+cell.n+'）挨着'+room_name(nk)+'（'+nc.n+'）——两门之间放一盆绿植或做个门槛隔断，水生木、木生火，借木通关'});
+        }
+      });
+    });
+    function room_name(ck){ var r=_fsRoomOf(data[ck]); return r?r.n:'房间'; }
+    var verdict = usedN===0 ? '先把家里的房间摆进去——点格子切换类型，右上角小圆点标记大门'
+      : ((gates.length?('气口 '+gates.length+' 处 · '):'')+(dual.length?('水火冲 '+dual.length+' 处 · '):'')+(warnN===0&&dual.length===0 ? '格局顺，换季回来看一眼' : '可以调的都在下面'));
+    var extra='';
+    if(gates.length){ extra+='<div style="margin-top:10px;font-size:12px;font-weight:700;color:var(--text);">🚪 气口（门为纳气第一要）</div>'+gates.map(function(t){ return '<div style="font-size:12px;color:var(--text-sub);line-height:1.7;padding:6px 0;border-top:1px dashed var(--card-border);">'+t+'</div>'; }).join(''); }
+    if(dual.length){ extra+='<div style="margin-top:10px;font-size:12px;font-weight:700;color:var(--text);">💧🔥 水火相冲（厨卫贴着）</div>'+dual.map(function(d){ return '<div style="font-size:12px;color:var(--text-sub);line-height:1.7;padding:6px 0;border-top:1px dashed var(--card-border);">'+d.txt+'</div>'; }).join(''); }
     var h='<div class="widget" style="grid-column:1/-1;">'
       +'<div class="widget-title">🧭 我家的风水图</div>'
       +'<div class="widget-body" style="padding:12px;">'
-      +'<div style="font-size:11px;color:var(--text-hint);line-height:1.6;margin-bottom:2px;">按上北下南摆正手机，点格子切换：卧室→厨房→卫生间→客厅→书房→空。绿色顺、描边的要注意——每条都配了五分钟能动手的改法。</div>'
+      +'<div style="font-size:11px;color:var(--text-hint);line-height:1.6;margin-bottom:2px;">按上北下南摆正手机，点格子切换：卧室→厨房→卫生间→客厅→书房→空；<b>右上角小圆点「门」标记你家大门位置</b>。绿色顺、描边的要注意——每条都配了五分钟能动手的改法。</div>'
       +svg
       +'<div style="font-size:12px;color:var(--text-sub);margin-top:4px;text-align:center;">'+verdict+(usedN?(' · ✓'+goodN+' 顺 / ⚠'+warnN+' 调'):'')+'</div>'
+      +extra
       +(notes.length?('<div style="margin-top:8px;">'+notes.map(function(n){ return '<div style="font-size:12px;color:var(--text-sub);line-height:1.7;padding:6px 0;border-top:1px dashed var(--card-border);">'+n+'</div>'; }).join('')+'</div>'):'')
       +'<div style="text-align:center;margin-top:6px;"><span id="fsMapReset" style="font-size:11px;color:var(--text-hint);text-decoration:underline;cursor:pointer;">重置这张图</span></div>'
       +'</div></div>';
@@ -24654,6 +24698,16 @@ function renderBody(){
     var FS_ORDER=['bed','kitch','toilet','living','study','empty'];
     document.addEventListener('click', function(ev){
       try{
+        /* 大门徽章优先:circle.fs-door 在 g.fs-cell 内,先判门再判房间 */
+        var dc=(ev.target&&ev.target.closest)?ev.target.closest('circle.fs-door'):null;
+        if(dc&&dc.closest('svg#fsMapSvg')){
+          var dk=dc.getAttribute('data-ck');
+          var dd=_fsMapData();
+          if(dd[dk+':door']) delete dd[dk+':door']; else dd[dk+':door']=1;
+          localStorage.setItem('zhiming_fengshui_map_v1', JSON.stringify(dd));
+          window._fsMapRender();
+          return;
+        }
         var g=(ev.target&&ev.target.closest)?ev.target.closest('g.fs-cell'):null;
         if(g&&g.closest('svg#fsMapSvg')){
           var ck=g.getAttribute('data-ck');
