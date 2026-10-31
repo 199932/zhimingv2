@@ -34,6 +34,7 @@
 <link rel="apple-touch-icon" id="pwaAppleIcon">
 <link rel="preload" href="assets/app.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
   @keyframes maiRing{ 0%{opacity:.75;transform:translate(-50%,-50%) scale(.9);} 100%{opacity:0;transform:translate(-50%,-50%) scale(2.6);} }
+  .pd-face{position:absolute;left:0;top:0;width:150px;height:200px;background:linear-gradient(165deg,#262A33,#1B1E26);border:1px solid #3A3F4A;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:inset 0 0 30px rgba(0,0,0,.35);}
 </style>
 <style>
 /* ============================================================ */
@@ -1589,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.94.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.95.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2581,7 +2582,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.94.0-20261101';
+const ZHIMING_BUILD = 'v2.95.0-20261101';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -23894,6 +23895,107 @@ function _lenormandAIEnhance(cards, spreadType){
   };
 
   /* ---- 交互 ---- */
+  /* ---- 命盘塔:四柱立成CSS 3D塔,拖动/陀螺仪绕着看(纯视觉装置,零依赖) ---- */
+  var PD_GAN={甲:['木','#5E8B4F'],乙:['木','#5E8B4F'],丙:['火','#B4553C'],丁:['火','#B4553C'],戊:['土','#A5813C'],己:['土','#A5813C'],庚:['金','#8C9099'],辛:['金','#8C9099'],壬:['水','#4E6E8E'],癸:['水','#4E6E8E']};
+  var PD_ZHI={子:['水','#4E6E8E'],丑:['土','#A5813C'],寅:['木','#5E8B4F'],卯:['木','#5E8B4F'],辰:['土','#A5813C'],巳:['火','#B4553C'],午:['火','#B4553C'],未:['土','#A5813C'],申:['金','#8C9099'],酉:['金','#8C9099'],戌:['土','#A5813C'],亥:['水','#4E6E8E']};
+  window._pagodaRender=function(){
+    var pan=document.getElementById('g-p-pan')||document.getElementById('grow-body');
+    if(!pan||document.getElementById('pagodaBox')) return;
+    var pillars=null, fromArc='';
+    try{
+      var _bz=null; _bz=JSON.parse(localStorage.getItem('zhiming_bazi_v1')||'null');
+      if(_bz&&_bz.y&&_bz.m&&_bz.d){
+        var _r=null;
+        try{
+          if(typeof baziCalc==='function') _r=baziCalc({year:_bz.y,month:_bz.m,day:_bz.d,hour:_bz.h||12,minute:_bz.mi||0,gender:_bz.gender||'male',cityLng:_bz.lng||116.4,dontSave:true});
+        }catch(_e){}
+        if(_r&&_r.pillars&&_r.pillars.length===4){
+          pillars=_r.pillars.map(function(p){ return p.gz; });
+          fromArc='（你的档案 · '+_bz.y+'）';
+        }
+      }
+    }catch(_e){}
+    if(!pillars){
+      var d=new Date(); var idx=0;
+      try{ idx=dayGanZhiIdxFromDate(d.getFullYear(),d.getMonth()+1,d.getDate(),12); }catch(_e){}
+      var GAN='甲乙丙丁戊己庚辛壬癸', ZHI='子丑寅卯辰巳午未申酉戌亥';
+      var dg=GAN[idx%10]+ZHI[idx%12];
+      pillars=[null,null,dg,null];
+      fromArc='';
+    }
+    var names=['年柱','月柱','日柱','时柱'];
+    var faces=pillars.map(function(gz,i){
+      if(!gz) gz='甲子';
+      var g=gz[0], z=gz[1];
+      var gc=PD_GAN[g]||['','#7A7468'], zc=PD_ZHI[z]||['','#7A7468'];
+      return '<div class="pd-face" style="transform:rotateY('+(i*90)+'deg) translateZ(112px);">'
+        +'<div style="font-size:10.5px;color:rgba(255,255,255,.55);letter-spacing:3px;">'+names[i]+'</div>'
+        +'<div style="display:flex;align-items:baseline;justify-content:center;gap:2px;margin-top:4px;">'
+        +'<span style="font-size:40px;font-weight:700;color:'+gc[1]+';text-shadow:0 2px 10px '+gc[1]+'55;">'+g+'</span>'
+        +'<span style="font-size:40px;font-weight:700;color:'+zc[1]+';text-shadow:0 2px 10px '+zc[1]+'55;">'+z+'</span>'
+        +'</div>'
+        +'<div style="font-size:9.5px;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:2px;">'+gc[0]+' · '+zc[0]+'</div>'
+        +'</div>';
+    }).join('');
+    var box=document.createElement('div');
+    box.id='pagodaBox';
+    box.style.cssText='margin-top:14px;';
+    box.innerHTML='<div class="widget"><div class="widget-title">🗼 命盘塔 · 四柱立起来</div>'
+      +'<div class="widget-body" style="padding:14px 10px 10px;">'
+      +'<div style="font-size:11.5px;color:var(--text-hint);margin-bottom:10px;">'+(fromArc?'你的八字立成了一座塔——四面各一柱，拖着转一圈，日柱正对你'+fromArc:'这里是演示塔（今天的干支）——<a href="javascript:void(0)" onclick="try{switchTab(&#39;ba&#39;)}catch(_e){}" style="color:var(--pri);">先去八字排盘建档</a>，塔上才会立起你的柱子')+'</div>'
+      +'<div id="pdStage" style="height:300px;display:flex;align-items:center;justify-content:center;perspective:950px;touch-action:none;cursor:grab;overflow:hidden;border-radius:12px;background:radial-gradient(ellipse at 50% 62%, #23262E 0%, #16181F 70%);">'
+      +'<div id="pdTower" style="position:relative;width:150px;height:200px;transform-style:preserve-3d;transform:rotateX(-8deg) rotateY(-24deg);">'
+      +faces
+      +'<div class="pd-face" style="transform:rotateX(90deg) translateZ(100px);background:linear-gradient(160deg,#2E323C,#20242C);border:1px solid #3A3F4A;"></div>'
+      +'<div class="pd-face" style="transform:rotateX(-90deg) translateZ(100px);background:linear-gradient(160deg,#20242C,#181B22);border:1px solid #3A3F4A;"></div>'
+      +'</div></div>'
+      +'<div style="display:flex;gap:8px;margin-top:10px;">'
+      +'<button id="pdGyro" class="switch-btn" onclick="window._pdGyro()" style="flex:1;">📱 倾着手机看（陀螺仪）</button>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:6px;text-align:center;">※ 塔是四柱的视觉装置——五行颜色按天干地支本气</div>'
+      +'</div></div>';
+    pan.appendChild(box);
+    var tower=document.getElementById('pdTower'), stage=document.getElementById('pdStage');
+    var rotY=-24, rotX=-8, dragging=false, lx=0, ly=0;
+    stage.addEventListener('pointerdown', function(e){ dragging=true; lx=e.clientX; ly=e.clientY; stage.style.cursor='grabbing'; }, {passive:false});
+    window.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      rotY+=(e.clientX-lx)*0.45; rotX-=(e.clientY-ly)*0.3;
+      rotX=Math.max(-46, Math.min(30, rotX));
+      lx=e.clientX; ly=e.clientY;
+      if(!_pdGyroOn) tower.style.transform='rotateX('+rotX+'deg) rotateY('+rotY+'deg)';
+    }, {passive:false});
+    window.addEventListener('pointerup', function(){ dragging=false; stage.style.cursor='grab'; });
+  };
+  var _pdGyroOn=false, _pdOriH=null;
+  window._pdGyro=function(){
+    var btn=document.getElementById('pdGyro');
+    if(_pdGyroOn){
+      _pdGyroOn=false;
+      if(_pdOriH){ window.removeEventListener('deviceorientation', _pdOriH); _pdOriH=null; }
+      if(btn){ btn.textContent='📱 倾着手机看（陀螺仪）'; btn.classList.remove('active'); }
+      return;
+    }
+    var arm=function(){
+      _pdGyroOn=true;
+      _pdOriH=function(e){
+        try{
+          var bx=Math.max(-40,Math.min(40,(e.beta||0)-35))*0.9;
+          var gy=Math.max(-60,Math.min(60,(e.gamma||0)))*0.9;
+          var t=document.getElementById('pdTower');
+          if(t&&_pdGyroOn) t.style.transform='rotateX('+(-8+bx)+'deg) rotateY('+(-24+gy)+'deg)';
+        }catch(_e){}
+      };
+      window.addEventListener('deviceorientation', _pdOriH);
+      if(btn){ btn.textContent='📱 陀螺仪中 · 手机轻轻倾'; btn.classList.add('active'); }
+    };
+    try{
+      if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+        DeviceOrientationEvent.requestPermission().then(function(st){ if(st==='granted') arm(); else if(btn) btn.textContent='📱 权限没给 · 拖着塔转也一样'; }).catch(function(){ if(btn) btn.textContent='📱 权限没给 · 拖着塔转也一样'; });
+      } else { arm(); }
+    }catch(_e){ arm(); }
+    setTimeout(function(){ if(!_pdOriH||!_pdGyroOn){} else {} },100);
+  };
   window._growSub = function(which){
     try{ sessionStorage.setItem('zhiming_grow_sub', which); }catch(e){}
     ['today','pan','tools'].forEach(function(k){
@@ -23911,6 +24013,7 @@ function _lenormandAIEnhance(cards, spreadType){
     var saved='today'; try{ saved=sessionStorage.getItem('zhiming_grow_sub')||'today'; }catch(e){}
     if(!document.getElementById('g-p-pan')&&!document.getElementById('g-n-today')) return;
     if(saved==='pan'&&!document.getElementById('g-p-pan')) saved='today';
+    try{ window._pagodaRender(); }catch(_e){}
     window._growSub(saved);
   };
   window._growSetMood = function(m){
