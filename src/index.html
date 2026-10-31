@@ -1589,7 +1589,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.92.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.93.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2581,7 +2581,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.92.0-20261101';
+const ZHIMING_BUILD = 'v2.93.0-20261101';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4758,6 +4758,98 @@ function _shiChart(dayZhi){
     <div class="hint" style="margin-top:8px;">※ 按日支起青龙、顺轮十二神分黄黑道（传统通书规则）。吉时：青龙/明堂/金匮/宝光/玉堂/司命。</div>
   </div>`;
 }
+  /* ---- 今日喜神指路:buildAlmanac喜神方位×手机罗盘朝向→箭头指路(逻辑函数化,降级滑块) ---- */
+  var XI_DEG={'正北':0,'东北':45,'正东':90,'东南':135,'正南':180,'西南':225,'正西':270,'西北':315};
+  function _xiDegOf(name){
+    if(XI_DEG[name]!=null) return XI_DEG[name];
+    var m=String(name).match(/[东南西北]{1,2}/);
+    return m?(XI_DEG[m[0]]!=null?XI_DEG[m[0]]:0):0;
+  }
+  window._xiRelDeg=function(alpha, xiDeg){
+    var a=((alpha%360)+360)%360;
+    var rel=((xiDeg-a)%360+360)%360;
+    return Math.round(rel);
+  };
+  window._xiRender=function(){
+    var body=document.getElementById('almanac-body');
+    if(!body||document.getElementById('xiBox')) return;
+    var d=new Date();
+    var a=null; try{ a=buildAlmanac(d); }catch(_e){ return; }
+    var xi=(a&&a.xiShen)||'正南';
+    var xiDeg=_xiDegOf(xi);
+    var box=document.createElement('div');
+    box.id='xiBox';
+    box.style.cssText='margin-top:12px;';
+    box.innerHTML='<div class="card"><div class="card-title">🧭 今日喜神指路 · '+xi+'</div>'
+      +'<div style="font-size:11.5px;color:#A8A29A;margin-bottom:8px;">喜神在<b style="color:#5A5245;">'+xi+'</b>——出门办事、见人谈事，先朝这个方向走一段，顺一顺。箭头永远指着喜神：转动身体，让箭头冲上，你就面朝喜神了。</div>'
+      +'<div style="display:flex;align-items:center;gap:14px;">'
+      +'<div style="position:relative;width:110px;height:110px;flex:0 0 auto;">'
+      +'<div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(#F5F1E8,#EDE7DA,#F5F1E8);border:1.5px solid #E5DFD2;"></div>'
+      +'<div style="position:absolute;left:0;right:0;top:6px;text-align:center;font-size:9px;color:#B8B2A8;">北</div>'
+      +'<div style="position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:9px;color:#B8B2A8;">南</div>'
+      +'<div id="xiPtr" style="position:absolute;left:50%;top:50%;width:0;height:0;transform-origin:0 0;">'
+      +'<div style="position:absolute;left:-7px;top:-44px;width:14px;height:52px;background:linear-gradient(180deg,#B4553C,#C97B5A);clip-path:polygon(50% 0,100% 26%,72% 26%,72% 100%,28% 100%,28% 26%,0 26%);border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.18);"></div>'
+      +'</div>'
+      +'<div style="position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:#5A5245;"></div>'
+      +'</div>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div id="xiInfo" style="font-size:12.5px;color:#5A5245;line-height:1.55;">点下面按钮开罗盘——箭头会开始指路</div>'
+      +'<input id="xiRange" type="range" min="0" max="360" value="0" style="width:100%;margin-top:8px;accent-color:#B4553C;">'
+      +'<button id="xiBtn" class="switch-btn active" onclick="window._xiToggle()" style="width:100%;margin-top:8px;">🧭 开启指路罗盘</button>'
+      +'</div></div>'
+      +'<div style="font-size:10px;color:#B8B2A8;margin-top:7px;text-align:center;">※ 喜神方位沿用当日黄历推法；传感器只在本机读角度，无定位无上传</div>'
+      +'</div>';
+    body.appendChild(box);
+    var range=document.getElementById('xiRange');
+    range.addEventListener('input', function(){ window._xiSet(parseFloat(range.value), true); });
+  };
+  var _xiSensor=false, _xiActive=false;
+  window._xiSet=function(alpha, fromRange){
+    try{
+      var ptr=document.getElementById('xiPtr');
+      var info=document.getElementById('xiInfo');
+      var d=new Date(); var a=null;
+      try{ a=buildAlmanac(d); }catch(_e){}
+      var xi=(a&&a.xiShen)||'正南';
+      var rel=window._xiRelDeg(alpha, _xiDegOf(xi));
+      if(ptr) ptr.style.transform='rotate('+rel+'deg)';
+      var rg=document.getElementById('xiRange');
+      if(rg&&!fromRange) rg.value=Math.round(((alpha%360)+360)%360);
+      if(info){
+        var names=['正北','东北','正东','东南','正南','西南','正西','西北'];
+        var cur=names[Math.round((((alpha%360)+360)%360)/45)%8];
+        var dirText=rel<23||rel>337?'就在你正前方——出发':rel<68?'在你右前方':rel<113?'在你右手边':rel<158?'在你右后方':rel<203?'在你正后方——掉个头':rel<248?'在你左后方':rel<293?'在你左手边':'在你左前方';
+        info.innerHTML='你现在面朝<b style="color:#5A5245;">'+cur+'</b>——喜神<b style="color:#B4553C;">'+dirText+'</b>（'+rel+'°）';
+      }
+    }catch(_e){}
+  };
+  function _xiOriHandler(e){
+    if(e.alpha==null) return;
+    _xiSensor=true;
+    window._xiSet(e.alpha);
+  }
+  window._xiToggle=function(){
+    var btn=document.getElementById('xiBtn');
+    if(_xiActive){
+      _xiActive=false;
+      window.removeEventListener('deviceorientation', _xiOriHandler);
+      var rg=document.getElementById('xiRange'); if(rg) rg.disabled=false;
+      if(btn){ btn.textContent='🧭 开启指路罗盘'; btn.classList.remove('active'); }
+      return;
+    }
+    var arm=function(){
+      _xiActive=true;
+      window.addEventListener('deviceorientation', _xiOriHandler);
+      var rg=document.getElementById('xiRange'); if(rg) rg.disabled=true;
+      if(btn){ btn.textContent='🧭 指路中 · 转动身体找箭头朝上'; btn.classList.add('active'); }
+    };
+    try{
+      if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+        DeviceOrientationEvent.requestPermission().then(function(st){ if(st==='granted') arm(); else if(btn) btn.textContent='🧭 权限没给 · 拖滑块也行'; }).catch(function(){ if(btn) btn.textContent='🧭 权限没给 · 拖滑块也行'; });
+      } else { arm(); }
+    }catch(_e){ arm(); }
+    setTimeout(function(){ if(!_xiSensor){ var rg=document.getElementById('xiRange'); if(rg){ rg.disabled=false; } if(btn&&_xiActive){ btn.textContent='🧭 没检测到传感器 · 拖滑块也行'; } } }, 1200);
+  };
   /* ---- 今日一字:每日按日干支五行荐字,canvas手写,字迹年轮存档(缩略图60天滚动,纯本地) ---- */
   var INK_CHARS={
     '木':['生','舒','萌','达','直','青'],
@@ -4769,6 +4861,7 @@ function _shiChart(dayZhi){
   window._inkRender=function(){
     var body=document.getElementById('almanac-body');
     if(!body) return;
+    try{ window._xiRender(); }catch(_e){}
     if(document.getElementById('inkBox')) return;
     var d=new Date();
     var idx=0; try{ idx=dayGanZhiIdxFromDate(d.getFullYear(),d.getMonth()+1,d.getDate(),12); }catch(_e){}
