@@ -53,7 +53,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.86.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.87.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2003,6 +2003,102 @@ function renderBody(){
   function _fsRoomOf(k){ for(var i=0;i<FS_ROOMS.length;i++){ if(FS_ROOMS[i].k===k) return FS_ROOMS[i]; } return null; }
   function _fsCellOf(k){ for(var i=0;i<FS_CELLS.length;i++){ if(FS_CELLS[i].k===k) return FS_CELLS[i]; } return null; }
   function _fsMapData(){ try{ return JSON.parse(localStorage.getItem('zhiming_fengshui_map_v1')||'{}'); }catch(_e){ return {}; } }
+  /* ---- 今日家居提醒:风水图冲煞×宅况todo×奇门吉门 三源合一 ---- */
+  var FS_LUO={1:'北·坎',2:'西南·坤',3:'东·震',4:'东南·巽',6:'西北·乾',7:'西·兑',8:'东北·艮',9:'南·离'};
+  window._fsTodayRender=function(){
+    var area=document.getElementById('fs-today-area');
+    if(!area) return;
+    var items=[];
+    try{
+      var data=_fsMapData();
+      /* 门冲厕/灶 + 门克位 */
+      FS_CELLS.forEach(function(cell){
+        if(!data[cell.k+':door']) return;
+        var room=_fsRoomOf(data[cell.k]||'');
+        if(room&&room.k==='toilet'){ items.push({pri:1, t:'🚪 门冲厕', txt:'大门在'+cell.n+'，气口对污秽', fix:'进门设个鞋柜或玄关帘，厕门随手常闭——2 分钟'}); return; }
+        if(room&&room.k==='kitch'){ items.push({pri:1, t:'🚪 门冲灶', txt:'大门在'+cell.n+'，气口对灶火', fix:'灶台挂半幅帘子，别让门风直吹灶——3 分钟'}); return; }
+        if(cell.el&&cell.el!=='木'){
+          var gA=cell.el+'克木', gB='木克'+cell.el;
+          if(FS_KE[gA]||FS_KE[gB]){ items.push({pri:3, t:'🚪 气口受克', txt:'大门在'+cell.n+'（'+cell.el+'位）克门木', fix:'门口放一盆水养植物或深蓝脚垫——2 分钟'}); }
+        }
+      });
+      /* 水火相冲 */
+      FS_CELLS.forEach(function(cell){
+        if(data[cell.k]!=='kitch') return;
+        (FS_ADJ[cell.k]||[]).forEach(function(nk){
+          if(data[nk]==='toilet'){
+            var nc=_fsCellOf(nk); var rc=_fsRoomOf('kitch');
+            items.push({pri:0, t:'💧🔥 水火贴身', txt:rc.n+'（'+cell.n+'）挨着卫生间（'+nc.n+'）', fix:'两门之间放一盆绿植或做个门槛隔断——5 分钟'});
+          }
+        });
+      });
+      /* ⚠宫:房克位 */
+      FS_CELLS.forEach(function(cell){
+        var room=_fsRoomOf(data[cell.k]||'');
+        if(!room||!room.e||!cell.el||cell.el===room.e) return;
+        var kA=room.e+'克'+cell.el, kB=cell.el+'克'+room.e;
+        if(FS_KE[kA]||FS_KE[kB]){ items.push({pri:2, t:'⚠ 相克压宫', txt:room.n+'在'+cell.n+'（'+(FS_KE[kA]?kA:kB)+'）', fix:(FS_FIX[kA]||FS_FIX[kB]||'颜色材质往通关五行靠')+'——3 分钟'}); }
+      });
+    }catch(_e){}
+    /* 宅况 todo 摘一条 */
+    var zhai='';
+    try{
+      var st=_fsState();
+      if(st&&st.ans){
+        var todo=null;
+        for(var i=0;i<FSCHECK.length;i++){ var k=FSCHECK[i].k; if(st.ans[k]===0&&!(st.done&&st.done[k])){ todo=FSCHECK[i]; break; } }
+        if(todo) zhai=todo.fix;
+      }
+    }catch(_e){}
+    /* 奇门吉门:生/开门落宫 */
+    var qm='';
+    try{
+      var r=_qmNow();
+      if(r&&r.bamen){
+        for(var g in r.bamen){
+          var mn=r.bamen[g];
+          if(mn==='生'||mn==='开'){
+            var dn=DOOR_FS[mn];
+            qm='今天'+mn+'门落在'+(FS_LUO[g]||('宫'+g))+'——'+(dn?dn.a:'把重要的活动挪到这一角');
+            break;
+          }
+        }
+      }
+    }catch(_e){}
+    items.sort(function(a,b){ return a.pri-b.pri; });
+    var top=items[0];
+    var h='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🏠 今日家居提醒</div>'
+      +'<div class="widget-body" style="padding:12px;">';
+    var hasMap=Object.keys(_fsMapData()).length>0;
+    if(!hasMap&&!zhai&&!qm){
+      h+='<div style="font-size:12.5px;color:var(--text-sub);line-height:1.8;">先花一分钟把家里的房间摆进下面的九宫格——摆完，这里每天给你一件五分钟能动手的家事。</div>';
+    }else{
+      if(top){
+        h+='<div style="background:var(--pri-light, #f2f5ee);border-radius:10px;padding:10px 12px;">'
+          +'<div style="font-size:13.5px;font-weight:700;color:var(--text);">'+top.t+' · 最值得先动手</div>'
+          +'<div style="font-size:12px;color:var(--text-sub);margin-top:2px;">'+top.txt+'</div>'
+          +'<div style="font-size:12.5px;color:var(--pri, #7c9e63);margin-top:4px;font-weight:600;">👉 '+top.fix+'</div>'
+          +'</div>';
+      }else{
+        h+='<div style="background:var(--pri-light, #f2f5ee);border-radius:10px;padding:10px 12px;">'
+          +'<div style="font-size:13.5px;font-weight:700;color:var(--text);">🌿 今天家里没红灯</div>'
+          +'<div style="font-size:12.5px;color:var(--text-sub);margin-top:2px;">开窗通风 10 分钟，就是今天最好的风水。</div>'
+          +'</div>';
+      }
+      var alts=[];
+      if(zhai) alts.push('📋 宅况：'+zhai);
+      if(qm) alts.push('🧭 '+qm);
+      if(alts.length){
+        h+='<div style="margin-top:8px;">'+alts.map(function(t){ return '<div style="font-size:12px;color:var(--text-sub);line-height:1.7;padding:5px 0;border-top:1px dashed var(--card-border);">'+t+'</div>'; }).join('')+'</div>';
+      }
+      if(!hasMap){
+        h+='<div style="font-size:11.5px;color:var(--text-hint);margin-top:8px;">💡 把家里的房间摆进下面的九宫格（右上角「门」标记大门），这里的提醒会更有的放矢。</div>';
+      }
+    }
+    h+='</div></div>';
+    area.innerHTML=h;
+  };
   window._fsMapRender=function(){
     var area=document.getElementById('fs-map-area');
     if(!area) return;
@@ -2131,7 +2227,8 @@ function renderBody(){
     var el=document.getElementById('health-fs'); if(!el) return;
     var r=_qmNow();
     if(!r||!r.bamen){
-      el.innerHTML='<div class="widget" style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-hint);">奇门局加载中，稍后再点开试试</div><div id="fs-map-area"></div>';
+      el.innerHTML='<div class="widget" style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-hint);">奇门局加载中，稍后再点开试试</div><div id="fs-today-area"></div><div id="fs-map-area"></div>';
+      try{ window._fsTodayRender(); }catch(_e){}
       try{ window._fsMapRender(); }catch(_e){}
       return;
     }
@@ -2163,8 +2260,9 @@ function renderBody(){
       if(r.badGe&&r.badGe.length) html+='<div style="color:#b0713f;margin-top:2px;">△ 此局留意：'+r.badGe.join('、')+'</div>';
       html+='</div>';
     }
-    html+='</div></div><div id="fs-map-area"></div><div id="fs-detail"></div><div id="fs-check-area"></div>';
+    html+='</div></div><div id="fs-today-area"></div><div id="fs-map-area"></div><div id="fs-detail"></div><div id="fs-check-area"></div>';
     el.innerHTML=html;
+    try{ window._fsTodayRender(); }catch(_e){}
     try{ window._fsMapRender(); }catch(_e){}
     try{ window._fsCheckRender(); }catch(_e13){}
   };
