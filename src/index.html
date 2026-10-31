@@ -1589,7 +1589,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.91.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.92.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2581,7 +2581,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.91.0-20261101';
+const ZHIMING_BUILD = 'v2.92.0-20261101';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4758,6 +4758,96 @@ function _shiChart(dayZhi){
     <div class="hint" style="margin-top:8px;">※ 按日支起青龙、顺轮十二神分黄黑道（传统通书规则）。吉时：青龙/明堂/金匮/宝光/玉堂/司命。</div>
   </div>`;
 }
+  /* ---- 今日一字:每日按日干支五行荐字,canvas手写,字迹年轮存档(缩略图60天滚动,纯本地) ---- */
+  var INK_CHARS={
+    '木':['生','舒','萌','达','直','青'],
+    '火':['明','暖','照','心','昭','炎'],
+    '土':['安','稳','厚','信','容','坦'],
+    '金':['清','断','收','白','毅','静'],
+    '水':['润','智','流','墨','藏','涵']
+  };
+  window._inkRender=function(){
+    var body=document.getElementById('almanac-body');
+    if(!body) return;
+    if(document.getElementById('inkBox')) return;
+    var d=new Date();
+    var idx=0; try{ idx=dayGanZhiIdxFromDate(d.getFullYear(),d.getMonth()+1,d.getDate(),12); }catch(_e){}
+    var WX=['木','木','火','火','土','土','金','金','水','水'];
+    var wx=WX[(idx||0)%10];
+    var grp=INK_CHARS[wx];
+    var seed=Math.floor(d.getTime()/86400000);
+    var ch=grp[seed%grp.length];
+    var inks=[]; try{ inks=JSON.parse(localStorage.getItem('zhiming_ink_v1')||'[]'); }catch(_e){}
+    var today=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    var todayInk=null; for(var i=0;i<inks.length;i++){ if(inks[i].d===today){ todayInk=inks[i]; break; } }
+    var reel=inks.slice(-14).reverse().map(function(k){
+      return '<div style="flex:0 0 auto;text-align:center;">'
+        +'<img src="'+k.t+'" style="width:44px;height:44px;border-radius:8px;border:1px solid #E5E0D5;background:#FDFCF9;">'
+        +'<div style="font-size:9px;color:#A8A29A;margin-top:1px;">'+k.d.slice(5)+'</div></div>';
+    }).join('');
+    var box=document.createElement('div');
+    box.id='inkBox';
+    box.style.cssText='margin-top:12px;';
+    box.innerHTML='<div class="card"><div class="card-title">✍️ 今日一字 · '+ch+'（'+wx+'日）</div>'
+      +'<div style="font-size:11.5px;color:#A8A29A;margin-bottom:8px;">今天属于「'+wx+'」——照着写「'+ch+'」，也可以随手写这个字给你的感觉。写了的字会进下面的字迹年轮。</div>'
+      +'<div style="position:relative;width:min(280px,86vw);margin:0 auto;">'
+      +'<canvas id="inkRef" width="280" height="280" style="position:absolute;left:0;top:0;pointer-events:none;"></canvas>'
+      +'<canvas id="inkCv" width="280" height="280" style="position:relative;width:100%;touch-action:none;background:#FDFCF9;border-radius:12px;border:1.5px solid #E5E0D5;cursor:crosshair;"></canvas>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:9px;">'
+      +'<button id="inkClear" class="switch-btn" style="flex:1;">↺ 重写</button>'
+      +'<button id="inkSave" class="switch-btn active" style="flex:1;">✓ 写好了，收进年轮</button>'
+      +'</div>'
+      +'<div id="inkMsg" style="font-size:11.5px;color:#3E6B55;margin-top:6px;text-align:center;min-height:15px;">'+(todayInk?'今天已写过「'+todayInk.c+'」——可以覆盖':'')+'</div>'
+      +(reel?'<div style="display:flex;gap:7px;overflow-x:auto;padding:8px 2px 2px;margin-top:4px;border-top:1px dashed #EEE8DC;">'+reel+'</div>':'<div style="font-size:11px;color:#B8B2A8;margin-top:8px;text-align:center;">字迹年轮还是空的——从今天开始</div>')
+      +'</div>';
+    body.appendChild(box);
+    var ref=document.getElementById('inkRef'), cv=document.getElementById('inkCv');
+    var rctx=ref.getContext('2d');
+    rctx.strokeStyle='#DDD6C8'; rctx.lineWidth=1;
+    rctx.beginPath(); rctx.moveTo(140,10); rctx.lineTo(140,270); rctx.moveTo(10,140); rctx.lineTo(270,140); rctx.stroke();
+    rctx.setLineDash([5,5]);
+    rctx.beginPath(); rctx.moveTo(20,20); rctx.lineTo(260,260); rctx.moveTo(260,20); rctx.lineTo(20,260); rctx.stroke();
+    rctx.setLineDash([]);
+    rctx.fillStyle='rgba(90,82,69,0.13)';
+    rctx.font='170px "Kaiti SC","STKaiti",KaiTi,serif';
+    rctx.textAlign='center'; rctx.textBaseline='middle';
+    rctx.fillText(ch,140,148);
+    var ctx=cv.getContext('2d'); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=3.2; ctx.strokeStyle='#3A3428';
+    var drawing=false, had=false;
+    function pos(e){ var r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*(280/r.width), y:(e.clientY-r.top)*(280/r.height)}; }
+    cv.addEventListener('pointerdown', function(e){ e.preventDefault(); drawing=true; had=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }, {passive:false});
+    cv.addEventListener('pointermove', function(e){ if(!drawing) return; var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); }, {passive:false});
+    ['pointerup','pointercancel','pointerleave'].forEach(function(ev){ cv.addEventListener(ev, function(){ drawing=false; }); });
+    document.getElementById('inkClear').onclick=function(){
+      ctx.clearRect(0,0,280,280); had=false;
+      var m=document.getElementById('inkMsg'); if(m) m.textContent='重新写——不着急';
+    };
+    document.getElementById('inkSave').onclick=function(){
+      if(!had){ var m0=document.getElementById('inkMsg'); if(m0) m0.textContent='还没下笔呢——写一笔再收'; return; }
+      var th=document.createElement('canvas'); th.width=44; th.height=44;
+      var tc=th.getContext('2d');
+      tc.fillStyle='#FDFCF9'; tc.fillRect(0,0,44,44);
+      tc.drawImage(cv,0,0,280,280,0,0,44,44);
+      var url=th.toDataURL('image/png');
+      var inks2=[]; try{ inks2=JSON.parse(localStorage.getItem('zhiming_ink_v1')||'[]'); }catch(_e){}
+      var tdy=new Date();
+      var ds=tdy.getFullYear()+'-'+String(tdy.getMonth()+1).padStart(2,'0')+'-'+String(tdy.getDate()).padStart(2,'0');
+      var rec={d:ds, w:wx, c:ch, t:url};
+      var fi=-1; for(var k=0;k<inks2.length;k++){ if(inks2[k].d===ds){ fi=k; break; } }
+      if(fi>=0) inks2[fi]=rec; else inks2.push(rec);
+      while(inks2.length>60) inks2.shift();
+      try{ localStorage.setItem('zhiming_ink_v1', JSON.stringify(inks2)); }catch(_e){}
+      var m2=document.getElementById('inkMsg');
+      if(m2) m2.textContent='收好了。「'+ch+'」进了你的字迹年轮';
+      window._inkRender2();
+    };
+  };
+  window._inkRender2=function(){
+    var box=document.getElementById('inkBox'); if(!box) return;
+    box.remove();
+    window._inkRender();
+  };
 function renderAlmanac(date){
   const a = buildAlmanac(date);
   const lunarStr = `${a.yearGZ}年【${a.zodiac}年】 ${lunarMonthStr(a.lunar.month,a.lunar.isLeap)}${lunarDayStr(a.lunar.day)}`;
@@ -4808,6 +4898,8 @@ function switchAlmanac(off){
   });
   const d = new Date(); d.setDate(d.getDate()+off);
   document.getElementById("almanac-body").innerHTML = renderAlmanac(d);
+      try{ window._inkRender(); }catch(_e){}
+    try{ window._inkRender(); }catch(_e){}
 }
 
 /* =========================================================
@@ -6610,6 +6702,7 @@ function switchTab(page){
     if (!document.getElementById("almanac-body").innerHTML || _almanacOffset===0){
       const d = new Date(); d.setDate(d.getDate()+_almanacOffset);
       document.getElementById("almanac-body").innerHTML = renderAlmanac(d);
+      try{ window._inkRender(); }catch(_e){}
     }
   }
   else if (page==="cal") {
