@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.87.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.88.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1771,11 +1771,13 @@ body{ padding-bottom:160px; }
         </div>
       </div>
       <div id="zyRow" class="zhouyi-row">
-        <div class="coin" id="zy-c1" onclick="window.flipCoin(0)">字</div>
-        <div class="coin" id="zy-c2" onclick="window.flipCoin(1)">字</div>
-        <div class="coin" id="zy-c3" onclick="window.flipCoin(2)">背</div>
+        <div class="coin" id="zy-c1" onclick="window.flipCoinZY(0)">字</div>
+        <div class="coin" id="zy-c2" onclick="window.flipCoinZY(1)">字</div>
+        <div class="coin" id="zy-c3" onclick="window.flipCoinZY(2)">背</div>
       </div>
       <button class="btn-primary" id="zyYaoBtn" onclick="window.yaoZhouyi()">摇 · 记一爻(共6爻)</button>
+        <button class="switch-btn" id="zyShakeBtn" onclick="window._zyShakeToggle()" style="width:100%;margin-top:8px;">📱 开启摇一摇起卦</button>
+        <div class="hint" style="margin-top:4px;">摇一次=抛一次三枚铜钱，记一爻；六爻摇完自动出卦。桌面没有传感器，点三枚铜钱再点「记一爻」也一样。</div>
       <div class="hint" style="margin-top:8px;" id="zyYaoHint">已记录 0 / 6 爻</div>
     </div>
     <div class="result" id="zy-result"></div>
@@ -2577,7 +2579,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.87.0-20261031';
+const ZHIMING_BUILD = 'v2.88.0-20261031';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -8101,6 +8103,61 @@ function flipCoin(idx){
   const c = document.getElementById("zy-c"+(idx+1));
   if (c) c.textContent = _zyCoins[idx] ? "背" : "字";
 }
+window.flipCoinZY = flipCoin; /* 周易三币专用:window.flipCoin 已被决策币游戏覆盖,勿混用 */
+/* ---- 摇一摇起卦:devicemotion 峰谷检测,摇一次=随机抛三铜钱记一爻(逻辑函数化可测) ---- */
+let _zyShakeActive=false, _zyShakeLastHit=0, _zyShakeCool=0;
+window._zyShakeSample=function(mag){
+  const now=Date.now();
+  if(now-_zyShakeCool<450) return null;           /* 同一次摇动的余震不重复计 */
+  if(Math.abs(mag-9.8)>6.5){                       /* 峰值:偏离重力基线>6.5m/s²(静止≈9.8) */
+    if(now-_zyShakeLastHit>500){                   /* 两次独立摇动 */
+      _zyShakeLastHit=now; _zyShakeCool=now;
+      return 'hit';
+    }
+  }
+  return null;
+};
+function _zyShakeThrow(){
+  try{
+    if(_zyYaos.length>=6) return;
+    for(let i=0;i<3;i++){
+      _zyCoins[i]=Math.random()<0.5?0:1;
+      const c=document.getElementById("zy-c"+(i+1));
+      if(c){ c.textContent=_zyCoins[i]?"背":"字"; }
+    }
+    yaoZhouyi();
+    if(_zyYaos.length>=6&&_zyShakeActive) window._zyShakeOff(true);
+  }catch(_e){}
+}
+window._zyShakeOn=function(){
+  const btn=document.getElementById('zyShakeBtn');
+  const arm=function(){
+    _zyShakeActive=true;
+    window.addEventListener('devicemotion', _zyMotionHandler);
+    if(btn){ btn.textContent='📱 摇一摇已开启 · 再点关闭'; btn.classList.add('active'); }
+  };
+  try{
+    if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+      DeviceMotionEvent.requestPermission().then(function(st){ if(st==='granted') arm(); else if(btn) btn.textContent='📱 权限没给 · 点按钮摇也一样'; }).catch(function(){ if(btn) btn.textContent='📱 权限没给 · 点按钮摇也一样'; });
+    }else{ arm(); }
+  }catch(_e){ if(btn) btn.textContent='📱 这台设备不支持摇一摇 · 点按钮摇'; }
+};
+window._zyShakeOff=function(done){
+  _zyShakeActive=false;
+  window.removeEventListener('devicemotion', _zyMotionHandler);
+  const btn=document.getElementById('zyShakeBtn');
+  if(btn){ btn.textContent=done?'📱 卦成 · 摇一摇已收工':'📱 开启摇一摇起卦'; btn.classList.remove('active'); }
+};
+window._zyShakeToggle=function(){ if(_zyShakeActive){ window._zyShakeOff(); } else { window._zyShakeOn(); } };
+function _zyMotionHandler(e){
+  try{
+    if(!_zyShakeActive) return;
+    const a=e.accelerationIncludingGravity; if(!a||a.x==null||a.y==null||a.z==null) return; /* null帧(传感器间隙/合成补发)直接跳过 */
+    const mag=Math.sqrt((a.x||0)*(a.x||0)+(a.y||0)*(a.y||0)+(a.z||0)*(a.z||0));
+    if(window._zyShakeSample(mag)==='hit') _zyShakeThrow();
+  }catch(_e){}
+}
+
 function yaoZhouyi(){
   if (_zyYaos.length >= 6) { _alert2("已摇完6爻，可查看结果或「重置」"); return; }
   const sum = _zyCoins.reduce((a,c)=>a + (c===0?3:2), 0);
@@ -24602,6 +24659,112 @@ function renderBody(){
   function _fsRoomOf(k){ for(var i=0;i<FS_ROOMS.length;i++){ if(FS_ROOMS[i].k===k) return FS_ROOMS[i]; } return null; }
   function _fsCellOf(k){ for(var i=0;i<FS_CELLS.length;i++){ if(FS_CELLS[i].k===k) return FS_CELLS[i]; } return null; }
   function _fsMapData(){ try{ return JSON.parse(localStorage.getItem('zhiming_fengshui_map_v1')||'{}'); }catch(_e){ return {}; } }
+  /* ---- 转一转·罗盘:deviceorientation alpha→方位→风水图宫位联动(逻辑函数化可测) ---- */
+  function _fsDirOf(alpha){
+    var a=((alpha%360)+360)%360;
+    var names=['北','东北','东','东南','南','西南','西','西北'];
+    var keys=['n','ne','e','se','s','sw','w','nw'];
+    var idx=Math.round(a/45)%8;
+    return {name:names[idx], k:keys[idx], deg:Math.round(a)};
+  }
+  window._fsCompassSet=function(alpha){
+    try{
+      var d=_fsDirOf(alpha);
+      var ptr=document.getElementById('fsCompPtr');
+      if(ptr) ptr.setAttribute('transform','rotate('+(-d.deg)+' 70 70)');
+      var degEl=document.getElementById('fsCompDeg');
+      if(degEl) degEl.textContent=d.deg+'°';
+      var nameEl=document.getElementById('fsCompDir');
+      if(nameEl) nameEl.textContent=d.name;
+      var info=document.getElementById('fsCompInfo');
+      if(info){
+        var cell=_fsCellOf(d.k);
+        var room=_fsRoomOf((_fsMapData()[d.k])||'');
+        var door=_fsMapData()[d.k+':door'];
+        var line='<b style="color:var(--text);">'+cell.n+'</b>'+(cell.el?('（'+cell.el+'）'):'');
+        if(room){ line+='<br>宫里是：'+room.n; 
+          if(room.e&&cell.el){
+            var relA=cell.el+'生'+room.e, relB=room.e+'生'+cell.el;
+            var kA=room.e+'克'+cell.el, kB=cell.el+'克'+room.e;
+            if(cell.el===room.e) line+=' · 同气，顺';
+            else if(FS_SHENG[relA]||FS_SHENG[relB]) line+=' · '+(FS_SHENG[relA]||relB)+'，✓';
+            else if(FS_KE[kA]||FS_KE[kB]) line+=' · '+(FS_KE[kA]?kA:kB)+'，⚠ '+(FS_FIX[kA]||FS_FIX[kB]);
+          }
+        } else { line+='<br>宫里还没摆房间'; }
+        if(door) line+='<br>🚪 你家大门在这宫——迎着气口';
+        info.innerHTML=line;
+      }
+    }catch(_e){}
+  };
+  var _fsCompSensor=false;
+  function _fsCompOriHandler(e){
+    if(e.alpha==null) return;
+    _fsCompSensor=true;
+    var rg=document.getElementById('fsCompRange');
+    if(rg){ rg.value=Math.round(e.alpha); rg.disabled=true; }
+    window._fsCompassSet(e.alpha);
+  }
+  window._fsCompassToggle=function(){
+    var btn=document.getElementById('fsCompBtn');
+    if(window._fsCompActive){
+      window._fsCompActive=false;
+      window.removeEventListener('deviceorientation', _fsCompOriHandler);
+      var rg=document.getElementById('fsCompRange'); if(rg) rg.disabled=false;
+      if(btn){ btn.textContent='🧭 开启传感器罗盘'; btn.classList.remove('active'); }
+      return;
+    }
+    var arm=function(){
+      window._fsCompActive=true;
+      window.addEventListener('deviceorientation', _fsCompOriHandler);
+      if(btn){ btn.textContent='🧭 罗盘已开启 · 拿稳手机原地转一圈'; btn.classList.add('active'); }
+    };
+    try{
+      if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+        DeviceOrientationEvent.requestPermission().then(function(st){ if(st==='granted') arm(); else if(btn) btn.textContent='🧭 权限没给 · 拖下面的转盘也行'; }).catch(function(){ if(btn) btn.textContent='🧭 权限没给 · 拖下面的转盘也行'; });
+      }else{ arm(); }
+    }catch(_e){ if(btn) btn.textContent='🧭 拖下面的转盘也行'; }
+  };
+  window._fsCompassRender=function(){
+    var area=document.getElementById('fs-compass-area');
+    if(!area) return;
+    var degEl='<svg viewBox="0 0 140 140" style="width:140px;height:140px;flex:none;">'
+      +'<circle cx="70" cy="70" r="64" fill="var(--card)" stroke="var(--card-border)" stroke-width="1.5"/>'
+      +'<text x="70" y="22" font-size="11" fill="#C25E3A" text-anchor="middle" font-weight="700">北</text>'
+      +'<text x="122" y="74" font-size="10" fill="#838A95" text-anchor="middle">东</text>'
+      +'<text x="70" y="128" font-size="10" fill="#838A95" text-anchor="middle">南</text>'
+      +'<text x="18" y="74" font-size="10" fill="#838A95" text-anchor="middle">西</text>'
+      +'<text x="106" y="42" font-size="8" fill="#B9BEC6" text-anchor="middle">东北</text>'
+      +'<text x="34" y="42" font-size="8" fill="#B9BEC6" text-anchor="middle">西北</text>'
+      +'<text x="106" y="104" font-size="8" fill="#B9BEC6" text-anchor="middle">东南</text>'
+      +'<text x="34" y="104" font-size="8" fill="#B9BEC6" text-anchor="middle">西南</text>'
+      +'<g id="fsCompPtr" transform="rotate(0 70 70)">'
+      +'<path d="M70 16 L76 70 L70 82 L64 70 Z" fill="#C25E3A"/>'
+      +'<path d="M70 124 L76 70 L70 58 L64 70 Z" fill="#1A2029"/>'
+      +'<circle cx="70" cy="70" r="4" fill="#1A2029"/>'
+      +'</g></svg>';
+    var h='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🧭 转一转 · 你正对着哪一宫</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div style="display:flex;gap:12px;align-items:center;">'
+      +degEl
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:16px;font-weight:700;color:var(--text);">面朝 <span id="fsCompDir">北</span> <span id="fsCompDeg" style="font-size:11px;color:var(--text-hint);font-weight:400;">0°</span></div>'
+      +'<div id="fsCompInfo" style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:4px;"></div>'
+      +'</div></div>'
+      +'<input id="fsCompRange" type="range" min="0" max="359" value="0" style="width:100%;margin-top:8px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">'
+      +'<span style="font-size:10px;color:var(--text-hint);">拖转盘模拟朝向 / 真机开传感器自动转</span>'
+      +'<button id="fsCompBtn" class="switch-btn" onclick="window._fsCompassToggle()" style="padding:5px 12px;font-size:11px;">🧭 开启传感器罗盘</button>'
+      +'</div>'
+      +'</div></div>';
+    area.innerHTML=h;
+    var rg=document.getElementById('fsCompRange');
+    if(rg){
+      rg.addEventListener('input', function(){ window._fsCompassSet(+this.value); });
+      window._fsCompassSet(0);
+    }
+  };
+
   /* ---- 今日家居提醒:风水图冲煞×宅况todo×奇门吉门 三源合一 ---- */
   var FS_LUO={1:'北·坎',2:'西南·坤',3:'东·震',4:'东南·巽',6:'西北·乾',7:'西·兑',8:'东北·艮',9:'南·离'};
   window._fsTodayRender=function(){
@@ -24826,10 +24989,11 @@ function renderBody(){
     var el=document.getElementById('health-fs'); if(!el) return;
     var r=_qmNow();
     if(!r||!r.bamen){
-      el.innerHTML='<div class="widget" style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-hint);">奇门局加载中，稍后再点开试试</div><div id="fs-today-area"></div><div id="fs-map-area"></div>';
+      el.innerHTML='<div class="widget" style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-hint);">奇门局加载中，稍后再点开试试</div><div id="fs-today-area"></div><div id="fs-map-area"></div><div id="fs-compass-area"></div>';
       try{ window._fsTodayRender(); }catch(_e){}
       try{ window._fsMapRender(); }catch(_e){}
       return;
+      try{ window._fsCompassRender(); }catch(_e){}
     }
     var html='<div class="widget" style="grid-column:1/-1;">'
       +'<div class="widget-title">🧭 此时奇门 · '+(r.dun==='YANG'?'阳':'阴')+'遁'+r.juNum+'局</div>'
@@ -24859,10 +25023,11 @@ function renderBody(){
       if(r.badGe&&r.badGe.length) html+='<div style="color:#b0713f;margin-top:2px;">△ 此局留意：'+r.badGe.join('、')+'</div>';
       html+='</div>';
     }
-    html+='</div></div><div id="fs-today-area"></div><div id="fs-map-area"></div><div id="fs-detail"></div><div id="fs-check-area"></div>';
+    html+='</div></div><div id="fs-today-area"></div><div id="fs-map-area"></div><div id="fs-compass-area"></div><div id="fs-detail"></div><div id="fs-check-area"></div>';
     el.innerHTML=html;
     try{ window._fsTodayRender(); }catch(_e){}
     try{ window._fsMapRender(); }catch(_e){}
+    try{ window._fsCompassRender(); }catch(_e){}
     try{ window._fsCheckRender(); }catch(_e13){}
   };
 
