@@ -32,7 +32,9 @@
 <meta name="theme-color" content="#8B6F47">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" id="pwaAppleIcon">
-<link rel="preload" href="assets/app.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}</style>
+<link rel="preload" href="assets/app.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
+  @keyframes maiRing{ 0%{opacity:.75;transform:translate(-50%,-50%) scale(.9);} 100%{opacity:0;transform:translate(-50%,-50%) scale(2.6);} }
+</style>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="theme-light">
@@ -53,7 +55,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.89.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.90.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1820,6 +1822,69 @@
       +'</div></div>';
     /* 点钮时更新提示行 */
   };
+  /* ---- 把脉:手指按住屏幕感受脉象震动(体质→脉象推理,vibrate+波纹双通道,松手出解读) ---- */
+  var MAIX = {
+    ping:  {n:'平脉', rhythm:'不快不慢，从容均匀', desc:'就像一个心平气和的人走路——稳。', vibe:[420,620], dur:1.04, amp:1.0,  why:'平和体质或近期状态平稳——这本身就是好信号'},
+    hua:   {n:'滑脉', rhythm:'来去流利，如盘走珠', desc:'血流得又快又顺，像珠子在盘子上滚。', vibe:[90,90,90,520], dur:0.79, amp:1.15, why:'痰湿体质常见——身体里「水湿」偏多，脉道滑利'},
+    xian:  {n:'弦脉', rhythm:'端直而长，如按琴弦', desc:'指尖绷着一根琴弦的感觉——紧、有张力。', vibe:[720,280], dur:1.0,  amp:1.3,  why:'气郁或压力大时常见——肝气偏紧，身体在「使劲」'},
+    chen:  {n:'沉脉', rhythm:'轻取不应，重按始得', desc:'轻轻碰摸不到，要按得深一点才出现。', vibe:[70,420,560,620], dur:1.67, amp:0.9, why:'阳虚体质常见——阳气偏弱，脉藏得深'},
+    shuo:  {n:'数脉', rhythm:'一息六至，来得急促', desc:'比正常快一拍，像小跑。', vibe:[230,190], dur:0.42, amp:1.1,  why:'阴虚或体内有「热」——身体代谢偏快'},
+    chi:   {n:'迟脉', rhythm:'一息三至，来去迟缓', desc:'比正常慢，像散步。', vibe:[380,1150], dur:1.53, amp:0.85, why:'气虚或偏寒——身体在省着用能量'}
+  };
+  var TZ2MAI = {
+    '平和':'ping', '阳虚':'chen', '气虚':'chi', '阴虚':'shuo', '痰湿':'hua',
+    '湿热':'shuo', '血瘀':'xian', '气郁':'xian', '特禀':'ping'
+  };
+  window._maiRender=function(){
+    var area=document.getElementById('health-mai');
+    if(!area) return;
+    var t=null, maiKey='ping', fromTz='';
+    try{ t=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_e){}
+    if(t&&t.t&&TZ2MAI[t.t]){ maiKey=TZ2MAI[t.t]; fromTz='（从你的体质「'+t.t+'」推出）'; }
+    var m=MAIX[maiKey];
+    var hasVib=(typeof navigator!=='undefined'&&typeof navigator.vibrate==='function');
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🫆 把脉 · 手指按住感受</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div id="maiPad" style="position:relative;height:132px;border-radius:12px;background:linear-gradient(160deg,#2A2F38,#1B1F26);overflow:hidden;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;">'
+      +'<div id="maiWave" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,#E8B4B8 0%,#B4656F 60%,transparent 72%);opacity:.9;"></div>'
+      +'<div id="maiWave2" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;border:2px solid #B4656F;opacity:0;"></div>'
+      +'<div style="position:absolute;left:0;right:0;bottom:9px;text-align:center;font-size:11px;color:rgba(255,255,255,.55);">'+(hasVib?'指尖轻按，感受 10 个搏动':'此设备不支持震动，盯着波纹感受节奏')+'</div>'
+      +'</div>'
+      +'<div id="maiHint" style="font-size:12px;color:var(--text-sub);margin-top:8px;text-align:center;min-height:16px;">今日脉象已就位——按住不放试试'+fromTz+'</div>'
+      +'<div id="maiRead" style="display:none;margin-top:8px;background:var(--pri-light,#f2f5ee);border-radius:10px;padding:10px 12px;">'
+      +'<div style="font-size:13.5px;font-weight:700;">诊断：'+m.n+'</div>'
+      +'<div style="font-size:12px;color:var(--text-sub);margin-top:2px;">节奏：'+m.rhythm+'</div>'
+      +'<div style="font-size:12.5px;color:var(--text);margin-top:4px;">体感：'+m.desc+'</div>'
+      +'<div style="font-size:12.5px;color:var(--pri);margin-top:4px;font-weight:600;">为什么是你：'+m.why+'</div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:6px;text-align:center;">※ 这是「节奏模拟」不是真实诊脉——把手放在胸口同步感受心跳更好；震动纯本机触发</div>'
+      +'</div></div>';
+    var pad=document.getElementById('maiPad'), iv=null, t0=0;
+    var wave=document.getElementById('maiWave'), wave2=document.getElementById('maiWave2');
+    var stop=function(){
+      if(iv){ clearInterval(iv); iv=null; }
+      try{ if(navigator.vibrate) navigator.vibrate(0); }catch(_e){}
+      wave.style.animation='none'; wave2.style.animation='none';
+      wave.style.transform='translate(-50%,-50%) scale(1)';
+      var held=(Date.now()-t0)/1000;
+      if(held>2.5){
+        var rd=document.getElementById('maiRead'); if(rd) rd.style.display='block';
+        var hi=document.getElementById('maiHint'); if(hi) hi.textContent='感受够久了——解读在下面 ↓';
+      }else if(held>0.6){
+        var hi2=document.getElementById('maiHint'); if(hi2) hi2.textContent='再多按一会儿，感受 10 个搏动再松手';
+      }
+    };
+    var step=function(){
+      try{ if(navigator.vibrate) navigator.vibrate(m.vibe); }catch(_e){}
+      wave.style.animation='none'; void wave.offsetWidth;
+      wave.style.animation='maiBeat '+m.dur+'s cubic-bezier(.3,0,.4,1)';
+      wave2.style.animation='maiRing '+m.dur+'s ease-out';
+    };
+    pad.addEventListener('pointerdown', function(e){ e.preventDefault(); t0=Date.now(); step(); iv=setInterval(step, m.dur*1000); }, {passive:false});
+    pad.addEventListener('pointerup', stop); pad.addEventListener('pointercancel', stop); pad.addEventListener('pointerleave', stop);
+    document.addEventListener('visibilitychange', function(){ if(document.hidden) stop(); });
+  };
 function renderBody(){
       var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
       var h='';
@@ -1876,9 +1941,10 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-music"></div><div id="health-detail"></div>';
+      h+='<div id="health-mai"></div><div id="health-music"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
+      try{ window._maiRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
