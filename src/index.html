@@ -1589,7 +1589,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.90.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.91.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2581,7 +2581,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.90.0-20261101';
+const ZHIMING_BUILD = 'v2.91.0-20261101';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -26296,11 +26296,141 @@ try{ window._chartInit(); }catch(_e){}
       +'</div>');
     // v2 段：明日预告 + 今晚行运
     try{ var v2=window._sleepRitualV2(); if(v2) parts.push(v2); }catch(_e){}
+    // v3 段：吹气散忧
+    try{ var v3=window._sleepRitualV3(); if(v3) parts.push(v3); }catch(_e){}
     // 收尾
     parts.push('<div style="margin-top:10px;font-size:12.5px;color:#838A95;text-align:center;">'+BYE[Math.floor(Date.now()/86400000)%BYE.length]+' 晚安。</div>');
     return '<div style="font-size:12px;color:#838A95;margin-bottom:6px;">睡前三分钟 · 今天到这</div>'+parts.join('');
   };
 
+  /* v3 段：吹气散忧——对着屏幕哈一口气,把今天最烦的事吹散(麦克风只算音量,不录音不存字) */
+  window._sleepRitualV3=function(){
+    var today=''; try{ today=JSON.parse(localStorage.getItem('zhiming_blow_v1')||'null'); }catch(_e){}
+    var done=today&&today.d===new Date().toDateString();
+    var html='<div style="margin-top:12px;border-top:1px dashed #E0E0E0;padding-top:10px;">'
+      +'<div style="font-size:13px;font-weight:600;color:#1A2029;">💨 吹一口气 · 把今天散掉</div>'
+      +'<div style="font-size:11.5px;color:#838A95;margin-top:2px;">想一件今天最烦的事（不写也行）——对屏幕哈气把它吹散，内容不会保存</div>'
+      +'<div id="blowStage" style="position:relative;height:104px;background:linear-gradient(180deg,#F2EFE9,#E9E4DA);border-radius:10px;overflow:hidden;margin-top:8px;">'
+      +'<canvas id="blowCv" width="320" height="104" style="width:100%;height:100%;display:block;"></canvas>'
+      +'<div id="blowTip" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:#9A948A;pointer-events:none;">哈气开始后这行字会散掉</div>'
+      +'</div>'
+      +'<input id="blowTxt" type="text" maxlength="16" placeholder="今天最烦的一件事（可选）" style="width:100%;box-sizing:border-box;margin-top:8px;padding:8px 10px;border-radius:9px;border:1.5px solid #E3DED4;background:#fff;font-size:12.5px;outline:none;">'
+      +'<div style="display:flex;gap:8px;margin-top:8px;">'
+      +'<button id="blowBtn" class="switch-btn active" onclick="window._blowStart()" style="flex:1;">'+(done?'💨 再吹一次（今天已吹 '+today.n+' 口）':'💨 开始吹')+'</button>'
+      +'</div>'
+      +'<div id="blowDone" style="display:none;font-size:12.5px;color:#3E6B55;margin-top:6px;text-align:center;font-weight:600;"></div>'
+      +'</div>';
+    return html;
+  };
+  var _blowRAF=null;
+  window._blowStart=function(){
+    var cv=document.getElementById('blowCv'); if(!cv) return;
+    var tip=document.getElementById('blowTip');
+    var txtEl=document.getElementById('blowTxt');
+    var btn=document.getElementById('blowBtn');
+    var doneEl=document.getElementById('blowDone');
+    var ctx=cv.getContext('2d');
+    var W=cv.width, H=cv.height;
+    var text=(txtEl&&txtEl.value.trim())||'今天的烦心事';
+    if(text.length>14) text=text.slice(0,14);
+    if(tip) tip.style.display='none';
+    if(btn){ btn.textContent='💨 吹——匀速长哈一口气'; btn.disabled=true; btn.style.opacity='0.7'; }
+    if(doneEl) doneEl.style.display='none';
+    var chars=text.split('');
+    var cw=ctx.measureText(text).width; ctx.font='15px sans-serif';
+    var startX=Math.max(10,(W-cw)/2), x=startX;
+    var ps=chars.map(function(ch){
+      var w=ctx.measureText(ch).width;
+      var p={ch:ch, x:x+w/2, y:H*0.52, vx:0, vy:(Math.random()-0.5)*0.6, a:1, rot:0};
+      x+=w; return p;
+    });
+    var mic=null, ac=null, analyser=null, buf=null, stream=null, tapMode=false;
+    function killMic(){ try{ if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); } if(ac&&ac.state!=='closed') ac.close(); }catch(_e){} }
+    function stopRAF(){ if(_blowRAF){ cancelAnimationFrame(_blowRAF); _blowRAF=null; } }
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      var alive=0;
+      for(var i=0;i<ps.length;i++){
+        var p=ps[i];
+        if(p.a>0.01){ alive++; }
+        ctx.save();
+        ctx.globalAlpha=Math.max(0,p.a);
+        ctx.fillStyle='#5A5245';
+        ctx.font='15px sans-serif';
+        ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.fillText(p.ch,-8,5);
+        ctx.restore();
+      }
+      return alive;
+    }
+    var wind=0;
+    function tick(){
+      var rms=0;
+      if(analyser&&!tapMode){
+        analyser.getByteTimeDomainData(buf);
+        var sum=0;
+        for(var i=0;i<buf.length;i++){ var v=(buf[i]-128)/128; sum+=v*v; }
+        rms=Math.sqrt(sum/buf.length);
+        wind=rms>0.13?Math.min(rms*9,4.2):0;
+      }
+      var alive=0;
+      for(var j=0;j<ps.length;j++){
+        var p=ps[j];
+        if(p.a<=0.01) continue;
+        if(wind>0){
+          p.vx+=(wind*(0.5+Math.random()))*0.35;
+          p.vy+=(Math.random()-0.5)*wind*0.5;
+          p.rot+=(Math.random()-0.5)*wind*0.03;
+          p.a-=0.006+wind*0.004;
+        }else{
+          p.vx*=0.96; p.vy*=0.96;
+        }
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<-20||p.x>W+20) p.a-=0.02;
+        if(p.a<0) p.a=0;
+        if(p.a>0.01) alive++;
+      }
+      draw();
+      if(alive===0){
+        stopRAF(); killMic();
+        var n=1;
+        try{
+          var st=JSON.parse(localStorage.getItem('zhiming_blow_v1')||'null');
+          var todayStr=new Date().toDateString();
+          n=(st&&st.d===todayStr)?(st.n+1):1;
+          localStorage.setItem('zhiming_blow_v1',JSON.stringify({d:todayStr,n:n}));
+        }catch(_e){}
+        if(btn){ btn.textContent='💨 再吹一次（今天已吹 '+n+' 口）'; btn.disabled=false; btn.style.opacity='1'; btn.onclick=window._blowStart; }
+        if(doneEl){ doneEl.textContent='吹掉了。今晚好睡。'; doneEl.style.display='block'; }
+        return;
+      }
+      _blowRAF=requestAnimationFrame(tick);
+    }
+    function goTap(){
+      tapMode=true;
+      if(btn){ btn.textContent='👆 没有麦克风——连点屏幕 8 下代替吹气'; btn.disabled=false; btn.style.opacity='1'; }
+      var taps=0;
+      cv.onclick=function(){ taps++; wind=3.5; setTimeout(function(){ wind=0; },160); if(taps>=8){ cv.onclick=null; } };
+    }
+    var started=false;
+    function boot(acx){
+      ac=acx;
+      var src=ac.createMediaStreamSource(stream);
+      analyser=ac.createAnalyser(); analyser.fftSize=512;
+      src.connect(analyser); buf=new Uint8Array(analyser.fftSize);
+      if(!started){ started=true; tick(); }
+    }
+    var GUM=navigator.mediaDevices&&navigator.mediaDevices.getUserMedia;
+    if(GUM){
+      navigator.mediaDevices.getUserMedia({audio:true}).then(function(st2){
+        stream=st2;
+        var AC=window.AudioContext||window.webkitAudioContext;
+        boot(new AC());
+        if(tip) tip.style.display='none';
+      }).catch(function(){ goTap(); });
+    } else { goTap(); }
+    if(!started){ started=true; tick(); }
+  };
   /* v2 段：明日预告 + 今晚行运（插在记录回放后、按钮前） */
   window._sleepRitualV2=function(){
     var out=[], now=new Date();
