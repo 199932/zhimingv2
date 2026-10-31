@@ -1587,7 +1587,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.84.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.85.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2577,7 +2577,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.84.0-20261030';
+const ZHIMING_BUILD = 'v2.85.0-20261031';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24571,11 +24571,113 @@ function renderBody(){
     }catch(_){ return null; }
   }
 
+  /* ---- 我家的风水图:九宫点选房间类型,五行相生相克出动手清单(纯本地) ---- */
+  var FS_ROOMS=[
+    {k:'bed',  n:'卧室',   e:'木', c:'#7FA8C9', ic:'🛏'},
+    {k:'kitch',n:'厨房',   e:'火', c:'#E8A87C', ic:'🍳'},
+    {k:'toilet',n:'卫生间', e:'水', c:'#6FB3B8', ic:'🚿'},
+    {k:'living',n:'客厅',   e:'土', c:'#C9BC8F', ic:'🛋'},
+    {k:'study', n:'书房',   e:'木', c:'#8FBC8F', ic:'📚'},
+    {k:'empty', n:'空/储',  e:'',   c:'#E3E6EA', ic:'·'}
+  ];
+  var FS_CELLS=[
+    {k:'nw', n:'西北·乾', el:'金'},{k:'n',  n:'北·坎',  el:'水'},{k:'ne', n:'东北·艮', el:'土'},
+    {k:'w',  n:'西·兑',   el:'金'},{k:'c',  n:'中宫',    el:'土'},{k:'e',  n:'东·震',   el:'木'},
+    {k:'sw', n:'西南·坤', el:'土'},{k:'s',  n:'南·离',   el:'火'},{k:'se', n:'东南·巽', el:'木'}
+  ];
+  var FS_SHENG={'金生水':1,'水生木':1,'木生火':1,'火生土':1,'土生金':1};
+  var FS_KE={'火克金':1,'水克火':1,'土克水':1,'金克木':1,'木克土':1};
+  var FS_FIX={
+    '火克金':'灶台边放一盆厚叶绿植或陶瓷罐——火生土、土生金，一路通关。',
+    '水克火':'卫生间常闭门、放一盆耐阴绿植——水生木、木生火，隔一层就好。',
+    '土克水':'门口加脚垫、马桶盖随手盖、放一罐粗盐收湿气。',
+    '金克木':'床头或桌旁加一盆水养植物或深蓝物件——金生水、水生木，顺过来。',
+    '木克土':'这宫多铺暖色织物或一盏暖灯——木生火、火生土，借火通关。'
+  };
+  function _fsMapData(){ try{ return JSON.parse(localStorage.getItem('zhiming_fengshui_map_v1')||'{}'); }catch(_e){ return {}; } }
+  window._fsMapRender=function(){
+    var area=document.getElementById('fs-map-area');
+    if(!area) return;
+    var data=_fsMapData();
+    var W=120, H=86, gap=3;
+    var svg='<svg id="fsMapSvg" viewBox="0 0 '+(W*3+gap*2)+' '+(H*3+gap*2)+'" style="width:100%;max-width:340px;height:auto;display:block;margin:6px auto;">';
+    var goodN=0, warnN=0, usedN=0;
+    var notes=[];
+    FS_CELLS.forEach(function(cell, idx){
+      var col=idx%3, row=Math.floor(idx/3);
+      var x=col*(W+gap), y=row*(H+gap);
+      var rk=data[cell.k]||'';
+      var room=null;
+      for(var i=0;i<FS_ROOMS.length;i++){ if(FS_ROOMS[i].k===rk){ room=FS_ROOMS[i]; break; } }
+      var fill='#F3F4F6', tag='', tcol='#B9BEC6';
+      if(room){
+        usedN++;
+        fill=room.c;
+        if(room.e&&cell.el){
+          if(cell.el===room.e){ tag='平'; }
+          else{
+            var relA=cell.el+'生'+room.e, relB=room.e+'生'+cell.el;
+            var kA=room.e+'克'+cell.el, kB=cell.el+'克'+room.e;
+            if(FS_SHENG[relA]||FS_SHENG[relB]){ tag='✓'; tcol='#3E7C5B'; goodN++; notes.push('✓ '+room.n+'在'+cell.n+'（'+(FS_SHENG[relA]?relA:relB)+'）：顺的，保持'); }
+            else if(FS_KE[kA]||FS_KE[kB]){ var kw=FS_KE[kA]?kA:kB; tag='⚠'; tcol='#C25E3A'; warnN++;
+              var fix=FS_FIX[kw]||('五行相克，'+room.n+'的颜色、材质可以往通关的五行上靠。');
+              notes.push('⚠ '+room.n+'在'+cell.n+'（'+kw+'）：'+fix);
+            }
+          }
+        }
+      }
+      var label=room?(room.ic+' '+room.n):'点击设置';
+      var sub=room?(room.e?(room.e+' / '+cell.el):' '):cell.el;
+      svg+='<g class="fs-cell" data-ck="'+cell.k+'" style="cursor:pointer;">'
+        +'<rect x="'+x+'" y="'+y+'" width="'+W+'" height="'+H+'" rx="10" fill="'+fill+'" '+(tag==='⚠'?'stroke="#C25E3A" stroke-width="2"':'')+'/>'
+        +'<text x="'+(x+8)+'" y="'+(y+16)+'" font-size="10" fill="#6B7280">'+cell.n+'</text>'
+        +'<text x="'+(x+W/2)+'" y="'+(y+46)+'" font-size="15" font-weight="600" fill="#1A2029" text-anchor="middle">'+label+'</text>'
+        +'<text x="'+(x+W/2)+'" y="'+(y+66)+'" font-size="10" fill="'+tcol+'" text-anchor="middle">'+(tag?tag+' ':'')+sub+'</text>'
+        +'</g>';
+    });
+    svg+='</svg>';
+    var verdict = usedN===0 ? '先把家里的房间摆进去——点格子切换类型'
+      : (warnN===0 ? '九宫没有相冲——这图先存着，换季回来看一眼' : '有 '+warnN+' 处可以调，动手清单在下面');
+    var h='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🧭 我家的风水图</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div style="font-size:11px;color:var(--text-hint);line-height:1.6;margin-bottom:2px;">按上北下南摆正手机，点格子切换：卧室→厨房→卫生间→客厅→书房→空。绿色顺、描边的要注意——每条都配了五分钟能动手的改法。</div>'
+      +svg
+      +'<div style="font-size:12px;color:var(--text-sub);margin-top:4px;text-align:center;">'+verdict+(usedN?(' · ✓'+goodN+' 顺 / ⚠'+warnN+' 调'):'')+'</div>'
+      +(notes.length?('<div style="margin-top:8px;">'+notes.map(function(n){ return '<div style="font-size:12px;color:var(--text-sub);line-height:1.7;padding:6px 0;border-top:1px dashed var(--card-border);">'+n+'</div>'; }).join('')+'</div>'):'')
+      +'<div style="text-align:center;margin-top:6px;"><span id="fsMapReset" style="font-size:11px;color:var(--text-hint);text-decoration:underline;cursor:pointer;">重置这张图</span></div>'
+      +'</div></div>';
+    area.innerHTML=h;
+  };
+  if(!window._fsMapBound){
+    window._fsMapBound=true;
+    var FS_ORDER=['bed','kitch','toilet','living','study','empty'];
+    document.addEventListener('click', function(ev){
+      try{
+        var g=(ev.target&&ev.target.closest)?ev.target.closest('g.fs-cell'):null;
+        if(g&&g.closest('svg#fsMapSvg')){
+          var ck=g.getAttribute('data-ck');
+          var data=_fsMapData();
+          var cur=data[ck]||'';
+          var i=cur?FS_ORDER.indexOf(cur):-1;
+          data[ck]=FS_ORDER[(i+1)%FS_ORDER.length];
+          localStorage.setItem('zhiming_fengshui_map_v1', JSON.stringify(data));
+          window._fsMapRender();
+          return;
+        }
+        if(ev.target&&ev.target.id==='fsMapReset'){
+          localStorage.removeItem('zhiming_fengshui_map_v1');
+          window._fsMapRender();
+        }
+      }catch(_e){}
+    });
+  }
   window._renderHealthFS = function(){
     var el=document.getElementById('health-fs'); if(!el) return;
     var r=_qmNow();
     if(!r||!r.bamen){
-      el.innerHTML='<div class="widget" style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-hint);">奇门局加载中，稍后再点开试试</div>';
+      el.innerHTML='<div class="widget" style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-hint);">奇门局加载中，稍后再点开试试</div><div id="fs-map-area"></div>';
+      try{ window._fsMapRender(); }catch(_e){}
       return;
     }
     var html='<div class="widget" style="grid-column:1/-1;">'
@@ -24606,8 +24708,9 @@ function renderBody(){
       if(r.badGe&&r.badGe.length) html+='<div style="color:#b0713f;margin-top:2px;">△ 此局留意：'+r.badGe.join('、')+'</div>';
       html+='</div>';
     }
-    html+='</div></div><div id="fs-detail"></div><div id="fs-check-area"></div>';
+    html+='</div></div><div id="fs-map-area"></div><div id="fs-detail"></div><div id="fs-check-area"></div>';
     el.innerHTML=html;
+    try{ window._fsMapRender(); }catch(_e){}
     try{ window._fsCheckRender(); }catch(_e13){}
   };
 
