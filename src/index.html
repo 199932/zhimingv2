@@ -1589,7 +1589,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.93.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.94.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2581,7 +2581,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.93.0-20261101';
+const ZHIMING_BUILD = 'v2.94.0-20261101';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -26484,11 +26484,88 @@ try{ window._chartInit(); }catch(_e){}
     try{ var v2=window._sleepRitualV2(); if(v2) parts.push(v2); }catch(_e){}
     // v3 段：吹气散忧
     try{ var v3=window._sleepRitualV3(); if(v3) parts.push(v3); }catch(_e){}
+    // v4 段：声场
+    try{ var v4=window._sleepRitualV4(); if(v4) parts.push(v4); }catch(_e){}
     // 收尾
     parts.push('<div style="margin-top:10px;font-size:12.5px;color:#838A95;text-align:center;">'+BYE[Math.floor(Date.now()/86400000)%BYE.length]+' 晚安。</div>');
     return '<div style="font-size:12px;color:#838A95;margin-bottom:6px;">睡前三分钟 · 今天到这</div>'+parts.join('');
   };
 
+  /* v4 段：声场——双耳节拍助眠(WebAudio 纯合成,左耳载波/右耳+差频,耳机才有用) */
+  var SND_PRESETS=[
+    {k:'deep', n:'深睡', band:'delta', beat:2.2,  car:136, hint:'2.2Hz 差频——最接近深睡脑波，适合已经困了'},
+    {k:'calm', n:'放松', band:'theta', beat:5.5,  car:174, hint:'5.5Hz 差频——卸掉肌肉紧绷，适合刚躺下'},
+    {k:'ease', n:'平心', band:'alpha', beat:9.5,  car:210, hint:'9.5Hz 差频——把思绪压平，适合脑子还在转'}
+  ];
+  window._sleepRitualV4=function(){
+    var h=new Date().getHours();
+    var defK=(h>=23||h<1)?'deep':(h>=22?'calm':'ease');
+    var btns=SND_PRESETS.map(function(p){
+      return '<button class="switch-btn'+(p.k===defK?' active':'')+'" id="sndBtn-'+p.k+'" onclick="window._sndPick(\''+p.k+'\')" style="flex:1;font-size:12px;">'+p.n+'</button>';
+    }).join('');
+    return '<div style="margin-top:12px;border-top:1px dashed #E0E0E0;padding-top:10px;">'
+      +'<div style="font-size:13px;font-weight:600;color:#1A2029;">🌊 声场 · 耳机里的深水</div>'
+      +'<div style="font-size:11.5px;color:#838A95;margin-top:2px;">左右耳各放一个微微差频的低音——大脑自己会「追平」它。要戴耳机，两只都要戴。</div>'
+      +'<div style="display:flex;gap:7px;margin-top:9px;">'+btns+'</div>'
+      +'<div id="sndHint" style="font-size:11.5px;color:#5A6B7A;margin-top:6px;line-height:1.5;">'+(SND_PRESETS.find(function(p){return p.k===defK;})||SND_PRESETS[0]).hint+'</div>'
+      +'<button id="sndMain" class="switch-btn active" onclick="window._sndToggle()" style="width:100%;margin-top:8px;">▶ 播放声场（自动 15 分钟）</button>'
+      +'<div style="font-size:10px;color:#B8B2A8;margin-top:5px;text-align:center;">※ 声音本机实时合成，不联网；夜里手机媒体音量调小一点刚好</div>'
+      +'</div>';
+  };
+  var _sndCtx=null, _sndNodes=null, _sndTimer=null, _sndCur=null;
+  window._sndPick=function(k){
+    _sndCur=k;
+    SND_PRESETS.forEach(function(p){
+      var b=document.getElementById('sndBtn-'+p.k);
+      if(b) b.classList.toggle('active', p.k===k);
+    });
+    var p=SND_PRESETS.find(function(x){ return x.k===k; });
+    var hint=document.getElementById('sndHint');
+    if(hint&&p) hint.textContent=p.hint;
+  };
+  window._sndStop=function(){
+    if(_sndTimer){ clearTimeout(_sndTimer); _sndTimer=null; }
+    try{
+      if(_sndNodes){
+        var g=_sndNodes.master;
+        var ac=_sndCtx;
+        try{ g.gain.setValueAtTime(g.gain.value, ac.currentTime); g.gain.linearRampToValueAtTime(0.0001, ac.currentTime+0.6); }catch(_e){}
+        var oscs=_sndNodes.oscs;
+        setTimeout(function(){ try{ oscs.forEach(function(o){ o.stop(); }); _sndNodes=null; }catch(_e){} }, 700);
+      }
+      if(_sndCtx&&_sndCtx.state==='running'&&_sndNodes===null){ try{ _sndCtx.close(); _sndCtx=null; }catch(_e){} }
+    }catch(_e){}
+    var b=document.getElementById('sndMain');
+    if(b){ b.textContent='▶ 播放声场（自动 15 分钟）'; b.classList.add('active'); }
+  };
+  window._sndToggle=function(){
+    if(_sndTimer){ window._sndStop(); return; }
+    try{
+      if(!_sndCtx||_sndCtx.state==='closed') _sndCtx=new (window.AudioContext||window.webkitAudioContext)();
+      var ac=_sndCtx;
+      if(ac.state==='suspended') ac.resume();
+      var p=SND_PRESETS.find(function(x){ return x.k===(_sndCur||'deep'); })||SND_PRESETS[0];
+      var merger=ac.createChannelMerger(2);
+      var master=ac.createGain();
+      master.gain.setValueAtTime(0.0001, ac.currentTime);
+      master.gain.linearRampToValueAtTime(0.11, ac.currentTime+3);
+      var oscs=[];
+      [0, p.beat].forEach(function(off, i){
+        var o=ac.createOscillator(); o.type='sine'; o.frequency.value=p.car+off;
+        var g=ac.createGain(); g.gain.value=0.5;
+        o.connect(g); g.connect(merger, 0, i);
+        o.start(); oscs.push(o);
+      });
+      merger.connect(master); master.connect(ac.destination);
+      _sndNodes={master:master, oscs:oscs};
+      _sndTimer=setTimeout(function(){ window._sndStop(); }, 15*60*1000);
+      var b=document.getElementById('sndMain');
+      if(b){ b.textContent='⏸ 声场播放中 · '+p.n+'（点停）'; b.classList.remove('active'); }
+    }catch(_e){
+      var b2=document.getElementById('sndMain');
+      if(b2) b2.textContent='▶ 这台设备放不了——换手机试试';
+    }
+  };
   /* v3 段：吹气散忧——对着屏幕哈一口气,把今天最烦的事吹散(麦克风只算音量,不录音不存字) */
   window._sleepRitualV3=function(){
     var today=''; try{ today=JSON.parse(localStorage.getItem('zhiming_blow_v1')||'null'); }catch(_e){}
