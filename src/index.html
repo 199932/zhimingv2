@@ -1590,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.99.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.100.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2592,7 +2592,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.99.0-20261101';
+const ZHIMING_BUILD = 'v2.100.0-20261101';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25239,6 +25239,114 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
       try{ if(navigator.vibrate) navigator.vibrate([20,40,20]); }catch(_e){}
     }, 2650);
   };
+  /* ---- 呼吸定力:对麦哈一口长气,测时长+稳度→肺气线+体质联动(管线同吹气散忧,零上传) ---- */
+  window._breathRender=function(){
+    var area=document.getElementById('health-breath');
+    if(!area||area.dataset.brDone) return;
+    area.dataset.brDone='1';
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🌬️ 呼吸定力 · 哈气测肺气</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div style="font-size:11.5px;color:var(--text-sub);margin-bottom:9px;">对麦克风匀速哈一口<b>长气</b>（像给眼镜哈气那样），能哈多长、稳不稳，就是肺气的一个粗测。</div>'
+      +'<div style="position:relative;height:46px;border-radius:10px;background:#16181F;overflow:hidden;">'
+      +'<div id="brBar" style="position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#3E6B55,#61AB83);transition:width .12s;"></div>'
+      +'<div id="brTime" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;">0.0s</div>'
+      +'</div>'
+      +'<div id="brMsg" style="font-size:11.5px;color:var(--text-sub);margin-top:7px;text-align:center;min-height:16px;">按住按钮哈气——松手或停 0.8 秒结束</div>'
+      +'<button id="brBtn" class="switch-btn active" style="width:100%;margin-top:8px;">🌬️ 按住哈气</button>'
+      +'<div id="brOut" style="display:none;margin-top:10px;background:var(--pri-light,#f2f5ee);border-radius:10px;padding:10px 12px;">'
+      +'<div id="brTitle" style="font-size:13.5px;font-weight:700;"></div>'
+      +'<div id="brSay" style="font-size:12.5px;color:var(--text);margin-top:4px;line-height:1.65;"></div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:6px;text-align:center;">※ 声音只在本机算音量，不录音不存字；这是趣味粗测不是肺功能检查</div>'
+      +'</div></div>';
+    var btn=document.getElementById('brBtn');
+    btn.addEventListener('pointerdown', function(e){ e.preventDefault(); window._breathGo(); }, {passive:false});
+    ['pointerup','pointercancel','pointerleave'].forEach(function(ev){ btn.addEventListener(ev, function(){ window._breathEnd(false); }); });
+  };
+  var _brCtx=null, _brStream=null, _brAnalyser=null, _brBuf=null, _brRAF=null;
+  var _brActive=false, _brStartT=0, _brDurMs=0, _brSum=0, _brSum2=0, _brN=0, _brLastLoud=0;
+  window._breathGo=function(){
+    var msg=document.getElementById('brMsg');
+    var btn=document.getElementById('brBtn');
+    if(_brActive) return;
+    var GUM=navigator.mediaDevices&&navigator.mediaDevices.getUserMedia;
+    if(!GUM){ if(msg) msg.textContent='这台设备开不了麦克风——定力测不了，深呼吸三组也有用'; return; }
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+      _brStream=st;
+      var AC=window.AudioContext||window.webkitAudioContext;
+      _brCtx=new AC();
+      if(_brCtx.state==='suspended') _brCtx.resume();
+      var src=_brCtx.createMediaStreamSource(st);
+      _brAnalyser=_brCtx.createAnalyser(); _brAnalyser.fftSize=512; window._brAnalyserRef=_brAnalyser;
+      src.connect(_brAnalyser);
+      _brBuf=new Uint8Array(_brAnalyser.fftSize);
+      _brActive=true; _brStartT=0; _brDurMs=0; _brSum=0; _brSum2=0; _brN=0; _brLastLoud=0;
+      if(btn){ btn.textContent='🌬️ 哈气中……'; btn.style.pointerEvents='none'; }
+      if(msg) msg.textContent='对准麦，匀速哈——';
+      _brLoop();
+    }).catch(function(){ if(msg) msg.textContent='麦的权限没给——测不了也没事'; });
+  };
+  function _brLoop(){
+    if(!_brActive) return;
+    _brAnalyser.getByteTimeDomainData(_brBuf);
+    var sum=0;
+    for(var i=0;i<_brBuf.length;i++){ var v=(_brBuf[i]-128)/128; sum+=v*v; }
+    var rms=Math.sqrt(sum/_brBuf.length);
+    var now=performance.now();
+    if(rms>0.06){
+      if(!_brStartT) _brStartT=now;
+      _brLastLoud=now;
+      _brSum+=rms; _brSum2+=rms*rms; _brN++;
+      _brDurMs=now-_brStartT;
+    } else if(_brStartT&&now-_brLastLoud>800){
+      window._breathEnd(true);
+      return;
+    }
+    var bar=document.getElementById('brBar');
+    var tEl=document.getElementById('brTime');
+    var pct=Math.min(rms*320, 100);
+    if(bar) bar.style.width=pct+'%';
+    if(tEl) tEl.textContent=(_brDurMs/1000).toFixed(1)+'s';
+    _brRAF=requestAnimationFrame(_brLoop);
+  }
+  window._breathEnd=function(auto){
+    if(!_brActive) return;
+    _brActive=false;
+    if(_brRAF){ cancelAnimationFrame(_brRAF); _brRAF=null; }
+    try{ if(_brStream){ _brStream.getTracks().forEach(function(t){ t.stop(); }); _brStream=null; } }catch(_e){}
+    try{ if(_brCtx&&_brCtx.state!=='closed') _brCtx.close(); }catch(_e){}
+    var btn=document.getElementById('brBtn');
+    if(btn){ btn.textContent='🌬️ 按住再测一口'; btn.style.pointerEvents='auto'; }
+    var msg=document.getElementById('brMsg');
+    var bar=document.getElementById('brBar');
+    var tEl=document.getElementById('brTime');
+    if(bar) bar.style.width='0%';
+    if(tEl) tEl.textContent='0.0s';
+    var sec=_brDurMs/1000;
+    var cv=(_brN>0)?(_brSum/_brN):0;
+    var sd=(_brN>1)?Math.sqrt(Math.max(0, _brSum2/_brN-cv*cv)):0;
+    if(sec<0.5){
+      if(msg) msg.textContent='这一口太短了——重新按住，匀速哈长一点';
+      return;
+    }
+    var t=null; try{ t=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_e){}
+    var qixu=t&&t.t==='气虚';
+    var title, say;
+    if(sec>=6){ title='肺气足 · '+sec.toFixed(1)+' 秒'; say='一口气能哈这么长还稳——肺气底子在线，今天不用刻意补，保持就行'; }
+    else if(sec>=4){ title='肺气中平 · '+sec.toFixed(1)+' 秒'; say='中规中矩——平时快走 15 分钟、爬两层楼梯不喘，就是在养它'; }
+    else if(sec>=2){ title='肺气偏弱 · '+sec.toFixed(1)+' 秒'; say='短了点——八段锦「左右开弓似射雕」那式每天来两组，两周就有变化'; }
+    else { title='一口气偏短 · '+sec.toFixed(1)+' 秒'; say='别硬撑——今天久坐 1 小时就起身扩胸 5 下，白天多晒背'; }
+    if(sd>0.09) say+='。另外你这口气忽强忽弱（气流波动偏大），呼吸偏浅——试试腹式呼吸：手放肚子上，吸气鼓肚子';
+    if(qixu&&sec<4) say+='。你是气虚体质——今天黄芪泡水可以安排上';
+    if(msg) msg.textContent=(auto?'（气流断了自动结算）':'')+'这口哈了 '+sec.toFixed(1)+' 秒 · 稳度 '+(sd<=0.05?'很稳':sd<=0.09?'还行':'波动大');
+    var outEl=document.getElementById('brOut');
+    if(outEl){ outEl.style.display='block'; }
+    var ti=document.getElementById('brTitle');
+    if(ti) ti.textContent=title;
+    var sy=document.getElementById('brSay');
+    if(sy) sy.textContent=say;
+  };
   window._maiRender=function(){
     var area=document.getElementById('health-mai');
     if(!area) return;
@@ -25345,10 +25453,12 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-flavor"></div><div id="health-mai"></div><div id="health-music"></div><div id="health-detail"></div>';
+      h+='<div id="health-breath"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-music"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
+      try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
       try{ window._flavorRender(); }catch(_e){}
+      try{ window._breathRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
