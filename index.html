@@ -56,7 +56,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.97.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.98.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -323,6 +323,16 @@
         <div class="front" id="guaCardFront"></div>
       </div>
       <button class="btn-secondary" style="width:100%;" id="guaAgainBtn" style="display:none;" onclick="window.gameFlipGua(true)">🔄 再抽一张</button>
+    </div>
+    <div class="card"><div class="card-title">✒️ 一笔画 · 连出今日</div>
+      <p class="hint">今天的六个点，按 1→6 一笔连成——中途跳序或松手就重来。连得顺不顺，就是今天的节奏暗示。</p>
+      <div style="position:relative;border-radius:12px;overflow:hidden;background:#F7F4EC;border:1.5px solid #E5E0D5;">
+        <canvas id="osCv" width="320" height="220" style="width:100%;display:block;touch-action:none;cursor:crosshair;"></canvas>
+      </div>
+      <div id="osMsg" style="font-size:12px;color:#838A95;margin-top:8px;text-align:center;min-height:17px;">从 1 号点按下，依次划过 2→6</div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn-secondary" id="osReset" style="flex:1;" onclick="window._osReset(true)">↺ 换个连法（重开）</button>
+      </div>
     </div>
     <div class="foot-disclaimer">※ 趣味互动均为简化游戏向演绎，仅供娱乐参考，不构成人生决策建议</div>
   </div>
