@@ -1590,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.95.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.96.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2582,7 +2582,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.95.0-20261101';
+const ZHIMING_BUILD = 'v2.96.0-20261101';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -23898,6 +23898,148 @@ function _lenormandAIEnhance(cards, spreadType){
   /* ---- 命盘塔:四柱立成CSS 3D塔,拖动/陀螺仪绕着看(纯视觉装置,零依赖) ---- */
   var PD_GAN={甲:['木','#5E8B4F'],乙:['木','#5E8B4F'],丙:['火','#B4553C'],丁:['火','#B4553C'],戊:['土','#A5813C'],己:['土','#A5813C'],庚:['金','#8C9099'],辛:['金','#8C9099'],壬:['水','#4E6E8E'],癸:['水','#4E6E8E']};
   var PD_ZHI={子:['水','#4E6E8E'],丑:['土','#A5813C'],寅:['木','#5E8B4F'],卯:['木','#5E8B4F'],辰:['土','#A5813C'],巳:['火','#B4553C'],午:['火','#B4553C'],未:['土','#A5813C'],申:['金','#8C9099'],酉:['金','#8C9099'],戌:['土','#A5813C'],亥:['水','#4E6E8E']};
+  /* ---- 人生旋律:80年=80个年音,心情→五声音阶,大运=低八度转调,播到今年戛然而止 ---- */
+  window._melodyData=function(r, p){
+    try{
+      if(!p||!p.year||!p.month||!p.day) return null;
+      const birth=new Date(+p.year, +p.month-1, +p.day);
+      if(isNaN(birth.getTime())) return null;
+      const now=new Date();
+      const livedDays=Math.floor((now-birth)/86400000);
+      if(livedDays<0) return null;
+      const livedY=Math.min(Math.floor(livedDays/365.25), 79);
+      const ckD=(function(){ try{ return JSON.parse(localStorage.getItem('zhiming_grow_ck_v1')||'{}'); }catch(_c){ return {}; } })();
+      const byYear={};
+      Object.keys(ckD).forEach(function(k){ const v=ckD[k]; if(v&&v.m){ const y=k.slice(0,4); (byYear[y]=byYear[y]||[]).push(v.m); } });
+      const ym={};
+      Object.keys(byYear).forEach(function(y){ if(byYear[y].length>=8){ const a=byYear[y].reduce(function(x,z){return x+z;},0)/byYear[y].length; ym[y]=a; } });
+      const dlist=(r&&r.dayun&&r.dayun.list)||[];
+      const startYears={}; dlist.forEach(function(d){ startYears[d.startYear]=d.gz; });
+      const birthY=+p.year;
+      const notes=[];
+      for(let age=0; age<=livedY; age++){
+        const y=String(birthY+age);
+        if(startYears[birthY+age]!=null){ notes.push({age:age, f:130.8, g:0.16, t:'triangle', tag:'dy', gz:startYears[birthY+age]}); }
+        const a=ym[y];
+        if(a!=null){
+          if(a>=3.8) notes.push({age:age, f:659.3, g:0.14, t:'sine', tag:'good'});
+          else if(a<=2.8) notes.push({age:age, f:261.6, g:0.13, t:'sine', tag:'hard'});
+          else notes.push({age:age, f:392.0, g:0.10, t:'sine', tag:'mid'});
+        } else {
+          notes.push({age:age, f:174.6, g:0.045, t:'sine', tag:'silence'});
+        }
+      }
+      return {notes:notes, birthY:birthY, livedY:livedY, ym:ym, startYears:startYears, curYear:String(now.getFullYear())};
+    }catch(_e){ return null; }
+  };
+  window._melodyRender=function(){
+    var pan=document.getElementById('g-p-pan');
+    if(!pan||document.getElementById('melodyBox')) return;
+    var p=null; try{ p=(typeof window.getActiveProfile==='function')?window.getActiveProfile():null; }catch(_e){}
+    var r=null;
+    try{
+      if(p&&p.year&&typeof baziCalc==='function') r=baziCalc({year:+p.year,month:+p.month,day:+p.day,hour:+(p.hour||12),minute:+(p.minute||30),gender:p.gender||'male',cityLng:p.cityLng||116.4,dontSave:true});
+    }catch(_e){}
+    var data=window._melodyData(r, p);
+    if(!data) return;
+    var played=data.notes.filter(function(n){ return n.tag==='good'||n.tag==='hard'||n.tag==='mid'; }).length;
+    var box=document.createElement('div');
+    box.id='melodyBox';
+    box.style.cssText='margin-top:14px;';
+    box.innerHTML='<div class="widget"><div class="widget-title">🎵 听一遍你的人生</div>'
+      +'<div class="widget-body" style="padding:13px 12px 11px;">'
+      +'<div style="font-size:11.5px;color:var(--text-hint);line-height:1.7;margin-bottom:10px;">80 年压成 48 秒——每年一个音：打卡出的<b style="color:#3E6B55;">好年是高音</b>、<b style="color:#C46A2B;">难年是低音</b>、没打卡的年是几乎听不见的垫音、大运换挡一声闷响转调。播到你今年——<b style="color:var(--text);">戛然而止，剩下的留白</b>。</div>'
+      +'<div style="position:relative;height:76px;border-radius:10px;background:#16181F;overflow:hidden;">'
+      +'<canvas id="melodyCv" width="358" height="76" style="width:100%;height:100%;display:block;"></canvas>'
+      +'<div id="melodyHead" style="position:absolute;top:0;bottom:0;width:2px;background:#49B3FC;box-shadow:0 0 8px #49B3FC;left:0;display:none;"></div>'
+      +'</div>'
+      +'<div id="melodyInfo" style="font-size:11.5px;color:var(--text-sub);margin-top:8px;min-height:16px;">'+(played>0?('有 '+played+' 个年份被你打卡出了音高'):'还没攒出音高——多打几天卡，难年好年才听得出来')+'</div>'
+      +'<button id="melodyBtn" class="switch-btn active" onclick="window._melodyToggle()" style="width:100%;margin-top:8px;">▶ 播放（'+data.birthY+' 到 '+data.curYear+'，约 '+Math.round((data.livedY+1)*0.6)+' 秒）</button>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:5px;text-align:center;">※ 旋律由打卡数据实时合成，声音本机播放，建议音量先调小</div>'
+      +'</div></div>';
+    pan.appendChild(box);
+    var cv=document.getElementById('melodyCv'), ctx=cv.getContext('2d');
+    var W=cv.width, H=cv.height, N=80;
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<N;i++){
+      var x=(i+0.5)*W/N;
+      var yv=data.ym[String(data.birthY+i)];
+      if(yv==null){ ctx.fillStyle='rgba(131,138,149,0.30)'; ctx.fillRect(x-2, H*0.72, 3.2, H*0.2); }
+      else if(yv>=3.8){ ctx.fillStyle='#61AB83'; ctx.fillRect(x-2, H*0.12, 3.2, H*0.8); }
+      else if(yv<=2.8){ ctx.fillStyle='#F58323'; ctx.fillRect(x-2, H*0.60, 3.2, H*0.32); }
+      else { ctx.fillStyle='#9AA5B1'; ctx.fillRect(x-2, H*0.42, 3.2, H*0.5); }
+      if(data.startYears[data.birthY+i]!=null){ ctx.fillStyle='rgba(200,232,254,0.7)'; ctx.fillRect(x-0.5, 4, 1, 6); }
+    }
+    ctx.fillStyle='#49B3FC';
+    var cx=(data.livedY+0.5)*W/N;
+    ctx.fillRect(cx-2, 2, 4, H-4);
+  };
+  var _melCtx=null, _melPlaying=false, _melRAF=null;
+  window._melodyStop=function(){
+    _melPlaying=false;
+    if(_melRAF){ cancelAnimationFrame(_melRAF); _melRAF=null; }
+    try{ if(_melCtx&&_melCtx.state!=='closed'){ _melCtx.close(); } }catch(_e){}
+    _melCtx=null;
+    var b=document.getElementById('melodyBtn');
+    if(b){ b.textContent='▶ 重新播放'; b.classList.add('active'); }
+    var h=document.getElementById('melodyHead');
+    if(h) h.style.display='none';
+  };
+  window._melodyToggle=function(){
+    if(_melPlaying){ window._melodyStop(); return; }
+    var p=null; try{ p=(typeof window.getActiveProfile==='function')?window.getActiveProfile():null; }catch(_e){}
+    var r=null;
+    try{
+      if(p&&p.year&&typeof baziCalc==='function') r=baziCalc({year:+p.year,month:+p.month,day:+p.day,hour:+(p.hour||12),minute:+(p.minute||30),gender:p.gender||'male',cityLng:p.cityLng||116.4,dontSave:true});
+    }catch(_e){}
+    var data=window._melodyData(r, p);
+    if(!data||!data.notes.length) return;
+    try{
+      _melCtx=new (window.AudioContext||window.webkitAudioContext)();
+      if(_melCtx.state==='suspended') _melCtx.resume();
+    }catch(_e){
+      var b2=document.getElementById('melodyBtn');
+      if(b2) b2.textContent='▶ 这台设备放不了——换手机试试';
+      return;
+    }
+    var ac=_melCtx, t0=ac.currentTime+0.25, STEP=0.6;
+    var master=ac.createGain();
+    master.gain.value=1;
+    master.connect(ac.destination);
+    data.notes.forEach(function(n){
+      var o=ac.createOscillator(); o.type=n.t; o.frequency.value=n.f;
+      var g=ac.createGain();
+      g.gain.setValueAtTime(0.0001, t0+n.age*STEP);
+      g.gain.linearRampToValueAtTime(n.g, t0+n.age*STEP+0.08);
+      g.gain.linearRampToValueAtTime(0.0001, t0+(n.age+1)*STEP-0.06);
+      o.connect(g); g.connect(master);
+      o.start(t0+n.age*STEP); o.stop(t0+(n.age+1)*STEP+0.05);
+    });
+    _melPlaying=true;
+    var total=(data.livedY+1)*STEP;
+    var b=document.getElementById('melodyBtn');
+    if(b){ b.textContent='⏸ 播放中——'+data.birthY+' 年开始，听听看'; b.classList.remove('active'); }
+    var h=document.getElementById('melodyHead');
+    if(h) h.style.display='block';
+    var cvW=358;
+    var tick=function(){
+      if(!_melPlaying) return;
+      var el=ac.currentTime-t0;
+      if(el<0) el=0;
+      var hh=document.getElementById('melodyHead');
+      if(hh) hh.style.left=Math.min(el/total, 1)*cvW+'px';
+      if(el>=total+0.3){
+        window._melodyStop();
+        var b3=document.getElementById('melodyBtn');
+        if(b3) b3.textContent='▶ 重新播放——刚才那声戛然而止，就是今年';
+        var inf=document.getElementById('melodyInfo');
+        if(inf) inf.textContent='播完了。'+data.birthY+' 到 '+data.curYear+'——后面的音还没攒出来';
+        return;
+      }
+      _melRAF=requestAnimationFrame(tick);
+    };
+    tick();
+  };
   window._pagodaRender=function(){
     var pan=document.getElementById('g-p-pan')||document.getElementById('grow-body');
     if(!pan||document.getElementById('pagodaBox')) return;
@@ -24014,6 +24156,7 @@ function _lenormandAIEnhance(cards, spreadType){
     if(!document.getElementById('g-p-pan')&&!document.getElementById('g-n-today')) return;
     if(saved==='pan'&&!document.getElementById('g-p-pan')) saved='today';
     try{ window._pagodaRender(); }catch(_e){}
+    try{ window._melodyRender(); }catch(_e){}
     window._growSub(saved);
   };
   window._growSetMood = function(m){
