@@ -1590,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.96.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.97.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2582,7 +2582,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.96.0-20261101';
+const ZHIMING_BUILD = 'v2.97.0-20261101';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4859,10 +4859,109 @@ function _shiChart(dayZhi){
     '金':['清','断','收','白','毅','静'],
     '水':['润','智','流','墨','藏','涵']
   };
+  /* ---- 今日之相·五行镜:前置镜头拍一张,本地像素分析亮度/冷暖→五行色滤镜+气色人话(照片即弃只存结论) ---- */
+  window._jingAnalyze=function(ravg, gavg, bavg){
+    var lum=0.299*ravg+0.587*gavg+0.114*bavg;
+    var warm=ravg-bavg;
+    var br=lum>128?'bright':(lum>72?'mid':'dark');
+    var hue=warm>10?'warm':(warm<-10?'cold':'neutral');
+    var wx, name, say;
+    if(br==='bright'&&hue==='warm'){ wx='火'; name='火相 · 亮且暖'; say='气色在线——今天的你电量是满的，适合见人谈事；别浪费，把这股热用在最要紧的一件上'; }
+    else if(br==='bright'&&hue==='cold'){ wx='金'; name='金相 · 亮而清'; say='清爽利落——今天脑子快、边界清，适合做决断类的事；就是别太硬，说话留三分余地'; }
+    else if(br==='mid'&&(hue==='warm'||hue==='neutral')){ wx='土'; name='土相 · 平稳'; say='平稳的一天——不太兴奋也不低落，适合把例行的事做扎实；稳就是今天的赢法'; }
+    else if(br==='mid'&&hue==='cold'){ wx='水'; name='水相 · 安静'; say='偏安静——适合整理、复盘、写点东西；今天不必强求热闹，向内收着点'; }
+    else if(br==='dark'&&hue==='warm'){ wx='木'; name='木相 · 疲而带暖'; say='看着有点累，但底色是暖的——去晒 15 分钟太阳，比咖啡管用'; }
+    else { wx='水'; name='水相 · 暗而冷'; say='亮度和气色都偏低——先喝口热水、开窗见见光；今天少硬撑，早点收工'; }
+    return {wx:wx, name:name, say:say, br:br, hue:hue, lum:Math.round(lum), warm:Math.round(warm)};
+  };
+  window._jingRender=function(){
+    var body=document.getElementById('almanac-body');
+    if(!body||document.getElementById('jingBox')) return;
+    var old=null; try{ old=JSON.parse(localStorage.getItem('zhiming_xiang_v1')||'null'); }catch(_e){}
+    var today=new Date(); var ds=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+    var done=old&&old.d===ds;
+    var box=document.createElement('div');
+    box.id='jingBox';
+    box.style.cssText='margin-top:12px;';
+    box.innerHTML='<div class="card"><div class="card-title">🪞 今日之相 · 五行镜</div>'
+      +'<div style="font-size:11.5px;color:#A8A29A;margin-bottom:8px;">用前置镜头照一张——本地分析气色的亮度与冷暖，叠一层今日五行色。<b style="color:#5A5245;">照片拍完即弃，机器只记五行结论，不存图不上传。</b></div>'
+      +'<div id="jingStage" style="position:relative;width:min(240px,70vw);height:min(240px,70vw);margin:0 auto;border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#F2EFE9,#E4DED2);">'
+      +'<div id="jingIdle" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">'
+      +'<div style="font-size:34px;opacity:.5;">🪞</div>'
+      +'<div style="font-size:11px;color:#A8A29A;">'+(done?('今天照过了——'+old.name):'镜子里今天还没有你')+'</div>'
+      +'</div>'
+      +'<video id="jingVid" autoplay playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1);"></video>'
+      +'<canvas id="jingCv" width="240" height="240" style="position:absolute;inset:0;width:100%;height:100%;display:none;"></canvas>'
+      +'</div>'
+      +'<div id="jingMsg" style="font-size:12px;color:#3E6B55;margin-top:8px;text-align:center;line-height:1.65;min-height:17px;">'+(done?('上次结论：'+old.name+'——可以再照一张对比'):'')+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:6px;">'
+      +'<button id="jingBtn" class="switch-btn active" onclick="window._jingOpen()" style="flex:1;">🪞 打开镜头照一照</button>'
+      +'<button id="jingShot" class="switch-btn" onclick="window._jingShoot()" style="flex:1;display:none;">⚡ 咔嚓，就现在</button>'
+      +'</div>'
+      +'<div style="font-size:10px;color:#B8B2A8;margin-top:6px;text-align:center;">※ 摄像头画面全程留在本机，取一帧分析完就关</div>'
+      +'</div>';
+    body.appendChild(box);
+  };
+  var _jingStream=null;
+  window._jingOpen=function(){
+    var vid=document.getElementById('jingVid');
+    var idle=document.getElementById('jingIdle');
+    var btn=document.getElementById('jingBtn');
+    var shot=document.getElementById('jingShot');
+    var msg=document.getElementById('jingMsg');
+    var GUM=navigator.mediaDevices&&navigator.mediaDevices.getUserMedia;
+    if(!GUM){ if(msg) msg.textContent='这台设备开不了前置镜头——镜子今天照不了'; return; }
+    if(msg) msg.textContent='镜头开着——找好光，准备好了点右边「咔嚓」';
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'user', width:{ideal:480}, height:{ideal:480}}, audio:false}).then(function(st){
+      _jingStream=st;
+      vid.srcObject=st;
+      vid.style.display='block';
+      if(idle) idle.style.display='none';
+      if(btn){ btn.style.display='none'; }
+      if(shot){ shot.style.display='block'; shot.classList.add('active'); }
+    }).catch(function(){
+      if(msg) msg.textContent='镜头权限没给——照不了也没事，气色自己照镜子也能看';
+    });
+  };
+  window._jingShoot=function(){
+    var vid=document.getElementById('jingVid');
+    if(!vid||!vid.videoWidth){ var m0=document.getElementById('jingMsg'); if(m0) m0.textContent='镜头还没就绪——再等一秒'; return; }
+    var cv=document.getElementById('jingCv');
+    var ctx=cv.getContext('2d');
+    ctx.save();
+    ctx.translate(240,0); ctx.scale(-1,1);
+    var sz=Math.min(vid.videoWidth, vid.videoHeight);
+    ctx.drawImage(vid, (vid.videoWidth-sz)/2, (vid.videoHeight-sz)/2, sz, sz, 0, 0, 240, 240);
+    ctx.restore();
+    var d=ctx.getImageData(0,0,240,240).data;
+    var rs=0,gs=0,bs=0,n=0;
+    for(var i=0;i<d.length;i+=64){ rs+=d[i]; gs+=d[i+1]; bs+=d[i+2]; n++; }
+    var res=window._jingAnalyze(rs/n, gs/n, bs/n);
+    var WX_COLOR={'火':'rgba(214,86,55,0.20)','金':'rgba(176,186,198,0.22)','土':'rgba(196,160,80,0.20)','木':'rgba(94,139,79,0.20)','水':'rgba(78,110,142,0.22)'};
+    ctx.globalCompositeOperation='overlay';
+    ctx.fillStyle=WX_COLOR[res.wx]||'rgba(0,0,0,0.1)';
+    ctx.fillRect(0,0,240,240);
+    ctx.globalCompositeOperation='source-over';
+    var grad=ctx.createRadialGradient(120,100,60,120,120,190);
+    grad.addColorStop(0,'rgba(255,244,220,0.10)');
+    grad.addColorStop(1,'rgba(0,0,0,0.26)');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,240,240);
+    cv.style.display='block';
+    var vid2=document.getElementById('jingVid'); vid2.style.display='none';
+    try{ if(_jingStream){ _jingStream.getTracks().forEach(function(t){ t.stop(); }); _jingStream=null; } }catch(_e){}
+    var shot=document.getElementById('jingShot'); if(shot){ shot.style.display='none'; }
+    var btn=document.getElementById('jingBtn'); if(btn){ btn.style.display='block'; btn.textContent='🪞 再照一张'; }
+    var today=new Date(); var ds=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+    try{ localStorage.setItem('zhiming_xiang_v1', JSON.stringify({d:ds, wx:res.wx, name:res.name, lum:res.lum, warm:res.warm})); }catch(_e){}
+    var idle=document.getElementById('jingIdle'); if(idle) idle.style.display='none';
+    var msg=document.getElementById('jingMsg');
+    if(msg) msg.innerHTML='<b style="font-size:13px;">'+res.name+'</b><br><span style="font-size:12px;">'+res.say+'</span><br><span style="font-size:10px;color:#B8B2A8;">（亮度 '+res.lum+' · 色偏 '+res.warm+'——图已弃，只留结论）</span>';
+  };
   window._inkRender=function(){
     var body=document.getElementById('almanac-body');
     if(!body) return;
     try{ window._xiRender(); }catch(_e){}
+    try{ window._jingRender(); }catch(_e){}
     if(document.getElementById('inkBox')) return;
     var d=new Date();
     var idx=0; try{ idx=dayGanZhiIdxFromDate(d.getFullYear(),d.getMonth()+1,d.getDate(),12); }catch(_e){}
