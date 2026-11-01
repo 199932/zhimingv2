@@ -56,7 +56,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.98.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.99.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1846,6 +1846,82 @@
     '平和':'ping', '阳虚':'chen', '气虚':'chi', '阴虚':'shuo', '痰湿':'hua',
     '湿热':'shuo', '血瘀':'xian', '气郁':'xian', '特禀':'ping'
   };
+  /* ---- 五味轮:体质×时辰→今天主角味/少碰味/吃法,转盘仪式展开(纯推理不随机) ---- */
+  var FV_RULES={
+    '气虚':{add:'甘',cut:'辛',why:'甘能补气——山药小米黄芪都在这个味里；辛散耗气，气本来就不够，别再散',},
+    '阳虚':{add:'辛',cut:'咸',why:'辛温助阳——姜桂圆韭菜都靠这个味起效；咸走血寒凉，阳虚的人要收着',},
+    '阴虚':{add:'酸',cut:'辛',why:'酸甘化阴——酸味收敛生津，梨百合枸杞都搭这个；辛辣烧烤最灼阴，躲远点',},
+    '痰湿':{add:'辛',cut:'甘',why:'辛能化湿行气——姜陈皮芥末都行气；甜腻生湿，痰湿体质的糖和奶油要克制',},
+    '湿热':{add:'苦',cut:'甘',why:'苦能清降——苦瓜绿茶苦菜都败这个火；甜腻助湿热，越甜越闷',},
+    '血瘀':{add:'辛',cut:'咸',why:'辛能行血活血——山楂玫瑰花茶洋葱都对路；咸味重了血行更滞',},
+    '气郁':{add:'辛',cut:'酸',why:'辛能行气解郁——陈皮佛手柑萝卜都是顺气的；酸味收敛，郁本来就没散出去，别再收',},
+    '特禀':{add:'甘',cut:'辛',why:'甘平养胃最稳——五味都淡着来，辛散走窜的对敏感体质不算友好',},
+    '平和':{add:'甘',cut:'咸',why:'底子好，五味均衡就好——甘平养中，重口味别成习惯',}
+  };
+  var FV_HOUR=[[5,'苦','5-7 点大肠当令——早起一杯温水，空腹先别上刺激的'],[7,'甘','7-9 点胃当令——早餐吃暖吃甘：粥、面、红薯都对'],[9,'甘','9-11 点脾当令——脾主运化，加餐别碰冰'],[11,'苦','11-13 点心当令——苦入心，午饭配点苦瓜绿茶'],[13,'甘','13-15 点小肠当令——消化中，饭后走 10 分钟'],[15,'辛','15-17 点膀胱当令——多喝温水别憋着'],[17,'咸','17-19 点肾当令——咸入肾不是多吃咸，晚餐清淡反而养肾'],[19,'甘','19-21 点心包当令——饭后两小时，别加餐了'],[21,'咸','21-23 点三焦当令——睡前不吃夜宵，三焦通则安'],[23,'咸','23-1 点胆当令——该睡了，不是该吃了'],[1,'酸','1-5 点肝肺当令——睡觉就是最好的养']];
+  window._flavorRender=function(){
+    var area=document.getElementById('health-flavor');
+    if(!area||area.dataset.fvDone) return;
+    area.dataset.fvDone='1';
+    var t=null; try{ t=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_e){}
+    var tz=t&&t.t&&FV_RULES[t.t]?t.t:'';
+    var rule=tz?FV_RULES[tz]:FV_RULES['平和'];
+    var wxs=['酸','苦','甘','辛','咸'];
+    var cols=['#7E9E5B','#8A6B3C','#C4A050','#B4553C','#4E6E8E'];
+    var seg=wxs.indexOf(rule.add);
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🍜 五味轮 · 今天吃什么味</div>'
+      +'<div class="widget-body" style="padding:12px;text-align:center;">'
+      +'<div style="position:relative;width:200px;height:200px;margin:0 auto;">'
+      +'<div id="fvWheel" style="position:absolute;inset:0;border-radius:50%;border:5px solid #F2EFE9;box-shadow:0 4px 14px rgba(0,0,0,.12);background:conic-gradient(#7E9E5B 0 72deg,#8A6B3C 72deg 144deg,#C4A050 144deg 216deg,#B4553C 216deg 288deg,#4E6E8E 288deg 360deg);transition:transform 2.6s cubic-bezier(.2,.8,.25,1);">'
+      +wxs.map(function(w,i){
+        var ang=i*72+36;
+        var rad=(ang-90)*Math.PI/180;
+        var x=100+66*Math.cos(rad), y=100+66*Math.sin(rad);
+        return '<div style="position:absolute;left:'+x.toFixed(1)+'px;top:'+y.toFixed(1)+'px;transform:translate(-50%,-50%);font-size:17px;font-weight:800;color:#FFF7EE;text-shadow:0 1px 3px rgba(0,0,0,.35);">'+w+'</div>';
+      }).join('')
+      +'</div>'
+      +'<div style="position:absolute;left:50%;top:-4px;transform:translateX(-50%);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:14px solid #5A5245;"></div>'
+      +'</div>'
+      +'<button id="fvBtn" class="switch-btn active" onclick="window._flavorSpin()" style="width:100%;margin-top:12px;">🌀 转出今天的主味'+(tz?('（你的'+tz+'体质）'):'')+'</button>'
+      +'<div id="fvOut" style="display:none;margin-top:10px;text-align:left;background:var(--pri-light,#f2f5ee);border-radius:10px;padding:10px 12px;">'
+      +'<div style="font-size:13px;font-weight:700;">🎯 今天主角味：'+rule.add+'</div>'
+      +'<div style="font-size:12.5px;color:var(--text);margin-top:3px;">'+rule.why+'</div>'
+      +'<div style="font-size:12.5px;color:var(--pri);font-weight:600;margin-top:5px;">⚠️ 今天少碰味：'+rule.cut+'</div>'
+      +'<div id="fvHour" style="font-size:12.5px;color:var(--text-sub);margin-top:5px;"></div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:6px;text-align:center;">※ 五味不是药——是让你今天挑菜时多一个「偏一点」的方向</div>'
+      +'</div></div>';
+    area.dataset.fvSeg=seg;
+  };
+  window._flavorSpin=function(){
+    var area=document.getElementById('health-flavor');
+    var wheel=document.getElementById('fvWheel');
+    var out=document.getElementById('fvOut');
+    if(!area||!wheel) return;
+    var seg=parseInt(area.dataset.fvSeg||'0',10);
+    var cur=parseInt(area.dataset.fvRot||'0',10);
+    var turns=4;
+    var targetCenter=seg*72+36;
+    var base=cur-turns*360-((cur)%360);
+    var rot=base-(targetCenter)+360*turns;
+    rot=cur+360*turns+(((360-(targetCenter))-(cur%360))+360)%360;
+    wheel.style.transform='rotate('+rot+'deg)';
+    area.dataset.fvRot=rot;
+    var btn=document.getElementById('fvBtn');
+    if(btn){ btn.disabled=true; btn.style.opacity='.6'; btn.textContent='🌀 转着呢——'; }
+    var out2=out;
+    setTimeout(function(){
+      var h=new Date().getHours();
+      var hp=FV_HOUR[0];
+      for(var i=0;i<FV_HOUR.length;i++){ if(h>=FV_HOUR[i][0]) hp=FV_HOUR[i]; }
+      var he=document.getElementById('fvHour');
+      if(he) he.innerHTML='⏰ 此刻吃法：<b>'+hp[2]+'</b>';
+      if(out2) out2.style.display='block';
+      if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.textContent='🌀 再转一次'; }
+      try{ if(navigator.vibrate) navigator.vibrate([20,40,20]); }catch(_e){}
+    }, 2650);
+  };
   window._maiRender=function(){
     var area=document.getElementById('health-mai');
     if(!area) return;
@@ -1952,10 +2028,10 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-mai"></div><div id="health-music"></div><div id="health-detail"></div>';
+      h+='<div id="health-flavor"></div><div id="health-mai"></div><div id="health-music"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
-      try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
+      try{ window._flavorRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
