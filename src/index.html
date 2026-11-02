@@ -1590,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.100.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.101.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2592,7 +2592,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.100.0-20261101';
+const ZHIMING_BUILD = 'v2.101.0-20261103';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25397,6 +25397,239 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
     pad.addEventListener('pointerup', stop); pad.addEventListener('pointercancel', stop); pad.addEventListener('pointerleave', stop);
     document.addEventListener('visibilitychange', function(){ if(document.hidden) stop(); });
   };
+  /* ---- 指尖心率:后摄透指PPG,15秒测真实BPM+节律,纯本地不留画面(点子池五期A) ---- */
+  window._ppgAnalyze=function(samples){
+    if(!samples||samples.length<150) return {ok:false,msg:'有效数据不够——手指贴紧后从头再测一次'};
+    var n=samples.length, gArr=[], rArr=[], ts=[], i, j;
+    for(i=0;i<n;i++){ ts.push(samples[i].t); gArr.push(samples[i].g); rArr.push(samples[i].r); }
+    var stat=function(a){ var m=0,q; for(q=0;q<a.length;q++) m+=a[q]; m/=a.length; var v=0; for(q=0;q<a.length;q++) v+=(a[q]-m)*(a[q]-m); return {mean:m,sd:Math.sqrt(v/a.length)}; };
+    var rS=stat(rArr);
+    if(rS.mean<25) return {ok:false,msg:'画面全黑——手指没盖住镜头，或光没透进来（开闪光/对着灯）'};
+    if(rS.sd>42) return {ok:false,msg:'画面晃得厉害——手指按紧贴住，手臂找个支撑再测'};
+    var gS=stat(gArr);
+    var sig=(gS.sd>0.8)?gArr:rArr;
+    var sS=stat(sig);
+    if(sS.sd<0.55) return {ok:false,msg:'信号太弱——没抓到搏动。试试开闪光灯，或把指尖按得更实'};
+    /* 去基线:1200ms滑窗移动平均 */
+    var det=new Array(n), que=[], w, k;
+    for(i=0;i<n;i++){
+      que.push(i);
+      while(ts[i]-ts[que[0]]>1200) que.shift();
+      var sm=0; for(w=0;w<que.length;w++) sm+=sig[que[w]];
+      det[i]=sig[i]-sm/que.length;
+    }
+    var smArr=new Array(n);
+    for(i=0;i<n;i++) smArr[i]=(det[i>0?i-1:0]+det[i]+det[i<n-1?i+1:n-1])/3;
+    var dS=stat(smArr), th=dS.sd*0.45;
+    var peaks=[], lastT=-9999;
+    for(i=1;i<n-1;i++){
+      if(smArr[i]>smArr[i-1]&&smArr[i]>=smArr[i+1]&&smArr[i]>th){
+        if(ts[i]-lastT>330){ peaks.push(ts[i]); lastT=ts[i]; }
+      }
+    }
+    if(peaks.length<5) return {ok:false,msg:'没抓到足够的心跳——手指别动别说话，15秒再试一次'};
+    var ibi=[];
+    for(i=1;i<peaks.length;i++){ var dd=peaks[i]-peaks[i-1]; if(dd>=400&&dd<=1500) ibi.push(dd); }
+    if(ibi.length<4) return {ok:false,msg:'节律信号太乱——静坐一分钟再测'};
+    ibi.sort(function(a,b){ return a-b; });
+    var med=ibi[Math.floor(ibi.length/2)];
+    var bpm=Math.round(60000/med);
+    if(bpm<40||bpm>170) return {ok:false,msg:'这个数不像静息心率——刚活动过就歇两分钟再测'};
+    var m2=0; for(i=0;i<ibi.length;i++) m2+=ibi[i]; m2/=ibi.length;
+    var v2=0; for(i=0;i<ibi.length;i++) v2+=(ibi[i]-m2)*(ibi[i]-m2);
+    var cv=Math.sqrt(v2/ibi.length)/m2;
+    return {ok:true,bpm:bpm,cv:Math.round(cv*100)/100,beats:ibi.length+1};
+  };
+  window._ppgSay=function(bpm,cv){
+    var h=new Date().getHours(), out=[];
+    if(h>=22||h<6){
+      if(bpm>78) out.push('这个点心率还在 '+bpm+'——要么刚动过，要么心里有事没放下。睡前该收收了');
+      else if(bpm<48) out.push('深夜静息 '+bpm+'，身体完全进了休整模式——这个数很安静');
+      else out.push('深夜静息 '+bpm+'，节奏落得挺稳，是睡着前的样子');
+    }else{
+      if(bpm>=95) out.push(bpm+' 偏快——咖啡？紧张？还是刚爬完楼？缓几分钟重测一次更准');
+      else if(bpm>=86) out.push(bpm+' 略快——白天静息一般 60-85，可能是久坐憋闷或刚走动完');
+      else if(bpm<52) out.push(bpm+' 偏慢——长期运动的人常这样；不是运动员且伴头晕乏力就值得留意');
+      else out.push(bpm+'，白天静息的正常轨道上');
+    }
+    if(cv<0.15) out.push('节律整齐');
+    else if(cv<0.28) out.push('节律略有起伏——呼吸性波动其实很常见，别慌');
+    else out.push('节律波动偏大——歇几分钟重测；反复偏大再留个心眼');
+    return out;
+  };
+  window._ppgRender=function(){
+    var area=document.getElementById('health-ppg');
+    if(!area) return;
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">❤️ 指尖心率 · 真的测一次</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div id="ppgBox"></div>'
+      +'<div id="ppgTrendRow" style="margin-top:10px;"></div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:8px;text-align:center;">※ 透指测心率是娱乐级参考，不是医疗设备；心悸胸闷请及时就医。画面只在采样时用，不拍照不存储</div>'
+      +'</div></div>';
+    window._ppgIdle();
+    window._ppgTrendLine();
+  };
+  window._ppgIdle=function(){
+    var b=document.getElementById('ppgBox'); if(!b) return;
+    b.innerHTML='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:14px;text-align:center;">'
+      +'<div style="font-size:26px;">🫰</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.7;">指尖盖住后置摄像头和闪光灯，按住 15 秒<br>摄像头看血流微变，算出真实心率</div>'
+      +'<button id="ppgGo" class="switch-btn active" onclick="window._ppgStart()" style="margin-top:10px;width:100%;">开始测量</button>'
+      +'</div>';
+  };
+  window._ppgCancel=function(){
+    var r2=window._ppgRef;
+    if(r2){ r2.done=true; if(r2.timer) clearInterval(r2.timer); if(r2.stream){ try{ r2.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){} } }
+    window._ppgIdle();
+  };
+  window._ppgStart=function(){
+    var b=document.getElementById('ppgBox'); if(!b) return;
+    if(window._ppgRef&&!window._ppgRef.done) window._ppgCancel();
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      b.innerHTML='<div style="font-size:12.5px;color:var(--text-sub);padding:10px;">这台浏览器开不了摄像头——心率测不了，试试系统浏览器打开</div>';
+      return;
+    }
+    b.innerHTML='<div style="background:#111;border-radius:12px;overflow:hidden;position:relative;">'
+      +'<video id="ppgVid" autoplay playsinline muted style="width:100%;height:170px;object-fit:cover;display:block;"></video>'
+      +'<div id="ppgCover" style="position:absolute;left:10px;top:10px;font-size:11px;background:rgba(0,0,0,.55);color:#fff;border-radius:8px;padding:4px 8px;">检测手指覆盖…</div>'
+      +'</div>'
+      +'<div style="background:var(--pri-light,#f2f5ee);border-radius:10px;padding:10px 10px 8px;margin-top:8px;">'
+      +'<div style="height:6px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden;"><div id="ppgBar" style="height:100%;width:0%;background:var(--pri);transition:width .3s;"></div></div>'
+      +'<div id="ppgHint" style="font-size:12px;color:var(--text-sub);margin-top:6px;min-height:16px;text-align:center;">手指盖住镜头和闪光灯，按住别动</div>'
+      +'</div>'
+      +'<canvas id="ppgWave" width="320" height="46" style="width:100%;height:46px;margin-top:8px;border-radius:8px;background:#16191F;"></canvas>'
+      +'<button class="switch-btn" onclick="window._ppgCancel()" style="margin-top:8px;width:100%;">取消</button>';
+    window._ppgRef={samples:[], stream:null, done:false, covered:false, coveredMs:0, startT:0, timer:null};
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}},audio:false}).then(function(stream){
+      var r0=window._ppgRef;
+      if(!r0||r0.done){ try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){} return; }
+      var v=document.getElementById('ppgVid');
+      if(!v){ try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){} return; }
+      v.srcObject=stream; r0.stream=stream;
+      try{
+        var tr=stream.getVideoTracks()[0];
+        if(tr&&tr.getCapabilities&&tr.getCapabilities().torch){
+          tr.applyConstraints({advanced:[{torch:true}]}).then(function(){
+            var c=document.getElementById('ppgCover'); if(c) c.textContent='闪光已开——指尖盖住镜头';
+          }).catch(function(){});
+        }else{
+          var c2=document.getElementById('ppgCover'); if(c2) c2.textContent='没找到闪光开关——对着灯或窗也行';
+        }
+      }catch(_e){}
+      window._ppgLoop();
+    }).catch(function(){
+      window._ppgIdle();
+      var b2=document.getElementById('ppgBox');
+      if(b2) b2.innerHTML='<div style="font-size:12.5px;color:var(--text-sub);padding:10px;">摄像头没开成（权限拒绝或没有后摄）——允许摄像头权限后重试</div>';
+    });
+  };
+  window._ppgLoop=function(){
+    var ref=window._ppgRef; if(!ref) return;
+    var DUR=15000;
+    var v=document.getElementById('ppgVid');
+    var cv=document.createElement('canvas'); cv.width=64; cv.height=48;
+    var cx=cv.getContext('2d',{willReadFrequently:true});
+    ref.startT=Date.now();
+    ref.timer=setInterval(function(){
+      var r2=window._ppgRef;
+      if(!r2||r2.done){ if(r2&&r2.timer) clearInterval(r2.timer); return; }
+      if(!v||v.readyState<2) return;
+      var now=Date.now()-r2.startT;
+      try{ cx.drawImage(v,0,0,64,48); }catch(_e){ return; }
+      var d;
+      try{ d=cx.getImageData(16,12,32,24).data; }catch(_e){ return; }
+      var px=d.length/4, R=0, G=0, k;
+      for(k=0;k<d.length;k+=4){ R+=d[k]; G+=d[k+1]; }
+      R/=px; G/=px;
+      r2.samples.push({t:Date.now(), r:R, g:G});
+      var s=r2.samples, i, wr=[];
+      for(i=s.length-1;i>=0;i--){ if(Date.now()-s[i].t>1500) break; wr.push(s[i].r); }
+      var mR=0, jj; for(jj=0;jj<wr.length;jj++) mR+=wr[jj]; mR/=(wr.length||1);
+      var sd=0; for(jj=0;jj<wr.length;jj++) sd+=(wr[jj]-mR)*(wr[jj]-mR); sd=Math.sqrt(sd/(wr.length||1));
+      var cov=(wr.length>=20&&mR>=25&&mR<=250&&sd<22);
+      r2.covered=cov;
+      if(cov) r2.coveredMs+=33;
+      var hint=document.getElementById('ppgHint'), covEl=document.getElementById('ppgCover'), bar=document.getElementById('ppgBar');
+      if(bar) bar.style.width=Math.min(100, r2.coveredMs/DUR*100)+'%';
+      if(covEl) covEl.textContent=cov?'已贴紧 · 采集中':'指尖完全盖住镜头+闪光灯';
+      if(hint) hint.textContent=cov?('别动，还剩 '+Math.max(1,Math.ceil((DUR-r2.coveredMs)/1000))+' 秒'):(now>3000?'没检测到稳定手指——盖紧别漏光，手臂搭在桌上':'准备中…');
+      var wc=document.getElementById('ppgWave');
+      if(wc&&s.length>4){
+        var c2=wc.getContext('2d');
+        c2.fillStyle='#16191F'; c2.fillRect(0,0,320,46);
+        var tail=Math.min(s.length,240), st=s.length-tail, mn=1e9, mx=-1e9, ii;
+        for(ii=st;ii<s.length;ii++){ if(s[ii].g<mn) mn=s[ii].g; if(s[ii].g>mx) mx=s[ii].g; }
+        var rng=Math.max(2, mx-mn);
+        c2.strokeStyle='#E8B4B8'; c2.lineWidth=1.4; c2.beginPath();
+        for(ii=st;ii<s.length;ii++){
+          var xx=(ii-st)*320/Math.max(1,tail-1), yy=38-((s[ii].g-mn)/rng)*30;
+          if(ii===st) c2.moveTo(xx,yy); else c2.lineTo(xx,yy);
+        }
+        c2.stroke();
+      }
+      if(r2.coveredMs>=DUR){ window._ppgFinish(); return; }
+      if(now>50000&&r2.coveredMs<3000){
+        r2.done=true; clearInterval(r2.timer);
+        if(r2.stream){ try{ r2.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){} }
+        var b3=document.getElementById('ppgBox');
+        if(b3) b3.innerHTML='<div style="background:var(--pri-light,#f2f5ee);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:13px;font-weight:700;">没测成</div><div style="font-size:12px;color:var(--text-sub);margin-top:4px;">手指一直没盖稳——指尖完全盖住镜头和闪光灯别漏光，再试一次</div><button class="switch-btn active" onclick="window._ppgIdle()" style="margin-top:10px;width:100%;">再试一次</button></div>';
+      }
+    }, 33);
+  };
+  window._ppgFinish=function(){
+    var r2=window._ppgRef; if(!r2||r2.done) return;
+    r2.done=true; if(r2.timer) clearInterval(r2.timer);
+    if(r2.stream){ try{ r2.stream.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){} }
+    var res=window._ppgAnalyze(r2.samples);
+    var b=document.getElementById('ppgBox'); if(!b) return;
+    if(!res.ok){
+      b.innerHTML='<div style="background:var(--pri-light,#f2f5ee);border-radius:10px;padding:12px;text-align:center;">'
+        +'<div style="font-size:13px;font-weight:700;">没测成</div>'
+        +'<div style="font-size:12px;color:var(--text-sub);margin-top:4px;line-height:1.7;">'+res.msg+'</div>'
+        +'<button class="switch-btn active" onclick="window._ppgIdle()" style="margin-top:10px;width:100%;">再试一次</button>'
+        +'</div>';
+      return;
+    }
+    var hist=[];
+    try{ hist=JSON.parse(localStorage.getItem('zhiming_ppg_v1')||'[]'); }catch(_e){}
+    hist.push({t:Date.now(), bpm:res.bpm, cv:res.cv});
+    if(hist.length>60) hist=hist.slice(-60);
+    try{ localStorage.setItem('zhiming_ppg_v1', JSON.stringify(hist)); }catch(_e){}
+    var says=window._ppgSay(res.bpm, res.cv);
+    b.innerHTML='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:16px;text-align:center;">'
+      +'<div style="font-size:11px;color:rgba(255,255,255,.5);">你的静息心率</div>'
+      +'<div style="font-size:44px;font-weight:800;color:#E8B4B8;line-height:1.2;">'+res.bpm+'<span style="font-size:14px;font-weight:400;color:rgba(255,255,255,.55);"> BPM</span></div>'
+      +'<div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;">'+says[1]+' · 抓到 '+res.beats+' 次搏动</div>'
+      +'</div>'
+      +'<div style="background:var(--pri-light,#f2f5ee);border-radius:10px;padding:10px 12px;margin-top:8px;">'
+      +'<div style="font-size:12.5px;color:var(--text);line-height:1.7;">'+says[0]+'</div>'
+      +'</div>'
+      +'<button class="switch-btn" onclick="window._ppgIdle()" style="margin-top:8px;width:100%;">再测一次</button>';
+    window._ppgTrendLine();
+  };
+  window._ppgTrendLine=function(){
+    var el=document.getElementById('ppgTrendRow'); if(!el) return;
+    var hist=[];
+    try{ hist=JSON.parse(localStorage.getItem('zhiming_ppg_v1')||'[]'); }catch(_e){}
+    if(hist.length<2){ el.innerHTML=''; return; }
+    var last=hist[hist.length-1], prev=hist[hist.length-2], sum=0, i;
+    for(i=0;i<hist.length;i++) sum+=hist[i].bpm;
+    var avg=Math.round(sum/hist.length);
+    var dd=Math.round((last.t-prev.t)/86400000);
+    var dTxt;
+    if(last.bpm>prev.bpm+3) dTxt='比上次快 '+(last.bpm-prev.bpm)+' 拍';
+    else if(prev.bpm>last.bpm+3) dTxt='比上次慢 '+(prev.bpm-last.bpm)+' 拍';
+    else dTxt='和上次基本持平';
+    var when=dd<1?'今天测过':dd+' 天前测过';
+    el.innerHTML='<div style="font-size:11.5px;color:var(--text-hint);text-align:center;line-height:1.7;">已测 '+hist.length+' 次 · 平均静息 '+avg+' BPM · '+dTxt+'（'+when+'）</div>';
+  };
+  if(!window._ppgVisBound){
+    window._ppgVisBound=1;
+    document.addEventListener('visibilitychange', function(){
+      if(document.hidden&&window._ppgRef&&!window._ppgRef.done) window._ppgCancel();
+    });
+  }
 function renderBody(){
       var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
       var h='';
@@ -25453,10 +25686,11 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-breath"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-music"></div><div id="health-detail"></div>';
+      h+='<div id="health-breath"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
+      try{ window._ppgRender(); }catch(_e){}
       try{ window._flavorRender(); }catch(_e){}
       try{ window._breathRender(); }catch(_e){}
     }
