@@ -1590,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.102.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.103.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2592,7 +2592,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.102.0-20261103';
+const ZHIMING_BUILD = 'v2.103.0-20261103';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25686,7 +25686,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-detail"></div>';
+      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -25694,6 +25694,7 @@ function renderBody(){
       try{ window._flavorRender(); }catch(_e){}
       try{ window._breathRender(); }catch(_e){}
       try{ window._kjRender(); }catch(_e){}
+      try{ window._sxRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
@@ -26509,6 +26510,169 @@ function renderBody(){
   window._kjStopTimer=function(){
     if(window._kjCalibTimer){ clearInterval(window._kjCalibTimer); window._kjCalibTimer=null; }
     if(window._kjClockTimer){ clearInterval(window._kjClockTimer); window._kjClockTimer=null; }
+  };
+  window._sxStop=function(){
+    if(window._sxTimer){ clearInterval(window._sxTimer); window._sxTimer=null; }
+    if(window._sxStreamRef){ try{ window._sxStreamRef.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){} window._sxStreamRef=null; }
+    if(window._sxAcRef){ try{ window._sxAcRef.close(); }catch(_e){} window._sxAcRef=null; }
+    window._sxAnalyserRef=null;
+  };
+  window._sxCalc=function(bands, rms){ /* 纯逻辑可测:静/混/主相三态 */
+    if(!bands||bands.length!==5) return {ok:false};
+    var i, mx=-1, mi=0, mn=1e9, sum=0;
+    for(i=0;i<5;i++){ sum+=bands[i]; if(bands[i]>mx){ mx=bands[i]; mi=i; } if(bands[i]<mn) mn=bands[i]; }
+    if(rms<5&&sum<40) return {ok:true, silent:true};
+    if(mx-mn<40) return {ok:true, mix:true};
+    return {ok:true, mi:mi};
+  };
+  window._sxRender=function(){
+    var area=document.getElementById('health-sheng');
+    if(!area) return;
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">👂 此刻声相 · 听见你的环境</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div id="sxBox"></div>'
+      +'<div id="sxRecent"></div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:8px;text-align:center;">※ 麦克风采样 3 秒，声音只在本地分析——不上传、不存音频</div>'
+      +'</div></div>';
+    window._sxIdle();
+    window._sxRecentLine();
+  };
+  window._sxIdle=function(){
+    window._sxStop();
+    var b=document.getElementById('sxBox'); if(!b) return;
+    b.innerHTML='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:14px;text-align:center;">'
+      +'<div style="font-size:26px;">👂</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.7;">按下就听 3 秒——看看你此刻<br>泡在什么样的声音里</div>'
+      +'<button id="sxGo" class="switch-btn active" onclick="window._sxListen()" style="margin-top:10px;width:100%;">听此刻</button>'
+      +'</div>';
+  };
+  window._sxRecentLine=function(){
+    var el=document.getElementById('sxRecent'); if(!el) return;
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_shengxiang_v1')||'[]'); }catch(_e){}
+    if(arr.length<2){ el.innerHTML=''; return; }
+    var cnt={silent:0, mix:0, gong:0, shang:0, jue:0, zhi:0, yu:0}, i;
+    for(i=0;i<arr.length;i++){ var p=arr[i].phase; cnt[p]=(cnt[p]||0)+1; }
+    var best='silent', bn=0;
+    for(i in cnt){ if(cnt[i]>bn){ bn=cnt[i]; best=i; } }
+    var bn2={gong:'宫',shang:'商',jue:'角',zhi:'徵',yu:'羽',silent:'静',mix:'杂'};
+    el.innerHTML='<div style="font-size:11.5px;color:var(--text-hint);text-align:center;margin-top:8px;line-height:1.8;">已听 '+arr.length+' 次 · 你最近多泡在「'+bn2[best]+'」里</div>';
+  };
+  window._sxListen=function(){
+    var b=document.getElementById('sxBox'); if(!b) return;
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+      b.innerHTML='<div style="font-size:12.5px;color:var(--text-sub);padding:10px;text-align:center;">这台浏览器开不了麦克风——声相听不了</div>';
+      return;
+    }
+    window._sxStop();
+    b.innerHTML='<div style="background:#16191F;border-radius:12px;padding:12px;text-align:center;">'
+      +'<canvas id="sxWave" width="320" height="70" style="width:100%;height:70px;display:block;"></canvas>'
+      +'<div id="sxHint" style="font-size:12px;color:rgba(255,255,255,.6);margin-top:6px;">正在听此刻的环境…</div></div>'
+      +'<button class="switch-btn" onclick="window._sxIdle()" style="margin-top:8px;width:100%;">不听了</button>';
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC){ window._sxIdle(); return; }
+      var ac=new AC();
+      if(ac.state==='suspended'){ try{ ac.resume(); }catch(_e){} }
+      var an=ac.createAnalyser();
+      an.fftSize=2048; an.smoothingTimeConstant=0.75;
+      ac.createMediaStreamSource(stream).connect(an);
+      window._sxStreamRef=stream; window._sxAcRef=ac; window._sxAnalyserRef=an;
+      window._sxRun(an);
+    }).catch(function(){
+      var b2=document.getElementById('sxBox');
+      if(b2) b2.innerHTML='<div style="font-size:12.5px;color:var(--text-sub);padding:10px;text-align:center;">麦克风没开成（权限拒绝）——允许后再来。也可以就此打住：环境声不听也罢</div>';
+    });
+  };
+  window._sxRun=function(an){
+    var sr=(window._sxAcRef&&window._sxAcRef.sampleRate)||48000, binHz=sr/an.fftSize;
+    var cut=[250,500,2000,4000], idx=[], ci;
+    for(ci=0;ci<4;ci++) idx.push(Math.max(2, Math.round(cut[ci]/binHz)));
+    var NB=an.frequencyBinCount;
+    var fd=new Uint8Array(NB), td=new Uint8Array(an.fftSize);
+    var acc=[0,0,0,0,0], rmsSum=0, frames=0;
+    var seg=[idx[0],idx[1],idx[2],idx[3],NB];
+    var DUR=window._sxDurOverride||3000;
+    var t0=Date.now();
+    var cv=document.getElementById('sxWave'), cx=cv?cv.getContext('2d'):null;
+    window._sxTimer=setInterval(function(){
+      var r2=window._sxAnalyserRef; if(!r2){ return; }
+      r2.getByteFrequencyData(fd); r2.getByteTimeDomainData(td);
+      var i, j, start=1, cur=[0,0,0,0,0];
+      for(i=0;i<5;i++){ var s=0, c=0; for(j=start;j<seg[i];j++){ s+=fd[j]; c++; } cur[i]=c?s/c:0; acc[i]+=cur[i]; start=seg[i]; }
+      var rr=0, vc=0;
+      for(i=0;i<td.length;i+=4){ var v=(td[i]-128)/128; rr+=v*v; vc++; }
+      rmsSum+=Math.sqrt(rr/vc)*128; frames++;
+      if(cx){
+        cx.fillStyle='#16191F'; cx.fillRect(0,0,320,70);
+        for(i=1;i<195;i++){ var h2=fd[i]/255*66; cx.fillStyle=fd[i]>90?'#E8B4B8':'#9FC58F'; cx.fillRect(i*1.63,70-h2,1.4,h2); }
+      }
+      if(Date.now()-t0>=DUR){
+        window._sxStop();
+        var avg=[0,1,2,3,4].map(function(i2){ return acc[i2]/Math.max(1,frames); });
+        var rms=rmsSum/Math.max(1,frames);
+        window._sxFinish(window._sxCalc(avg,rms), avg, rms);
+      }
+    }, 100);
+  };
+  window._sxFinish=function(res, bands, rms){
+    var b=document.getElementById('sxBox'); if(!b) return;
+    if(!res||!res.ok){
+      b.innerHTML='<div style="background:var(--pri-light,#f2f5ee);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:12px;color:var(--text-sub);">没听清——再来一次</div><button class="switch-btn active" onclick="window._sxIdle()" style="margin-top:10px;width:100%;">返回</button></div>';
+      return;
+    }
+    var rec={t:Date.now(), phase:res.silent?'silent':(res.mix?'mix':['gong','shang','jue','zhi','yu'][res.mi]), rms:Math.round(rms)};
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_shengxiang_v1')||'[]'); }catch(_e){}
+    arr.push(rec); if(arr.length>30) arr=arr.slice(-30);
+    try{ localStorage.setItem('zhiming_shengxiang_v1', JSON.stringify(arr)); }catch(_e){}
+    var hh=new Date().getHours(), night=(hh>=22||hh<7);
+    var h='';
+    if(res.silent){
+      var sSay=night?'深夜的静——这是睡前声音该有的样子。手机扣过去，人跟着一起静':'白天这么静，房间空得能听见自己——适合做点要专注的事，别浪费';
+      h='<div style="background:linear-gradient(160deg,#1B2430,#151A22);border-radius:12px;padding:18px 14px;text-align:center;">'
+        +'<div style="font-size:30px;">🤫</div>'
+        +'<div style="font-size:24px;font-weight:800;color:#5B8DB8;margin-top:6px;">此刻很静</div>'
+        +'<div style="font-size:12.5px;color:rgba(255,255,255,.75);margin-top:8px;line-height:1.8;">'+sSay+'</div></div>';
+    } else if(res.mix){
+      var mSay=night?'环境声杂——电视、说话、电器混在一起。睡前一小时值得清一清':'环境声比较杂——什么都有一点。需要专心的话，找个单一声响的角落';
+      h='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:18px 14px;text-align:center;">'
+        +'<div style="font-size:24px;font-weight:800;color:#C8A96A;margin-top:2px;">混合声相</div>'
+        +'<div style="font-size:12.5px;color:rgba(255,255,255,.75);margin-top:8px;line-height:1.8;">'+mSay+'</div></div>';
+    } else {
+      var S=['gong','shang','jue','zhi','yu'][res.mi];
+      var COL={gong:'#C8A96A', shang:'#E8E2D4', jue:'#7C9E63', zhi:'#E0708A', yu:'#5B8DB8'};
+      var sx=SX5[S];
+      var extra='';
+      if(night&&S==='zhi') extra='<div style="font-size:12px;color:#E0708A;margin-top:8px;">这个点了还泡在火音里——把发亮发声的东西关一关吧</div>';
+      else if(night) extra='<div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;">深夜还有这些声响——能关的关上，耳朵也该下班</div>';
+      h='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:16px 14px;text-align:center;">'
+        +'<div style="font-size:32px;font-weight:800;color:'+COL[S]+';">'+sx.n+' <span style="font-size:13px;font-weight:400;color:rgba(255,255,255,.5);">· '+sx.wx+'</span></div>'
+        +'<div style="font-size:12.5px;color:rgba(255,255,255,.85);margin-top:6px;">'+sx.feel+'</div>'
+        +'<div style="font-size:11.5px;color:rgba(255,255,255,.5);margin-top:4px;">像是：'+sx.src+'</div>'
+        +'<div style="font-size:12px;color:#9FC58F;margin-top:8px;line-height:1.7;">'+sx.tip+'</div>'+extra
+        +'</div>';
+    }
+    var mx2=Math.max.apply(null, bands.concat([1]));
+    var NAMES=['宫土','商金','角木','徵火','羽水'], BCOL=['#C8A96A','#E8E2D4','#7C9E63','#E0708A','#5B8DB8'];
+    h+='<div style="background:#16191F;border-radius:10px;padding:10px 12px;margin-top:8px;">';
+    for(var i=0;i<5;i++){
+      var w=Math.max(3, bands[i]/mx2*100);
+      h+='<div style="display:flex;align-items:center;margin:3px 0;">'
+        +'<div style="width:34px;font-size:10px;color:rgba(255,255,255,.45);">'+NAMES[i]+'</div>'
+        +'<div style="flex:1;height:9px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;"><div style="height:100%;width:'+w+'%;background:'+BCOL[i]+';border-radius:4px;"></div></div></div>';
+    }
+    h+='</div><button class="switch-btn active" onclick="window._sxIdle()" style="margin-top:8px;width:100%;">再听一次</button>';
+    b.innerHTML=h;
+    window._sxRecentLine();
+  };
+  var SX5={
+    gong:{n:'宫', wx:'土', feel:'沉、厚、闷——声音从地底下上来', src:'空调低鸣、马路的 distant 嗡嗡、楼下装修闷响', tip:'低频声一直泡着会闷人——窗能开条缝就开条缝，透透气'},
+    shang:{n:'商', wx:'金', feel:'清、稳、带点凉', src:'钟表走字、键盘敲击、金属轻碰', tip:'金音环境适合收心做事——别放音乐打破它'},
+    jue:{n:'角', wx:'木', feel:'舒展、有活气', src:'人声交谈、翻书、外面风穿过树', tip:'角音环境是活气——待着舒服就多待会儿'},
+    zhi:{n:'徵', wx:'火', feel:'亮、尖、跳——在推着人走', src:'电视广告、小孩闹、消息提示音', tip:'火音提神也耗神——要专注就把这类声源清掉'},
+    yu:{n:'羽', wx:'水', feel:'细、流、远——在往下淌', src:'流水、风扇、电流沙沙、细雨', tip:'水音催眠一流；但持续的电流细声会偷注意力，留意下源头'}
   };
   window.renderHealth = function(){
     try{ renderBody(); }catch(_){}
