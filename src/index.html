@@ -1590,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.101.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.102.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2592,7 +2592,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.101.0-20261103';
+const ZHIMING_BUILD = 'v2.102.0-20261103';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25686,13 +25686,14 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-breath"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-detail"></div>';
+      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
       try{ window._ppgRender(); }catch(_e){}
       try{ window._flavorRender(); }catch(_e){}
       try{ window._breathRender(); }catch(_e){}
+      try{ window._kjRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
@@ -26327,6 +26328,188 @@ function renderBody(){
     try{ el.scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(_){}
   };
 
+  /* ---- 扣机修行:相对基准翻转检测计时,放下即动作,翻面结算(点子池五期B) ---- */
+  window._kjState='idle';
+  window._kjRef=null;
+  var _kjMotionHandler=function(e){
+    try{
+      var r=window._kjRef; if(!r) return;
+      if(window._kjState!=='armed'&&window._kjState!=='active'&&window._kjState!=='calib') return;
+      var a=e.accelerationIncludingGravity; if(!a||a.z==null) return; /* null帧直接跳过 */
+      var now=Date.now(); if(now-(r.lastT||0)<80) return; r.lastT=now;
+      r.lastZ=a.z;
+      if(window._kjState==='armed'||window._kjState==='active') window._kjSample(a.z);
+    }catch(_e){}
+  };
+  window._kjSample=function(z){ /* 纯逻辑可测:prod<-80翻转>80回正(约35度反向起判) */
+    var r=window._kjRef; if(!r||z==null) return null;
+    var prod=z*r.z0;
+    if(prod<-80){ r.downFrames++; r.upFrames=0; }
+    else if(prod>80){ r.upFrames++; r.downFrames=0; }
+    else { r.downFrames=0; r.upFrames=0; }
+    if(window._kjState==='armed'&&r.downFrames>=12){
+      window._kjState='active'; r.startT=Date.now(); r.downFrames=0; r.upFrames=0;
+      window._kjLiveView();
+      return 'down';
+    }
+    if(window._kjState==='active'&&r.upFrames>=3){
+      window._kjFinish(false);
+      return 'up';
+    }
+    return null;
+  };
+  window._kjFmt=function(ms){
+    var s=Math.floor(ms/1000), m=Math.floor(s/60);
+    if(m<1) return s+' 秒';
+    if(m<60) return m+' 分 '+(s%60)+' 秒';
+    var h=ms/3600000; return (Math.round(h*10)/10)+' 小时';
+  };
+  window._kjSay=function(ms){
+    var min=ms/60000;
+    if(min<1) return '碰了一下又拿起来了——没关系，想起来扣它就算一次';
+    if(min<5) return Math.round(min)+' 分钟——喝口水的功夫，手机没来吵你';
+    if(min<20) return Math.round(min)+' 分钟，真放下了——这段时间你是自己的';
+    if(min<120){ var h=Math.round(min/6)/10; return h+' 小时——手机在桌上睡了个好觉，你去忙了正事'; }
+    if(min<720) return Math.round(min/60)+' 小时——这已经不是修行了，这是生活';
+    return '超过 12 小时——多半是忘了它。也行，忘得彻底，记你一场长修行';
+  };
+  window._kjToday=function(){
+    var arr=[], d0=new Date(); d0.setHours(0,0,0,0); var t0=d0.getTime(), i, sum=0, n=0;
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_kouji_v1')||'[]'); }catch(_e){}
+    for(i=0;i<arr.length;i++){ if(arr[i].t>=t0){ sum+=arr[i].dur; n++; } }
+    return {n:n, sum:sum};
+  };
+  window._kjTodayLine=function(){
+    var el=document.getElementById('kjToday'); if(!el) return;
+    var d=window._kjToday();
+    if(!d.n){ el.innerHTML=''; return; }
+    el.innerHTML='<div style="font-size:11.5px;color:var(--text-hint);text-align:center;margin-top:8px;">今天已扣 '+d.n+' 次 · 共 '+window._kjFmt(d.sum)+'</div>';
+  };
+  window._kjRecent=function(){
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_kouji_v1')||'[]'); }catch(_e){}
+    return arr.slice(-3).reverse();
+  };
+  window._kjRender=function(){
+    var area=document.getElementById('health-kouji'); if(!area) return;
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">📱 扣机修行 · 放下即计时</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div id="kjBox"></div>'
+      +'<div id="kjToday"></div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:8px;text-align:center;">※ 扣多久算多久（含锁屏时间）——它不锁手机，只给「放下」盖个章</div>'
+      +'</div></div>';
+    window._kjIdle();
+    window._kjTodayLine();
+  };
+  window._kjIdle=function(){
+    window._kjStopTimer();
+    var b=document.getElementById('kjBox'); if(!b) return;
+    var rec=window._kjRecent(), h='', i;
+    if(rec.length){
+      h+='<div style="border:1.5px solid var(--card-border);border-radius:10px;padding:8px 10px;margin-bottom:10px;">';
+      for(i=0;i<rec.length;i++){
+        var d=new Date(rec[i].t), hh=d.getHours(), mm=('0'+d.getMinutes()).slice(-2);
+        h+='<div style="font-size:11.5px;color:var(--text-hint);line-height:1.9;">· '+hh+':'+mm+' 扣了 '+window._kjFmt(rec[i].dur)+'</div>';
+      }
+      h+='</div>';
+    }
+    h+='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:14px;text-align:center;">'
+      +'<div style="font-size:26px;">🫳📱</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.7;">点开始校准一秒，然后把手机扣在桌上<br>扣多久算多久，翻回来就结算</div>'
+      +'<button id="kjGo" class="switch-btn active" onclick="window._kjStart()" style="margin-top:10px;width:100%;">开始修行</button>'
+      +'</div>';
+    b.innerHTML=h;
+  };
+  window._kjStart=function(){
+    var b=document.getElementById('kjBox'); if(!b) return;
+    if(window._kjState==='active'||window._kjState==='armed'){ window._kjStopTimer(); window._kjState='idle'; }
+    b.innerHTML='<div style="background:#16191F;border-radius:12px;padding:20px;text-align:center;">'
+      +'<div style="font-size:22px;">🧭</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;">手机拿平，正在校准基准面…</div></div>';
+    var arm=function(){
+      window._kjRef={z0:0, downFrames:0, upFrames:0, startT:0, lastT:0, lastZ:null, calibN:0, calibSum:0};
+      window._kjState='calib';
+      if(window._kjMotionBound!==1){
+        window._kjMotionBound=1;
+        window.addEventListener('devicemotion', _kjMotionHandler);
+      }
+      window._kjCalibTimer=setInterval(function(){
+        var r=window._kjRef;
+        if(!r||window._kjState!=='calib'){ if(r&&window._kjState!=='calib') clearInterval(window._kjCalibTimer); return; }
+        if(r.lastZ==null) return;
+        r.calibN++; r.calibSum+=r.lastZ;
+        if(r.calibN>=16){
+          clearInterval(window._kjCalibTimer);
+          var z0=r.calibSum/r.calibN;
+          if(Math.abs(z0)<6){
+            window._kjState='idle';
+            b.innerHTML='<div style="background:var(--pri-light,#f2f5ee);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:12.5px;font-weight:700;">没校准上</div><div style="font-size:12px;color:var(--text-sub);margin-top:4px;">手机拿平放稳一点（贴桌面或平托在手上），再点一次开始</div><button class="switch-btn active" onclick="window._kjIdle()" style="margin-top:10px;width:100%;">重来</button></div>';
+            return;
+          }
+          r.z0=z0; r.downFrames=0; r.upFrames=0; window._kjState='armed';
+          window._kjArmedView();
+        }
+      }, 50);
+    };
+    try{
+      if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+        DeviceMotionEvent.requestPermission().then(function(st){ if(st==='granted') arm(); else { window._kjState='idle'; b.innerHTML='<div style="font-size:12.5px;color:var(--text-sub);padding:10px;text-align:center;">动作权限没给——设置里允许后再来</div><button class="switch-btn" onclick="window._kjIdle()" style="width:100%;">返回</button>'; } }).catch(function(){ window._kjState='idle'; window._kjIdle(); });
+      }else{ arm(); }
+    }catch(_e){ window._kjState='idle'; b.innerHTML='<div style="font-size:12.5px;color:var(--text-sub);padding:10px;text-align:center;">这台设备不支持动作传感器——扣机修行测不了</div>'; }
+  };
+  window._kjArmedView=function(){
+    var b=document.getElementById('kjBox'); if(!b) return;
+    b.innerHTML='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:22px 14px;text-align:center;">'
+      +'<div style="font-size:30px;">🫳</div>'
+      +'<div style="font-size:16px;font-weight:700;color:rgba(255,255,255,.92);margin-top:8px;">校准好了——扣下去吧</div>'
+      +'<div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:6px;line-height:1.7;">把手机屏幕朝下扣稳，约 2 秒后开始计时<br>翻回来就结算</div>'
+      +'<button class="switch-btn" onclick="window._kjCancel()" style="margin-top:12px;width:100%;">先不修了</button></div>';
+  };
+  window._kjLiveView=function(){
+    var b=document.getElementById('kjBox'); if(!b) return;
+    b.innerHTML='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:22px 14px;text-align:center;">'
+      +'<div style="font-size:12px;color:rgba(255,255,255,.5);">修行中 · 扣着就别管它</div>'
+      +'<div id="kjClock" style="font-size:34px;font-weight:800;color:#9FC58F;margin-top:6px;">0 秒</div>'
+      +'<div style="font-size:12px;color:rgba(255,255,255,.55);margin-top:6px;">翻回来就结算——中途锁屏也照算</div>'
+      +'<button class="switch-btn" onclick="window._kjFinish(true)" style="margin-top:12px;width:100%;">提前收工</button></div>';
+    window._kjClockTimer=setInterval(function(){
+      var r=window._kjRef; var c=document.getElementById('kjClock');
+      if(!r||!c||window._kjState!=='active') return;
+      c.textContent=window._kjFmt(Date.now()-r.startT);
+    }, 500);
+  };
+  window._kjFinish=function(manual){
+    var r=window._kjRef; if(!r) return;
+    var wasActive=(window._kjState==='active');
+    window._kjStopTimer();
+    window._kjState='idle';
+    if(!wasActive){ window._kjIdle(); return; } /* armed 里收工=取消不存 */
+    var dur=Date.now()-r.startT;
+    if(dur>86400000*1.5) dur=86400000*1.5;
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_kouji_v1')||'[]'); }catch(_e){}
+    arr.push({t:Date.now(), dur:Math.round(dur)});
+    if(arr.length>60) arr=arr.slice(-60);
+    try{ localStorage.setItem('zhiming_kouji_v1', JSON.stringify(arr)); }catch(_e){}
+    var b=document.getElementById('kjBox'); if(!b) return;
+    var d=new Date(), hh=d.getHours(), extra='';
+    if(hh>=22||hh<6) extra='<div style="font-size:12px;color:var(--text-hint);margin-top:6px;">深夜扣机——手机也睡了，你也该睡了</div>';
+    var d2=window._kjToday();
+    b.innerHTML='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:20px 14px;text-align:center;">'
+      +'<div style="font-size:11px;color:rgba(255,255,255,.5);">本次修行</div>'
+      +'<div style="font-size:36px;font-weight:800;color:#9FC58F;margin-top:4px;">'+window._kjFmt(dur)+'</div>'
+      +'<div style="font-size:12.5px;color:rgba(255,255,255,.75);margin-top:8px;line-height:1.7;">'+window._kjSay(dur)+'</div>'+extra
+      +(d2.n?'<div style="font-size:11.5px;color:rgba(255,255,255,.45);margin-top:8px;">今天第 '+d2.n+' 次 · 共 '+window._kjFmt(d2.sum)+'</div>':'')
+      +'</div>'
+      +'<button class="switch-btn active" onclick="window._kjIdle()" style="margin-top:10px;width:100%;">再修一次</button>';
+    window._kjTodayLine();
+  };
+  window._kjCancel=function(){ window._kjStopTimer(); window._kjState='idle'; window._kjIdle(); };
+  window._kjStopTimer=function(){
+    if(window._kjCalibTimer){ clearInterval(window._kjCalibTimer); window._kjCalibTimer=null; }
+    if(window._kjClockTimer){ clearInterval(window._kjClockTimer); window._kjClockTimer=null; }
+  };
   window.renderHealth = function(){
     try{ renderBody(); }catch(_){}
     try{ window._renderHealthFS(); }catch(_){}
