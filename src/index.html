@@ -1590,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.103.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.104.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2592,7 +2592,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.103.0-20261103';
+const ZHIMING_BUILD = 'v2.104.0-20261104';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25686,7 +25686,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-detail"></div>';
+      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -25695,6 +25695,7 @@ function renderBody(){
       try{ window._breathRender(); }catch(_e){}
       try{ window._kjRender(); }catch(_e){}
       try{ window._sxRender(); }catch(_e){}
+      try{ window._hhRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
@@ -26673,6 +26674,151 @@ function renderBody(){
     jue:{n:'角', wx:'木', feel:'舒展、有活气', src:'人声交谈、翻书、外面风穿过树', tip:'角音环境是活气——待着舒服就多待会儿'},
     zhi:{n:'徵', wx:'火', feel:'亮、尖、跳——在推着人走', src:'电视广告、小孩闹、消息提示音', tip:'火音提神也耗神——要专注就把这类声源清掉'},
     yu:{n:'羽', wx:'水', feel:'细、流、远——在往下淌', src:'流水、风扇、电流沙沙、细雨', tip:'水音催眠一流；但持续的电流细声会偷注意力，留意下源头'}
+  };
+  window._hhStopAll=function(){
+    if(window._hhTimer){ clearInterval(window._hhTimer); window._hhTimer=null; }
+    if(window._hhRaf){ try{ cancelAnimationFrame(window._hhRaf); }catch(_e){} window._hhRaf=null; }
+    if(window._hhHandler){ window.removeEventListener('deviceorientation', window._hhHandler); window._hhHandler=null; }
+    window._hhOn=false;
+  };
+  window._hhRead=function(f){ /* 纯逻辑可测:幅度/速度/笔画数→三词 */
+    var a1=f.span>0.8?'豪放':(f.span<0.3?'收敛':'居中——收放有度');
+    var a2=f.speed>260?'爽利':(f.speed<90?'沉稳':'从容');
+    var a3=f.strokes>=4?'一气多折':(f.strokes<=1?'一笔到底':'两三转笔');
+    return [a1,a2,a3];
+  };
+  window._hhRender=function(){
+    var area=document.getElementById('health-hui');
+    if(!area) return;
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">✍️ 空中挥毫 · 一笔倾泻</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div id="hhBox"></div>'
+      +'<div id="hhRecent"></div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:8px;text-align:center;">※ 手机平握屏幕朝上，手腕当笔尖——倾斜画出轨迹，只在本地</div>'
+      +'</div></div>';
+    window._hhIdle();
+    window._hhRecentLine();
+  };
+  window._hhIdle=function(){
+    window._hhStopAll();
+    var b=document.getElementById('hhBox'); if(!b) return;
+    b.innerHTML='<div style="background:linear-gradient(160deg,#2A2F38,#1B1F26);border-radius:12px;padding:14px;text-align:center;">'
+      +'<div style="font-size:26px;">✍️</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:6px;line-height:1.7;">宣纸已铺好——手机平握屏幕朝上<br>倾斜手腕，空中写一笔</div>'
+      +'<button id="hhGo" class="switch-btn active" onclick="window._hhTap()" style="margin-top:10px;width:100%;">落笔</button>'
+      +'</div>';
+  };
+  window._hhRecentLine=function(){
+    var el=document.getElementById('hhRecent'); if(!el) return;
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_huihao_v1')||'[]'); }catch(_e){}
+    if(arr.length<2){ el.innerHTML=''; return; }
+    var last=arr[arr.length-1];
+    el.innerHTML='<div style="font-size:11.5px;color:var(--text-hint);text-align:center;margin-top:8px;line-height:1.8;">已写 '+arr.length+' 笔 · 上一笔：'+last.w+'</div>';
+  };
+  window._hhTap=function(){
+    var go=function(){ window._hhStart(); };
+    if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+      DeviceOrientationEvent.requestPermission().then(function(st){ if(st==='granted') go(); else {
+        var b=document.getElementById('hhBox');
+        if(b) b.innerHTML='<div style="font-size:12.5px;color:var(--text-sub);padding:10px;text-align:center;">方向权限没给——挥不了毫。允许后再来</div>';
+      } }).catch(function(){ go(); });
+    } else go();
+  };
+  window._hhStart=function(){
+    var b=document.getElementById('hhBox'); if(!b) return;
+    window._hhStopAll();
+    b.innerHTML='<div style="background:#F5F0E6;border-radius:12px;padding:8px;">'
+      +'<canvas id="hhCv" width="312" height="312" style="width:100%;display:block;border-radius:8px;"></canvas>'
+      +'<div style="height:3px;background:rgba(0,0,0,.08);border-radius:2px;margin-top:6px;overflow:hidden;"><div id="hhBar" style="height:100%;width:0%;background:#8A7A5C;"></div></div></div>'
+      +'<button class="switch-btn active" onclick="window._hhFinish()" style="margin-top:8px;width:100%;">收笔</button>';
+    var cv=document.getElementById('hhCv'), cx=cv.getContext('2d');
+    cx.fillStyle='#F5F0E6'; cx.fillRect(0,0,312,312);
+    cx.strokeStyle='rgba(120,100,70,.18)'; cx.lineWidth=1; cx.setLineDash([4,5]);
+    cx.beginPath(); cx.moveTo(156,20); cx.lineTo(156,292); cx.moveTo(20,156); cx.lineTo(292,156); cx.stroke(); cx.setLineDash([]);
+    window._hhCx=cx; window._hhCv=cv;
+    window._hhPrev=null; window._hhBase=null; window._hhCur=null;
+    window._hhStats={dx:0,speedSum:0,n:0,strokes:1,calm:0};
+    window._hhOn=true;
+    window._hhT0=Date.now();
+    var DUR=window._hhDurOverride||3500;
+    window._hhTimer=setInterval(function(){
+      if(!window._hhOn) return;
+      var bar=document.getElementById('hhBar');
+      if(bar) bar.style.width=Math.min(100,(Date.now()-window._hhT0)/DUR*100)+'%';
+      if(Date.now()-window._hhT0>=DUR) window._hhFinish();
+    },80);
+    window._hhHandler=function(e){
+      if(!window._hhOn) return;
+      if(e.beta==null||e.gamma==null) return;
+      if(!window._hhBase) window._hhBase={b:e.beta,g:e.gamma};
+      var db=e.beta-window._hhBase.b, dg=e.gamma-window._hhBase.g;
+      window._hhStats.dx=Math.max(window._hhStats.dx, Math.hypot(dg,db));
+      var x=0.5+Math.max(-1,Math.min(1,dg/36))/2;
+      var y=0.5+Math.max(-1,Math.min(1,db/36))/2;
+      window._hhCur={x:x,y:y,t:Date.now()};
+    };
+    window.addEventListener('deviceorientation', window._hhHandler);
+    window._hhRaf=requestAnimationFrame(window._hhFrame);
+  };
+  window._hhFrame=function(){
+    if(!window._hhOn) return;
+    var cur=window._hhCur;
+    if(cur){
+      var pv=window._hhPrev;
+      if(pv){
+        var W=312, H=312;
+        var d=Math.hypot((cur.x-pv.x)*W,(cur.y-pv.y)*H);
+        var dt=Math.max(16,cur.t-pv.t);
+        var v=d/dt; /* px/ms */
+        window._hhStats.speedSum+=v*1000; window._hhStats.n++;
+        if(v<0.03){ window._hhStats.calm++; } else window._hhStats.calm=0;
+        if(window._hhStats.calm>8){ window._hhStats.strokes++; window._hhStats.calm=0; window._hhPrev=cur; }
+        else {
+          var lw=Math.max(2,Math.min(9,10-v*45));
+          var cx2=window._hhCx;
+          cx2.strokeStyle='#1A1A1A'; cx2.lineWidth=lw; cx2.lineCap='round';
+          cx2.beginPath(); cx2.moveTo(pv.x*W,pv.y*H); cx2.lineTo(cur.x*W,cur.y*H); cx2.stroke();
+          window._hhPrev=cur;
+        }
+      } else window._hhPrev=cur;
+    }
+    window._hhRaf=requestAnimationFrame(window._hhFrame);
+  };
+  window._hhFinish=function(){
+    if(!window._hhOn) return;
+    window._hhOn=false;
+    window._hhStopAll();
+    var cv=window._hhCv, b=document.getElementById('hhBox');
+    if(!cv||!b) return;
+    var st=window._hhStats;
+    var f={span:Math.min(1,st.dx/36), speed:st.n?st.speedSum/st.n:0, strokes:st.strokes};
+    if(st.n<3){ window._hhIdle(); return; } /* 几乎没动=回idle */
+    var words=window._hhRead(f);
+    var rec={t:Date.now(), sp:Math.round(f.span*100), sd:Math.round(f.speed), sk:f.strokes, w:words.join('·')};
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_huihao_v1')||'[]'); }catch(_e){}
+    arr.push(rec); if(arr.length>30) arr=arr.slice(-30);
+    try{ localStorage.setItem('zhiming_huihao_v1', JSON.stringify(arr)); }catch(_e){}
+    var hh=new Date().getHours();
+    var hourSay=(hh>=5&&hh<9)?'晨起一笔——宣纸已铺好，写完这手再开始今天':((hh>=22||hh<2)?'睡前狂草一把，把一天甩出去再睡':'手悬空写，不靠纸——笔迹全凭手腕今天的稳');
+    var h='<div style="background:#F5F0E6;border-radius:12px;padding:8px;">'
+      +'<div id="hhArt"></div>'
+      +'<div style="font-size:11px;color:#8A7A5C;margin-top:6px;text-align:center;">长按上面可保存这张墨</div></div>'
+      +'<div style="font-size:15px;font-weight:700;color:var(--text-main);margin-top:10px;text-align:center;letter-spacing:1px;">'+words.join(' · ')+'</div>'
+      +'<div style="font-size:12px;color:var(--text-sub);margin-top:6px;line-height:1.8;text-align:center;">幅度'+rec.sp+'% · 手速'+rec.sd+'px/s · '+rec.sk+'笔<br>'+hourSay+'</div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:4px;text-align:center;">※ 只是手腕今天的脾气，别当命</div>'
+      +'<button class="switch-btn active" onclick="window._hhIdle()" style="margin-top:8px;width:100%;">再写一笔</button>';
+    b.innerHTML=h;
+    var art=document.getElementById('hhArt');
+    if(art){
+      var im=new Image();
+      im.src=cv.toDataURL('image/png');
+      im.style.cssText='width:100%;display:block;border-radius:8px;';
+      art.appendChild(im);
+    }
+    window._hhRecentLine();
   };
   window.renderHealth = function(){
     try{ renderBody(); }catch(_){}
