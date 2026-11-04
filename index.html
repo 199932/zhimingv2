@@ -56,7 +56,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.105.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.106.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2369,7 +2369,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -2380,6 +2380,7 @@ function renderBody(){
       try{ window._sxRender(); }catch(_e){}
       try{ window._hhRender(); }catch(_e){}
       try{ window._xiangRender(); }catch(_e){}
+      try{ window._ptRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
@@ -3681,6 +3682,135 @@ function renderBody(){
       cx.stroke();
     }
     window._xiangRecentLine();
+  };
+  window._ptTab=[
+    {n:'胆经',w:'大腿外侧裤缝一线，从胯骨外侧顺着往下拍到膝盖',f:'胆主决断——这条拍松了，人不容易纠结，早起嘴也不苦',ac:'风市：直立垂手，中指尖碰到大腿外侧的那一点'},
+    {n:'肝经',w:'大腿内侧，从膝盖内侧往上拍到大腿根',f:'肝主疏泄——睡前拍这条，火气大的日子特别合适',ac:'太冲：脚背上，大拇趾和二趾趾缝往上两指的凹陷处'},
+    {n:'肺经',w:'手臂拇指那一侧，从锁骨下方顺着拍到拇指尖',f:'肺主皮毛——嗓子干、容易感冒的人，这条要常拍',ac:'尺泽：手肘内侧横纹上，大筋外侧的凹陷'},
+    {n:'大肠经',w:'手臂外侧，食指方向沿手臂外侧一路拍到肩',f:'大肠当令——早上拍，帮肠道醒过来，白天更顺畅',ac:'合谷：虎口肌肉最高的那一点'},
+    {n:'胃经',w:'小腿外侧，膝盖下缘往下一掌宽再往外一指',f:'胃经当令——早饭前拍足三里一带，吃下去的才化得动',ac:'足三里：膝盖外侧凹眼下四横指，胫骨外一横指'},
+    {n:'脾经',w:'小腿内侧，从脚踝内侧沿小腿内侧往上拍',f:'脾主运化——上午拍，饭后不容易困、不容易胀',ac:'三阴交：内踝尖上四横指，胫骨内侧后缘'},
+    {n:'心经',w:'小指那一侧手臂内侧，从腋下往小指方向拍',f:'心主神明——午间拍，下午心不慌、坐得住',ac:'神门：手腕内侧横纹上，小指一侧的凹陷'},
+    {n:'小肠经',w:'小指侧手臂外侧，从手背往肩头方向拍',f:'小肠吸收当令——这条经绕肩胛，拍完颈肩也会松',ac:'后溪：握拳，小指那侧掌横纹的尽头'},
+    {n:'膀胱经',w:'腿后侧，从臀部下缘顺着拍到大腿根、腘窝',f:'膀胱经是身体最大的下行通道——下午拍，久坐的水肿往下走',ac:'委中：膝盖正后方凹陷的正中点'},
+    {n:'肾经',w:'脚底内侧，从足心往内踝方向推着拍',f:'肾藏精——傍晚拍涌泉一带，一天耗掉的气往回收',ac:'涌泉：足底前三分之一的凹陷处'},
+    {n:'心包经',w:'手臂正中内侧，从腋下往手腕中指方向拍',f:'心包替心挡事——晚饭后拍，胸口发闷发堵的感觉会松',ac:'内关：手腕横纹上三横指，两根筋的正中间'},
+    {n:'三焦经',w:'无名指侧手臂外侧，从手背往肩方向拍',f:'三焦通水道——睡前拍，帮着消脸肿、松肩膀',ac:'支沟：手背腕横纹上四横指，两骨之间'}
+  ];
+  window._ptMer=function(h){
+    var idx=Math.floor(((h+1)%24)/2)%12;
+    return window._ptTab[idx]||window._ptTab[0];
+  };
+  window._ptCstLine=function(){
+    var cst=null; try{ cst=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_e){}
+    if(!cst||!cst.t) return '';
+    var map={'气虚质':['脾经','肺经'],'阳虚质':['肾经'],'阴虚质':['肾经','肝经'],'痰湿质':['脾经'],'湿热质':['大肠经'],'血瘀质':['肝经'],'气郁质':['肝经','三焦经'],'特禀质':['肺经']};
+    var ms=map[cst.t]; if(!ms) return '';
+    return '<div style="font-size:11.5px;color:#8A7B5E;margin-top:8px;line-height:1.7;">🧬 你是'+cst.t+'——拍完当令经，顺带拍拍「'+ms.join('」「')+'」（体质对应的弱经）</div>';
+  };
+  window._ptRecent=function(){
+    var el=document.getElementById('ptRecent'); if(!el) return;
+    var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_paida_v1')||'[]'); }catch(_e){}
+    if(!a.length){ el.innerHTML='<div style="font-size:11px;color:var(--text-hint);text-align:center;margin-top:8px;">还没拍过——从现在这条开始</div>'; return; }
+    var ok=0,no=0; a.forEach(function(x){ if(x.eff==='ok')ok++; else if(x.eff==='no')no++; });
+    var last=a[a.length-1];
+    el.innerHTML='<div style="font-size:11px;color:var(--text-hint);text-align:center;margin-top:8px;">已拍 '+a.length+' 次（管用 '+ok+' · 没用 '+no+'）· 最近一次：'+last.mer+'</div>';
+  };
+  window._ptStopAll=function(){
+    if(window._ptTimer){ clearInterval(window._ptTimer); window._ptTimer=null; }
+    if(window._ptVT){ clearTimeout(window._ptVT); window._ptVT=null; }
+    window._ptOn=false;
+    try{ if(navigator.vibrate) navigator.vibrate(0); }catch(_e){}
+  };
+  window._ptBeat=function(sections){
+    if(!window._ptOn||sections<=0) return;
+    var flat=[]; for(var i=0;i<20;i++){ flat.push(180,120); }
+    try{ if(navigator.vibrate) navigator.vibrate(flat); }catch(_e){}
+    window._ptVT=setTimeout(function(){ window._ptBeat(sections-1); }, 6100);
+  };
+  window._ptIdle=function(){
+    var area=document.getElementById('health-pt'); if(!area) return;
+    var d=new Date(); var h=d.getHours();
+    var cur=window._ptMer(h); window._ptCur=cur;
+    var sc=''; try{ if(typeof window._shichenName==='function') sc=window._shichenName(h); }catch(_e){}
+    var b=document.getElementById('health-pt'); if(!b) return;
+    b.innerHTML='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">👊 循经拍打 · 跟着震拍</div><div class="widget-body" style="padding:12px;">'
+      +'<div style="background:linear-gradient(170deg,#26221C,#171410);border-radius:12px;padding:16px;text-align:center;">'
+      +'<div style="font-size:11px;color:#8A8578;">现在是'+(sc?sc.slice(0,2)+'——':'')+'当令的是</div>'
+      +'<div style="font-size:24px;font-weight:800;color:#C8A96A;margin:4px 0 2px;">'+cur.n+'</div>'
+      +'<div style="font-size:12px;color:#B8B2A6;line-height:1.7;">'+cur.f+'</div>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--text-main);margin-top:10px;line-height:1.8;"><b style="color:#C8A96A;">拍哪：</b>'+cur.w+'</div>'
+      +'<div style="font-size:11.5px;color:var(--text-hint);margin-top:4px;line-height:1.7;">🎯 配穴：'+cur.ac+'</div>'
+      +window._ptCstLine()
+      +'<button id="ptGo" class="switch-btn active" style="width:100%;margin-top:12px;" onclick="window._ptStart()">👊 跟着震拍拍 18 秒</button>'
+      +'<div style="font-size:10.5px;color:var(--text-hint);text-align:center;margin-top:6px;">手机按节奏震动——跟着一下一下拍，左右各拍一条更匀</div>'
+      +'<div id="ptRecent"></div>'
+      +'<div style="font-size:10px;color:var(--text-hint);opacity:.7;text-align:center;margin-top:6px;">※ 保健拍打，不是治病——不舒服该看医生看医生；只在本机记录</div>'
+      +'</div></div>';
+    window._ptRecent();
+  };
+  window._ptRender=function(){
+    if(!document.getElementById('health-pt')) return;
+    window._ptIdle();
+  };
+  window._ptStart=function(){
+    var b=document.getElementById('health-pt'); if(!b) return;
+    var cur=window._ptCur||window._ptMer(new Date().getHours());
+    window._ptStopAll();
+    window._ptOn=true;
+    window._ptBeat(3);
+    window._ptT0=Date.now(); window._ptDur=18000;
+    window._ptTimer=setInterval(function(){
+      var left=window._ptDur-(Date.now()-window._ptT0);
+      var el=document.getElementById('ptCount');
+      if(el) el.textContent=left>0?(Math.ceil(left/1000)+'s'):'0s';
+      if(left<=0){ window._ptFinish(); }
+    },200);
+    b.innerHTML='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">👊 循经拍打 · 正在拍「'+cur.n+'」</div><div class="widget-body" style="padding:12px;">'
+      +'<div style="background:linear-gradient(170deg,#26221C,#171410);border-radius:12px;padding:22px;text-align:center;">'
+      +'<div id="ptPulse" style="width:26px;height:26px;border-radius:50%;background:#E8542F;margin:0 auto 10px;box-shadow:0 0 12px 3px rgba(232,84,47,.5);animation:ptPulse .3s ease-in-out infinite alternate;"></div>'
+      +'<div id="ptCount" style="font-size:34px;font-weight:800;color:#E8E4DC;font-variant-numeric:tabular-nums;">18s</div>'
+      +'<div style="font-size:12.5px;color:#B8B2A6;margin-top:8px;line-height:1.8;">跟着节奏，一下一下拍：<br><b style="color:#C8A96A;">'+cur.w+'</b></div>'
+      +'</div>'
+      +'<button id="ptStop" class="switch-btn" style="width:100%;margin-top:12px;" onclick="window._ptStop()">停</button>'
+      +'<div style="font-size:10.5px;color:var(--text-hint);text-align:center;margin-top:6px;">手机不震动的设备：跟着红点的节奏拍也一样</div>'
+      +'</div></div>';
+    var st=document.getElementById('ptPulse');
+    if(st){ try{ var s2=document.createElement('style'); s2.textContent='@keyframes ptPulse{from{transform:scale(1);opacity:.75}to{transform:scale(1.35);opacity:1}}'; document.head.appendChild(s2); }catch(_e){} }
+  };
+  window._ptStop=function(){
+    window._ptStopAll();
+    var b=document.getElementById('health-pt');
+    if(b){ window._ptIdle(); try{ if(window.showToast) window.showToast('⏹ 停了——拍完整节再记效果更准','ok',1600); }catch(_e){} }
+  };
+  window._ptFinish=function(){
+    if(!window._ptOn) return;
+    window._ptStopAll();
+    var cur=window._ptCur||window._ptMer(new Date().getHours());
+    var b=document.getElementById('health-pt'); if(!b) return;
+    b.innerHTML='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">👊 循经拍打 · 拍完了</div><div class="widget-body" style="padding:12px;">'
+      +'<div style="background:linear-gradient(170deg,#26221C,#171410);border-radius:12px;padding:18px;text-align:center;">'
+      +'<div style="font-size:13px;font-weight:700;color:#C8A96A;">「'+cur.n+'」一节拍完</div>'
+      +'<div style="font-size:12px;color:#B8B2A6;margin-top:6px;line-height:1.7;">拍完这条，身上松了吗？</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:12px;">'
+      +'<button id="ptOk" class="switch-btn active" style="flex:1;" onclick="window._ptDone(\'ok\')">👍 松了，管用</button>'
+      +'<button id="ptNo" class="switch-btn" style="flex:1;" onclick="window._ptDone(\'no\')">😐 没感觉</button>'
+      +'</div>'
+      +'<div style="font-size:10.5px;color:var(--text-hint);text-align:center;margin-top:6px;">记进你的拍打战绩——哪条经对你最灵，慢慢就看出来了</div>'
+      +'</div></div>';
+  };
+  window._ptDone=function(eff){
+    try{
+      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_paida_v1')||'[]'); }catch(_e){}
+      var cur=window._ptCur||window._ptMer(new Date().getHours());
+      a.push({t:Date.now(), mer:cur.n, eff:eff});
+      if(a.length>30) a=a.slice(-30);
+      localStorage.setItem('zhiming_paida_v1', JSON.stringify(a));
+      try{ if(window.showToast) window.showToast(eff==='ok'?'✅ 记下了——这条经对你管用':(eff==='no'?'❌ 记下了——没感觉就少拍这条，换别的试试':'好的'),'ok',1800); }catch(_e){}
+    }catch(_e){}
+    window._ptIdle();
   };
   window.renderHealth = function(){
     try{ renderBody(); }catch(_){}
