@@ -61,7 +61,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.107.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.108.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -522,6 +522,19 @@
     <button class="btn-primary" onclick="window._chartGo()">★ 排我的星盘</button>
   </div>
   <div class="result" id="chart-result" aria-live="polite"></div>
+  <div class="card">
+    <div class="card-title">🌠 今晚抬头看星</div>
+    <div style="font-size:12.5px;color:var(--text-sub);margin-bottom:10px;line-height:1.7;">行星、月亮、十五颗亮星此刻的真实方位——切时间看几点最好看，开罗盘让图跟着手机转。纯天文历算，离线可算。</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button class="subtab" data-skyh="0" onclick="window._skySetHour(0)" style="flex:1;">现在</button>
+      <button class="subtab" data-skyh="2" onclick="window._skySetHour(2)" style="flex:1;">+2h</button>
+      <button class="subtab" data-skyh="4" onclick="window._skySetHour(4)" style="flex:1;">+4h</button>
+      <button class="subtab" data-skyh="6" onclick="window._skySetHour(6)" style="flex:1;">+6h</button>
+    </div>
+    <div id="skyBox"><div style="font-size:12px;color:var(--text-hint);text-align:center;padding:20px 0;">进入本页自动算出你所在城市的星空…</div></div>
+    <button id="skyCompBtn" class="subtab" onclick="window._skyCompass()" style="width:100%;margin-top:8px;">🧭 开罗盘对向（手机指向哪，图转到哪）</button>
+    <div id="skyStat" style="font-size:11px;color:var(--text-hint);margin-top:6px;text-align:center;"></div>
+  </div>
   <div class="foot-disclaimer">※ 星盘为天文历算+占星惯例解读，仅供自我觉察与娱乐参考</div>
 </div>
 

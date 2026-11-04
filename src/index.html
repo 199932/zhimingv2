@@ -1595,7 +1595,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.107.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.108.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2056,6 +2056,19 @@ body{ padding-bottom:160px; }
     <button class="btn-primary" onclick="window._chartGo()">★ 排我的星盘</button>
   </div>
   <div class="result" id="chart-result" aria-live="polite"></div>
+  <div class="card">
+    <div class="card-title">🌠 今晚抬头看星</div>
+    <div style="font-size:12.5px;color:var(--text-sub);margin-bottom:10px;line-height:1.7;">行星、月亮、十五颗亮星此刻的真实方位——切时间看几点最好看，开罗盘让图跟着手机转。纯天文历算，离线可算。</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button class="subtab" data-skyh="0" onclick="window._skySetHour(0)" style="flex:1;">现在</button>
+      <button class="subtab" data-skyh="2" onclick="window._skySetHour(2)" style="flex:1;">+2h</button>
+      <button class="subtab" data-skyh="4" onclick="window._skySetHour(4)" style="flex:1;">+4h</button>
+      <button class="subtab" data-skyh="6" onclick="window._skySetHour(6)" style="flex:1;">+6h</button>
+    </div>
+    <div id="skyBox"><div style="font-size:12px;color:var(--text-hint);text-align:center;padding:20px 0;">进入本页自动算出你所在城市的星空…</div></div>
+    <button id="skyCompBtn" class="subtab" onclick="window._skyCompass()" style="width:100%;margin-top:8px;">🧭 开罗盘对向（手机指向哪，图转到哪）</button>
+    <div id="skyStat" style="font-size:11px;color:var(--text-hint);margin-top:6px;text-align:center;"></div>
+  </div>
   <div class="foot-disclaimer">※ 星盘为天文历算+占星惯例解读，仅供自我觉察与娱乐参考</div>
 </div>
 
@@ -2597,7 +2610,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.107.0-20261104';
+const ZHIMING_BUILD = 'v2.108.0-20261105';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -28129,6 +28142,251 @@ function renderBody(){
 })();
 
 try{ window._chartInit(); }catch(_e){}
+
+/* ============ 🌠 今晚抬头看星：行星/月亮/亮星地平坐标全览天图（自足内核：黄道→赤道→地平；黄经复用 window._chartCalc，黄纬忽略精度~5°可接受） ============ */
+(function(){
+  if(window._skyRender) return;
+  'use strict';
+  function n360(x){ x%=360; return x<0?x+360:x; }
+  var RD=Math.PI/180;
+  function gmst(jdv){ return n360(280.46061837+360.98564736629*(jdv-2451545.0)); }
+  /* 黄道经度 lon（纬度忽略=0）→ 地平 alt/北起方位 az */
+  function eclHor(lon,jdv,lng,latO){
+    var eps=23.4392911*RD;
+    var l=lon*RD;
+    var dec=Math.asin(Math.sin(eps)*Math.sin(l)); /* sinδ=sinε·sinλ（b=0） */
+    var ra=Math.atan2(Math.sin(l)*Math.cos(eps),Math.cos(l));
+    var lst=(gmst(jdv)+lng)/15; /* 小时 */
+    var H=(lst*15-ra/RD)*RD;
+    var phi=latO*RD;
+    var alt=Math.asin(Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(H));
+    var az=Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(phi)-Math.tan(dec)*Math.cos(phi))/RD;
+    var azN=(az+180+360)%360;
+    return {alt:alt/RD, az:azN};
+  }
+  /* 15 颗肉眼亮星 J2000 [名, RA小时, Dec度] */
+  var STARS=[
+    ['天狼星',6.752,-16.72],['老人星',6.399,-52.70],['大角星',14.261,19.18],['织女星',18.616,38.78],
+    ['五车二',5.278,46.00],['参宿七',5.242,-8.20],['南河三',7.655,5.22],['参宿四',5.919,7.41],
+    ['牛郎星',19.846,8.87],['角宿一',13.420,-11.16],['心宿二',16.490,-26.43],['北极星',2.530,89.26],
+    ['北落师门',22.961,-29.62],['天津四',20.690,45.28],['轩辕十四',10.139,11.97]
+  ];
+  function starHor(raH,dec,jdv,lng,latO){
+    var lst=(gmst(jdv)+lng)/15;
+    var H=(lst*15-raH*15)*RD;
+    var d=dec*RD, phi=latO*RD;
+    var alt=Math.asin(Math.sin(phi)*Math.sin(d)+Math.cos(phi)*Math.cos(d)*Math.cos(H));
+    var az=Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(phi)-Math.tan(d)*Math.cos(phi))/RD;
+    var azN=(az+180+360)%360;
+    return {alt:alt/RD, az:azN};
+  }
+  function skyJd(hoursAhead){
+    var n=new Date();
+    n.setHours(n.getHours()+(hoursAhead||0));
+    var y=n.getFullYear(),mo=n.getMonth()+1,dd=n.getDate();
+    if(mo<=2){ y-=1; mo+=12; }
+    var A=Math.floor(y/100), B=2-A+Math.floor(A/4);
+    return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(mo+1))+(dd+(n.getHours()+n.getMinutes()/60-8)/24)+B-1524.5;
+  }
+  function cityOf(){
+    try{
+      var sel=document.getElementById('chart-city');
+      var idx=sel&&sel.value!==''&&sel.value!=null?parseInt(sel.value,10):0;
+      var names=window._chartCityNames();
+      if(!(idx>=0&&names&&idx<names.length)) idx=0;
+      return {name:names[idx], lng:_SKY_CITIES[idx][1], lat:_SKY_CITIES[idx][2], idx:idx};
+    }catch(_e){ return {name:'北京', lng:116.41, lat:39.90, idx:0}; }
+  }
+  window._SKY_CITIES=[['北京',116.41,39.90],['上海',121.47,31.23],['广州',113.26,23.13],['深圳',114.06,22.54],['杭州',120.16,30.27],['成都',104.07,30.57],['重庆',106.55,29.56],['武汉',114.31,30.59],['西安',108.94,34.34],['南京',118.80,32.06],['苏州',120.58,31.30],['天津',117.20,39.08],['长沙',112.94,28.23],['郑州',113.63,34.75],['青岛',120.38,36.07],['合肥',117.28,31.82],['福州',119.30,26.07],['厦门',118.09,24.48],['济南',117.12,36.65],['沈阳',123.43,41.81],['大连',121.62,38.91],['哈尔滨',126.63,45.80],['长春',125.32,43.88],['石家庄',114.51,38.04],['太原',112.55,37.87],['昆明',102.83,24.88],['贵阳',106.63,26.65],['南宁',108.37,22.82],['南昌',115.86,28.68],['海口',110.32,20.03],['兰州',103.83,36.06],['西宁',101.78,36.62],['银川',106.23,38.49],['乌鲁木齐',87.62,43.83],['呼和浩特',111.75,40.84],['拉萨',91.11,29.65],['香港',114.17,22.32],['澳门',113.55,22.20],['台北',121.56,25.03],['高雄',120.31,22.62],['东京',139.69,35.68],['首尔',126.98,37.57],['新加坡',103.82,1.35],['曼谷',100.50,13.76],['吉隆坡',101.69,3.14],['悉尼',151.21,-33.87],['墨尔本',144.96,-37.81],['奥克兰',174.76,-36.85],['伦敦',-0.13,51.51],['巴黎',2.35,48.86],['柏林',13.40,52.52],['莫斯科',37.62,55.76],['迪拜',55.27,25.20]];
+  var BODIES=[
+    ['月亮','#d9d4c8',1.0],['金星','#f2d9a0',2],['火星','#e08a6a',1.4],['木星','#f0e6c8',2.2],['土星','#d8cfa8',1.4]
+  ];
+  /* --- 核心计算：jdv+经纬 → 全天体 {bodies:[{name,alt,az,up}], stars:[{name,alt,az}], sun:{...}} --- */
+  window._skyCalc=function(jdv,lng,lat){
+    var n=new Date(), out={bodies:[],stars:[],sun:null,jdv:jdv};
+    var lons=null;
+    try{
+      var t=new Date((jdv-2440587.5)*86400000);
+      var cc=window._chartCalc(t.getFullYear(),t.getMonth()+1,t.getDate(),t.getHours(),t.getMinutes(),0);
+      lons=(cc&&cc.lons)?cc.lons:(cc||{});
+    }catch(_e){ lons=null; }
+    if(!lons){ lons={}; }
+    var map={'太阳':'太阳','月亮':'月亮','水星':'水星','金星':'金星','火星':'火星','木星':'木星','土星':'土星'};
+    var order=['月亮','金星','木星','火星','土星','水星'];
+    for(var oi=0;oi<order.length;oi++){
+      var nm=order[oi]; if(lons[nm]==null) continue;
+      var h=eclHor(lons[nm],jdv,lng,lat);
+      out.bodies.push({name:nm,alt:h.alt,az:h.az});
+    }
+    if(lons['太阳']!=null){ var sh=eclHor(lons['太阳'],jdv,lng,lat); out.sun=sh; }
+    for(var si=0;si<STARS.length;si++){
+      var st=STARS[si];
+      var hh=starHor(st[1],st[2],jdv,lng,lat);
+      out.stars.push({name:st[0],alt:hh.alt,az:hh.az});
+    }
+    return out;
+  };
+  /* --- 今晚看什么：alt∈[8°,75°] 里挑最亮的行星；月亮优先级低（太亮抢戏但占星解读另说） --- */
+  var PICK_W={'金星':5,'木星':4,'火星':3,'土星':2,'水星':1,'月亮':2.5};
+  window._skyPick=function(res){
+    var best=null,bs=-1;
+    for(var i=0;i<res.bodies.length;i++){
+      var b=res.bodies[i];
+      if(b.alt<8||b.alt>75) continue;
+      var w=(PICK_W[b.name]||1)*(1-b.alt/150);
+      if(w>bs){ bs=w; best=b; }
+    }
+    return best;
+  };
+  function dirName(az){
+    var names=['北','东北','东','东南','南','西南','西','西北'];
+    return names[Math.round(((az%360)+360)%360/45)%8];
+  }
+  /* --- 天穹 SVG（仰视约定：面朝南对照，东在左） --- */
+  window._skySvg=function(res){
+    var S=300,C=150,R=132;
+    function pt(az,alt){
+      var r=(90-alt)/90*R;
+      /* 仰视：北在上，东在左——x = C - r*sin(az), y = C - r*cos(az) */
+      var a=az*RD;
+      return [C-r*Math.sin(a), C-r*Math.cos(a)];
+    }
+    var g='<svg id="skyDome" viewBox="0 0 300 300" style="width:100%;max-width:340px;display:block;margin:0 auto;background:#0B0E1A;border-radius:14px;">';
+    g+='<defs><radialGradient id="skyG" cx="50%" cy="45%"><stop offset="0%" stop-color="#161B2E"/><stop offset="100%" stop-color="#0B0E1A"/></radialGradient></defs>';
+    g+='<circle cx="'+C+'" cy="'+C+'" r="'+R+'" fill="url(#skyG)" stroke="#2A3046" stroke-width="1.5"/>';
+    var rings=[30,60];
+    for(var ri=0;ri<rings.length;ri++){
+      var rr=R*(90-rings[ri])/90;
+      g+='<circle cx="'+C+'" cy="'+C+'" r="'+rr.toFixed(1)+'" fill="none" stroke="#232942" stroke-width="0.6" stroke-dasharray="3 4"/>';
+      g+='<text x="'+(C+4)+'" y="'+(C-rr-3)+'" fill="#5A6078" font-size="9">'+rings[ri]+'°</text>';
+    }
+    g+='<line x1="'+C+'" y1="'+(C-R)+'" x2="'+C+'" y2="'+(C+R)+'" stroke="#232942" stroke-width="0.6" stroke-dasharray="2 5"/>';
+    g+='<line x1="'+(C-R)+'" y1="'+C+'" x2="'+(C+R)+'" y2="'+C+'" stroke="#232942" stroke-width="0.6" stroke-dasharray="2 5"/>';
+    g+='<text x="'+C+'" y="'+(C-R-4)+'" fill="#8A92AC" font-size="11" text-anchor="middle">北</text>';
+    g+='<text x="'+(C-R-2)+'" y="'+(C+4)+'" fill="#8A92AC" font-size="11" text-anchor="end">东</text>';
+    g+='<text x="'+C+'" y="'+(C+R+13)+'" fill="#8A92AC" font-size="11" text-anchor="middle">南</text>';
+    g+='<text x="'+(C+R+2)+'" y="'+(C+4)+'" fill="#8A92AC" font-size="11">西</text>';
+    if(res.sun&&res.sun.alt<-6){
+      g+='<text x="'+C+'" y="'+(C+R-6)+'" fill="#4A5068" font-size="9" text-anchor="middle">☀ 已落·天黑了</text>';
+    }else if(res.sun&&res.sun.alt<6){
+      g+='<text x="'+C+'" y="'+(C+R-6)+'" fill="#C8A96A" font-size="9" text-anchor="middle">☀ 贴地平·晨昏天光</text>';
+    }
+    for(var si2=0;si2<res.stars.length;si2++){
+      var st=res.stars[si2];
+      if(st.alt<2) continue;
+      var p=pt(st.az,st.alt);
+      g+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="1.4" fill="#C9CEDF" opacity="0.9"/>';
+      if(st.name==='北极星'||st.name==='天狼星'||st.name==='织女星'||st.name==='牛郎星'||st.name==='大角星'){
+        g+='<text x="'+(p[0]+4).toFixed(1)+'" y="'+(p[1]-3).toFixed(1)+'" fill="#9AA2BC" font-size="8.5">'+st.name+'</text>';
+      }
+    }
+    for(var bi=0;bi<res.bodies.length;bi++){
+      var b=res.bodies[bi];
+      if(b.alt<-2) continue;
+      var up=b.alt>0;
+      var p2=pt(Math.max(0,Math.min(180,b.alt<0?0:b.az)),Math.max(0,b.alt));
+      if(!up){ continue; }
+      g+='<circle cx="'+p2[0].toFixed(1)+'" cy="'+p2[1].toFixed(1)+'" r="4.2" fill="'+(b.name==='月亮'?'#E8E4D8':(b.name==='火星'?'#E08A6A':(b.name==='金星'?'#F2D9A0':'#E6DDBE')))+'"/>';
+      g+='<circle cx="'+p2[0].toFixed(1)+'" cy="'+p2[1].toFixed(1)+'" r="7.5" fill="none" stroke="'+(b.name==='月亮'?'#E8E4D8':'#F0E6C8')+'" stroke-width="0.5" opacity="0.35"/>';
+      g+='<text x="'+p2[0].toFixed(1)+'" y="'+(p2[1]+17).toFixed(1)+'" fill="#F0EBD8" font-size="10.5" font-weight="600" text-anchor="middle">'+b.name+'</text>';
+      g+='<text x="'+p2[0].toFixed(1)+'" y="'+(p2[1]+28).toFixed(1)+'" fill="#7A8098" font-size="8" text-anchor="middle">'+Math.round(b.alt)+'°·'+dirName(b.az)+'</text>';
+    }
+    g+='</svg>';
+    return g;
+  };
+  /* --- 今晚看什么判词 --- */
+  function pickText(res){
+    var pk=window._skyPick(res);
+    var moon=null;
+    for(var i=0;i<res.bodies.length;i++){ if(res.bodies[i].name==='月亮') moon=res.bodies[i]; }
+    var bits=[];
+    if(pk){
+      bits.push('<b style="color:#F0E6C8;">今晚主看：'+pk.name+'</b>——'+dirName(pk.az)+'方，抬头约 '+Math.round(pk.alt)+'° 高'+(pk.name==='月亮'?'（月亮最不挑地方）':'')+'。肉眼直接看，不用任何设备。');
+    }else{
+      bits.push('这个钟点主行星都在地平线下——纯看星星也行，'+(moon&&moon.alt>8?'月亮在'+dirName(moon.az)+'方 '+Math.round(moon.alt)+'° 高，先看它。':'银河方向在南北线附近，找最暗的地方看。'));
+    }
+    if(moon&&pk&&pk.name!=='月亮'&&moon.alt>8){
+      bits.push('月亮在'+dirName(moon.az)+'方 '+Math.round(moon.alt)+'° 高——它最亮，别盯太久，看行星要让它出视野。');
+    }
+    return bits.join('<br>');
+  }
+  /* --- 渲染主入口 --- */
+  window._skyRender=function(){
+    var box=document.getElementById('skyBox');
+    if(!box) return;
+    var city=cityOf();
+    var hours=window._skyHour||0;
+    var res=window._skyCalc(skyJd(hours),city.lng,city.lat);
+    var hh=new Date(Date.now()+hours*3600000);
+    var tLabel=hours===0?'现在':('+'+hours+' 小时（'+String(hh.getHours()).padStart(2,'0')+':'+String(hh.getMinutes()).padStart(2,'0')+'）');
+    var html='<div style="font-size:11px;color:#8A92AC;margin-bottom:6px;">'+city.name+' · '+tLabel+' · 仰视约定（面朝南对照，东在左）</div>';
+    html+=window._skySvg(res);
+    html+='<div style="background:#141826;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;line-height:1.75;color:#C9CEDF;">'+pickText(res)+'</div>';
+    var legend=[];
+    for(var i=0;i<res.bodies.length;i++){
+      var b=res.bodies[i];
+      legend.push(b.name+' '+(b.alt>0?('在'+dirName(b.az)+'方 '+Math.round(b.alt)+'° 高'):('地平线下（'+Math.round(-b.alt)+'°）')));
+    }
+    html+='<div style="font-size:11px;color:#6E7488;margin-top:8px;line-height:1.7;">'+legend.join(' · ')+'</div>';
+    box.innerHTML=html;
+    var lbl=document.getElementById('skyHourLbl');
+    if(lbl) lbl.textContent=tLabel;
+  };
+  window._skySetHour=function(h){
+    window._skyHour=h;
+    var btns=document.querySelectorAll('[data-skyh]');
+    for(var i=0;i<btns.length;i++){
+      btns[i].style.background=(parseInt(btns[i].getAttribute('data-skyh'),10)===h)?'#2A3046':'transparent';
+      btns[i].style.color=(parseInt(btns[i].getAttribute('data-skyh'),10)===h)?'#F0EBD8':'#7A8098';
+    }
+    window._skyRender();
+  };
+  window._skyRotate=function(alpha){
+    var a=((alpha%360)+360)%360;
+    var svg=document.getElementById('skyDome');
+    var st=document.getElementById('skyStat');
+    if(st) st.textContent='罗盘对向中 · 面朝 '+dirName(a)+'（'+Math.round(a)+'°）——图已转正：你面朝的方向在图上方';
+    if(svg) svg.style.transform='rotate('+(-a)+'deg)';
+  };
+  window._skyCompass=function(){
+    var btn=document.getElementById('skyCompBtn');
+    var arm=function(){
+      window.__skyOri=function(e){
+        var hd=(e&&typeof e.webkitCompassHeading==='number')?e.webkitCompassHeading:(e&&e.alpha!=null?e.alpha:null);
+        if(hd==null) return;
+        window._skyRotate(hd);
+      };
+      window.addEventListener('deviceorientation',window.__skyOri);
+      if(btn){ btn.textContent='🧭 对向中 · 转动手机'; btn.classList.add('active'); }
+      setTimeout(function(){
+        if(btn&&!btn.dataset.got){ btn.textContent='🧭 没检测到传感器 · 用上面的方位文字也行'; }
+      },1500);
+    };
+    try{
+      if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+        DeviceOrientationEvent.requestPermission().then(function(st){ if(st==='granted') arm(); else if(btn) btn.textContent='🧭 权限没给 · 看方位文字就行'; }).catch(function(){ if(btn) btn.textContent='🧭 权限没给 · 看方位文字就行'; });
+      } else { arm(); }
+    }catch(_e){ arm(); }
+  };
+  window._skyLazy=function(){
+    var box=document.getElementById('skyBox');
+    if(!box||box.dataset.skyDone) return;
+    box.dataset.skyDone='1';
+    window._skyRender();
+  };
+  /* switchSec('wu10') 独立 wrapper 钩子（不挤既有 _chartEnsureFromBazi 链） */
+  if(!window.__skySecBound&&typeof window.switchSec==='function'){
+    var _ss2=window.switchSec;
+    window.switchSec=function(p,s){
+      var r=_ss2.apply(this,arguments);
+      if(s==='wu10'||(arguments.length===1&&p==='wu10')){
+        setTimeout(function(){ try{ window._skyLazy(); }catch(_e){} },350);
+      }
+      return r;
+    };
+    window.__skySecBound=1;
+  }
+})();
 </script>
 <script>
 /* ============ 睡前仪式 · 深夜时段感知 ============ */
