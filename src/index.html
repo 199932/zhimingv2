@@ -1573,6 +1573,11 @@ body{ padding-bottom:160px; }
   </style>
 </head>
 <body class="theme-light">
+<h1 style="position:absolute;left:-9999px;top:0;">知命V2 · 纯本机命理与自我观察工具集</h1>
+<div style="position:absolute;left:-9999px;">
+  <h2>不联网、不上传的命理工具站</h2>
+  <p>知命V2 是一个纯本机运行的命理与自我观察工具集：八字排盘（含真太阳时校正与大运流年）、六十四卦金钱卦、奇门遁甲、大六壬、梅花易数、韦特塔罗、本命星盘、黄历宜忌、体质自测与养生手法记录等 25 个模块。所有数据只保存在你自己的浏览器里，不经过任何服务器。</p>
+</div>
 <div id="boot"><div class="b-logo">知命</div><div class="b-sub">纯本地 · 你的成长档案</div><div class="b-spin"></div></div>
 <script>setTimeout(function(){try{var b=document.getElementById("boot");if(b){b.classList.add("off");setTimeout(function(){if(b&&b.parentNode)b.parentNode.removeChild(b);},400);}}catch(e){}},8000);</script>
 <div id="errBox" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#D32F2F;color:#fff;padding:10px 14px;font:13px/1.5 -apple-system,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.35);">
@@ -1590,7 +1595,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.106.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.107.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2592,7 +2597,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.106.0-20261104';
+const ZHIMING_BUILD = 'v2.107.0-20261104';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -7091,7 +7096,7 @@ function calcBazi(){
       : "";
   document.getElementById("bz-tst").style.display="block";
   document.getElementById("bz-tst").innerHTML =
-    `<b>🕒 真太阳时校正</b><br>出生地：${cityName}（经度 ${lng}°${latV?("，纬度 "+latV+"°"):""}）<br>`+
+    `<b>🕒 真太阳时校正</b><br>出生地：${_esc(cityName)}（经度 ${lng}°${latV?("，纬度 "+latV+"°"):""}）<br>`+
     `北京时间：${origS}<br>经度差修正(${lng}°-120°)：${lngCls}${db.lngDiffMin}分<br>`+
     `真时差EoT：${eotCls}${db.eotMin}分${dstStr}<br>`+
     `<b>最终真太阳时：${r.trueSolar}</b>` +
@@ -7915,7 +7920,7 @@ function calcQimen(){
 
   const questionHtml = question
     ? `<div class="card"><div class="card-title">针对所问之事</div>
-        <div class="desc-text">问：<b style="color:var(--pri-dark);">${question}</b><br><br>${TEXT.qimen.career.question_tip}</div>
+        <div class="desc-text">问：<b style="color:var(--pri-dark);">${_esc(question)}</b><br><br>${TEXT.qimen.career.question_tip}</div>
        </div>`
     : "";
 
@@ -8358,8 +8363,8 @@ function calcWuge(){
   const html = `
     <div class="card">
       <div class="card-title">笔画拆解</div>
-      <div class="kv"><span class="k">姓氏「${surname}」</span><span class="v">${isShuangXing?"复姓":"单姓"} · 康熙笔画合计=${surnameBi}</span></div>
-      <div class="kv"><span class="k">名字「${given}」</span><span class="v">${givenArr.length}字名 · 康熙笔画合计=${givenBi}</span></div>
+      <div class="kv"><span class="k">姓氏「${_esc(surname)}」</span><span class="v">${isShuangXing?"复姓":"单姓"} · 康熙笔画合计=${surnameBi}</span></div>
+      <div class="kv"><span class="k">名字「${_esc(given)}」</span><span class="v">${givenArr.length}字名 · 康熙笔画合计=${givenBi}</span></div>
       <div class="hint">*笔画优先读取「康熙笔画表」，未收录字使用 Unicode 区段近似估算（偏差属正常）。</div>
     </div>
     <div class="card">
@@ -8541,7 +8546,7 @@ function calcZhouyi(autoGen){
   const thisName = hexNameByIndex(thisIdx), changeName = hexNameByIndex(changeIdx);
   const thisTuan = (TEXT.zhouyi.hex[thisIdx]||[])[1] || "", thisBrief = (TEXT.zhouyi.hex[thisIdx]||[])[2] || "";
   const html = `
-    ${question?`<div class="card"><div class="card-title">所问之事</div><div class="desc-text"><b style="color:var(--pri-dark);">${question}</b></div></div>`:""}
+    ${question?`<div class="card"><div class="card-title">所问之事</div><div class="desc-text"><b style="color:var(--pri-dark);">${_esc(question)}</b></div></div>`:""}
     <div class="card">
       <div class="card-title">金钱卦 · 六爻结果</div>
       <div class="kv"><span class="k">六爻(初→上)</span><span class="v">${_zyYaos.map((v,i)=>`${v}${changesArr[i]?'✱':''}`).join("  ")}</span></div>
@@ -8653,7 +8658,7 @@ function calcXiaoliuren(){
   const resultObj = {daxian: g.name, gongIdx, shiName, shiIdx, month:mo, day:da, jx:g.jx, wx:g.wx, fang:g.fang, shou:g.shou, name:g.name, kw:g.kw, career:g.career, love:g.love, decision:g.decision, route};
   if(isDirect) return resultObj;  // 直调模式跳 DOM
   const html = `
-    ${question?`<div class="card"><div class="card-title">所问之事</div><div class="desc-text"><b style="color:var(--pri-dark);">${question}</b></div></div>`:""}
+    ${question?`<div class="card"><div class="card-title">所问之事</div><div class="desc-text"><b style="color:var(--pri-dark);">${_esc(question)}</b></div></div>`:""}
     <div class="card">
       <div class="card-title">🎴 小六壬 · 起课落宫</div>
       <div class="kv"><span class="k">月/日/时辰</span><span class="v">${mo}月 / ${da}日 / ${shiName}（${SHICHEN_RANGE[shiIdx]}）</span></div>
@@ -8765,7 +8770,7 @@ function calcCezi(){
     "水":`问财运：财属${cai}，水流则财动，宜流通不宜囤积。`
   };
   const html = `
-    ${question?`<div class="card"><div class="card-title">所问之事</div><div class="desc-text"><b style="color:var(--pri-dark);">${question}</b></div></div>`:""}
+    ${question?`<div class="card"><div class="card-title">所问之事</div><div class="desc-text"><b style="color:var(--pri-dark);">${_esc(question)}</b></div></div>`:""}
     <div class="card">
       <div class="card-title">✎ 字理数象 · ${ch}</div>
       <div class="cz-glyph">${ch}</div>
@@ -16244,9 +16249,9 @@ function calcGongzhen(){
   const html = `
     <div class="card">
       <div class="card-title">📝 判定输入</div>
-      <div class="kv"><span class="k">所问之事</span><span class="v" style="color:var(--pri-dark);font-weight:700;">${question}</span></div>
+      <div class="kv"><span class="k">所问之事</span><span class="v" style="color:var(--pri-dark);font-weight:700;">${_esc(question)}</span></div>
       <div class="kv"><span class="k">时间</span><span class="v">${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")} ${String(h).padStart(2,"0")}:${String(mn).padStart(2,"0")}</span></div>
-      <div class="kv"><span class="k">城市 / 性别</span><span class="v">${cityName} · ${gd}</span></div>
+      <div class="kv"><span class="k">城市 / 性别</span><span class="v">${_esc(cityName)} · ${gd}</span></div>
     </div>
 
     <div class="card">
@@ -22499,6 +22504,7 @@ function _lenormandAIEnhance(cards, spreadType){
   function _ckSave(o){ try{ localStorage.setItem(CK_KEY, JSON.stringify(o)); }catch(e){} }
   function _dkey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
   function _esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  window._esc = _esc;
   function _wxPercent(wx){
     const total = Object.values(wx).reduce((a,b)=>a+b,0) || 1;
     const out = {};
