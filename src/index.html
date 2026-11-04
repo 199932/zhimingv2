@@ -1590,7 +1590,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.104.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.105.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2592,7 +2592,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.104.0-20261104';
+const ZHIMING_BUILD = 'v2.105.0-20261104';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25686,7 +25686,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -25696,6 +25696,7 @@ function renderBody(){
       try{ window._kjRender(); }catch(_e){}
       try{ window._sxRender(); }catch(_e){}
       try{ window._hhRender(); }catch(_e){}
+      try{ window._xiangRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
@@ -26819,6 +26820,184 @@ function renderBody(){
       art.appendChild(im);
     }
     window._hhRecentLine();
+  };
+  window._xiangStopAll=function(){
+    if(window._xiangTimer){ clearInterval(window._xiangTimer); window._xiangTimer=null; }
+    window._xiangOn=false; window._xiangHold=false;
+  };
+  window._xiangHour=function(h){
+    if(h>=5&&h<11) return '一日之计——先立一炷再开工';
+    if(h>=11&&h<14) return '午间一炷，攒下午的神';
+    if(h>=17&&h<22) return '一天收尾前，稳一稳再回家';
+    if(h>=22||h<2) return '睡前一炷，把心放下再睡';
+    return '凌晨了——别点了，去睡';
+  };
+  window._xiangRead=function(dur,end,jit,cv){ /* 纯逻辑可测 */
+    var w,s;
+    if(end==='full'){ w='功德圆满'; s='三分钟一秒没晃——把这份稳带进今天的事里'; }
+    else if(end==='shake'){
+      if(dur<10){ w='一闪而过'; s='香灭了——心里还装着事，先别急'; }
+      else if(dur<30){ w='渐定'; s='半炷香不到就晃了——心事还在手上'; }
+      else if(dur<60){ w='半程即止'; s='稳住过一阵——比上次多稳一秒就是赚'; }
+      else { w='近乎入定'; s='快一炷香了才晃——今天的定力其实够用'; }
+    } else {
+      if(dur<10){ w='点到即收'; s='收功干脆——下次试着多守几秒'; }
+      else if(dur<30){ w='渐定'; s='心已经开始收'; }
+      else if(dur<60){ w='入静'; s='这一炷香，心是稳的'; }
+      else { w='如磐'; s='一炷香纹丝没晃——心收住了'; }
+    }
+    if(cv>0.4&&jit>5) s+='。不过手一直在小抖——累了就歇会儿';
+    else if(cv>0.4) s+='。手有点小颤——深呼吸两次再来一炷';
+    return {w:w,s:s};
+  };
+  window._xiangRender=function(){
+    if(!window._xiangBound){
+      window.addEventListener('pointermove', window._xiangMove);
+      window.addEventListener('pointerup', window._xiangUp);
+      window.addEventListener('pointercancel', function(){ if(window._xiangOn&&window._xiangHold) window._xiangFinish('ok'); });
+      window._xiangBound=true;
+    }
+    var area=document.getElementById('health-xiang');
+    if(!area) return;
+    area.innerHTML='<div class="widget" style="grid-column:1/-1;">'
+      +'<div class="widget-title">🕯️ 一炷香 · 定力桩</div>'
+      +'<div class="widget-body" style="padding:12px;">'
+      +'<div id="xiangBox"></div>'
+      +'<div id="xiangRecent"></div>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:8px;text-align:center;">※ 不是禅修，就是给心按个暂停——数据只在本机</div>'
+      +'</div></div>';
+    window._xiangIdle();
+    window._xiangRecentLine();
+  };
+  window._xiangIdle=function(){
+    window._xiangStopAll();
+    var b=document.getElementById('xiangBox'); if(!b) return;
+    b.innerHTML='<div style="background:linear-gradient(170deg,#26221C,#171410);border-radius:12px;padding:16px;text-align:center;">'
+      +'<div style="font-size:30px;line-height:1;">🕯️</div>'
+      +'<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:8px;line-height:1.8;">按住那个圆点，别松手也别晃<br>香会替你记时——手一抖，香就灭</div>'
+      +'<button id="xiangGo" class="switch-btn active" onclick="window._xiangStart()" style="margin-top:10px;width:100%;">点香</button>'
+      +'</div>';
+  };
+  window._xiangRecentLine=function(){
+    var el=document.getElementById('xiangRecent'); if(!el) return;
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_xiang_v1')||'[]'); }catch(_e){}
+    if(!arr.length){ el.innerHTML=''; return; }
+    var best=0;
+    for(var i=0;i<arr.length;i++){ if(arr[i].dur>best) best=arr[i].dur; }
+    el.innerHTML='<div style="font-size:11.5px;color:var(--text-hint);text-align:center;margin-top:8px;line-height:1.8;">已点 '+arr.length+' 炷 · 最长 '+best+' 秒</div>';
+  };
+  window._xiangStart=function(){
+    var b=document.getElementById('xiangBox'); if(!b) return;
+    window._xiangStopAll();
+    window._xiangOn=true;
+    window._xiangHold=false;
+    b.innerHTML='<div id="xiangStage" style="background:linear-gradient(170deg,#26221C,#171410);border-radius:12px;padding:14px 12px 18px;text-align:center;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;">'
+      +'<div style="height:132px;position:relative;">'
+      +'<div id="xiangStick" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:3px;height:0;background:linear-gradient(180deg,#C8A96A,#8A6B4A);border-radius:2px;"></div>'
+      +'<div id="xiangTip" style="position:absolute;left:50%;transform:translateX(-50%);width:7px;height:7px;background:#E8542F;border-radius:50%;box-shadow:0 0 8px 2px rgba(232,84,47,.55);display:none;"></div>'
+      +'<div id="xiangSmoke" style="position:absolute;left:50%;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.25);display:none;"></div>'
+      +'</div>'
+      +'<div id="xiangTimer" style="font-size:26px;font-weight:700;color:#E8E4DC;font-variant-numeric:tabular-nums;letter-spacing:1px;">0.0s</div>'
+      +'<div id="xiangDial" style="width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(200,169,106,.16),rgba(200,169,106,.05));border:1.5px solid rgba(200,169,106,.45);margin:12px auto 0;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:#C8A96A;">按住</div>'
+      +'<div style="font-size:10.5px;color:rgba(255,255,255,.4);margin-top:8px;">按住圆点 · 满三分钟功德圆满 · 抖了香灭</div>'
+      +'</div>'
+      +'<div id="xiangHint" style="font-size:11.5px;color:var(--text-sub);margin-top:8px;text-align:center;min-height:16px;"></div>';
+    var dial=document.getElementById('xiangDial');
+    if(dial){
+      dial.addEventListener('pointerdown', function(ev){
+        ev.preventDefault();
+        try{ dial.setPointerCapture(ev.pointerId); }catch(_e){}
+        window._xiangDown(ev);
+      });
+    }
+  };
+  window._xiangDown=function(ev){
+    if(!window._xiangOn) return;
+    if(window._xiangHold) return;
+    window._xiangHold=true;
+    window._xiangBase={x:ev.clientX,y:ev.clientY};
+    window._xiangSeq=[0];
+    window._xiangT0=Date.now();
+    window._xiangCurOff=0; window._xiangOffSum=0; window._xiangOffN=0;
+    var d=document.getElementById('xiangDial');
+    if(d) d.style.borderColor='rgba(232,84,47,.8)';
+    var FULL=window._xiangFullMs||180000;
+    window._xiangTimer=setInterval(function(){
+      if(!window._xiangOn||!window._xiangHold) return;
+      var el=Date.now()-window._xiangT0;
+      var tEl=document.getElementById('xiangTimer');
+      if(tEl) tEl.textContent=(el/1000).toFixed(1)+'s';
+      var h=Math.min(118, el/FULL*118);
+      var st=document.getElementById('xiangStick');
+      if(st) st.style.height=h+'px';
+      var tip=document.getElementById('xiangTip');
+      if(tip){ tip.style.display='block'; tip.style.bottom=(h+2)+'px'; }
+      var sm=document.getElementById('xiangSmoke');
+      if(sm){ sm.style.display='block'; sm.style.bottom=(h+12)+'px'; sm.style.opacity=Math.max(0,.35-el/FULL*.2); }
+      window._xiangSeq.push(window._xiangCurOff);
+      window._xiangOffSum+=window._xiangCurOff; window._xiangOffN++;
+      if(el>=FULL) window._xiangFinish('full');
+    },100);
+    var hint=document.getElementById('xiangHint');
+    if(hint) hint.textContent='';
+  };
+  window._xiangMove=function(ev){
+    if(!window._xiangOn||!window._xiangHold||!window._xiangBase) return;
+    var off=Math.hypot(ev.clientX-window._xiangBase.x, ev.clientY-window._xiangBase.y);
+    window._xiangCurOff=off;
+    if(off>12 && Date.now()-window._xiangT0>300) window._xiangFinish('shake');
+  };
+  window._xiangUp=function(){ if(!window._xiangOn||!window._xiangHold) return; window._xiangFinish('ok'); };
+  window._xiangFinish=function(end){
+    if(!window._xiangOn) return;
+    window._xiangOn=false;
+    if(window._xiangTimer){ clearInterval(window._xiangTimer); window._xiangTimer=null; }
+    window._xiangHold=false;
+    var b=document.getElementById('xiangBox'); if(!b) return;
+    var dur=Math.round((Date.now()-window._xiangT0)/100)/10;
+    var jit=window._xiangOffN?window._xiangOffSum/window._xiangOffN:0;
+    var mean=jit, sq=0, i;
+    for(i=0;i<window._xiangSeq.length;i++){ var d0=window._xiangSeq[i]-mean; sq+=d0*d0; }
+    var cv=window._xiangSeq.length&&mean>0?Math.sqrt(sq/window._xiangSeq.length)/mean:0;
+    var r=window._xiangRead(dur,end,jit,cv);
+    var rec={t:Date.now(), dur:dur, end:end, jit:Math.round(jit*10)/10, cv:Math.round(cv*100)/100};
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem('zhiming_xiang_v1')||'[]'); }catch(_e){}
+    arr.push(rec); if(arr.length>30) arr=arr.slice(-30);
+    try{ localStorage.setItem('zhiming_xiang_v1', JSON.stringify(arr)); }catch(_e){}
+    var endSay=end==='full'?'烧满三分钟 · 功德圆满':(end==='shake'?'第 '+dur+' 秒手抖了 · 香灭':'收功 · 香完好');
+    var stickH=Math.min(118, dur/180*118);
+    var h='<div style="background:linear-gradient(170deg,#26221C,#171410);border-radius:12px;padding:14px;text-align:center;">'
+      +'<div style="position:relative;height:60px;display:flex;align-items:flex-end;justify-content:center;">'
+      +'<div style="width:3px;height:'+stickH+'px;background:linear-gradient(180deg,'+(end==='shake'?'#777':'#C8A96A')+',#8A6B4A);border-radius:2px;"></div>'
+      +'<div style="width:7px;height:7px;margin-left:1px;margin-bottom:'+Math.max(0,stickH-2)+'px;border-radius:50%;background:'+(end==='shake'?'#555':'#E8542F')+';"></div>'
+      +'</div>'
+      +'<div style="font-size:24px;font-weight:700;color:#E8E4DC;margin-top:6px;font-variant-numeric:tabular-nums;">'+dur+'s</div>'
+      +'<div style="font-size:11.5px;color:rgba(255,255,255,.5);margin-top:2px;">'+endSay+'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#C8A96A;margin-top:10px;letter-spacing:2px;">'+r.w+'</div>'
+      +'<div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:5px;line-height:1.8;">'+r.s+'</div>'
+      +'<canvas id="xiangSpect" width="300" height="46" style="width:100%;margin-top:8px;border-radius:6px;background:rgba(255,255,255,.05);"></canvas>'
+      +'<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;">手的抖动谱</div>'
+      +'<div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:8px;">'+window._xiangHour(new Date().getHours())+'</div>'
+      +'<button class="switch-btn active" onclick="window._xiangStart()" style="margin-top:10px;width:100%;">再点一炷</button>'
+      +'</div>';
+    b.innerHTML=h;
+    var cv2=document.getElementById('xiangSpect');
+    if(cv2){
+      var cx=cv2.getContext('2d');
+      var seq=window._xiangSeq.slice(-60);
+      var mx=12;
+      cx.strokeStyle='rgba(255,255,255,.15)'; cx.beginPath(); cx.moveTo(0,40); cx.lineTo(300,40); cx.stroke();
+      cx.strokeStyle=end==='shake'?'#E8542F':'#C8A96A'; cx.lineWidth=1.5; cx.beginPath();
+      for(i=0;i<seq.length;i++){
+        var x=seq.length>1?i/(seq.length-1)*296+2:2;
+        var y=42-Math.min(38, seq[i]/mx*38);
+        if(i===0) cx.moveTo(x,y); else cx.lineTo(x,y);
+      }
+      cx.stroke();
+    }
+    window._xiangRecentLine();
   };
   window.renderHealth = function(){
     try{ renderBody(); }catch(_){}
