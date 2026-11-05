@@ -1570,7 +1570,9 @@ body{ padding-bottom:160px; }
 .jd-act{display:inline-block;min-width:30px;height:30px;line-height:30px;text-align:center;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);cursor:pointer;font-size:13px;transition:all .15s;}
 .jd-act:active{transform:scale(.92);}
 
-  </style>
+  .menu-tearing{transform-origin:top center;animation:menuTear .6s ease-in forwards;}
+@keyframes menuTear{0%{transform:perspective(600px) rotateX(0);}60%{transform:perspective(600px) rotateX(-55deg);opacity:.85;}100%{transform:perspective(600px) rotateX(-95deg) translateY(8px);opacity:0;}}
+</style>
 </head>
 <body class="theme-light">
 <h1 style="position:absolute;left:-9999px;top:0;">知命V2 · 纯本机命理与自我观察工具集</h1>
@@ -1595,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.108.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.109.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2610,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.108.0-20261105';
+const ZHIMING_BUILD = 'v2.109.0-20261105';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25705,12 +25707,13 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
       try{ window._ppgRender(); }catch(_e){}
       try{ window._flavorRender(); }catch(_e){}
+      try{ window._menuRender(); }catch(_e){}
       try{ window._breathRender(); }catch(_e){}
       try{ window._kjRender(); }catch(_e){}
       try{ window._sxRender(); }catch(_e){}
@@ -28386,6 +28389,176 @@ try{ window._chartInit(); }catch(_e){}
     };
     window.__skySecBound=1;
   }
+})();
+</script>
+<script>
+/* ============ 🍚 今日食单：节气×体质×日干支→三餐配伍（自足内核：同日同单 hash 确定性；撕页黄历交互） ============ */
+(function(){
+  if(window._menuRender) return;
+  'use strict';
+  var GAN='甲乙丙丁戊己庚辛壬癸', ZHI='子丑寅卯辰巳午未申酉戌亥';
+  var WX_OF_GAN={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+  var FLAVOR_OF_WX={'木':'酸','火':'苦','土':'甘','金':'辛','水':'咸'};
+  var GROW_OF_WX={'木':'酸','火':'苦','土':'甘','金':'辛','水':'咸'};
+  /* 当令池（立冬前后·11月为主，按月份段微调） */
+  var POOL={
+    early:[
+      ['小米粥','温软养胃，早上第一口最舒服'],['鸡蛋','水煮蛋/蒸蛋，蛋白质顶半天'],['山药','蒸着吃或煮粥，脾胃都喜欢'],
+      ['南瓜','蒸南瓜/南瓜小米粥，甜口靠食材本身'],['红枣','粥里丢三颗，甜味不用加糖'],['核桃','两三颗就够，嚼慢一点'],
+      ['燕麦','牛奶冲泡，赶时间的早餐'],['豆浆','温的，别空腹喝冰的']
+    ],
+    lunch:[
+      ['白萝卜','「冬吃萝卜」——炖汤清炒都行'],['白菜','当季最便宜也最应景，炖豆腐一绝'],['莲藕','排骨藕汤，或清炒脆藕'],
+      ['栗子','糖炒栗子当零食，炖鸡也行'],['羊肉','怕冷的人这天可以来一顿'],['牛肉','炖软烂，配白萝卜更好'],
+      ['香菇','提鲜神器，配什么菜都不错'],['红薯','蒸一个当主食，比精米面顶饱'],['鲫鱼','豆腐鲫鱼汤，刺多但鲜']
+    ],
+    dinner:[
+      ['青菜粥','晚上肠胃要收工，粥最省力'],['面条','热汤面，卧个蛋加点青菜'],['豆腐','清淡做法，晚上吃没负担'],
+      ['银耳','银耳羹润燥，秋冬晚上一碗很舒服'],['百合','煮粥或羹，安神助眠向'],['绿叶菜','焯水清炒，晚餐一半是菜'],
+      ['梨','秋冬季晚上一口梨，润嗓子'],['紫菜蛋花汤','三分钟搞定，热乎不油腻']
+    ]
+  };
+  /* 体质→忌池/宜倾向（不复述体质页eat字段，只做三餐过滤） */
+  var CONSTI={
+    pinghe:{avoid:[''],tip:'平和底子，跟着节气吃就是最好的进补'},
+    qixu:{avoid:['冰','生萝卜'],tip:'气虚的人吃七分饱就好——撑着更耗气'},
+    yangxu:{avoid:['冰','绿豆','苦瓜','梨'],tip:'阳虚体质：所有凉的都过一遍热水再说'},
+    yinxu:{avoid:['羊肉','桂圆','辣'],tip:'阴虚体质：羊肉桂圆这类温补今天绕道'},
+    tanshi:{avoid:['甜','油炸','糯米','肥'],tip:'痰湿体质：甜和黏的东西今天就放放'},
+    shire:{avoid:['辣','羊肉','桂圆','酒'],tip:'湿热体质：辛辣和温补都在火上浇油'},
+    xueyu:{avoid:['冰','寒凉'],tip:'血瘀体质：吃得温乎点，血遇寒则凝'},
+    qiyu:{avoid:[''],tip:'气郁体质：好好吃一顿本身就是疏肝'},
+    tebing:{avoid:['海鲜','酒'],tip:'特禀体质：没吃过的东西今天别试新'}
+  };
+  function n360(x){ x%=360; return x<0?x+360:x; }
+  function hash32(str){
+    var h=2166136261>>>0;
+    for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+    return h>>>0;
+  }
+  function pick(list,seed){ return list[seed%list.length]; }
+  /* 时段→当前该备哪顿 */
+  function mealOfHour(hour){ if(hour<10) return 'breakfast'; if(hour<16) return 'lunch'; return 'dinner'; }
+  /* 日干支五行→一行总note */
+  function gzNote(jdv){
+    var d=new Date((jdv-2440587.5)*86400000+8*3600000);
+    var idx=window.dayGanZhiIdxFromDate?window.dayGanZhiIdxFromDate(d.getFullYear(),d.getMonth()+1,d.getDate(),d.getHours()):(0);
+    var g=GAN[idx%10], wx=WX_OF_GAN[g], fl=FLAVOR_OF_WX[wx];
+    var notes={'木':'今天木气当令（'+g+'日）——酸味收敛点，甘味可以多一点，别吃太猛','火':'今天火气足（'+g+'日）——苦味清清火，辣的晚点吃','土':'今天土气厚（'+g+'日）——甘味已经够了，甜食悠着点','金':'今天金气锐（'+g+'日）——辛味少碰点嗓子，润的吃起来','水':'今天水气盛（'+g+'日）——咸味压一压，喝够温水'};
+    return {g:g,wx:wx,txt:notes[wx]||''};
+  }
+  /* 核心：dateStr('2026-11-05')/体质key/hour → 三餐单（同输入同输出） */
+  window._menuCalc=function(dateStr, constiKey, hour, jdv, termName){
+    var h1=hash32(dateStr+'|a'), h2=hash32(dateStr+'|b'), h3=hash32(dateStr+'|c'), h4=hash32(dateStr+'|d');
+    var c=CONSTI[constiKey]||CONSTI.pinghe;
+    function meal(list,seed,mealName){
+      var cands=list.filter(function(it){
+        for(var k=0;k<c.avoid.length;k++){ if(c.avoid[k]&&it[0].indexOf(c.avoid[k])>=0) return false; }
+        return true;
+      });
+      if(!cands.length) cands=list;
+      var main=pick(cands,seed);
+      var side=pick(cands,(seed*7+3)>>>0);
+      if(side[0]===main[0]) side=pick(cands,(seed*7+11)>>>0);
+      var avoidTxt=(c.avoid.length&&c.avoid[0])?('今天绕开：'+c.avoid.slice(0,2).join('、')):'跟着节气吃就好';
+      return {main:main,side:side,avoid:avoidTxt,meal:mealName};
+    }
+    var out={
+      breakfast:meal(POOL.early,h1,'早餐'),
+      lunch:meal(POOL.lunch,h2,'午餐'),
+      dinner:meal(POOL.dinner,h3,'晚餐'),
+      tip:c.tip,
+      gz:gzNote(jdv||0),
+      term:termName||'',
+      focus:mealOfHour(hour||12)
+    };
+    return out;
+  };
+  /* --- 撕页状态 --- */
+  function menuStore(){ try{ return JSON.parse(localStorage.getItem('zhiming_menu_v1')||'{"days":{}}'); }catch(_e){ return {"days":{}}; } }
+  function menuSave(s){ try{ localStorage.setItem('zhiming_menu_v1', JSON.stringify(s)); }catch(_e){} }
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function streakOf(s){
+    var n=0, d=new Date();
+    for(;;){
+      var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(s.days&&s.days[k]){ n++; d.setDate(d.getDate()-1); } else break;
+      if(n>999) break;
+    }
+    return n;
+  }
+  window._menuTear=function(){
+    var box=document.getElementById('health-menu');
+    if(!box||box.dataset.torn==='1') return;
+    box.dataset.torn='1';
+    var cover=document.getElementById('menuCover');
+    if(cover){ cover.classList.add('menu-tearing'); }
+    var s=menuStore(), k=todayStr();
+    if(!s.days[k]){ s.days[k]=1; s.last=k; menuSave(s); }
+    setTimeout(function(){ window._menuRender(); },650);
+  };
+  /* --- 渲染 --- */
+  window._menuRender=function(){
+    var box=document.getElementById('health-menu');
+    if(!box) return;
+    var d=new Date();
+    var k=todayStr();
+    var term='';
+    try{ if(window._houOfDate){ var ho=window._houOfDate(d.getFullYear(),d.getMonth()+1,d.getDate()); if(ho&&ho.term) term=ho.term; } }catch(_e){}
+    var cst=null; try{ cst=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_e){}
+    var ck=(cst&&cst.t)?cst.t:'pinghe';
+    
+    var gIdx=0;
+    try{ gIdx=window.dayGanZhiIdxFromDate(d.getFullYear(),d.getMonth()+1,d.getDate(),d.getHours()); }catch(_e){ gIdx=0; }
+    var gz=GAN[gIdx%10]+ZHI[gIdx%12];
+    var wxG=WX_OF_GAN[GAN[gIdx%10]]||'土';
+    var jdvNoon=2440587.5+(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),4,0,0)/86400000); /* 今日正午JD(UTC04:00=北京12:00)，gzNote 转回北京同日 */
+    var m=window._menuCalc(k,ck,d.getHours(),jdvNoon,term);
+    var s=menuStore();
+    var streak=streakOf(s);
+    var torn=(box.dataset.torn==='1')||(s.days&&s.days[k]);
+    var wxC={'木':'#3E7C4F','火':'#C0392B','土':'#B8860B','金':'#8E8E8E','水':'#2C5F8A'};
+    var headCol=wxC[wxG]||'#B8860B';
+    var html='';
+    html+='<div style="border:1.5px solid var(--card-border);border-radius:14px;overflow:hidden;background:#FDF8EE;">';
+    /* 红头 */
+    html+='<div style="background:linear-gradient(135deg,#B3352C,#8E2A22);color:#F7E9C5;padding:12px 16px;display:flex;align-items:baseline;gap:8px;">';
+    html+='<div style="font-size:16px;font-weight:700;letter-spacing:2px;">今日食单</div>';
+    html+='<div style="font-size:11px;opacity:.85;">'+k+(term?(' · '+term):'')+' · '+gz+'日</div>';
+    html+='<div style="margin-left:auto;font-size:11px;opacity:.9;">'+(streak>1?('🔥 连撕 '+streak+' 天'):'')+'</div></div>';
+    if(!torn){
+      /* 封面（未撕） */
+      html+='<div id="menuCover" style="padding:26px 16px;text-align:center;background:#FDF8EE;">';
+      html+='<div style="font-size:34px;">🍚</div>';
+      html+='<div style="font-size:14px;font-weight:600;color:#5A4632;margin-top:8px;">今天三顿怎么吃，已经排好了</div>';
+      html+='<div style="font-size:12px;color:#8A7A62;margin-top:4px;line-height:1.7;">节气当令 × 你的体质 × 今天'+wxG+'气——撕开看三餐配伍</div>';
+      html+='<button onclick="window._menuTear()" style="margin-top:14px;background:#B3352C;color:#F7E9C5;border:none;border-radius:10px;padding:10px 26px;font-size:13.5px;font-weight:600;letter-spacing:1px;">✂ 撕开今日一页</button>';
+      html+='</div>';
+    }else{
+      /* 三餐单 */
+      var mealRow=function(mo,ico,zone,isFocus){
+        var bgc=isFocus?'background:rgba(179,53,44,.07);':'';
+        var tag=isFocus?'<span style="font-size:10px;background:#B3352C;color:#F7E9C5;border-radius:6px;padding:1px 6px;margin-left:6px;">该备这顿</span>':'';
+        var h='<div style="'+bgc+'padding:12px 16px;border-top:1px dashed #D8C8A8;">';
+        h+='<div style="font-size:13px;font-weight:700;color:#5A4632;">'+ico+' '+mo.meal+tag+'</div>';
+        h+='<div style="font-size:12.5px;color:#4A3E2E;margin-top:4px;line-height:1.75;">';
+        h+='<b>主</b> '+mo.main[0]+'——'+mo.main[1]+'<br>';
+        if(mo.side[0]!==mo.main[0]) h+='<b>搭</b> '+mo.side[0]+'（'+mo.side[1]+'）<br>';
+        h+='<span style="color:#9A6A4A;font-size:11.5px;">✋ '+mo.avoid+'</span></div></div>';
+        return h;
+      };
+      html+=mealRow(m.breakfast,'🌅','early',m.focus==='breakfast');
+      html+=mealRow(m.lunch,'☀️','lunch',m.focus==='lunch');
+      html+=mealRow(m.dinner,'🌙','dinner',m.focus==='dinner');
+      /* 总注：体质tip+日干支 */
+      html+='<div style="padding:10px 16px;border-top:1px dashed #D8C8A8;font-size:11.5px;color:#8A7A62;line-height:1.7;">';
+      html+='💡 '+m.tip;
+      if(m.gz&&m.gz.txt) html+='<br> 风 '+m.gz.txt;
+      html+='</div>';
+    }
+    html+='</div>';
+    box.innerHTML=html;
+  };
 })();
 </script>
 <script>

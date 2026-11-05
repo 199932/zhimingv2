@@ -1410,3 +1410,5 @@ body{ padding-bottom:160px; }
 .judge-item:first-of-type{border-top:none;}
 .jd-act{display:inline-block;min-width:30px;height:30px;line-height:30px;text-align:center;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);cursor:pointer;font-size:13px;transition:all .15s;}
 .jd-act:active{transform:scale(.92);}
+  .menu-tearing{transform-origin:top center;animation:menuTear .6s ease-in forwards;}
+@keyframes menuTear{0%{transform:perspective(600px) rotateX(0);}60%{transform:perspective(600px) rotateX(-55deg);opacity:.85;}100%{transform:perspective(600px) rotateX(-95deg) translateY(8px);opacity:0;}}
