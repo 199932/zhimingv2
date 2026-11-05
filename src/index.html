@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.111.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.112.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.111.0-20261106';
+const ZHIMING_BUILD = 'v2.112.0-20261106';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25708,7 +25708,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-song" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -25717,6 +25717,7 @@ function renderBody(){
       try{ window._menuRender(); }catch(_e){}
       try{ window._muyuRender(); }catch(_e){}
       try{ window._bowlRender(); }catch(_e){}
+      try{ window._songRender(); }catch(_e){}
       try{ window._breathRender(); }catch(_e){}
       try{ window._kjRender(); }catch(_e){}
       try{ window._sxRender(); }catch(_e){}
@@ -28732,6 +28733,179 @@ try{ window._chartInit(); }catch(_e){}
     update();
   };
   /* renderHealth 重渲染后容器重建→dataset 清空→自然重挂；taps 保留会话内节奏 */
+})();
+</script>
+<script>
+/* ============ 🎵 心跳作曲：把你的心跳弹成歌——bpm=曲速 cv=曲风 体质=主音，五声音阶32拍 ============ */
+(function(){
+  if(window._songRender) return;
+  'use strict';
+  var ROOTS={'宫':261.63,'商':293.66,'角':329.63,'徵':392.00,'羽':440.00};
+  var SCALE=[0,2,4,7,9,12,14,16,19,21]; /* 五声音阶两个八度半音距 */
+  /* 体质→主音（中医五音共识映射：气虚阳虚→宫温补/阴虚→羽滋/痰湿湿热→角疏/血瘀气郁→徵活/平和→宫） */
+  var CST_ROOT={'平和':'宫','气虚':'宫','阳虚':'宫','阴虚':'羽','痰湿':'角','湿热':'角','血瘀':'徵','气郁':'徵','特禀':'商','湿热质':'角','气虚质':'宫'};
+  function freq(rootKey,idx){ return ROOTS[rootKey]*Math.pow(2,SCALE[Math.max(0,Math.min(9,idx))]/12); }
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+  /* --- 曲式映射（纯函数探针） --- */
+  window._songMap=function(bpm,cv,cstT){
+    bpm=bpm||72; cv=(cv==null||isNaN(cv))?0.04:cv;
+    var root=cstT&&CST_ROOT[cstT] ? CST_ROOT[cstT] : (bpm<70?'羽':(bpm<=85?'宫':'徵'));
+    var style=cv<0.03?'稳':(cv<=0.06?'自然':'起伏');
+    var tempoName=bpm<65?'慢板':(bpm<80?'行板':(bpm<95?'小快板':'快板'));
+    var tempoSay=bpm<65?'你的心在深水区':(bpm<80?'不快不慢，是颗自在的心':(bpm<95?'有点跃跃欲试':'心里有事？让它响一会儿'));
+    var cvSay=cv<0.03?'节律极稳，曲子方方正正':(cv<=0.06?'节律自然，曲子顺其本来的样子':'节律起伏不小，曲子带了点切分');
+    return {root:root,style:style,tempoName:tempoName,verdict:'「'+tempoName+'」——'+tempoSay+'。'+cvSay+'。',beatMs:60000/bpm};
+  };
+  /* --- 数据：最近一次 ppg --- */
+  function lastPpg(){
+    try{
+      var a=JSON.parse(localStorage.getItem('zhiming_ppg_v1')||'[]');
+      if(a&&a.length){
+        var e=a[a.length-1];
+        var ago=Math.round((Date.now()-e.t)/3600000);
+        return {bpm:Math.round(e.bpm),cv:e.cv,ago:ago<1?'刚刚':(ago<24?ago+' 小时前':Math.round(ago/24)+' 天前')};
+      }
+    }catch(_e){}
+    return null;
+  }
+  function cstType(){
+    try{ var c=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); return c&&c.t?c.t:''; }catch(_e){ return ''; }
+  }
+  /* --- 旋律生成：32音五声随机游走，每8拍落主音 --- */
+  window._songGen=function(seed,style,rootKey){
+    var rnd=mulberry32(seed), mel=[], cur=4;
+    for(var i=0;i<32;i++){
+      if(i%8===7){ mel.push({idx:0,root:true}); cur=4; continue; } /* 第8/16/24/32拍落主音 */
+      var step;
+      if(style==='稳') step=[-1,1][rnd()<0.5?0:1];
+      else if(style==='自然') step=[-2,-1,1,2][Math.floor(rnd()*4)];
+      else step=[-3,-2,-1,1,2,3][Math.floor(rnd()*6)];
+      cur=Math.max(0,Math.min(9,cur+step));
+      mel.push({idx:cur,root:false});
+    }
+    return mel;
+  };
+  /* --- 播放 --- */
+  var playing=false;
+  window._songLastNote=0;
+  window._songState={i:-1};
+  function acGet(){
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return null;
+    if(!window._songAC||window._songAC.state==='closed') window._songAC=new AC();
+    if(window._songAC.state==='suspended') window._songAC.resume();
+    return window._songAC;
+  }
+  function stopNotes(){
+    if(window._songTimers){ window._songTimers.forEach(clearTimeout); window._songTimers=null; }
+    playing=false;
+  }
+  window._songStopUI=function(){
+    var el=document.getElementById('songPulse');
+    if(el) el.innerHTML='';
+    var nm=document.getElementById('songNote');
+    if(nm) nm.textContent='';
+  };
+  window._songPlay=function(){
+    if(playing){ stopNotes(); window._songStopUI(); var b=document.getElementById('songGo'); if(b) b.textContent='▶ 播一遍'; return; }
+    var m=window._songMap(lastPpg()?lastPpg().bpm:72,lastPpg()?lastPpg().cv:0.04,cstType());
+    var p=lastPpg();
+    var seed=Math.floor(Date.now()/1000)%100000;
+    var mel=window._songGen(seed,m.style,m.root);
+    var ac=acGet();
+    var t0=ac?ac.currentTime+0.05:0;
+    window._songTimers=[];
+    window._songNoteTs=[];
+    mel.forEach(function(n,i){
+      var at=t0+i*m.beatMs/1000;
+      if(ac){
+        var o1=ac.createOscillator(), o2=ac.createOscillator(), g=ac.createGain();
+        o1.type='triangle'; o2.type='sine';
+        o1.frequency.value=freq(m.root,n.idx); o2.frequency.value=freq(m.root,n.idx)*2;
+        g.gain.setValueAtTime(0.0001,at);
+        g.gain.linearRampToValueAtTime(0.28,at+0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001,at+m.beatMs/1000*0.92);
+        o1.connect(g); o2.connect(g); g.connect(ac.destination);
+        o1.start(at); o2.start(at);
+        o1.stop(at+m.beatMs/1000); o2.stop(at+m.beatMs/1000);
+      }
+      /* 可视化+钩子（setTimeout 对齐音频排程） */
+      window._songTimers.push(setTimeout(function(){
+        window._songState.i=i;
+        window._songLastNote=Date.now();
+        var nm=document.getElementById('songNote');
+        if(nm) nm.textContent=(n.root?'★ ':'')+['宫','商','角','清角','徵','羽','清羽','高宫','高商','高角'][n.idx];
+        var el=document.getElementById('songPulse');
+        if(el){
+          var dots=el.children;
+          for(var k=0;k<dots.length;k++) dots[k].style.background=(k<=i?'#B08A4A':'#E3E6EC');
+          if(n.root&&dots[i]) dots[i].style.background='#8A6A32';
+        }
+      }, i*m.beatMs));
+    });
+    playing=true;
+    var b=document.getElementById('songGo');
+    if(b) b.textContent='⏹ 停';
+    /* 播完：判词+存 */
+    window._songTimers.push(setTimeout(function(){
+      playing=false;
+      var b2=document.getElementById('songGo');
+      if(b2) b2.textContent='▶ 再来一首';
+      var v=document.getElementById('songVerdict');
+      if(v) v.textContent=m.verdict;
+      if(v) v.style.display='block';
+      try{
+        var arr=JSON.parse(localStorage.getItem('zhiming_song_v1')||'[]');
+        arr.push({t:Date.now(),bpm:p?p.bpm:72,root:m.root,style:m.style});
+        while(arr.length>10) arr.shift();
+        localStorage.setItem('zhiming_song_v1',JSON.stringify(arr));
+        renderHist();
+      }catch(_e){}
+    }, 32*m.beatMs+150));
+  };
+  function renderHist(){
+    var el=document.getElementById('songHist');
+    if(!el) return;
+    var a=[];
+    try{ a=JSON.parse(localStorage.getItem('zhiming_song_v1')||'[]'); }catch(_e){}
+    if(!a.length){ el.innerHTML=''; return; }
+    var rows=a.slice(-3).reverse().map(function(e){
+      var d=new Date(e.t);
+      return '<span style="margin-right:10px;">'+(d.getMonth()+1)+'/'+d.getDate()+' · '+e.bpm+'拍 · '+e.root+'调'+(e.style==='稳'?'·稳':(e.style==='起伏'?'·起伏':''))+'</span>';
+    }).join('');
+    el.innerHTML='<div style="font-size:11px;color:var(--text-hint);">'+rows+'</div>';
+  }
+  window._songRender=function(){
+    var box=document.getElementById('health-song');
+    if(!box||box.dataset.songDone) return;
+    box.dataset.songDone='1';
+    var p=lastPpg();
+    var dataHtml;
+    if(p){
+      dataHtml='<div style="font-size:12.5px;color:var(--text);">最近一次心跳：<b>'+p.bpm+' 拍/分</b> <span style="color:var(--text-hint);font-size:11.5px;">· '+p.ago+'</span></div>';
+    }else{
+      dataHtml='<div style="font-size:12.5px;color:var(--text-sub);">还没测过心跳——先用 72 拍的普通心跳试一遍，测过后弹的就是你的心律。'
+        +'<a href="javascript:void(0)" onclick="var e=document.getElementById(\'health-ppg\');if(e)e.scrollIntoView({behavior:\'smooth\',block:\'center\'});" style="color:#B08A4A;margin-left:4px;">去测 ❤️ →</a></div>';
+    }
+    var m=window._songMap(p?p.bpm:72,p?p.cv:0.04,cstType());
+    var cst=cstType();
+    var html='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🎵 心跳作曲 · 把你的心跳弹成歌</div><div class="widget-body" style="padding:14px;">';
+    html+=dataHtml;
+    html+='<div style="font-size:12px;color:var(--text-sub);margin-top:6px;">曲式：<b>'+m.root+'调</b>（'+(cst?'体质'+cst+' → '+m.root+'音':(p?'心跳'+(p.bpm<70?'慢':'快')+' → '+m.root+'音':'默认宫音'))+'） · 曲速 '+m.tempoName+' · '+m.style+'曲风</div>';
+    html+='<div style="display:flex;align-items:center;gap:12px;margin-top:12px;">';
+    html+='<button class="btn-secondary" id="songGo" onclick="window._songPlay()" style="padding:8px 22px;font-size:13px;white-space:nowrap;">▶ 播一遍</button>';
+    html+='<div style="flex:1;"><div id="songNote" style="font-size:20px;font-weight:700;color:#8A6A32;min-height:24px;"></div><div id="songPulse" style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;"></div></div>';
+    html+='</div>';
+    html+='<div id="songVerdict" style="display:none;background:var(--pri-light,#f2f5ee);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:var(--text);line-height:1.7;"></div>';
+    html+='<div id="songHist" style="margin-top:8px;"></div>';
+    html+='<div style="font-size:11px;color:var(--text-hint);margin-top:6px;line-height:1.6;">你的心跳多快，歌就多快；心跳多稳，歌就多稳。声音是合成的，不联网。</div>';
+    html+='</div></div>';
+    box.innerHTML=html;
+    var pw=document.getElementById('songPulse');
+    if(pw){ for(var i=0;i<32;i++){ var d=document.createElement('span'); d.style.cssText='width:8px;height:8px;border-radius:50%;background:#E3E6EC;'; pw.appendChild(d); } }
+    renderHist();
+  };
+  window._songPlayRef=window._songPlay; /* onclick显式可查 */
 })();
 </script>
 <script>
