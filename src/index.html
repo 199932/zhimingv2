@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.110.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.111.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.110.1-20261105';
+const ZHIMING_BUILD = 'v2.111.0-20261106';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25708,7 +25708,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -25716,6 +25716,7 @@ function renderBody(){
       try{ window._flavorRender(); }catch(_e){}
       try{ window._menuRender(); }catch(_e){}
       try{ window._muyuRender(); }catch(_e){}
+      try{ window._bowlRender(); }catch(_e){}
       try{ window._breathRender(); }catch(_e){}
       try{ window._kjRender(); }catch(_e){}
       try{ window._sxRender(); }catch(_e){}
@@ -28731,6 +28732,245 @@ try{ window._chartInit(); }catch(_e){}
     update();
   };
   /* renderHealth 重渲染后容器重建→dataset 清空→自然重挂；taps 保留会话内节奏 */
+})();
+</script>
+<script>
+/* ============ 🎵 颂钵呼吸：一钵音陪你呼吸——合成颂钵（拍频tremolo+多泛音+长衰减）×呼吸相位引擎（三模式时辰默认） ============ */
+(function(){
+  if(window._bowlRender) return;
+  'use strict';
+  /* --- 模式定义：[吸,屏,呼,吸后屏] 秒（box=箱式四相,gentle/sleep=三相无第二屏） --- */
+  var MODES={
+    gentle:{name:'温和 · 4-6',ph:[4,0,6,0],desc:'吸 4 秒，呼 6 秒。清晨醒神，白天平心。'},
+    sleep:{name:'助眠 · 4-7-8',ph:[4,7,8,0],desc:'吸 4 屏 7 呼 8。夜里拉长呼气，把心率带下来。'},
+    box:{name:'定心 · 4-4-4-4',ph:[4,4,4,4],desc:'吸屏呼屏各 4 秒。心乱的时候方方正正最稳。'}
+  };
+  function defMode(){
+    var h=new Date().getHours();
+    if(h>=22||h<5) return 'sleep';   /* 夜里→助眠 */
+    if(h>=5&&h<11) return 'gentle';  /* 清晨上午→温和醒神 */
+    return 'box';                     /* 其他→定心 */
+  }
+  var curMode=defMode();
+  /* --- 相位引擎（纯函数，可headless探针）：elapsed(ms)→{ph,label,ratio,gain,scale} --- */
+  window._bowlPhase=function(elapsedMs,modeKey){
+    var m=MODES[modeKey]||MODES.gentle;
+    var ph=m.ph;
+    var c0=ph[0]*1000, c1=c0+ph[1]*1000, c2=c1+ph[2]*1000, cyc=c2+ph[3]*1000; /* 全程ms——秒混入=量纲bug */
+    var e=((elapsedMs%cyc)+cyc)%cyc; /* 负数兜底 */
+    var idx, t;
+    if(e<c0){ idx=0; t=e; }
+    else if(e<c1){ idx=1; t=e-c0; }
+    else if(e<c2){ idx=2; t=e-c1; }
+    else { idx=3; t=e-c2; }
+    var lab=['吸——','屏住','呼——','再屏一下'][idx];
+    var dur=ph[idx]*1000;
+    var ratio=dur>0?t/dur:0;
+    /* gain/scale曲线：吸=渐强,第一屏=保持,呼=渐弱长尾,第二屏=轻保持 */
+    var g,s;
+    if(idx===0){ var r=Math.min(1,ratio); g=0.25+0.65*(1-Math.pow(1-r,2)); s=1+0.15*r; }
+    else if(idx===1){ g=0.9-0.05*ratio; s=1.15; }
+    else if(idx===2){ g=0.85-0.65*Math.pow(ratio,0.8); s=1.15-0.15*ratio; }
+    else { g=0.2+0.05*(1-ratio); s=1; }
+    var rounds=Math.floor(elapsedMs/cyc);
+    return {ph:idx,label:lab,ratio:ratio,gain:g,scale:s,rounds:rounds,cyc:cyc};
+  };
+  /* --- 颂钵合成：基音220Hz+非谐波泛音(2.756x/5.404x)+拍频LFO(0.7Hz)+软击噪 --- */
+  window._bowlLastStrike=0;
+  var tone=null; /* 会话级持续音 {osc们,bus} */
+  function acGet(){
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return null;
+    if(!window._bowlAC||window._bowlAC.state==='closed') window._bowlAC=new AC();
+    if(window._bowlAC.state==='suspended') window._bowlAC.resume();
+    return window._bowlAC;
+  }
+  function stopTone(){
+    if(!tone) return;
+    try{
+      var ac=window._bowlAC, t=ac.currentTime;
+      tone.bus.gain.cancelScheduledValues(t);
+      tone.bus.gain.setTargetAtTime(0.0001,t,0.4);
+      tone.oscs.forEach(function(o){ try{o.stop(t+1.5);}catch(_e){} });
+    }catch(_e){}
+    tone=null;
+  }
+  function startTone(){
+    var ac=acGet(); if(!ac) return;
+    stopTone();
+    var bus=ac.createGain(); bus.gain.value=0.0001; bus.connect(ac.destination);
+    var oscs=[];
+    function osc(freq,amp){
+      var o=ac.createOscillator(), g=ac.createGain();
+      o.type='sine'; o.frequency.value=freq; g.gain.value=amp;
+      o.connect(g); g.connect(bus); o.start(); oscs.push(o);
+      return o;
+    }
+    osc(220,0.5);
+    osc(220.7,0.42);        /* 拍频对：220+220.7 → 0.7Hz tremolo（钵的嗡嗡灵魂） */
+    osc(606,0.14);          /* 2.756x 非谐波泛音 */
+    osc(1189,0.05);         /* 5.404x */
+    tone={bus:bus,oscs:oscs};
+  }
+  function strike(){
+    var ac=window._bowlAC;
+    if(!ac||!tone) return;
+    try{
+      var t=ac.currentTime;
+      /* 软槌击：短噪声+低通 */
+      var nb=ac.createBuffer(1,Math.floor(ac.sampleRate*0.06),ac.sampleRate);
+      var nd=nb.getChannelData(0);
+      for(var i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1)*Math.pow(1-i/nd.length,2);
+      var ns=ac.createBufferSource(); ns.buffer=nb;
+      var lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900;
+      var ng=ac.createGain(); ng.gain.setValueAtTime(0.5,t); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
+      ns.connect(lp); lp.connect(ng); ng.connect(tone.bus); ns.start(t);
+      /* 重激发：bus gain 瞬时抬升，相位引擎 rAF 里再 ramp */
+      tone.bus.gain.cancelScheduledValues(t);
+      tone.bus.gain.setValueAtTime(0.0001,t);
+      tone.bus.gain.linearRampToValueAtTime(0.9,t+0.08);
+      window._bowlLastStrike=Date.now();
+    }catch(_e){}
+  }
+  /* --- 存储：轮数 --- */
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function store(){
+    try{ var s=JSON.parse(localStorage.getItem('zhiming_bowl_v1')||'null'); if(s&&s.days) return s; }catch(_e){}
+    return {days:{},total:0};
+  }
+  function save(s){ try{ localStorage.setItem('zhiming_bowl_v1',JSON.stringify(s)); }catch(_e){} }
+  function streakOf(s){
+    var n=0,d=new Date();
+    for(;;){
+      var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(s.days&&s.days[k]>0){ n++; d.setDate(d.getDate()-1); } else break;
+      if(n>999) break;
+    }
+    return n;
+  }
+  /* --- 会话状态 --- */
+  var sess={on:false,t0:0,lastRound:-1,lastPhase:-1,raf:0};
+  function loop(){
+    if(!sess.on) return;
+    var el=Date.now()-sess.t0;
+    var p=window._bowlPhase(el,curMode);
+    /* 新循环=敲钵 */
+    if(p.rounds!==sess.lastRound){
+      sess.lastRound=p.rounds;
+      strike();
+      if(p.rounds>0){
+        var s=store(),k=todayStr();
+        s.days[k]=(s.days[k]||0)+1;
+        s.total=(s.total||0)+1;
+        save(s);
+        updateCount();
+      }
+    }
+    /* 相位文案切换 */
+    if(p.ph!==sess.lastPhase){
+      sess.lastPhase=p.ph;
+      var le=document.getElementById('bowlLabel');
+      if(le) le.textContent=p.label;
+      var se=document.getElementById('bowlStep');
+      if(se) se.textContent='第 '+(p.rounds+1)+' 轮 · '+p.label.replace('——','')+'（'+MODES[curMode].ph[p.ph]+' 秒）';
+    }
+    /* 呼吸同步：钵scale+音量 */
+    var bowl=document.getElementById('bowlDisc');
+    if(bowl) bowl.style.transform='scale('+p.scale.toFixed(3)+')';
+    if(tone&&window._bowlAC){
+      try{
+        var now=window._bowlAC.currentTime;
+        tone.bus.gain.cancelScheduledValues(now);
+        tone.bus.gain.setTargetAtTime(Math.max(0.02,p.gain),now,0.08);
+      }catch(_e){}
+    }
+    sess.raf=requestAnimationFrame(loop);
+  }
+  function updateCount(){
+    var s=store(),k=todayStr();
+    var n=s.days[k]||0, streak=streakOf(s);
+    var e1=document.getElementById('bowlCnt');
+    if(e1) e1.textContent='今天 '+n+' 轮 · 总共 '+s.total+' 轮 · 连续 '+streak+' 天';
+  }
+  window._bowlStop=function(){
+    sess.on=false;
+    if(sess.raf) cancelAnimationFrame(sess.raf);
+    stopTone();
+    var b=document.getElementById('bowlGo');
+    if(b) b.textContent='开始';
+    var le=document.getElementById('bowlLabel');
+    if(le) le.textContent='开始后，跟着钵声呼吸';
+    var se=document.getElementById('bowlStep');
+    if(se) se.textContent='';
+    var d=document.getElementById('bowlDisc');
+    if(d) d.style.transform='scale(1)';
+  };
+  window._bowlGo=function(){
+    if(sess.on){ window._bowlStop(); return; }
+    sess.on=true; sess.t0=Date.now(); sess.lastRound=-1; sess.lastPhase=-1;
+    startTone();
+    var b=document.getElementById('bowlGo');
+    if(b) b.textContent='停下';
+    sess.raf=requestAnimationFrame(loop);
+  };
+  window._bowlMode=function(k){
+    if(sess.on) window._bowlStop();
+    curMode=k;
+    renderChips();
+    var d=document.getElementById('bowlDesc');
+    if(d) d.textContent=MODES[k].desc;
+  };
+  function renderChips(){
+    var w=document.getElementById('bowlChips');
+    if(!w) return;
+    w.innerHTML='';
+    Object.keys(MODES).forEach(function(k){
+      var act=k===curMode;
+      var c=document.createElement('button');
+      c.textContent=MODES[k].name;
+      c.setAttribute('onclick','window._bowlMode("'+k+'")');
+      c.style.cssText='padding:6px 13px;border-radius:16px;font-size:12px;border:1px solid '+(act?'#B08A4A':'#E3E6EC')+';background:'+(act?'#F6EEDF':'#fff')+';color:'+(act?'#7A5B22':'#5A6170')+';cursor:pointer;';
+      w.appendChild(c);
+    });
+  }
+  function bowlSvg(){
+    return '<svg viewBox="0 0 220 220" style="width:210px;display:block;margin:0 auto;">'
+      +'<g id="bowlDisc" style="transform-origin:110px 110px;transition:transform .1s linear;">'
+      +'<circle cx="110" cy="110" r="86" fill="none" stroke="#C9A86A" stroke-width="2" opacity="0.7"/>'
+      +'<circle cx="110" cy="110" r="74" fill="#F2E4C8"/>'
+      +'<circle cx="110" cy="110" r="74" fill="none" stroke="#B08A4A" stroke-width="3"/>'
+      +'<circle cx="110" cy="110" r="56" fill="none" stroke="#C9A86A" stroke-width="1.5" opacity="0.8"/>'
+      +'<circle cx="110" cy="110" r="38" fill="none" stroke="#C9A86A" stroke-width="1" opacity="0.6"/>'
+      +'<circle cx="110" cy="110" r="6" fill="#8A6A32"/>'
+      +'<path d="M 40 96 A 72 72 0 0 1 74 52" fill="none" stroke="#FFF" stroke-width="3" opacity="0.5" stroke-linecap="round"/>'
+      +'</g></svg>';
+  }
+  window._bowlRender=function(){
+    var box=document.getElementById('health-bowl');
+    if(!box||box.dataset.bowlDone) return;
+    box.dataset.bowlDone='1';
+    var html='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🎵 颂钵呼吸 · 一钵音陪你呼吸</div><div class="widget-body" style="padding:14px;text-align:center;">';
+    html+='<div id="bowlChips" style="display:flex;gap:8px;justify-content:center;margin-bottom:9px;flex-wrap:wrap;"></div>';
+    html+='<div id="bowlDesc" style="font-size:12.5px;color:var(--text-sub);line-height:1.7;margin-bottom:8px;">'+MODES[curMode].desc+'</div>';
+    html+=bowlSvg();
+    html+='<div id="bowlLabel" style="font-size:22px;font-weight:600;color:var(--text);margin-top:6px;">开始后，跟着钵声呼吸</div>';
+    html+='<div id="bowlStep" style="font-size:12px;color:var(--text-hint);margin-top:3px;min-height:16px;"></div>';
+    html+='<button class="btn-secondary" id="bowlGo" onclick="window._bowlGo()" style="margin-top:10px;padding:9px 34px;font-size:14px;">开始</button>';
+    html+='<div id="bowlCnt" style="font-size:11px;color:var(--text-hint);margin-top:9px;"></div>';
+    html+='<div style="font-size:11px;color:var(--text-hint);margin-top:4px;line-height:1.6;">钵声会跟着你的呼吸起伏——吸的时候亮起来，呼的时候沉下去。声音是合成的，不联网。</div>';
+    html+='</div></div>';
+    box.innerHTML=html;
+    renderChips();
+    updateCount();
+  };
+  /* renderHealth 重渲染→容器重建→dataset 清空→自然重挂；sess 停止防孤儿 rAF */
+  if(typeof MutationObserver!=='undefined'){
+    var mo=new MutationObserver(function(){
+      var box=document.getElementById('health-bowl');
+      if(box&&!box.dataset.bowlDone&&sess.on) window._bowlStop();
+    });
+    try{ mo.observe(document.body,{childList:true,subtree:true}); }catch(_e){}
+  }
 })();
 </script>
 <script>
