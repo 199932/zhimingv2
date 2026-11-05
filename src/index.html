@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.112.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.113.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.112.0-20261106';
+const ZHIMING_BUILD = 'v2.113.0-20261106';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25708,7 +25708,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-song" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-song" style="grid-column:1/-1;"></div><div id="health-mixer" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -25718,6 +25718,7 @@ function renderBody(){
       try{ window._muyuRender(); }catch(_e){}
       try{ window._bowlRender(); }catch(_e){}
       try{ window._songRender(); }catch(_e){}
+      try{ window._mixerRender(); }catch(_e){}
       try{ window._breathRender(); }catch(_e){}
       try{ window._kjRender(); }catch(_e){}
       try{ window._sxRender(); }catch(_e){}
@@ -28733,6 +28734,209 @@ try{ window._chartInit(); }catch(_e){}
     update();
   };
   /* renderHealth 重渲染后容器重建→dataset 清空→自然重挂；taps 保留会话内节奏 */
+})();
+</script>
+<script>
+/* ============ 🎵 混音台·山居：雨打瓦/松涛/溪水/柴火四轨全合成，推子自调，纯本地 ============ */
+(function(){
+  if(window._mixerRender) return;
+  'use strict';
+  var TRACKS=[
+    {k:'rain', name:'雨打瓦', hint:'嗒、嗒嗒——打在瓦上的节奏'},
+    {k:'pine', name:'松涛',   hint:'风过松林，呜——沙——'},
+    {k:'creek',name:'溪水',   hint:'哗啦啦，带水泡的咕噜'},
+    {k:'fire', name:'柴火',   hint:'噼、噼啪——簇着响'}
+  ];
+  var PRESETS={
+    tea:   {name:'雨天喝茶', vol:[75,10,30,55]},
+    dawn:  {name:'山间清晨', vol:[0,55,65,10]},
+    night: {name:'篝火夜',   vol:[0,25,15,80]},
+    quiet: {name:'全静',     vol:[0,0,0,0]}
+  };
+  var vol=[0,0,0,0]; /* 当前推子 0-100 */
+  var built=false, on=false;
+  window._mixerDbg=null; /* headless 探针 */
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function memGet(){ try{ var m=JSON.parse(localStorage.getItem('zhiming_mixer_v1')||'null'); if(m&&m.vol&&m.vol.length===4) return m.vol; }catch(_e){} return null; }
+  function memSave(){ try{ localStorage.setItem('zhiming_mixer_v1',JSON.stringify({t:Date.now(),day:todayStr(),vol:vol})); }catch(_e){} }
+  function recPreset(){
+    var h=new Date().getHours();
+    if(h>=22||h<5) return 'night';
+    if(h>=5&&h<11) return 'dawn';
+    if(h>=15&&h<19) return 'tea';
+    return null;
+  }
+  /* --- 合成 --- */
+  function acGet(){
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return null;
+    if(!window._mixerAC||window._mixerAC.state==='closed') window._mixerAC=new AC();
+    if(window._mixerAC.state==='suspended') window._mixerAC.resume();
+    return window._mixerAC;
+  }
+  function makeNoiseBuf(ac,secs,brown){
+    var n=Math.floor(ac.sampleRate*secs), b=ac.createBuffer(1,n,ac.sampleRate), d=b.getChannelData(0), last=0;
+    for(var i=0;i<n;i++){
+      if(brown){ last+=(Math.random()-0.5)*0.04; last*=0.998; d[i]=last*2.2; }
+      else d[i]=Math.random()*2-1;
+    }
+    return b;
+  }
+  /* 雨打瓦：2s buffer（棕噪底+泊松 tick 2.5kHz 短衰减）循环 */
+  function rainBuf(ac){
+    var sr=ac.sampleRate, n=Math.floor(sr*2), b=ac.createBuffer(1,n,sr), d=b.getChannelData(0), last=0;
+    for(var i=0;i<n;i++){ last+=(Math.random()-0.5)*0.03; last*=0.997; d[i]+=last*1.6; }
+    var i=0;
+    while(i<n){ /* 泊松 ~14/s */
+      i+=Math.floor(sr*(0.03+Math.random()*0.11));
+      if(i+120>=n) break;
+      var f=2000+Math.random()*1800, a=0.10+Math.random()*0.22;
+      for(var k=0;k<120&&i+k<n;k++){ d[i+k]+=Math.sin(2*Math.PI*f*k/sr)*a*Math.pow(1-k/120,2.2); }
+    }
+    return b;
+  }
+  /* 柴火：3s buffer（轰底+簇发 crackle：1-4 连发宽带瞬态）循环 */
+  function fireBuf(ac){
+    var sr=ac.sampleRate, n=Math.floor(sr*3), b=ac.createBuffer(1,n,sr), d=b.getChannelData(0), last=0;
+    for(var i=0;i<n;i++){ last+=(Math.random()-0.5)*0.015; last*=0.995; d[i]+=last*1.2; }
+    var i=0;
+    while(i<n){ /* 簇 ~5/s */
+      i+=Math.floor(sr*(0.06+Math.random()*0.16));
+      var cnt=1+Math.floor(Math.random()*4), j=i;
+      for(var c=0;c<cnt;c++){
+        var a=0.25+Math.random()*0.55, w=2+Math.floor(Math.random()*5);
+        for(var k=0;k<w&&j+k<n;k++){ d[j+k]+=(Math.random()*2-1)*a*Math.pow(1-k/w,3); }
+        j+=w+Math.floor(sr*(0.004+Math.random()*0.02));
+        if(j>=n) break;
+      }
+    }
+    return b;
+  }
+  function build(){
+    var ac=acGet(); if(!ac) return false;
+    var tracks={};
+    /* 雨 */
+    var rs=ac.createBufferSource(); rs.buffer=rainBuf(ac); rs.loop=true;
+    var rf=ac.createBiquadFilter(); rf.type='lowpass'; rf.frequency.value=3200;
+    var rg=ac.createGain(); rg.gain.value=0;
+    rs.connect(rf); rf.connect(rg); rg.connect(ac.destination); rs.start();
+    tracks.rain={gain:rg,srcs:[rs],timers:[]};
+    /* 松涛：白噪→LFO 推 lowpass freq（呼吸）+LFO 推 gain（涛） */
+    var ps=ac.createBufferSource(); ps.buffer=makeNoiseBuf(ac,3,false); ps.loop=true;
+    var pf=ac.createBiquadFilter(); pf.type='lowpass'; pf.frequency.value=600; pf.Q.value=0.8;
+    var pg=ac.createGain(); pg.gain.value=0;
+    var lfo1=ac.createOscillator(); lfo1.frequency.value=0.07;
+    var lg1=ac.createGain(); lg1.gain.value=260;
+    lfo1.connect(lg1); lg1.connect(pf.frequency);
+    var lfo2=ac.createOscillator(); lfo2.frequency.value=0.045;
+    var lg2=ac.createGain(); lg2.gain.value=0.18;
+    var pg2=ac.createGain(); pg2.gain.value=1; /* 波动乘数 */
+    lfo2.connect(lg2); lg2.connect(pg2.gain);
+    ps.connect(pf); pf.connect(pg2); pg2.connect(pg); pg.connect(ac.destination);
+    ps.start(); lfo1.start(); lfo2.start();
+    tracks.pine={gain:pg,srcs:[ps,lfo1,lfo2],timers:[]};
+    /* 溪水：白噪→高通+低通（哗）+定时滑音水泡（咕噜） */
+    var cs=ac.createBufferSource(); cs.buffer=makeNoiseBuf(ac,2,false); cs.loop=true;
+    var chp=ac.createBiquadFilter(); chp.type='highpass'; chp.frequency.value=900;
+    var clp=ac.createBiquadFilter(); clp.type='lowpass'; clp.frequency.value=6000;
+    var cg=ac.createGain(); cg.gain.value=0;
+    cs.connect(chp); chp.connect(clp); clp.connect(cg); cg.connect(ac.destination); cs.start();
+    var ct=[];
+    tracks.creek={gain:cg,srcs:[cs],timers:ct};
+    var bubble=function(){
+      if(!on||!window._mixerAC) return;
+      try{
+        var a=window._mixerAC, t=a.currentTime;
+        var o=a.createOscillator(), g=a.createGain();
+        o.type='sine'; var f0=250+Math.random()*500;
+        o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f0*1.8,t+0.05);
+        g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.10,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.07);
+        o.connect(g); g.connect(cg); o.start(t); o.stop(t+0.09);
+      }catch(_e){}
+      ct.push(setTimeout(bubble, 120+Math.random()*600));
+    };
+    ct.push(setTimeout(bubble,300));
+    /* 柴火 */
+    var fs=ac.createBufferSource(); fs.buffer=fireBuf(ac); fs.loop=true;
+    var ff=ac.createBiquadFilter(); ff.type='lowpass'; ff.frequency.value=5500;
+    var fg=ac.createGain(); fg.gain.value=0;
+    fs.connect(ff); ff.connect(fg); fg.connect(ac.destination); fs.start();
+    tracks.fire={gain:fg,srcs:[fs],timers:[]};
+    window._mixerDbg=tracks;
+    built=true;
+    return true;
+  }
+  function teardown(){
+    if(!window._mixerDbg) return;
+    Object.keys(window._mixerDbg).forEach(function(k){
+      var t=window._mixerDbg[k];
+      t.timers.forEach(clearTimeout);
+      t.srcs.forEach(function(s){ try{s.stop();}catch(_e){} });
+    });
+    window._mixerDbg=null; built=false;
+  }
+  function applyGains(){
+    if(!built||!window._mixerDbg) return;
+    var ac=window._mixerAC, t=ac.currentTime;
+    TRACKS.forEach(function(tr,i){
+      var g=window._mixerDbg[tr.k].gain;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setTargetAtTime(Math.max(0.0001,(vol[i]/100)*0.85),t,0.15);
+    });
+  }
+  window._mixerSet=function(i,v){
+    vol[i]=Math.max(0,Math.min(100,Math.round(v)));
+    applyGains();
+    var s=document.getElementById('mixv'+i);
+    if(s) s.textContent=vol[i];
+    memSave();
+  };
+  window._mixerPreset=function(k){
+    var p=PRESETS[k]; if(!p) return;
+    p.vol.forEach(function(v,i){ vol[i]=v; var s=document.getElementById('mixr'+i); if(s) s.value=v; var t=document.getElementById('mixv'+i); if(t) t.textContent=v; });
+    applyGains(); memSave();
+    if(!on) window._mixerGo();
+  };
+  window._mixerGo=function(){
+    if(on){ window._mixerStop(); return; }
+    if(!build()){ var b=document.getElementById('mixGo'); if(b) b.textContent='浏览器不支持'; return; }
+    on=true;
+    applyGains();
+    var b=document.getElementById('mixGo');
+    if(b) b.textContent='停下';
+  };
+  window._mixerStop=function(){
+    on=false;
+    teardown();
+    var b=document.getElementById('mixGo');
+    if(b) b.textContent='开始山居';
+  };
+  window._mixerRender=function(){
+    var box=document.getElementById('health-mixer');
+    if(!box||box.dataset.mixerDone) return;
+    box.dataset.mixerDone='1';
+    var mem=memGet();
+    if(mem) vol=mem.slice();
+    var rec=recPreset();
+    var html='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🎵 混音台 · 山居</div><div class="widget-body" style="padding:14px;">';
+    html+=rec?'<div style="font-size:12.5px;color:var(--text-sub);margin-bottom:9px;">现在'+(rec==='night'?'是深夜':(rec==='dawn'?'是清晨':'是傍晚'))+'，试试 <a href="javascript:void(0)" onclick="window._mixerPreset(\''+rec+'\')" style="color:#B08A4A;">「'+PRESETS[rec].name+'」</a> →</div>':'<div style="font-size:12.5px;color:var(--text-sub);margin-bottom:9px;">四条轨，调出你心里那座山。</div>';
+    html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">';
+    Object.keys(PRESETS).forEach(function(k){
+      html+='<button onclick="window._mixerPreset(\''+k+'\')" style="padding:6px 12px;border-radius:14px;font-size:12px;border:1px solid #E3E6EC;background:#fff;color:#5A6170;cursor:pointer;">'+PRESETS[k].name+'</button>';
+    });
+    html+='</div>';
+    TRACKS.forEach(function(tr,i){
+      html+='<div style="margin-bottom:10px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:13px;font-weight:600;color:var(--text);">'+tr.name+'</span><span id="mixv'+i+'" style="font-size:11px;color:var(--text-hint);">'+vol[i]+'</span></div>'
+        +'<input type="range" min="0" max="100" value="'+vol[i]+'" id="mixr'+i+'" oninput="window._mixerSet('+i+',this.value)" style="width:100%;margin-top:3px;accent-color:#B08A4A;">'
+        +'<div style="font-size:11px;color:var(--text-hint);">'+tr.hint+'</div>'
+        +'</div>';
+    });
+    html+='<button class="btn-secondary" id="mixGo" onclick="window._mixerGo()" style="margin-top:4px;padding:9px 30px;font-size:14px;width:100%;">开始山居</button>';
+    html+='<div style="font-size:11px;color:var(--text-hint);margin-top:8px;line-height:1.6;">四种声音全是合成的——雨点是泊松随机落下的，柴火的噼啪是一簇一簇的。不联网、不下载音频。</div>';
+    html+='</div></div>';
+    box.innerHTML=html;
+  };
 })();
 </script>
 <script>
