@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.109.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.110.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.109.0-20261105';
+const ZHIMING_BUILD = 'v2.110.0-20261105';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25707,13 +25707,14 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
       try{ window._ppgRender(); }catch(_e){}
       try{ window._flavorRender(); }catch(_e){}
       try{ window._menuRender(); }catch(_e){}
+      try{ window._muyuRender(); }catch(_e){}
       try{ window._breathRender(); }catch(_e){}
       try{ window._kjRender(); }catch(_e){}
       try{ window._sxRender(); }catch(_e){}
@@ -28559,6 +28560,176 @@ try{ window._chartInit(); }catch(_e){}
     html+='</div>';
     box.innerHTML=html;
   };
+})();
+</script>
+<script>
+/* ============ 🪵 敲木鱼：敲屏→合成木鱼音+vibrate+念珠108计数+敲击间隔CV心定量化（自足：同作用域无外部依赖） ============ */
+(function(){
+  if(window._muyuRender) return;
+  'use strict';
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function store(){
+    try{ var s=JSON.parse(localStorage.getItem('zhiming_muyu_v1')||'null'); if(s&&s.days) return s; }catch(_e){}
+    return {days:{},total:0};
+  }
+  function save(s){ try{ localStorage.setItem('zhiming_muyu_v1', JSON.stringify(s)); }catch(_e){} }
+  function streakOf(s){
+    var n=0,d=new Date();
+    for(;;){
+      var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      if(s.days&&s.days[k]>0){ n++; d.setDate(d.getDate()-1); } else break;
+      if(n>999) break;
+    }
+    return n;
+  }
+  /* --- 心定量化：最近敲击间隔变异系数 CV=std/mean --- */
+  window._muyuCV=function(ts){
+    if(ts.length<4) return {cv:-1, verdict:'再敲几下看看', mean:0, cvPct:0};
+    var iv=[];
+    for(var i=1;i<ts.length;i++) iv.push(ts[i]-ts[i-1]);
+    var m=0,n=iv.length;
+    for(var j=0;j<n;j++) m+=iv[j];
+    m/=n;
+    var v=0;
+    for(var k2=0;k2<n;k2++) v+=(iv[k2]-m)*(iv[k2]-m);
+    v=Math.sqrt(v/n);
+    var cv=m>0?v/m:1;
+    var verdict;
+    if(cv<0.15) verdict='稳如老僧——这个匀度，寺里都少见';
+    else if(cv<0.3) verdict='渐入佳境——呼吸和节奏开始对上了';
+    else if(cv<0.5) verdict='心还有点飘——试试跟着上一声的余韵敲';
+    else verdict='着急了——木鱼不赶时间，慢点，让它响完';
+    return {cv:cv, verdict:verdict, mean:m, cvPct:Math.round(cv*100)};
+  };
+  /* --- 木鱼音合成：双正弦共振峰+敲击click+指数衰减 --- */
+  window._muyuLastPlay=0;
+  function playFish(){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC) return;
+      if(!window._muyuAC||window._muyuAC.state==='closed') window._muyuAC=new AC();
+      var ac=window._muyuAC;
+      if(ac.state==='suspended'){ ac.resume(); }
+      var t=ac.currentTime;
+      var detune=1+(Math.random()*0.04-0.02); /* ±2% 微随机防机械感 */
+      var f1=850*detune, f2=1780*detune;
+      var bus=ac.createGain();
+      bus.gain.value=0.9;
+      bus.connect(ac.destination);
+      function tone(freq, amp, decay){
+        var o=ac.createOscillator(), g=ac.createGain();
+        o.type='sine'; o.frequency.value=freq;
+        g.gain.setValueAtTime(0.0001,t);
+        g.gain.exponentialRampToValueAtTime(amp,t+0.003);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+decay);
+        o.connect(g); g.connect(bus);
+        o.start(t); o.stop(t+decay+0.02);
+      }
+      tone(f1,0.85,0.16);
+      tone(f2,0.30,0.09);
+      /* 敲击click：短噪声 */
+      var nb=ac.createBuffer(1,Math.floor(ac.sampleRate*0.012),ac.sampleRate);
+      var nd=nb.getChannelData(0);
+      for(var i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1)*(1-i/nd.length);
+      var ns=ac.createBufferSource(); ns.buffer=nb;
+      var ng=ac.createGain(); ng.gain.setValueAtTime(0.5,t); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.012);
+      ns.connect(ng); ng.connect(bus); ns.start(t);
+      window._muyuLastPlay=Date.now();
+    }catch(_e){}
+  }
+  function buzz(){
+    try{ if(navigator.vibrate) navigator.vibrate(15); }catch(_e){}
+  }
+  /* --- 敲击：防抖(<120ms)+计数+CV+视觉反馈 --- */
+  var taps=[];
+  window._muyuTap=function(){
+    var now=Date.now();
+    if(taps.length&&now-taps[taps.length-1]<120) return false; /* 双击防误触 */
+    taps.push(now);
+    if(taps.length>24) taps=taps.slice(-13);
+    playFish(); buzz();
+    var s=store(), k=todayStr();
+    s.days[k]=(s.days[k]||0)+1;
+    s.total=(s.total||0)+1;
+    save(s);
+    update();
+    return true;
+  };
+  /* --- 视觉 --- */
+  function fishSvg(){
+    return '<svg viewBox="0 0 200 200" style="width:190px;display:block;margin:0 auto;" id="muyuFish">'
+      +'<ellipse id="muyuBody" cx="100" cy="104" rx="66" ry="52" fill="#B8823C"/>'
+      +'<ellipse cx="100" cy="100" rx="66" ry="52" fill="#D89C4E"/>'
+      +'<ellipse cx="100" cy="96" rx="58" ry="44" fill="#E8B25F"/>'
+      +'<path d="M 46 92 Q 100 66 154 92" fill="none" stroke="#C08A3E" stroke-width="3" opacity="0.6"/>'
+      +'<circle cx="100" cy="104" r="17" fill="#8A5A24"/>'
+      +'<circle cx="100" cy="104" r="11" fill="#6E4318"/>'
+      +'<path d="M 34 104 Q 26 100 28 92" fill="none" stroke="#A87430" stroke-width="4" stroke-linecap="round"/>'
+      +'<path d="M 166 104 Q 174 100 172 92" fill="none" stroke="#A87430" stroke-width="4" stroke-linecap="round"/>'
+      +'<text x="100" y="176" font-size="11" fill="var(--text-hint)" text-anchor="middle">敲我</text>'
+      +'</svg>';
+  }
+  function update(){
+    var s=store(), k=todayStr();
+    var n=s.days[k]||0;
+    var streak=streakOf(s);
+    var numEl=document.getElementById('muyuNum');
+    if(numEl) numEl.textContent=n;
+    var totEl=document.getElementById('muyuTot');
+    if(totEl) totEl.textContent='总共敲了 '+(s.total||0)+' 下 · 连敲 '+streak+' 天';
+    /* 进度弧：r=78 c=490.1 */
+    var arc=document.getElementById('muyuArc');
+    if(arc){
+      var pct=Math.min(1,n/108);
+      var C=490.1;
+      arc.setAttribute('stroke-dasharray',(pct*C)+' '+C);
+      arc.setAttribute('stroke',(n>=108)?'#C0392B':'#D89C4E');
+    }
+    var roundEl=document.getElementById('muyuRound');
+    if(roundEl){
+      var rounds=Math.floor(n/108);
+      roundEl.textContent=rounds>0?('本轮已满，圆满 '+rounds+' 轮 · 继续敲不加负担'):(n>=100?('还差 '+(108-n)+' 下满一轮'):('这一轮还剩 '+(108-n)+' 下'));
+    }
+    var cvEl=document.getElementById('muyuCv');
+    if(cvEl){
+      var c=window._muyuCV(taps);
+      cvEl.textContent=c.cv<0?('心定读数：连续敲 4 下之后出'):('心定读数：'+c.verdict+'（间隔 '+Math.round(c.mean/100)/10+'s · 抖动 '+c.cvPct+'%）');
+    }
+  }
+  window._muyuRender=function(){
+    var box=document.getElementById('health-muyu');
+    if(!box||box.dataset.muyuDone) return;
+    box.dataset.muyuDone='1';
+    var s=store(), k=todayStr();
+    var n=s.days[k]||0;
+    var streak=streakOf(s);
+    var html='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🪵 敲木鱼 · 戒骄戒躁</div><div class="widget-body" style="padding:14px;text-align:center;">';
+    html+='<div style="font-size:12.5px;color:var(--text-sub);line-height:1.7;margin-bottom:10px;">心乱的时候敲两声。声音短、余韵长——敲得越匀，心越定。木鱼不赶时间。</div>';
+    html+='<div style="display:flex;justify-content:center;gap:14px;align-items:baseline;margin-bottom:6px;">'
+      +'<span style="font-size:34px;font-weight:800;color:var(--text);" id="muyuNum">'+n+'</span>'
+      +'<span style="font-size:13px;color:var(--text-hint);">/ 108 下</span></div>';
+    html+='<div id="muyuRound" style="font-size:11.5px;color:var(--text-hint);margin-bottom:8px;"></div>';
+    html+='<div style="position:relative;width:200px;margin:0 auto;">';
+    html+='<svg viewBox="0 0 200 200" style="width:200px;display:block;">'
+      +'<circle cx="100" cy="100" r="78" fill="none" stroke="var(--card-border)" stroke-width="5" opacity="0.5"/>'
+      +'<circle id="muyuArc" cx="100" cy="100" r="78" fill="none" stroke="#D89C4E" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 490.1" transform="rotate(-90 100 100)" style="transition:stroke-dasharray .25s;"/>'
+      +'</svg>';
+    html+='<div id="muyuTapZone" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:150px;cursor:pointer;-webkit-tap-highlight-color:transparent;" onclick="window._muyuTap()">';
+    html+=fishSvg();
+    html+='</div></div>';
+    html+='<div id="muyuCv" style="font-size:12px;color:var(--text-sub);margin-top:10px;line-height:1.7;"></div>';
+    html+='<div id="muyuTot" style="font-size:11px;color:var(--text-hint);margin-top:4px;">总共敲了 '+(s.total||0)+' 下 · 连敲 '+streak+' 天</div>';
+    html+='</div></div>';
+    box.innerHTML=html;
+    /* pointerdown 响应最快（click 有延迟感）——重复触发靠 _muyuTap 防抖兜底 */
+    var zone=document.getElementById('muyuTapZone');
+    if(zone&&!zone.dataset.pd){
+      zone.addEventListener('pointerdown',function(e){ e.preventDefault(); try{ window._muyuTap(); }catch(_e){} });
+      zone.dataset.pd='1';
+    }
+    update();
+  };
+  /* renderHealth 重渲染后容器重建→dataset 清空→自然重挂；taps 保留会话内节奏 */
 })();
 </script>
 <script>
