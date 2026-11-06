@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.113.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.114.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.113.0-20261106';
+const ZHIMING_BUILD = 'v2.114.0-20261106';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -25708,7 +25708,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-song" style="grid-column:1/-1;"></div><div id="health-mixer" style="grid-column:1/-1;"></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div id="health-flavor"></div><div id="health-mai"></div><div id="health-pt"></div><div id="health-ppg"></div><div id="health-music"></div><div id="health-sheng"></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🔊 声音与节律</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-song" style="grid-column:1/-1;"></div><div id="health-mixer" style="grid-column:1/-1;"></div><div id="health-music"></div><div id="health-sheng"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🌬 呼吸与定力</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🩺 身体与饮食</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-ppg"></div><div id="health-mai"></div><div id="health-flavor"></div><div id="health-pt"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🏠 居住与环境</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -28932,7 +28932,7 @@ try{ window._chartInit(); }catch(_e){}
         +'<div style="font-size:11px;color:var(--text-hint);">'+tr.hint+'</div>'
         +'</div>';
     });
-    html+='<button class="btn-secondary" id="mixGo" onclick="window._mixerGo()" style="margin-top:4px;padding:9px 30px;font-size:14px;width:100%;">开始山居</button>';
+    html+='<button class="btn-secondary" id="mixGo" onclick="window._mixerGo()" style="margin-top:4px;padding:9px 30px;font-size:14px;width:100%;">'+(on?'停下':'开始山居')+'</button>';
     html+='<div style="font-size:11px;color:var(--text-hint);margin-top:8px;line-height:1.6;">四种声音全是合成的——雨点是泊松随机落下的，柴火的噼啪是一簇一簇的。不联网、不下载音频。</div>';
     html+='</div></div>';
     box.innerHTML=html;
@@ -29097,7 +29097,7 @@ try{ window._chartInit(); }catch(_e){}
     html+=dataHtml;
     html+='<div style="font-size:12px;color:var(--text-sub);margin-top:6px;">曲式：<b>'+m.root+'调</b>（'+(cst?'体质'+cst+' → '+m.root+'音':(p?'心跳'+(p.bpm<70?'慢':'快')+' → '+m.root+'音':'默认宫音'))+'） · 曲速 '+m.tempoName+' · '+m.style+'曲风</div>';
     html+='<div style="display:flex;align-items:center;gap:12px;margin-top:12px;">';
-    html+='<button class="btn-secondary" id="songGo" onclick="window._songPlay()" style="padding:8px 22px;font-size:13px;white-space:nowrap;">▶ 播一遍</button>';
+    html+='<button class="btn-secondary" id="songGo" onclick="window._songPlay()" style="padding:8px 22px;font-size:13px;white-space:nowrap;">'+(window._songPlayingNow&&window._songPlayingNow()?'⏹ 停':'▶ 播一遍')+'</button>';
     html+='<div style="flex:1;"><div id="songNote" style="font-size:20px;font-weight:700;color:#8A6A32;min-height:24px;"></div><div id="songPulse" style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;"></div></div>';
     html+='</div>';
     html+='<div id="songVerdict" style="display:none;background:var(--pri-light,#f2f5ee);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:var(--text);line-height:1.7;"></div>';
@@ -29110,6 +29110,7 @@ try{ window._chartInit(); }catch(_e){}
     renderHist();
   };
   window._songPlayRef=window._songPlay; /* onclick显式可查 */
+  window._songPlayingNow=function(){ return playing; }; /* 重渲恢复按钮态用 */
 })();
 </script>
 <script>
@@ -29331,9 +29332,9 @@ try{ window._chartInit(); }catch(_e){}
     html+='<div id="bowlChips" style="display:flex;gap:8px;justify-content:center;margin-bottom:9px;flex-wrap:wrap;"></div>';
     html+='<div id="bowlDesc" style="font-size:12.5px;color:var(--text-sub);line-height:1.7;margin-bottom:8px;">'+MODES[curMode].desc+'</div>';
     html+=bowlSvg();
-    html+='<div id="bowlLabel" style="font-size:22px;font-weight:600;color:var(--text);margin-top:6px;">开始后，跟着钵声呼吸</div>';
+    html+='<div id="bowlLabel" style="font-size:22px;font-weight:600;color:var(--text);margin-top:6px;">'+(sess.on?'呼吸中——':'开始后，跟着钵声呼吸')+'</div>';
     html+='<div id="bowlStep" style="font-size:12px;color:var(--text-hint);margin-top:3px;min-height:16px;"></div>';
-    html+='<button class="btn-secondary" id="bowlGo" onclick="window._bowlGo()" style="margin-top:10px;padding:9px 34px;font-size:14px;">开始</button>';
+    html+='<button class="btn-secondary" id="bowlGo" onclick="window._bowlGo()" style="margin-top:10px;padding:9px 34px;font-size:14px;">'+(sess.on?'停下':'开始')+'</button>';
     html+='<div id="bowlCnt" style="font-size:11px;color:var(--text-hint);margin-top:9px;"></div>';
     html+='<div style="font-size:11px;color:var(--text-hint);margin-top:4px;line-height:1.6;">钵声会跟着你的呼吸起伏——吸的时候亮起来，呼的时候沉下去。声音是合成的，不联网。</div>';
     html+='</div></div>';
@@ -29341,14 +29342,7 @@ try{ window._chartInit(); }catch(_e){}
     renderChips();
     updateCount();
   };
-  /* renderHealth 重渲染→容器重建→dataset 清空→自然重挂；sess 停止防孤儿 rAF */
-  if(typeof MutationObserver!=='undefined'){
-    var mo=new MutationObserver(function(){
-      var box=document.getElementById('health-bowl');
-      if(box&&!box.dataset.bowlDone&&sess.on) window._bowlStop();
-    });
-    try{ mo.observe(document.body,{childList:true,subtree:true}); }catch(_e){}
-  }
+  /* 重渲=UI 重建，session 保持（声音不断）——rAF 下一帧自动接上新元素 */
 })();
 </script>
 <script>
