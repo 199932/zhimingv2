@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.115.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.116.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.115.1-20261106';
+const ZHIMING_BUILD = 'v2.116.0-20261106';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6926,6 +6926,7 @@ function switchTab(page){
       const d = new Date(); d.setDate(d.getDate()+_almanacOffset);
       document.getElementById("almanac-body").innerHTML = renderAlmanac(d);
       try{ window._inkRender(); }catch(_e){}
+    try{ var _ns=document.getElementById('nowdoSlot'); if(_ns&&typeof window._nowDoCardHTML==='function') _ns.innerHTML=window._nowDoCardHTML(); }catch(_nsE){} /* 每次切黄历刷Top1=数据新鲜 */
     }
   }
   else if (page==="cal") {
@@ -9035,6 +9036,7 @@ function renderToday(){
     <div id="fortuneBigBlock">
       ${(typeof window.renderWidget_fortuneGrid==='function'?window.renderWidget_fortuneGrid(r):'<div style="color:var(--text-hint);padding:20px;text-align:center;font-size:12px;">运势组件加载中…</div>')}
     </div>
+    <div id="nowdoSlot" style="margin-top:12px;">${(typeof window._nowDoCardHTML==='function')?window._nowDoCardHTML():''}</div>
     <div class="today-widget-grid">
       ${(typeof window['renderWidget_5score']==='function'?window['renderWidget_5score'](r):'<div class="widget"><div class="widget-title">📊 5项分数</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_dailyTarot']==='function'?window['renderWidget_dailyTarot'](r):'<div class="widget"><div class="widget-title">🎴 每日塔罗</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
@@ -25676,25 +25678,27 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
       if(document.hidden&&window._ppgRef&&!window._ppgRef.done) window._ppgCancel();
     });
   }
+window._nowDoCardHTML = function(){ /* Top1卡：v2.116 迁至黄历页运势格后（养生页子签埋太深） */
+  var _nd=window._nowDo();
+  if(!(_nd&&_nd.top)) return '';
+  var tp=_nd.top, tpBtn='';
+  if(tp.k==='breath') tpBtn='<div onclick="window._breathOpen()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+  else if(tp.k==='sym') tpBtn='<div onclick="window._healthPick('+tp.idx+')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+  else if(tp.k==='kitchen') tpBtn='<div onclick="window._jumpSound(\''+(tp.target||'health-menu')+'\')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+  else if(tp.k==='menu'||tp.k==='bowl'||tp.k==='muyu'||tp.k==='pt'||tp.k==='grow') tpBtn='<div onclick="window._jumpSound(\''+(tp.target||'health-muyu')+'\')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+  else if(tp.k==='quiz') tpBtn='<div onclick="window._constStart()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+  return '<div class="widget" style="border:1.5px solid var(--pri);"><div class="widget-body" style="padding:14px;">'
+    +'<div style="font-size:11.5px;color:var(--text-hint);">🎯 此刻最该做 · '+_nd.sc+'</div>'
+    +'<div style="font-size:16px;font-weight:800;color:var(--text);margin-top:6px;">'+tp.big+'</div>'
+    +'<div style="font-size:12.5px;color:var(--text-sub);line-height:1.7;margin-top:4px;">'+tp.why+'</div>'
+    +tpBtn
+    +(_nd.alts.length?'<div style="margin-top:8px;font-size:11.5px;color:var(--text-hint);">备选：'+_nd.alts.map(function(a){ return a.big; }).join(' · ')+'</div>':'')
+    +'</div></div>';
+};
 function renderBody(){
       var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
       var h='';
-      var _nd=window._nowDo();
-      if(_nd&&_nd.top){
-        var tp=_nd.top, tpBtn='';
-        if(tp.k==='breath') tpBtn='<div onclick="window._breathOpen()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
-        else if(tp.k==='sym') tpBtn='<div onclick="window._healthPick('+tp.idx+')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
-        else if(tp.k==='kitchen') tpBtn='<div onclick="window._jumpSound(\''+(tp.target||'health-menu')+'\')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
-        else if(tp.k==='menu'||tp.k==='bowl'||tp.k==='muyu'||tp.k==='pt'||tp.k==='grow') tpBtn='<div onclick="window._jumpSound(\''+(tp.target||'health-muyu')+'\')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
-        else if(tp.k==='quiz') tpBtn='<div onclick="window._constStart()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
-        h+='<div class="widget" style="grid-column:1/-1;"><div class="widget-body" style="padding:14px;border:1.5px solid var(--pri);">'
-          +'<div style="font-size:11.5px;color:var(--text-hint);">🎯 此刻最该做 · '+_nd.sc+'</div>'
-          +'<div style="font-size:16px;font-weight:800;color:var(--text);margin-top:6px;">'+tp.big+'</div>'
-          +'<div style="font-size:12.5px;color:var(--text-sub);line-height:1.7;margin-top:4px;">'+tp.why+'</div>'
-          +tpBtn
-          +(_nd.alts.length?'<div style="margin-top:8px;font-size:11.5px;color:var(--text-hint);">备选：'+_nd.alts.map(function(a){ return a.big; }).join(' · ')+'</div>':'')
-          +'</div></div>';
-      }
+      var h='';
       h+='<div onclick="window._breathOpen()" class="widget" style="grid-column:1/-1;cursor:pointer;><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
         +'<div style="font-size:30px;">😮‍💨</div>'
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">4-7-8 呼吸 · 失眠速救</div>'
