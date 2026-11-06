@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.117.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.118.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.117.0-20261107';
+const ZHIMING_BUILD = 'v2.118.0-20261107';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24152,7 +24152,7 @@ function _lenormandAIEnhance(cards, spreadType){
            ${_gTab('gst-today','📝','今日')} ${_gTab('gst-pan','🔭','命盘')} ${_gTab('gst-tools','🧰','工具')}
          </div>` +
         _gBox('g-p-today') + _gBox('g-p-pan') + _gBox('g-p-tools');
-      _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMonthReview()) + _tryGC(()=>_secMoonYou()) + _tryGC(()=>_secMoodCalendar()));
+      _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + '<div id="grow-month-box">'+_tryGC(()=>_secMonthReview())+'</div>' + _tryGC(()=>_secMoonYou()) + _tryGC(()=>_secMoodCalendar()));
       var _gBar=(t)=>'<div style="display:flex;align-items:center;gap:10px;margin:14px 0 8px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">'+t+'</span><span style="flex:1;height:1px;background:var(--card-border,#E3E6EC);"></span></div>';
       _gFill('g-p-pan', _gBar('🪞 你的底子') + _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _gBar('⏳ 时间的刻度') + _tryGC(()=>_secLifeGrid(r, p)) + _tryGC(()=>_secTimeSweep(r, p)) + _tryGC(()=>_secAnnual(r)) + _gBar('🌊 此刻的流动') + _tryGC(()=>_secYearShape(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)));
       window._tsArm&&window._tsArm(r, p);
@@ -24540,9 +24540,13 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
 
         window._shichenName = function(h){ var T=[['子','胆经当令，宜熟睡'],['丑','肝经当令，深睡养肝'],['寅','肺经当令'],['卯','大肠经当令，宜喝温水'],['辰','胃经当令，早餐吃热'],['巳','脾经当令，头脑清明'],['午','心经当令，宜小憩'],['未','小肠经当令'],['申','膀胱经当令，多喝水'],['酉','肾经当令，宜收敛'],['戌','心包经当令，宜散步'],['亥','三焦经当令，宜安睡']]; var x=T[Math.floor(((h+1)%24)/2)]||['','']; return x[0]+'时（'+x[1]+'）'; };
     window._nowDo = function(hour){
-      window._jumpSound = function(id){ /* 今日页Top1→养生页对应卡（坑72：health是真key；scroll留裕量） */
-        try{ switchTab('health'); }catch(_js){}
-        setTimeout(function(){ var el=document.getElementById(id); if(el&&el.scrollIntoView) try{ el.scrollIntoView({block:'center',behavior:'smooth'}); }catch(_js2){ el.scrollIntoView(); } },380);
+      window._jumpSound = function(id, page){ /* 今日页Top1→养生/成长页对应卡（坑72：health是真key；scroll留裕量） */
+        var pg = page || (id&&id.indexOf('grow-')===0 ? 'grow' : 'health');
+        try{ switchTab(pg); }catch(_js){}
+        setTimeout(function(){
+          if(pg==='grow'){ try{ if(typeof window._growSub==='function') window._growSub('today'); }catch(_jsg){} }
+          setTimeout(function(){ var el=document.getElementById(id); if(el&&el.scrollIntoView) try{ el.scrollIntoView({block:'center',behavior:'smooth'}); }catch(_js2){ el.scrollIntoView&&el.scrollIntoView(); } }, pg==='grow'?430:380);
+        },380);
       };
       try{
         hour=(hour===undefined)?new Date().getHours():hour;
@@ -24562,6 +24566,12 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
         if(hour>=1&&hour<5){ /* 深夜1-5点空窗补全（TA就是1点后用户）：失眠/熬夜型建议 */
           var nightWhy=hour<3?'丑时（1-3 点）是肝回血的时间，这个点还醒着最耗它':'寅时（3-5 点）肺当令——早醒的人这个点最难熬';
           acts.push({s:54, k:'breath', big:'还醒着？别刷了', why:nightWhy+'。放下手机，闭眼做几轮 4-7-8——睡不着也算休息', btn:'😮‍💨 躺下做 4 轮呼吸', alts:['🎵 开着颂钵音当白噪音（养生页）','灯调到最暗','手机扣过去放远点']});
+        }
+        if(hour>=6&&hour<9){ /* 晨间窗口：记睡眠引导（黄金场景=醒了顺手记昨晚） */
+          var _bedToday=false;
+          try{ diary.forEach(function(e){ if(e&&e.date===today&&e.bed) _bedToday=true; }); }catch(_sdE){}
+          if(!_bedToday) acts.push({s:50, k:'grow', target:'diaryCheckinBox', big:'醒了？顺手记一下昨晚', why:'睡眠是身体最诚实的反馈——现在花 30 秒记上，月底就能拼出你的入睡趋势', btn:'😴 记昨晚睡眠', alts:['记完今天都顺','睡眠会自己说话']});
+          else acts.push({s:44, k:'bowl', target:'health-bowl', big:'☀️ 早上好——温和呼吸醒神', why:'3 分钟吸 4 呼 6，比咖啡温柔。颂钵这个点会自动切到清晨模式', btn:'🎵 开一钵晨间呼吸', alts:['今天也好好过','顺手看一眼今日食单']});
         }
         if(hour>=8&&hour<22){
           var log=[]; try{ log=JSON.parse(localStorage.getItem('zhiming_symlog_v1')||'[]'); }catch(_){}
@@ -24595,7 +24605,7 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
         /* 11-06 引擎升级④：月初复盘钩子（1-3号晚间） */
         if((now.getDate()<=3)&&hour>=19&&hour<23){
           var _mName=(now.getMonth()===0?12:now.getMonth())+'月';
-          acts.push({s:42, k:'grow', target:'', big:_mName+'过了——回头看看「上月的你」', why:'月初三天是回看的好时机：记录密度、睡眠、情绪峰谷，几分钟拼出完整的一个月', btn:'🌙 去看月度复盘', alts:['顺手记一下今天']});
+          acts.push({s:42, k:'grow', target:'grow-month-box', big:_mName+'过了——回头看看「上月的你」', why:'月初三天是回看的好时机：记录密度、睡眠、情绪峰谷，几分钟拼出完整的一个月', btn:'🌙 去看月度复盘', alts:['顺手记一下今天']});
         }
         if(hour>=12&&hour<14) acts.push({s:52, k:'none', big:'午间眯 15-20 分钟', why:'午时心经当令，小睡养心——比刷手机划算得多', btn:'', alts:[]});
         if(hour>=20&&hour<22){ var boost=(cst&&(cst.t==='yangxu'||cst.t==='xueyu'))?18:0; acts.push({s:50+boost, k:'none', big:'睡前泡脚 15 分钟', why:'水温 42 度左右，泡到身体微微发热'+(boost?'——你是'+CONST9[cst.t].n+'，泡脚对你格外对症':''), btn:'', alts:[]}); }
@@ -25690,7 +25700,8 @@ window._nowDoCardHTML = function(){ /* Top1卡：v2.116 迁至黄历页运势格
   if(tp.k==='breath') tpBtn='<div onclick="window._breathOpen()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
   else if(tp.k==='sym') tpBtn='<div onclick="window._healthPick('+tp.idx+')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
   else if(tp.k==='kitchen') tpBtn='<div onclick="window._jumpSound(\''+(tp.target||'health-menu')+'\')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
-  else if(tp.k==='menu'||tp.k==='bowl'||tp.k==='muyu'||tp.k==='pt'||tp.k==='grow') tpBtn='<div onclick="window._jumpSound(\''+(tp.target||'health-muyu')+'\')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+  else if(tp.k==='grow') tpBtn='<div onclick="window._jumpSound(\''+(tp.target||'g-p-today')+'\',\'grow\')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
+  else if(tp.k==='menu'||tp.k==='bowl'||tp.k==='muyu'||tp.k==='pt') tpBtn='<div onclick="window._jumpSound(\''+(tp.target||'health-muyu')+'\')" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
   else if(tp.k==='quiz') tpBtn='<div onclick="window._constStart()" style="margin-top:10px;background:var(--pri);color:#fff;border-radius:12px;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;">'+tp.btn+'</div>';
   return '<div class="widget" style="border:1.5px solid var(--pri);"><div class="widget-body" style="padding:14px;">'
     +'<div style="font-size:11.5px;color:var(--text-hint);">🎯 此刻最该做 · '+_nd.sc+'</div>'
