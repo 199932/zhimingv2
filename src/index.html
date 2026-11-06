@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.116.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.117.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.116.0-20261106';
+const ZHIMING_BUILD = 'v2.117.0-20261107';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24153,7 +24153,8 @@ function _lenormandAIEnhance(cards, spreadType){
          </div>` +
         _gBox('g-p-today') + _gBox('g-p-pan') + _gBox('g-p-tools');
       _gFill('g-p-today', _tryGC(()=>_secCheckin(r)) + _tryGC(()=>_secWeekReview()) + _tryGC(()=>_secMonthReview()) + _tryGC(()=>_secMoonYou()) + _tryGC(()=>_secMoodCalendar()));
-      _gFill('g-p-pan', _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _tryGC(()=>_secLifeGrid(r, p)) + _tryGC(()=>_secYearShape(r, p)) + _tryGC(()=>_secTimeSweep(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)) + _tryGC(()=>_secAnnual(r)));
+      var _gBar=(t)=>'<div style="display:flex;align-items:center;gap:10px;margin:14px 0 8px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">'+t+'</span><span style="flex:1;height:1px;background:var(--card-border,#E3E6EC);"></span></div>';
+      _gFill('g-p-pan', _gBar('🪞 你的底子') + _tryGC(()=>_secPersona(r, p)) + _tryGC(()=>_secDayun(r, p)) + _gBar('⏳ 时间的刻度') + _tryGC(()=>_secLifeGrid(r, p)) + _tryGC(()=>_secTimeSweep(r, p)) + _tryGC(()=>_secAnnual(r)) + _gBar('🌊 此刻的流动') + _tryGC(()=>_secYearShape(r, p)) + _tryGC(()=>_secRhythm(r)) + _tryGC(()=>_secDivineMoment(r)));
       window._tsArm&&window._tsArm(r, p);
       _gFill('g-p-tools', _tryGC(()=>_secJiri(r)) + _tryGC(()=>_secJudge(r)) + _tryGC(()=>_secJudgeMonthly(r)) + _tryGC(()=>_secArchive(r)) + _tryGC(()=>_secPeople()) + vault);
       try{ window._growSubInit(); }catch(e){}
@@ -24557,6 +24558,10 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
           var moodLow=diary.slice(-3).filter(function(e){ return e.mood!==undefined&&e.mood!==null&&e.mood<=1; }).length;
           var why='现在是'+window._shichenName(hour)+'，'+(beds.length>0?('最近 '+beds.length+' 天里有 '+late+' 天零点后才睡'):'夜里 11 点到 1 点是养阴黄金档')+(moodLow>0?'，情绪也偏沉':'');
           acts.push({s:62+late*9+(moodLow>0?6:0), k:'breath', big:hour>=23?'放下手机，准备睡觉':'该收尾了，准备睡', why:why, btn:'😮‍💨 先做 4 轮 4-7-8 呼吸', alts:['手机别带上床','🎵 颂钵呼吸（声音引导版）']});
+        }
+        if(hour>=1&&hour<5){ /* 深夜1-5点空窗补全（TA就是1点后用户）：失眠/熬夜型建议 */
+          var nightWhy=hour<3?'丑时（1-3 点）是肝回血的时间，这个点还醒着最耗它':'寅时（3-5 点）肺当令——早醒的人这个点最难熬';
+          acts.push({s:54, k:'breath', big:'还醒着？别刷了', why:nightWhy+'。放下手机，闭眼做几轮 4-7-8——睡不着也算休息', btn:'😮‍💨 躺下做 4 轮呼吸', alts:['🎵 开着颂钵音当白噪音（养生页）','灯调到最暗','手机扣过去放远点']});
         }
         if(hour>=8&&hour<22){
           var log=[]; try{ log=JSON.parse(localStorage.getItem('zhiming_symlog_v1')||'[]'); }catch(_){}
