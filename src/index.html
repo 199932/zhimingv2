@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.122.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.123.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.122.0-20261107';
+const ZHIMING_BUILD = 'v2.123.1-20261108';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -27301,7 +27301,7 @@ function renderBody(){
     var T=(jdv-2451545.0)/36525;
     var pl=planetHelio(p,T);
     var sx=sunXyz(jdv);
-    var gx=pl.xyz.x-sx.x, gy=pl.xyz.y-sx.y, gz=pl.xyz.z-sx.z;
+    var gx=pl.xyz.x+sx.x, gy=pl.xyz.y+sx.y, gz=pl.xyz.z+sx.z; /* v2.123.1 符号修复: sx是太阳的地心向量(=太阳日心-地球日心=-地球日心向量), 行星地心=行星日心-地球日心=行星日心+sx——原减号致内行星距角爆炸(金星离太阳恒<47°,旧版算出226°) */
     return {lon:norm360(Math.atan2(gy,gx)*RAD), lat:Math.atan2(gz,Math.sqrt(gx*gx+gy*gy))*RAD};
   }
   // [a, e, I, L, long.peri, long.node] + 每世纪变化率
@@ -29904,9 +29904,12 @@ setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
       if(!c||!c.lons) return null;
       var sun=c.lons['太阳'], moon=c.lons['月亮'];
       if(sun==null) return null;
+      var P5={mer:'水星',ven:'金星',mar:'火星',jup:'木星',sat:'土星'}, p5={};
+      if(hasYear){ for(var pk in P5){ var pl=c.lons[P5[pk]]; if(pl!=null) p5[pk]={lon:pl,sign:SIGNS[signIdx(pl)]}; } }
       return {sun:sun, sunSign:SIGNS[signIdx(sun)],
               moon:(hasYear&&moon!=null)?moon:null,
               moonSign:(hasYear&&moon!=null)?SIGNS[signIdx(moon)]:null,
+              p5:p5,
               hasYear:hasYear};
     }catch(_e){ return null; }
   };
@@ -29961,6 +29964,24 @@ setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
       var a5=asp(ta.sun,me.asc);
       if(a5&&a5.k==='conj') out.push('TA的太阳正合你的上升——TA一出现就在你的主场频道，第一眼就投缘。');
     }
+    /* v2.123: 七星人话——金月(TA表达喜欢的方式×你情绪)/火日硬相位(摩擦)/水星同座(沟通)，最多2句防过载 */
+    if(ta.hasYear&&ta.p5&&me.moon!=null){
+      var extra=[];
+      if(ta.p5.ven){
+        var av=asp(ta.p5.ven.lon,me.moon);
+        if(av&&av.k==='conj') extra.push('TA表达喜欢的方式，正好是你心里最吃的那套（TA金星合你月亮）。');
+        else if(av&&(av.k==='tri'||av.k==='sext')) extra.push('TA示好的风格跟你的情绪很对路，相处自然舒服（TA金星拱/合你月亮）。');
+        else if(av&&(av.k==='opp'||av.k==='sq')) extra.push('TA表达在乎的方式你未必接得住——别拿你的标准要求TA（TA金星刑/冲你月亮）。');
+      }
+      if(ta.p5.mar){
+        var am=asp(ta.p5.mar.lon,me.sun);
+        if(am&&(am.k==='opp'||am.k==='sq')) extra.push('TA急起来的时候容易顶到你——TA的火气对事不对人，别往心里去（TA火星刑/冲你太阳）。');
+      }
+      if(ta.p5.mer&&me.p5m){
+        if(signIdx(ta.p5.mer.lon)===signIdx(me.p5m)) extra.push('你们聊天频道几乎同款，说话不用解释太多（水星同座）。');
+      }
+      out=out.concat(extra.slice(0,2));
+    }
     if(!ta.hasYear) out.push('（只记了月日，先看太阳——生日补上年份，月亮的关系也能看）');
     return out;
   };
@@ -29995,8 +30016,21 @@ setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
       var me=myChart();
       if(!ta){ box.innerHTML='生日没读出来，编辑补一下'; box.style.display='block'; return; }
       if(!me){ box.innerHTML='先去星盘页排自己的盘，再回来看合盘'; box.style.display='block'; return; }
+      var meC=window._chartCalc?null:null;
+      try{ var _bp=window._baziLoadProfile?window._baziLoadProfile():null;
+           if(_bp&&_bp.y&&window._chartCalc){ me.p5m=window._chartCalc(_bp.y,_bp.m,_bp.d,_bp.h||12,_bp.mi||0,(_bp.cityIdx||0)).lons['水星']; } }catch(_e5){}
       var lines=window._synReadout(ta,me);
-      box.innerHTML='<b style="color:var(--text);">🔭 '+person.name+' × 你</b><br>'+lines.join('<br>');
+      var starRow='';
+      if(ta.hasYear&&ta.p5){
+        var ord=[['sun','☀️'],['moon','🌙'],['mer','💧'],['ven','💗'],['mar','🔥'],['jup','🍀'],['sat','🪐']];
+        var parts=[];
+        for(var oi=0;oi<ord.length;oi++){
+          var ok2=ord[oi][0], sig2=(ok2==='sun')?ta.sunSign:(ok2==='moon')?ta.moonSign:(ta.p5[ok2]?ta.p5[ok2].sign:null);
+          if(sig2) parts.push(ord[oi][1]+sig2+(ok2==='moon'?'*':''));
+        }
+        if(parts.length) starRow='<div style="margin:4px 0 6px;font-size:11.5px;color:var(--text-sub);"><b style="color:var(--text);">'+person.name+'的星：</b>'+parts.join(' ')+(parts.length>2?' <span style="font-size:10px;opacity:.6;">（*月亮按当天正午估算）</span>':'')+'</div>';
+      }
+      box.innerHTML='<b style="color:var(--text);">🔭 '+person.name+' × 你</b>'+starRow+'<div style="margin-top:2px;">'+lines.join('<br>')+'</div>';
       box.style.display='block';
     }catch(_e){}
   };
