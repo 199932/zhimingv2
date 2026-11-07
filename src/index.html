@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.121.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.122.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.121.1-20261107';
+const ZHIMING_BUILD = 'v2.122.0-20261107';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -15555,6 +15555,18 @@ function fillFormWithProfile(p){
   if (lsD) lsD.value = p.day || "";
   if (typeof syncProfileToWuTabs === "function") syncProfileToWuTabs();
 }
+function _syncBaziCopy(){ /* v2.122.0: 激活档案生日/时辰→八字副本跟走（东西对照卡/十神行/合盘我的盘读zhiming_bazi_v1副本）；城市字段保留（改城市下次排盘自然更新） */
+  try{
+    var p=getActiveProfile(); if(!p||!p.year||!p.month||!p.day) return;
+    var raw=localStorage.getItem('zhiming_bazi_v1'); if(!raw) return;
+    var bz=JSON.parse(raw)||{};
+    bz.y=p.year; bz.m=p.month; bz.d=p.day;
+    bz.h=(typeof p.hour==='number')?p.hour:12;
+    bz.mi=p.minute||0;
+    bz.at=Date.now();
+    localStorage.setItem('zhiming_bazi_v1',JSON.stringify(bz));
+  }catch(_sbc){}
+}
 function setActiveProfile(id){
   window._activeProfileId = id || null;
   try{
@@ -15568,6 +15580,7 @@ function setActiveProfile(id){
   try{ renderProfilesUI(); }catch(_){}
   try{ syncProfileToWuTabs(); }catch(_){}
   try{ updateWesternViewPanel(); }catch(_){}
+  try{ _syncBaziCopy(); }catch(_){}
   try{ if(typeof showToast==='function'&&p) showToast('已切换到「'+(p.name||'未命名')+'」','success',1800); }catch(_){}
 }
 function addProfile(data){
@@ -15586,6 +15599,7 @@ function updateProfile(id, patch){
   if (i < 0) return;
   window._profiles[i] = Object.assign({}, window._profiles[i], patch || {});
   saveProfiles();
+  try{ if(id===window._activeProfileId) _syncBaziCopy(); }catch(_upB){} /* 生日/时辰改了，八字副本跟走 */
   /* 档案联动：编辑的是当前激活档案（改名/生日/性别等）时，刷新今日卦签与生肖运势 */
   try{
     if (id && id === window._activeProfileId){
