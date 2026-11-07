@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.120.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.121.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.120.1-20261107';
+const ZHIMING_BUILD = 'v2.121.1-20261107';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -5611,10 +5611,10 @@ function qianDraw(byDate){
     (hexInfo && hexInfo[1] ? '<div class="kv"><span class="k">卦辞</span><span class="v">' + hexInfo[1] + '</span></div>' : '') +
     (hexInfo && hexInfo[2] ? '<div class="hint" style="margin-top:6px;">' + hexInfo[2] + '</div>' : '') +
     profileLine +
-    '<div class="hint" style="margin-top:8px;">心法：卦为万象之喻，吉卦不狂喜、凶卦不气馁，观其启示、修正言行。</div>' +
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">' +
-    '<button class="btn-secondary" onclick="window.qianReDraw()">🎋 重新抽取</button>' +
-    '<button class="btn-primary" onclick="window.qianSave()">💾 存入历史</button></div></div>';
+    '<div class="hint" style="margin-top:6px;font-size:11px;opacity:.8;">心法：吉卦不狂喜，凶卦不气馁——观其启示，修正言行。</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;">' +
+    '<button class="btn-secondary" style="flex:1;" onclick="window.qianReDraw()">🎋 重新抽取</button>' +
+    '<button class="btn-primary" style="width:auto;flex:1.4;margin-top:0;" onclick="window.qianSave()">💾 存入历史</button></div></div>';
   _qianLast = { idx: idx, name: name, byDate: byDate || false };
   const box = document.getElementById("qian-result");
   if (box) box.innerHTML = profileStripHTML() + html;
@@ -9049,9 +9049,9 @@ function renderToday(){
       ${(typeof window['renderWidget_dailyTarot']==='function'?window['renderWidget_dailyTarot'](r):'<div class="widget"><div class="widget-title">🎴 每日塔罗</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_godsDir']==='function'?window['renderWidget_godsDir'](r):'<div class="widget"><div class="widget-title">💰 喜财福方位</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_wuxingToday']==='function'?window['renderWidget_wuxingToday'](r):'<div class="widget"><div class="widget-title">🌿 今日五行</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
+      ${(typeof window['renderWidget_peopleShortcut']==='function'?window['renderWidget_peopleShortcut'](r):'<div class="widget"><div class="widget-title">⭐ 人物快捷</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_shixu']==='function'?window['renderWidget_shixu'](r):'')}
       ${(typeof window['renderWidget_houToday']==='function'?window['renderWidget_houToday'](r):'')}
-      ${(typeof window['renderWidget_peopleShortcut']==='function'?window['renderWidget_peopleShortcut'](r):'<div class="widget"><div class="widget-title">⭐ 人物快捷</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
     </div>
   `;
   archiveDailyTarot(td, dateStr);
@@ -16829,7 +16829,7 @@ function _houInfo(){
     var r=_houOfDate(now.getFullYear(), now.getMonth()+1, now.getDate());
     if(!r) return null;
     var hi=r.hi, curIdx=r.termIdx;
-    var h2n=(SEVENTY2_HOU[curIdx]&&SEVENTY2_HOU[curIdx][hi+1])?(hi+1):(SEVENTY2_HOU[(curIdx+1)%24]&&SEVENTY2_HOU[(curIdx+1)%24][0]);
+    var h2n=(SEVENTY2_HOU[curIdx]&&SEVENTY2_HOU[curIdx][hi+1])?SEVENTY2_HOU[curIdx][hi+1]:(SEVENTY2_HOU[(curIdx+1)%24]&&SEVENTY2_HOU[(curIdx+1)%24][0]);
     return {term:r.term, hi:hi, hou:r.hou, next:h2n, left:Math.max(1,(hi+1)*5-r.diff)};
   }catch(_){ return null; }
 }
