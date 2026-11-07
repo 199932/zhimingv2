@@ -1597,7 +1597,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.118.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.119.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2612,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.118.0-20261107';
+const ZHIMING_BUILD = 'v2.119.0-20261107';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6891,6 +6891,7 @@ document.addEventListener('keydown', function(e){
     var qc=document.getElementById('quickCmdPanel');
     if(qc && qc.style.display!=='none' && !qc.classList.contains('hide')) return; // 面板有自己的 Esc
   }catch(_){}
+  try{ var _boe=document.getElementById('breath-ov'); if(_boe){ e.preventDefault(); window._breathClose&&window._breathClose(); return; } }catch(_boe2){}
   try{ if(window.__closeTopModal){ e.preventDefault(); window.__closeTopModal(); } }catch(_){}
 }, true);
 function switchTab(page){
@@ -6898,6 +6899,7 @@ function switchTab(page){
   try{ // 兜底清不在esc栈里的弹层(如择日dayPickerModal),切页即新上下文
     document.querySelectorAll('.modal-mask.show').forEach(function(m){ m.classList.remove('show'); });
     if(window.closeDayPicker) window.closeDayPicker();
+    var _bo=document.getElementById('breath-ov'); if(_bo){ try{ window._breathClose&&window._breathClose(); }catch(_boc){ _bo.remove(); } } /* 呼吸弹层是裸fixed div（不在栈/无mask类）——切页即新上下文 */
   }catch(_){}
   document.body.dataset.page = page;
   document.querySelectorAll(".btab").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
@@ -25715,7 +25717,7 @@ function renderBody(){
       var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
       var h='';
       var h='';
-      h+='<div onclick="window._breathOpen()" class="widget" style="grid-column:1/-1;cursor:pointer;><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
+      h+='<div onclick="window._breathOpen()" class="widget" style="grid-column:1/-1;cursor:pointer;"><div class="widget-body" style="padding:14px;display:flex;align-items:center;gap:12px;">'
         +'<div style="font-size:30px;">😮‍💨</div>'
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">4-7-8 呼吸 · 失眠速救</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吸 4 秒 → 屏 7 秒 → 呼 8 秒，4 轮，困意自然来</div></div>'
