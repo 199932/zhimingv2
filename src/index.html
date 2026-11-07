@@ -351,6 +351,11 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .hint{font-size:12px;color:var(--text-hint);text-align:center;padding:6px;}
 .desc-title{font-size:14px;font-weight:700;color:var(--pri-dark);margin:8px 0 4px;}
 .desc-text{font-size:13px;color:var(--text-sub);line-height:1.65;}
+.sx-fold{margin-top:8px;}
+.sx-fold>summary{cursor:pointer;padding:9px 12px;border-radius:10px;background:var(--bg-soft,rgba(0,0,0,.04));font-size:12.5px;font-weight:600;color:var(--text);list-style:none;user-select:none;}
+.sx-fold>summary::-webkit-details-marker{display:none;}
+.sx-fold>summary:active{opacity:.75;}
+.sx-fold:not([open])>.sx-grid{display:none;} /* display:grid覆盖UA收起隐藏——显式补 */
 .sx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:4px;}
 .sx-item{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;}
 .sx-head{display:flex;align-items:center;gap:6px;font-size:13px;}
@@ -1597,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.119.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.120.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2612,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.119.0-20261107';
+const ZHIMING_BUILD = 'v2.120.1-20261107';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -5730,7 +5735,7 @@ function sxRender(dayGzIdx){
       '<b style="color:var(--pri);">' + lv.lv + '</b>（' + (r.score > 0 ? "+" : "") + r.score + ' 分）· ' + tags +
       '<br>开运：<span style="color:' + SX_COLOR[wxC][1] + ';">●</span>' + SX_COLOR[wxC][0] + ' · 幸运数字 ' + SX_NUM[wxC].join("/") + ' · 吉利方位 ' + SX_DIR[wxC] + '</div>';
   }
-  html += '<div class="sx-grid">';
+  html += '<details class="sx-fold"><summary>▾ 展开全部 12 生肖（查身边人的运势）<span style="font-weight:400;font-size:11px;opacity:.65;">——你的生肖已在上面置顶</span></summary><div class="sx-grid" style="margin-top:8px;">';
   d.rows.forEach(r => {
     const isMine = (mySxIdx >= 0 && r.zhi === SX_ZHI[mySxIdx]);
     const tags = r.tags.length ? r.tags.join("·") : "平稳";
@@ -5738,7 +5743,7 @@ function sxRender(dayGzIdx){
       '<div class="sx-tag">' + tags + '</div>' +
       '<div class="sx-luck"><span style="color:' + r.color[1] + ';">●</span> ' + r.color[0] + ' · 数 ' + r.num.join("/") + ' · 方' + r.dir + '</div></div>';
   });
-  html += '</div>';
+  html += '</div></details>';
   html += '<div class="hint" style="margin-top:8px;">' + (profile
     ? '规则：按当日地支与各生肖地支的六冲/六合/三合/相害/相刑及五行生克综合计分；⭐为「' + myName + '」档案生肖。仅供参考。'
     : '规则：按当日地支与各生肖地支的六冲/六合/三合/相害/相刑及五行生克综合计分，仅供参考。') + '</div>';

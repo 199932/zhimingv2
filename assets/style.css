@@ -288,6 +288,11 @@ body.theme-dark .ji-box .yj-tag{background:#5a2a28;color:#f0a090;}
 .hint{font-size:12px;color:var(--text-hint);text-align:center;padding:6px;}
 .desc-title{font-size:14px;font-weight:700;color:var(--pri-dark);margin:8px 0 4px;}
 .desc-text{font-size:13px;color:var(--text-sub);line-height:1.65;}
+.sx-fold{margin-top:8px;}
+.sx-fold>summary{cursor:pointer;padding:9px 12px;border-radius:10px;background:var(--bg-soft,rgba(0,0,0,.04));font-size:12.5px;font-weight:600;color:var(--text);list-style:none;user-select:none;}
+.sx-fold>summary::-webkit-details-marker{display:none;}
+.sx-fold>summary:active{opacity:.75;}
+.sx-fold:not([open])>.sx-grid{display:none;}
 .sx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:4px;}
 .sx-item{background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:10px 12px;}
 .sx-head{display:flex;align-items:center;gap:6px;font-size:13px;}
