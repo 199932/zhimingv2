@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.123.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.123.2</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.123.1-20261108';
+const ZHIMING_BUILD = 'v2.123.2-20261108';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -24606,7 +24606,7 @@ try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classL
         }
         if(cst&&cst.t&&CONST9[cst.t]&&((hour>=11&&hour<13)||(hour>=17&&hour<19))){
           var TAB={'qixu':'七分饱，别喝冰的','yangxu':'这顿忌生冷，配杯姜茶','yinxu':'少辛辣烧烤，炖汤更合适','tanshi':'七分饱少甜腻，饭后走 10 分钟','shire':'忌辛辣火锅酒，备点绿豆汤','xueyu':'别久坐，饭后活动 5 分钟','qiyu':'慢慢吃，饭后别闷着刷手机','tebing':'避开你的过敏原','pinghe':'均衡就好，七分饱'};
-          acts.push({s:50, k:'kitchen', big:'这顿饭：'+TAB[cst.t], why:'你是'+CONST9[cst.t].n+'底子——吃对这一顿，比按什么穴都实在', btn:'🍚 看今日食单', target:'health-menu', alts:['🥣 厨房应急在养生页']});
+          acts.push({s:53, k:'kitchen', big:'这顿饭：'+TAB[cst.t], why:'你是'+CONST9[cst.t].n+'底子——吃对这一顿，比按什么穴都实在', btn:'🍚 看今日食单', target:'health-menu', alts:['🥣 厨房应急在养生页']});
         }
         /* 11-06 引擎升级①：心率PPG白天线（仅当天数据有效，stale不推） */
         if(hour>=7&&hour<22){
