@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.123.4</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.124.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.123.4-20261108';
+const ZHIMING_BUILD = 'v2.124.0-20261108';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6896,7 +6896,8 @@ document.addEventListener('keydown', function(e){
     var qc=document.getElementById('quickCmdPanel');
     if(qc && qc.style.display!=='none' && !qc.classList.contains('hide')) return; // 面板有自己的 Esc
   }catch(_){}
-  try{ var _boe=document.getElementById('breath-ov'); if(_boe){ e.preventDefault(); window._breathClose&&window._breathClose(); return; } }catch(_boe2){}
+  try{ var _boe=document.getElementById('breath-ov'); if(_boe){ e.preventDefault(); window._breathClose&&window._breathClose(); return; } }catch(_){}
+  try{ var _doe=document.getElementById('dao-ov'); if(_doe){ e.preventDefault(); window._dyClose&&window._dyClose(); return; } }catch(_doe2){}
   try{ if(window.__closeTopModal){ e.preventDefault(); window.__closeTopModal(); } }catch(_){}
 }, true);
 function switchTab(page){
@@ -6904,7 +6905,8 @@ function switchTab(page){
   try{ // 兜底清不在esc栈里的弹层(如择日dayPickerModal),切页即新上下文
     document.querySelectorAll('.modal-mask.show').forEach(function(m){ m.classList.remove('show'); });
     if(window.closeDayPicker) window.closeDayPicker();
-    var _bo=document.getElementById('breath-ov'); if(_bo){ try{ window._breathClose&&window._breathClose(); }catch(_boc){ _bo.remove(); } } /* 呼吸弹层是裸fixed div（不在栈/无mask类）——切页即新上下文 */
+    var _bo=document.getElementById('breath-ov'); if(_bo){ try{ window._breathClose&&window._breathClose(); }catch(_boc){ _bo.remove(); } }
+    var _do=document.getElementById('dao-ov'); if(_do){ try{ window._dyClose&&window._dyClose(); }catch(_doc){ _do.remove(); } } /* 呼吸弹层是裸fixed div（不在栈/无mask类）——切页即新上下文 */
   }catch(_){}
   document.body.dataset.page = page;
   document.querySelectorAll(".btab").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
@@ -25800,7 +25802,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">厨房应急 · 家里现成的就能顶上</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吃撑了、受凉了、上火了——5 分钟搞定的食疗法</div></div>'
         +'<div style="font-size:18px;color:var(--pri);">›</div></div></div>';
-      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🔊 声音与节律</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-song" style="grid-column:1/-1;"></div><div id="health-mixer" style="grid-column:1/-1;"></div><div id="health-music"></div><div id="health-sheng"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🌬 呼吸与定力</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🩺 身体与饮食</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-ppg"></div><div id="health-mai"></div><div id="health-flavor"></div><div id="health-pt"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🏠 居住与环境</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-hui"></div><div id="health-detail"></div>';
+      h+='<div id="health-menu" style="grid-column:1/-1;"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🔊 声音与节律</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-muyu" style="grid-column:1/-1;"></div><div id="health-bowl" style="grid-column:1/-1;"></div><div id="health-song" style="grid-column:1/-1;"></div><div id="health-mixer" style="grid-column:1/-1;"></div><div id="health-music"></div><div id="health-sheng"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🌬 呼吸与定力</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-breath"></div><div id="health-kouji"></div><div id="health-xiang"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🩺 身体与饮食</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-ppg"></div><div id="health-mai"></div><div id="health-flavor"></div><div id="health-pt"></div><div id="health-dy"></div><div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 2px;"><span style="font-size:12px;color:var(--text-hint);white-space:nowrap;">🏠 居住与环境</span><span style="flex:1;height:1px;background:#E3E6EC;"></span></div><div id="health-hui"></div><div id="health-detail"></div>';
       el.innerHTML=h; el.dataset.done='1';
       try{ window._musicRender(); }catch(_e){}
       try{ window._maiRender(); }catch(_e){}
@@ -25818,6 +25820,7 @@ function renderBody(){
       try{ window._hhRender(); }catch(_e){}
       try{ window._xiangRender(); }catch(_e){}
       try{ window._ptRender(); }catch(_e){}
+      try{ window._dyRender(); }catch(_e){}
     }
     window._healthPick = function(i){
       var s=SYMPTOMS[i]; var el=document.getElementById('health-detail'); if(!s||!el) return;
@@ -27164,6 +27167,113 @@ function renderBody(){
     var flat=[]; for(var i=0;i<20;i++){ flat.push(180,120); }
     try{ if(navigator.vibrate) navigator.vibrate(flat); }catch(_e){}
     window._ptVT=setTimeout(function(){ window._ptBeat(sections-1); }, 6100);
+  };
+  /* ============ 一式导引 · 时辰经络×八段锦跟做 (v2.124.0) ============ */
+  window._dyTab=[
+    {n:'背后七颠百病消',mer:'胆经',how:'踮起脚跟提到极限，松手自然落下震一下，8 拍颠 8 次。',tip:'落地震感传到头顶就对了，膝盖别绷死'},
+    {n:'攒拳怒目增气力',mer:'肝经',how:'马步半蹲双拳抱腰；向前猛冲一拳，眼睛瞪圆，收回换手。',tip:'瞪眼是在泄肝火，别省略'},
+    {n:'左右开弓似射雕',mer:'肺经',how:'马步，双手胸前交叉向两侧拉开像拉弓；扩胸到最开。',tip:'拉开时吸气，收回时呼'},
+    {n:'五劳七伤往后瞧',mer:'大肠经',how:'站直，头慢慢转向一侧看到极限，停一拍再转另一侧。',tip:'转的是脖子不是腰'},
+    {n:'调理脾胃须单举',mer:'胃经',how:'一手上托过头顶掌心朝天，一手下按掌心向地；对拔后换边。',tip:'上下对拉，侧腰有拉伸感'},
+    {n:'调理脾胃须单举',mer:'脾经',how:'一手上托过头顶掌心朝天，一手下按掌心向地；对拔后换边。',tip:'上下对拉，侧腰有拉伸感'},
+    {n:'摇头摆尾去心火',mer:'心经',how:'半蹲上身前俯；头和尾闾向相反方向摆，画平圆。',tip:'慢！晃的是脊柱不是头'},
+    {n:'五劳七伤往后瞧',mer:'小肠经',how:'站直，头慢慢转向一侧看到极限，停一拍再转另一侧。',tip:'转的是脖子不是腰'},
+    {n:'两手攀足固肾腰',mer:'膀胱经',how:'双手沿后腰往下摩到脚背，膝盖尽量伸直；起身掌托天。',tip:'腿后侧的酸就是膀胱经在拉'},
+    {n:'两手攀足固肾腰',mer:'肾经',how:'双手沿后腰往下摩到脚背，膝盖尽量伸直；起身掌托天。',tip:'腿后侧的酸就是膀胱经在拉'},
+    {n:'摇头摆尾去心火',mer:'心包经',how:'半蹲上身前俯；头和尾闾向相反方向摆，画平圆。',tip:'慢！晃的是脊柱不是头'},
+    {n:'两手托天理三焦',mer:'三焦经',how:'双手腹前十指交叉，翻掌上托到头顶极限，抬头看手背。',tip:'上托时踮脚，全身拔长'}
+  ];
+  window._dyMer=function(h){ var idx=Math.floor(((h+1)%24)/2)%12; return window._dyTab[idx]||window._dyTab[0]; };
+  window._dyLog=function(){ try{ return JSON.parse(localStorage.getItem('zhiming_daoyin_v1')||'[]'); }catch(_e){ return []; } };
+  window._dyRecent=function(){
+    var el=document.getElementById('dyRecent'); if(!el) return;
+    var a=window._dyLog();
+    if(!a.length){ el.innerHTML='<div style="font-size:11px;color:var(--text-hint);text-align:center;margin-top:8px;">还没练过——今天这一式算热身</div>'; return; }
+    var today=new Date().toDateString(), tn=0;
+    a.forEach(function(x){ if(new Date(x.t).toDateString()===today) tn++; });
+    el.innerHTML='<div style="font-size:11px;color:var(--text-hint);text-align:center;margin-top:8px;">今天练了 '+tn+' 式 · 累计 '+a.length+' 次</div>';
+  };
+  window._dyStopAll=function(){
+    if(window._dyTimer){ clearInterval(window._dyTimer); window._dyTimer=null; }
+    if(window._dyVT){ clearTimeout(window._dyVT); window._dyVT=null; }
+    window._dyOn=false;
+    try{ if(navigator.vibrate) navigator.vibrate(0); }catch(_e){}
+  };
+  window._dyIdle=function(){
+    var b=document.getElementById('health-dy'); if(!b) return;
+    var d=new Date(); var h=d.getHours();
+    var it=window._dyMer(h); window._dyCur=it;
+    var sc=''; try{ if(typeof window._shichenName==='function') sc=window._shichenName(h); }catch(_e){}
+    var locked=(h>=23||h<5);
+    var btn=locked
+      ?'<div style="font-size:11.5px;color:var(--text-hint);text-align:center;margin-top:12px;">🌙 亥子丑寅时（23点-5点）宜睡不宜动——导引明早再来</div>'
+      :'<button class="switch-btn active" style="width:100%;margin-top:12px;" onclick="window._dyStart()">🧘 跟着拍号练 32 秒</button>'
+      +'<div style="font-size:10.5px;color:var(--text-hint);text-align:center;margin-top:6px;">手机每拍震一下——一拍一个来回，共 8 拍</div>';
+    b.innerHTML='<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🧘 一式导引 · 此刻一式</div><div class="widget-body">'
+      +'<div style="background:linear-gradient(170deg,#26221C,#171410);border-radius:12px;padding:16px;text-align:center;">'
+      +'<div style="font-size:11px;color:#8A8578;">现在是'+(sc?sc.slice(0,2)+'——':'')+'当令的是</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#C8A96A;margin-top:4px;">'+it.mer+'</div>'
+      +'<div style="font-size:19px;font-weight:800;color:#F2EAD8;margin-top:8px;">「'+it.n+'」</div>'
+      +'<div style="font-size:12px;color:#B8B0A0;margin-top:8px;line-height:1.7;">'+it.how+'</div>'
+      +'<div style="font-size:11px;color:#8A8578;margin-top:6px;">💡 '+it.tip+'</div>'
+      +'</div>'
+      +btn
+      +'<div id="dyRecent"></div>'
+      +'<div style="font-size:10px;color:var(--text-hint);opacity:.7;text-align:center;margin-top:6px;">※ 导引是保健功法，饭后一小时内别练</div>'
+      +'</div></div>';
+    window._dyRecent();
+  };
+  window._dyRender=function(){
+    if(!document.getElementById('health-dy')) return;
+    window._dyIdle();
+  };
+  window._dyStart=function(){
+    var it=window._dyCur||window._dyMer(new Date().getHours());
+    window._dyStopAll();
+    if(document.getElementById('dao-ov')) return;
+    var ov=document.createElement('div');
+    ov.id='dao-ov';
+    ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(13,16,28,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;';
+    ov.innerHTML=
+      '<div style="position:absolute;top:18px;font-size:11px;color:#8A8578;">'+it.mer+' · 8 拍跟做</div>'
+      +'<div id="dy-beat" style="font-size:88px;font-weight:800;color:#C8A96A;line-height:1;">1</div>'
+      +'<div style="font-size:17px;font-weight:700;color:#F2EAD8;margin-top:14px;">「'+it.n+'」</div>'
+      +'<div id="dy-sec" style="margin-top:8px;font-size:13px;color:#8A8578;">32 秒</div>'
+      +'<div style="font-size:12px;color:#B8B0A0;margin-top:14px;line-height:1.7;max-width:300px;text-align:center;">'+it.how+'</div>'
+      +'<div onclick="window._dyClose()" style="margin-top:30px;padding:10px 30px;border:1px solid rgba(255,255,255,.25);border-radius:999px;font-size:13px;color:#e8ecf4;">停</div>';
+    document.body.appendChild(ov);
+    window._dyOn=true;
+    var beat=1, total=8*4, left=total;
+    try{ if(navigator.vibrate) navigator.vibrate(150); }catch(_e0){}
+    window._dyTimer=setInterval(function(){
+      var ov2=document.getElementById('dao-ov'); if(!ov2){ window._dyStopAll(); return; }
+      if(!window._dyOn) return;
+      left--;
+      var se=document.getElementById('dy-sec');
+      if(se) se.textContent=left+' 秒';
+      if(left<=0){
+        window._dyStopAll();
+        try{ var _a=window._dyLog(); _a.push({t:Date.now(),mer:it.mer,si:it.n}); if(_a.length>60) _a=_a.slice(-60); localStorage.setItem('zhiming_daoyin_v1',JSON.stringify(_a)); }catch(_e3){}
+        var bd=document.getElementById('dy-beat');
+        if(bd) bd.textContent='✓';
+        try{ if(navigator.vibrate) navigator.vibrate([200,100,300]); }catch(_e1){}
+        setTimeout(function(){ window._dyClose(true); },900);
+        return;
+      }
+      var nb=Math.floor((total-left)/4)+1;
+      if(nb!==beat){
+        beat=nb;
+        var bd2=document.getElementById('dy-beat');
+        if(bd2) bd2.textContent=beat<=8?beat:'8';
+        try{ if(navigator.vibrate) navigator.vibrate(150); }catch(_e2){}
+      }
+    },1000);
+  };
+  window._dyClose=function(done){
+    window._dyStopAll();
+    var ov=document.getElementById('dao-ov');
+    if(ov) ov.remove();
+    if(done){ window._dyIdle(); try{ if(typeof showToast==='function') showToast('导引毕。'+(window._dyCur?window._dyCur.mer:'')+'松快了。','success',1800); }catch(_e4){} }
   };
   window._ptIdle=function(){
     var area=document.getElementById('health-pt'); if(!area) return;
