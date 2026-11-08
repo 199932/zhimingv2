@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.123.3</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.123.4</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.123.3-20261108';
+const ZHIMING_BUILD = 'v2.123.4-20261108';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4201,7 +4201,7 @@ function calcDayun(r, p, tst){
     const endSui = startSui + 9;
     dayun.push({step:i+1, gz, wx:WUXING_GAN[GAN[gIdx]]+"/"+WUXING_ZHI[ZHI[zIdx]], nayin:nayinGZ(gz), ganShi,
       zhiCang:(CANG_GAN[ZHI[zIdx]]||[]).map(c=>`${c.g}(${c.w})`).join(" "),
-      startSui, endSui, startYear: PY + startSui, endYear: PY + endSui});
+      startSui, endSui, startYear: PY + startSui - 1, endYear: PY + endSui - 1}); /* v2.123.4 off-by-one修复: startSui是虚岁(出生年=1虚岁), startYear=PY+startSui会整体后移1年(6虚岁=2000而非2001); -1后与4160格/拖动一生的年对齐 */
   }
   return {isShun, qiYunSui, qiYunDays: qiYunDays.toFixed(2), qiYunSuiRaw: qiYunSuiRaw.toFixed(2), list:dayun};
 }
@@ -7262,7 +7262,7 @@ function calcBazi(){
           <th style="padding:6px 4px;border:1px solid var(--line);text-align:center;">干支</th>
           <th style="padding:6px 4px;border:1px solid var(--line);text-align:center;">十神</th>
           <th style="padding:6px 4px;border:1px solid var(--line);text-align:center;">纳音</th>
-          <th style="padding:6px 4px;border:1px solid var(--line);text-align:center;">起-止岁</th>
+          <th style="padding:6px 4px;border:1px solid var(--line);text-align:center;">起-止岁<small style="font-weight:400;">（虚）</small></th>
           <th style="padding:6px 4px;border:1px solid var(--line);text-align:center;">起-止年</th>
           <th style="padding:6px 4px;border:1px solid var(--line);text-align:center;">吉凶</th>
           <th style="padding:6px 4px;border:1px solid var(--line);text-align:left;">藏干</th>
@@ -22812,7 +22812,7 @@ function _lenormandAIEnhance(cards, spreadType){
         const enter=(prev&&y===dy.startYear);
         rows+='<div style="font-size:20px;font-weight:600;color:#1A2029;line-height:1.3;">'+y+' <span style="font-size:13px;font-weight:400;color:#838A95;">· '+sui+' 岁</span></div>'
           +'<div style="font-size:14px;color:#1A2029;margin-top:2px;">'+(enter?'⬇ 换运 · 进入 ':'当前大运 ')+_esc(dy.gz)+'运</div>'
-          +'<div style="font-size:12px;color:var(--text-sub);margin-top:1px;">'+dy.startYear+'–'+dy.endYear+'（'+dy.startSui+'~'+dy.endSui+' 岁）</div>';
+          +'<div style="font-size:12px;color:var(--text-sub);margin-top:1px;">'+dy.startYear+'–'+dy.endYear+'（虚岁 '+dy.startSui+'~'+dy.endSui+' 岁）</div>';
       } else {
         rows+='<div style="font-size:20px;font-weight:600;color:#1A2029;">'+y+' <span style="font-size:13px;font-weight:400;color:#838A95;">· '+sui+' 岁</span></div>';
       }
