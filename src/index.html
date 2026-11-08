@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.123.2</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.123.3</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.123.2-20261108';
+const ZHIMING_BUILD = 'v2.123.3-20261108';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -15564,7 +15564,33 @@ function _syncBaziCopy(){ /* v2.122.0: 激活档案生日/时辰→八字副本�
     bz.h=(typeof p.hour==='number')?p.hour:12;
     bz.mi=p.minute||0;
     bz.at=Date.now();
+    /* v2.123.3: 城市字段跟走——bz.lng直进baziCalc真太阳时,迁城不跟=时辰偏差 */
+    if(p.cityName){
+      bz.cityName=p.cityName;
+      if(typeof window._chartCityNames==='function'){
+        var cn4=window._chartCityNames(), ci4=-1, clean4=p.cityName.replace(/市$/,'');
+        for(var q4=0;q4<cn4.length;q4++){ if(cn4[q4]===p.cityName||cn4[q4]===clean4){ ci4=q4; break; } }
+        if(ci4>=0) bz.cityIdx=ci4;
+      }
+      if(typeof p.cityLng==='number') bz.lng=p.cityLng;
+    }
     localStorage.setItem('zhiming_bazi_v1',JSON.stringify(bz));
+    /* v2.123.3: 星盘存档跟走——chart_v1.city是idx，按cityName匹配转 */
+    try{
+      var cr=localStorage.getItem('zhiming_chart_v1');
+      if(cr){
+        var cv=JSON.parse(cr);
+        if(cv&&cv.y){
+          cv.y=bz.y; cv.m=bz.m; cv.d=bz.d; cv.h=bz.h; cv.mi=bz.mi;
+          if(typeof window._chartCityNames==='function'&&bz.cityName){
+            var cn3=window._chartCityNames(), ci3=-1, clean3=bz.cityName.replace(/市$/,'');
+            for(var q=0;q<cn3.length;q++){ if(cn3[q]===bz.cityName||cn3[q]===clean3){ ci3=q; break; } }
+            if(ci3>=0) cv.city=ci3;
+          }
+          localStorage.setItem('zhiming_chart_v1',JSON.stringify(cv));
+        }
+      }
+    }catch(_sbc2){}
   }catch(_sbc){}
 }
 function setActiveProfile(id){
