@@ -1,5 +1,5 @@
-const CACHE = 'zhiming_v2_sw_v138';
-const PRECACHE = ['./', './index.html', './widget.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './donate-qr.png', './assets/app.js', './assets/style.css', './og-card.png'];
+const CACHE = 'zhiming_v2_e2cbf00e';
+const PRECACHE = ['./', './index.html', './widget.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './donate-qr.png', './assets/app.e2cbf00e.js', './assets/style.css', './og-card.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -24,18 +24,18 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // 页面与 app.js network-first（保证版本一致、发版即生效）；其余静态资源 stale-while-revalidate 秒开
-  const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html') || url.pathname.includes('/assets/app.js');
+  // 2026-11-09 重写（坑93）：旧实现缓存命中也 await 一次网络往返，弱网等满全程——注释与实现不一致。
+  // 现策略：哈希资源（URL即版本）cache-first 纯秒回；其余（页面/静态）SWR——缓存命中立即返回+后台刷新，离线兜底保留。
+  const isHashed = /\/assets\/app[.-][0-9a-f]{8}\.js$/.test(url.pathname);
+  const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
   e.respondWith((async () => {
     const cached = await caches.match(req);
     if (cached) {
-      try {
-        const fresh = await fetch(req);
-        if (fresh && fresh.ok) { caches.open(CACHE).then(c => c.put(req, fresh.clone())).catch(() => {}); return fresh; }
-      } catch(_){}
-      fetch(req).then(res => {
-        if (res && res.ok) caches.open(CACHE).then(c => c.put(req, res.clone())).catch(() => {});
-      }).catch(() => {});
+      if (!isHashed) {
+        fetch(req).then(res => {
+          if (res && res.ok) caches.open(CACHE).then(c => c.put(req, res.clone())).catch(() => {});
+        }).catch(() => {});
+      }
       return cached;
     }
     try {
