@@ -45,12 +45,15 @@ for (let i = 0; i < lines.length; i++) {
 if (scriptBlocks.length < 3) { console.error('expect >=3 main script blocks (主逻辑/Phase3/养生/星盘...), got', scriptBlocks.length); process.exit(1); }
 const jsParts = scriptBlocks.map(b => lines.slice(b.start + 1, b.end).join('\n'));
 
-// ---------- 3. 组装 app.js ----------
+// ---------- 3. 组装 app.js（Block1+2 核心；Block3=mod-health、Block4=mod-chart、Block5~12=mod-extra 按需加载） ----------
+const MODS = [
+  ['health', 3, '/* 知命V2 养生调理模块（懒加载，勿手改） */\n'],
+  ['chart',  4, '/* 知命V2 星盘模块（懒加载，勿手改） */\n'],
+  ['extra', null, '/* 知命V2 附加模块合集（食单/睡前/合盘/小卡，懒加载，勿手改） */\n']
+];
 const appJs = '/* 知命V2 应用脚本（由 build.js 从 src/index.html 生成，勿手改） */\n'
   + '/* ==== Block 1: 主逻辑 ==== */\n' + jsParts[0]
-  + '\n/* ==== Block 2: Phase3 注入 & boot 移除 ==== */\n' + jsParts[1]
-  + '\n/* ==== Block 3: 养生调理（身体+风水）==== */\n' + jsParts[2]
-  + jsParts.slice(3).map((p,i)=>'\n/* ==== Block '+(i+4)+': 附加模块 ==== */\n'+p).join('') + '\n';
+  + '\n/* ==== Block 2: Phase3 注入 & boot 移除 ==== */\n' + jsParts[1] + '\n';
 fs.mkdirSync(ASSETS, { recursive: true });
 fs.writeFileSync(path.join(ASSETS, 'app.js'), appJs);
 
@@ -68,11 +71,39 @@ try {
   // app.js 已是原始版
 }
 
-// ---------- 4b. 内容哈希产物 + SW 注入 + sitemap lastmod（2026-11-09 基建改造：漏升版本号物理不可能） ----------
+// ---------- 4b. 内容哈希产物 + mod 分块 + SW 注入 + sitemap lastmod（漏升版本号物理不可能） ----------
+// mod 分块产物（各自 terser+hash）
+const MOD_URLS = {};
+for (const [mname, bidx, header] of MODS) {
+  const src = header + (bidx ? jsParts[bidx-1] : jsParts.slice(4).map((p,i)=>'\n/* ==== Block '+(i+5)+': 附加 ==== */\n'+p).join(''));
+  const tmpM = path.join(ROOT, 'assets', '.mod.tmp.js');
+  fs.writeFileSync(tmpM, src);
+  const mh = path.join(ASSETS, 'mod-' + mname + '.js');
+  try {
+    execSync('npx terser ' + tmpM + ' -c passes=2 --ecma 2017 -o ' + mh + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
+  } catch (e) { fs.copyFileSync(tmpM, mh); console.warn('terser mod-' + mname + ' failed, raw fallback'); }
+  fs.unlinkSync(tmpM);
+  const mtxt = fs.readFileSync(mh, 'utf8');
+  const mhash = crypto.createHash('sha256').update(mtxt).digest('hex').slice(0, 8);
+  const mout = 'assets/mod-' + mname + '.' + mhash + '.js';
+  fs.writeFileSync(path.join(ROOT, mout), mtxt);
+  fs.unlinkSync(mh);
+  MOD_URLS[mname] = mout;
+  console.log(mout + ':', (mtxt.length / 1024).toFixed(0) + 'KB');
+}
+// 清理旧 mod 哈希产物
+fs.readdirSync(ASSETS).filter(f => /^mod-[a-z]+\.[0-9a-f]{8}\.js$/.test(f) && !Object.values(MOD_URLS).includes('assets/' + f)).forEach(f => fs.unlinkSync(path.join(ASSETS, f)));
+
+// loader 注入 app.js（__ensureMod + MOD_URLS）
+const loaderJs = '\n/* ==== 模块懒加载器（build 注入） ==== */\n'
+  + 'window.__MOD_URLS=' + JSON.stringify(MOD_URLS) + ';\n'
+  + 'window.__mods={};\n'
+  + 'window.__ensureMod=function(n){ return window.__mods[n]||(window.__mods[n]=new Promise(function(res,rej){ var sc=document.createElement("script"); sc.src=window.__MOD_URLS[n]; sc.onload=function(){res()}; sc.onerror=function(){ delete window.__mods[n]; rej(new Error("mod load fail: "+n)); }; document.head.appendChild(sc); })); };\n';
 const APPHASH = crypto.createHash('sha256').update(appOut).digest('hex').slice(0, 8);
 const appHashed = 'app.' + APPHASH + '.js';
-fs.writeFileSync(path.join(ASSETS, appHashed), appOut);
-console.log('assets/' + appHashed + ':', (appOut.length / 1024).toFixed(0) + 'KB (hash=' + APPHASH + ')');
+fs.writeFileSync(path.join(ASSETS, 'app.js'), appOut + loaderJs);
+fs.writeFileSync(path.join(ASSETS, appHashed), appOut + loaderJs);
+console.log('assets/' + appHashed + ':', ((appOut.length + loaderJs.length) / 1024).toFixed(0) + 'KB (hash=' + APPHASH + ')');
 
 // sw.js：CACHE 版本=哈希、PRECACHE 注入哈希文件名（sw.js 字节随构建变化 → 浏览器自动检测更新）
 const SWP = path.join(ROOT, 'sw.js');
@@ -80,6 +111,9 @@ let swTxt = fs.readFileSync(SWP, 'utf8');
 swTxt = swTxt.replace(/const CACHE = '[^']+';/, "const CACHE = 'zhiming_v2_" + APPHASH + "';");
 if (!swTxt.includes("zhiming_v2_" + APPHASH)) { console.error('sw CACHE inject miss'); process.exit(1); }
 swTxt = swTxt.replace(/'\.\/assets\/app(\.[0-9a-f]{8})?\.js'/, "'./assets/" + appHashed + "'"); // 幂等：兼容首次(app.js)与二次(旧hash)
+for (const mv of Object.values(MOD_URLS)) {
+  if (!swTxt.includes(mv)) swTxt = swTxt.replace("'./assets/style.css'", "'" + mv + "', './assets/style.css'");
+}
 if (!swTxt.includes(appHashed)) { console.error('sw PRECACHE inject miss'); process.exit(1); }
 fs.writeFileSync(SWP, swTxt);
 // 清理旧哈希产物（保留 app.js 兼容旧缓存 index）

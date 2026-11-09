@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.125.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.126.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.125.0-20261109';
+const ZHIMING_BUILD = 'v2.126.0-20261109';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6901,6 +6901,7 @@ document.addEventListener('keydown', function(e){
   try{ if(window.__closeTopModal){ e.preventDefault(); window.__closeTopModal(); } }catch(_){}
 }, true);
 function switchTab(page){
+  try{ if(window.__ensureMod) window.__ensureMod('extra').catch(function(_me){}); }catch(_me0){} /* 附加模块合集后台预取（不阻塞,函数均有typeof守卫） */
   try{ window.__closeAllModals && window.__closeAllModals(); }catch(_){}
   try{ // 兜底清不在esc栈里的弹层(如择日dayPickerModal),切页即新上下文
     document.querySelectorAll('.modal-mask.show').forEach(function(m){ m.classList.remove('show'); });
@@ -6928,6 +6929,7 @@ function switchTab(page){
   else if (page==="cn") ;
   else if (page==="wu") {
     try{ syncProfileToWuTabs(); }catch(_){}
+    try{ if(window.__ensureMod&&!window.__mods['chart']) window.__ensureMod('chart').catch(function(_mc){}); }catch(_mc0){} /* 星盘模块预取（onclick入口函数就位前的极小竞态窗口可接受） */
   }
   else if (page==="al") {
     document.body.classList.add("theme-al");
@@ -6935,7 +6937,7 @@ function switchTab(page){
       const d = new Date(); d.setDate(d.getDate()+_almanacOffset);
       document.getElementById("almanac-body").innerHTML = renderAlmanac(d);
       try{ window._inkRender(); }catch(_e){}
-    try{ var _ns=document.getElementById('nowdoSlot'); if(_ns&&typeof window._nowDoCardHTML==='function') _ns.innerHTML=window._nowDoCardHTML(); }catch(_nsE){} /* 每次切黄历刷Top1=数据新鲜 */
+    try{ var _ns=document.getElementById('nowdoSlot'); if(_ns){ if(typeof window._nowDoCardHTML==='function') _ns.innerHTML=window._nowDoCardHTML(); else if(window.__ensureMod) window.__ensureMod('health').then(function(){ var _n2=document.getElementById('nowdoSlot'); if(_n2&&typeof window._nowDoCardHTML==='function') _n2.innerHTML=window._nowDoCardHTML(); }).catch(function(_nme){}); } }catch(_nsE){} /* 每次切黄历刷Top1=数据新鲜；mod-health懒加载就绪后补渲染 */
     }
   }
   else if (page==="cal") {
@@ -6950,7 +6952,8 @@ function switchTab(page){
   }
   else if (page==="health") {
     document.body.classList.add("theme-today");
-    try{ if(typeof window.renderHealth === 'function') window.renderHealth(); }catch(e){ console.warn('renderHealth:',e); }
+    if (typeof window.renderHealth === 'function') { try{ window.renderHealth(); }catch(e){ console.warn('renderHealth:',e); } }
+    else if (window.__ensureMod) window.__ensureMod('health').then(function(){ try{ if(typeof window.renderHealth==='function') window.renderHealth(); }catch(_e2){} }).catch(function(_me2){}); /* mod-health 懒加载后渲染 */
   }
   window.scrollTo(0,0);
 }

@@ -62,7 +62,16 @@
 源码在 `src/index.html`（单文件，含全部内联 CSS/JS），**根目录 index.html / assets/app.js / assets/style.css 是构建产物，勿直接手改**。
 
 ```bash
-node build.js   # src/index.html → 根产物（terser 压缩 JS、压缩 CSS）
+node build.js   # src/index.html → 根产物（terser 压缩、内容哈希命名、mod 分块、SW/sitemap 注入）
 ```
 
-改动流程：编辑 `src/index.html` → `node build.js` → 本地打开根 index.html 验证 → 提交全部变更。sw.js 的 PRECACHE 已包含 assets 两文件，离线可用不受影响。
+改动流程：编辑 `src/index.html` → `node build.js` → 本地打开根 index.html 验证 → 提交全部变更。
+
+**产物结构（v2.126.0 起模块懒加载）**：
+- `assets/app.<hash8>.js` — 核心包（Block1 主逻辑 + Block2 boot），首屏关键路径；同内容兼容副本 `assets/app.js` 供旧缓存过渡
+- `assets/mod-health.<hash8>.js` — 养生调理模块（首次切养生页/黄历 Top1 时按需加载）
+- `assets/mod-chart.<hash8>.js` — 星盘模块（首次切西玄页时按需加载）
+- `assets/mod-extra.<hash8>.js` — 附加模块合集：食单/睡前/合盘/小卡（switchTab 后台预取，函数均有 typeof 守卫）
+- `sw.js` / `sitemap.xml` — 构建期自动注入（CACHE 版本=核心包哈希，PRECACHE 含全部 mod，lastmod=构建日）
+
+**约束**：跨块引用函数必须走 `typeof 守卫` 或 `window.__ensureMod(name)`；新 window 函数定义必须显式挂 window（`onclick` 直调依赖）。构建产物全部内容哈希命名——**漏升版本号物理不可能**，SW 字节随哈希变化自动触发更新。
