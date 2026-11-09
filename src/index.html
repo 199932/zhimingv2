@@ -1586,7 +1586,7 @@ body{ padding-bottom:160px; }
   <p>知命V2 是一个纯本机运行的命理与自我观察工具集：八字排盘（含真太阳时校正与大运流年）、六十四卦金钱卦、奇门遁甲、大六壬、梅花易数、韦特塔罗、本命星盘、黄历宜忌、体质自测与养生手法记录等 25 个模块。所有数据只保存在你自己的浏览器里，不经过任何服务器。</p>
 </div>
 <div id="boot"><div class="b-logo">知命</div><div class="b-sub">纯本地 · 你的成长档案</div><div class="b-spin"></div></div>
-<script>setTimeout(function(){try{var b=document.getElementById("boot");if(b){b.classList.add("off");setTimeout(function(){if(b&&b.parentNode)b.parentNode.removeChild(b);},400);}}catch(e){}},8000);</script>
+<script>window.__LOCK_GATE=(function(){try{return !!(JSON.parse(localStorage.getItem("zhiming_lock_v1")||"null")||{}).enabled}catch(e){return false}})();</script><script>setTimeout(function(){try{if(window.__LOCK_GATE)return;var b=document.getElementById("boot");if(b){b.classList.add("off");setTimeout(function(){if(b&&b.parentNode)b.parentNode.removeChild(b);},400);}}catch(e){}},8000);</script>
 <div id="errBox" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#D32F2F;color:#fff;padding:10px 14px;font:13px/1.5 -apple-system,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.35);">
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
     <div>
@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.126.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.127.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.126.0-20261109';
+const ZHIMING_BUILD = 'v2.127.0-20261109';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -23891,6 +23891,190 @@ function _lenormandAIEnhance(cards, spreadType){
     rd.readAsText(f);
   };
   function _vaN(v){ if(Array.isArray(v)) return v.length; if(v&&typeof v==="object") return Object.keys(v).length; return 0; }
+  /* ---- PIN锁 + 加密备份（WebCrypto PBKDF2-150k + AES-GCM，纯本地零网络；门禁防偷瞄，加密文件防清库） ---- */
+  function _encDerive(pin, salt){
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey'])
+      .then(function(k){ return crypto.subtle.deriveKey({name:'PBKDF2', salt:salt, iterations:150000, hash:'SHA-256'}, k, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']); });
+  }
+  function _encOpen(pin, salt, iv, ct){
+    return _encDerive(pin, salt).then(function(key){ return crypto.subtle.decrypt({name:'AES-GCM', iv:iv}, key, ct); });
+  }
+  function _encSeal(pin, obj){
+    const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+    return _encDerive(pin, salt).then(function(key){
+      return crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key, new TextEncoder().encode(JSON.stringify(obj))).then(function(ct){
+        return {salt:salt, iv:iv, ct:new Uint8Array(ct)};
+      });
+    });
+  }
+  function _b64(u8){ let r=''; for(let i=0;i<u8.length;i++) r+=String.fromCharCode(u8[i]); return btoa(r); }
+  function _ub64(x){ return Uint8Array.from(atob(x), function(c){ return c.charCodeAt(0); }); }
+  const _LOCK_MAGIC='zhiming-lock-ok-v1';
+  function _lockRead(){ try{ return JSON.parse(localStorage.getItem("zhiming_lock_v1")||"null")||null; }catch(e){ return null; } }
+  /* PIN 面板：boot 门禁与设置流程共用 */
+  window._pinPanelOn = function(title, sub, onDone, onCancel){
+    let old=document.getElementById("pinPanel"); if(old) old.parentNode.removeChild(old);
+    const pp=document.createElement("div");
+    pp.id="pinPanel";
+    pp.style.cssText="position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:28px;background:var(--bg,#f5f1e8);";
+    pp.innerHTML='<div style="font-size:30px;font-weight:900;color:var(--text,#333);">'+title+'</div>'
+      +(sub?'<div style="font-size:13px;color:var(--text-sub,#888);text-align:center;max-width:300px;line-height:1.7;">'+sub+'</div>':'')
+      +'<div id="pinDots" style="display:flex;gap:12px;min-height:14px;"></div>'
+      +'<div id="pinGrid" style="display:grid;grid-template-columns:repeat(3,72px);gap:12px;"></div>'
+      +(onCancel?'<div id="pinCancel" style="font-size:12px;color:var(--text-sub,#888);cursor:pointer;padding:8px;">取消</div>':'');
+    (function(){
+      function b_id(x){ return document.getElementById(x); }
+      const bn=b_id("boot")||document.body;
+      bn.appendChild(pp);
+      if(onCancel) pp.querySelector("#pinCancel").onclick=function(){ _pinPanelOff(); onCancel(); };
+      let cur="";
+      const dots=pp.querySelector("#pinDots"), grid=pp.querySelector("#pinGrid");
+      function draw(){ dots.innerHTML=cur.split("").map(function(){ return '<div style="width:12px;height:12px;border-radius:50%;background:var(--text,#333);"></div>'; }).join("")||'<div style="font-size:12px;color:var(--text-sub,#999);">输入 PIN</div>'; }
+      [1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(function(n){
+        const c=document.createElement("div");
+        if(n===""){ c.innerHTML=""; grid.appendChild(c); return; }
+        c.textContent=n;
+        c.style.cssText="height:60px;border-radius:14px;background:var(--card-bg,#fff);color:var(--text,#333);font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08);user-select:none;";
+        c.onclick=function(){
+          if(n==="⌫"){ cur=cur.slice(0,-1); draw(); return; }
+          if(cur.length>=8) return;
+          cur+=n; draw();
+          if(cur.length>=4){ setTimeout(function(){ const ok=cur; cur=""; draw(); onDone(ok); },120); }
+        };
+        grid.appendChild(c);
+      });
+      draw();
+    })();
+  };
+  window._pinPanelOff = function(){ const pp=document.getElementById("pinPanel"); if(pp&&pp.parentNode) pp.parentNode.removeChild(pp); };
+  /* 门禁：锁开启时叠在 boot 上，成功才放行 */
+  window._lockGateBoot = function(){
+    const L=_lockRead(); if(!L||!L.enabled){ return; }
+    const b=document.getElementById("boot"); if(!b) return;
+    let fails=0;
+    window._pinPanelOn("🔒 知命已上锁","输入 PIN 解锁（数据只在这台设备上）",function(pin){
+      _encOpen(pin, _ub64(L.salt), _ub64(L.iv), _ub64(L.magic)).then(function(pt){
+        if(new TextDecoder().decode(pt)!==_LOCK_MAGIC) throw new Error("bad");
+        window._pinPanelOff();
+        b.classList.add("off"); setTimeout(function(){ if(b&&b.parentNode) b.parentNode.removeChild(b); },380);
+        try{ localStorage.setItem("zhiming_last_unlock", String(Date.now())); }catch(e){}
+        try{ const _lb=+(localStorage.getItem("zhiming_last_backup")||0);
+          const _n=(JSON.parse(localStorage.getItem("zhiming_v2_profiles")||"[]")).length;
+          if(_n>0&&(!_lb||Date.now()-_lb>14*86400000)){ setTimeout(function(){ try{ window._toast?window._toast("💡 已经 14 天没备份了——保险箱里 3 秒导出一份","info",2400):showToast("💡 该备份了","info",2400); }catch(e){} },900); }
+        }catch(e){}
+      }).catch(function(){ fails++;
+        const d=document.getElementById("pinDots");
+        if(d){ d.innerHTML='<div style="font-size:13px;color:#c0392b;font-weight:700;">PIN 不对，再试'+(fails>=3?"（忘记 PIN 可在解锁页重置）":"")+'</div>'; }
+      });
+    }, null);
+    /* 忘记PIN：重置锁定（数据仍在，仅移除门禁） */
+    setTimeout(function(){
+      const t=document.createElement("div");
+      t.textContent="忘记 PIN？重置锁定";
+      t.style.cssText="position:absolute;bottom:26px;left:0;right:0;text-align:center;font-size:12px;color:var(--text-sub,#999);cursor:pointer;padding:10px;";
+      t.onclick=function(){
+        if(confirm("重置锁定后需要重新设置 PIN（数据不受影响）。确定重置？")){
+          try{ localStorage.removeItem("zhiming_lock_v1"); }catch(e){}
+          window.__LOCK_GATE=false; window._pinPanelOff();
+          b.classList.add("off"); setTimeout(function(){ if(b&&b.parentNode) b.parentNode.removeChild(b); },380);
+        }
+      };
+      b.appendChild(t);
+    },50);
+  };
+  /* 设置/关闭/修改 PIN（保险箱卡调用） */
+  window._lockToggle = function(){
+    const L=_lockRead();
+    if(L&&L.enabled){
+      /* 关闭：先验当前 PIN */
+      window._pinPanelOn("关闭 PIN 锁","输入当前 PIN 确认",function(pin){
+        _encOpen(pin, _ub64(L.salt), _ub64(L.iv), _ub64(L.magic)).then(function(pt){
+          if(new TextDecoder().decode(pt)!==_LOCK_MAGIC) throw new Error("bad");
+          localStorage.removeItem("zhiming_lock_v1"); window.__LOCK_GATE=false; window._pinPanelOff();
+          try{ window._toast?window._toast("🔓 PIN 锁已关闭","info",1800):showToast("已关闭","info",1800); }catch(e){}
+          try{ window.renderGrow&&window.renderGrow(); }catch(e){}
+        }).catch(function(){
+          const d=document.getElementById("pinDots"); if(d) d.innerHTML='<div style="font-size:13px;color:#c0392b;font-weight:700;">PIN 不对</div>';
+        });
+      }, function(){ try{ window.renderGrow&&window.renderGrow(); }catch(e){} });
+    } else {
+      /* 开启：两遍输入 */
+      window._pinPanelOn("设置 PIN 锁","4-8 位数字，下次打开知命时需要输入",function(pin1){
+        window._pinPanelOn("再输一遍确认","",function(pin2){
+          if(pin1!==pin2){
+            try{ window._toast?window._toast("两次输入不一致，重新开始","err",1800):showToast("不一致","err",1800); }catch(e){}
+            setTimeout(function(){ window._lockToggle(); },600); return;
+          }
+          const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+          _encDerive(pin1, salt).then(function(key){
+            return crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key, new TextEncoder().encode(_LOCK_MAGIC));
+          }).then(function(ct){
+            localStorage.setItem("zhiming_lock_v1", JSON.stringify({enabled:true, salt:_b64(salt), iv:_b64(iv), magic:_b64(new Uint8Array(ct)), at:Date.now()}));
+            window.__LOCK_GATE=true; window._pinPanelOff();
+            try{ window._toast?window._toast("🔒 PIN 锁已开启——下次打开生效","ok",2200):showToast("已开启","ok",2200); }catch(e){}
+            try{ window.renderGrow&&window.renderGrow(); }catch(e){}
+          });
+        }, function(){ try{ window.renderGrow&&window.renderGrow(); }catch(e){} });
+      }, function(){ try{ window.renderGrow&&window.renderGrow(); }catch(e){} });
+    }
+  };
+  /* 加密备份：全量 zhiming_* 键 → AES-GCM → .zenc 下载 */
+  window._encExport = function(){
+    const L=_lockRead();
+    if(!(L&&L.enabled)){ try{ window._toast?window._toast("先开启 PIN 锁——加密备份的密钥就是你的 PIN","info",2600):showToast("先开PIN锁","info",2600); }catch(e){} return; }
+    const keys=Object.keys(localStorage).filter(function(k){ return k.indexOf("zhiming")===0; });
+    const data={};
+    keys.forEach(function(k){ data[k]=localStorage.getItem(k); });
+    data.__meta={app:"zhimingv2", keys:keys.length, at:Date.now()};
+    window._pinPanelOn("导出加密备份","用 PIN 加密整包数据（会下载 .zenc 文件）",function(pin){
+      /* 用当前锁的 salt/iv 体系独立加密：验证 PIN 对不对先 */
+      _encOpen(pin, _ub64(L.salt), _ub64(L.iv), _ub64(L.magic)).then(function(pt){
+        if(new TextDecoder().decode(pt)!==_LOCK_MAGIC) throw new Error("bad");
+        return _encSeal(pin, data);
+      }).then(function(sealed){
+        const pack={app:"zhimingv2", enc:1, kdf:"PBKDF2-SHA256-150000", cipher:"AES-GCM-256", salt:_b64(sealed.salt), iv:_b64(sealed.iv), ct:_b64(sealed.ct), at:Date.now()};
+        const blob=new Blob([JSON.stringify(pack)],{type:"application/json"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a"); a.href=url;
+        a.download="知命V2_加密备份_"+new Date(Date.now()+8*3600000).toISOString().slice(0,10)+".zenc";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function(){ try{ URL.revokeObjectURL(url); }catch(e){} },3000);
+        localStorage.setItem("zhiming_last_backup", String(Date.now()));
+        window._pinPanelOff();
+        try{ window._toast?window._toast("🔐 加密备份已下载——文件没有 PIN 谁也读不了","ok",2200):showToast("已导出","ok",2200); }catch(e){}
+        try{ window.renderGrow&&window.renderGrow(); }catch(e){}
+      }).catch(function(){
+        const d=document.getElementById("pinDots"); if(d) d.innerHTML='<div style="font-size:13px;color:#c0392b;font-weight:700;">PIN 不对</div>';
+      });
+    }, function(){ try{ window.renderGrow&&window.renderGrow(); }catch(e){} });
+  };
+  /* 加密恢复：.zenc → PIN → 写回 */
+  window._encImportPick = function(){ try{ document.getElementById("encFile").click(); }catch(e){} };
+  window._encImport = function(input){
+    const f=input.files&&input.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=function(){
+      let pack=null;
+      try{ pack=JSON.parse(rd.result); }catch(e){ try{ window._toast?window._toast("❌ 不是有效的加密备份文件","err",2000):showToast("解析失败","err",2000); }catch(_){} return; }
+      if(!pack||pack.app!=="zhimingv2"||!pack.enc||!pack.salt){ try{ window._toast?window._toast("❌ 这不是加密备份（明文备份请用旁边的导入）","err",2400):showToast("格式不对","err",2400); }catch(e){} return; }
+      window._pinPanelOn("恢复加密备份","输入这份备份加密时的 PIN",function(pin){
+        _encOpen(pin, _ub64(pack.salt), _ub64(pack.iv), _ub64(pack.ct)).then(function(pt){
+          const data=JSON.parse(new TextDecoder().decode(pt));
+          let n=0;
+          Object.keys(data).forEach(function(k){
+            if(k==="__meta") return;
+            if(k.indexOf("zhiming")===0 && typeof data[k]==="string"){ try{ localStorage.setItem(k, data[k]); n++; }catch(e){} }
+          });
+          window._pinPanelOff();
+          try{ window._toast?window._toast("✅ 已恢复 "+n+" 项数据，即将刷新","ok",2000):showToast("已恢复","ok",2000); }catch(e){}
+          setTimeout(function(){ location.reload(); },900);
+        }).catch(function(){
+          const d=document.getElementById("pinDots"); if(d) d.innerHTML='<div style="font-size:13px;color:#c0392b;font-weight:700;">PIN 不对或文件损坏</div>';
+        });
+      }, null);
+    };
+    rd.readAsText(f);
+  };
   function _secVault(r){
     const total=_vaultCount("profiles")+_vaultCount("checkin")+_vaultCount("judge")+_vaultCount("history")+_vaultCount("diary");
     let _bkHint="";
@@ -23904,7 +24088,17 @@ function _lenormandAIEnhance(cards, spreadType){
          <button onclick="window._vaultPick()" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--bg,#eee);color:var(--text,#333);font-size:14px;font-weight:700;cursor:pointer;">📥 导入恢复</button>
          <!-- 恢复数据经 _sanitizeImported 清洗后写入 -->
        </div>
-       <input type="file" id="vaultFile" accept=".json,application/json" style="display:none;" onchange="window._vaultImport(this)">`);
+       <div style="display:flex;gap:10px;margin-top:8px;">
+         <button onclick="window._encExport()" style="flex:1;padding:11px;border:none;border-radius:11px;background:#2E7D6B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">🔐 导出加密备份</button>
+         <button onclick="window._encImportPick()" style="flex:1;padding:11px;border:none;border-radius:11px;background:var(--bg,#eee);color:var(--text,#333);font-size:14px;font-weight:700;cursor:pointer;">🗝️ 恢复加密备份</button>
+       </div>
+       <div onclick="window._lockToggle()" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:11px 13px;border-radius:11px;background:var(--bg,#eee);cursor:pointer;">
+         <div style="font-size:13px;font-weight:700;color:var(--text,#333);" id="lockStateTxt">🔒 PIN 锁</div>
+         <div style="font-size:12px;color:var(--text-sub,#888);" id="lockStateBtn">${(function(){ try{ const _L=JSON.parse(localStorage.getItem("zhiming_lock_v1")||"null"); return _L&&_L.enabled?"已开启 · 点击管理":"未开启 · 点击开启"; }catch(e){ return "未开启 · 点击开启"; } })()}</div>
+       </div>
+       <div class="hint" style="margin-top:6px;">加密备份的密钥就是你的 PIN——文件丢了没 PIN 也读不出内容；忘了 PIN 就只能重置锁定（数据不受影响）。</div>
+       <input type="file" id="vaultFile" accept=".json,application/json" style="display:none;" onchange="window._vaultImport(this)">
+       <input type="file" id="encFile" accept=".zenc,.json,application/json" style="display:none;" onchange="window._encImport(this)">`);
   }
   /* ---- 信心校准曲线：月度应验率 vs 自报信心的偏差 ---- */
   function _jmConfCurve(){
@@ -24509,8 +24703,10 @@ function _lenormandAIEnhance(cards, spreadType){
 })();
 
   
-/* boot 遮罩移除：DOM/脚本初始化完成 */
-try{ (function(){ var b=document.getElementById("boot"); if(!b) return; b.classList.add("off"); setTimeout(function(){ if(b&&b.parentNode) b.parentNode.removeChild(b); },380); })(); }catch(e){}
+/* boot 遮罩移除：DOM/脚本初始化完成（锁开启时转为PIN门禁，解锁后才放行） */
+try{ (function(){ var b=document.getElementById("boot"); if(!b) return;
+  if(window.__LOCK_GATE && window._lockGateBoot){ try{ window._lockGateBoot(); return; }catch(_lg){ } }
+  b.classList.add("off"); setTimeout(function(){ if(b&&b.parentNode) b.parentNode.removeChild(b); },380); })(); }catch(e){}
 </script>
 
 <script>

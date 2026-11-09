@@ -32,7 +32,7 @@
 <meta name="theme-color" content="#8B6F47">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" id="pwaAppleIcon">
-<link rel="preload" href="assets/app.56b7cd8f.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
+<link rel="preload" href="assets/app.057a3c82.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
   @keyframes maiRing{ 0%{opacity:.75;transform:translate(-50%,-50%) scale(.9);} 100%{opacity:0;transform:translate(-50%,-50%) scale(2.6);} }
   .pd-face{position:absolute;left:0;top:0;width:150px;height:200px;background:linear-gradient(165deg,#262A33,#1B1E26);border:1px solid #3A3F4A;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:inset 0 0 30px rgba(0,0,0,.35);}
 </style>
@@ -45,7 +45,7 @@
   <p>知命V2 是一个纯本机运行的命理与自我观察工具集：八字排盘（含真太阳时校正与大运流年）、六十四卦金钱卦、奇门遁甲、大六壬、梅花易数、韦特塔罗、本命星盘、黄历宜忌、体质自测与养生手法记录等 25 个模块。所有数据只保存在你自己的浏览器里，不经过任何服务器。</p>
 </div>
 <div id="boot"><div class="b-logo">知命</div><div class="b-sub">纯本地 · 你的成长档案</div><div class="b-spin"></div></div>
-<script>setTimeout(function(){try{var b=document.getElementById("boot");if(b){b.classList.add("off");setTimeout(function(){if(b&&b.parentNode)b.parentNode.removeChild(b);},400);}}catch(e){}},8000);</script>
+<script>window.__LOCK_GATE=(function(){try{return !!(JSON.parse(localStorage.getItem("zhiming_lock_v1")||"null")||{}).enabled}catch(e){return false}})();</script><script>setTimeout(function(){try{if(window.__LOCK_GATE)return;var b=document.getElementById("boot");if(b){b.classList.add("off");setTimeout(function(){if(b&&b.parentNode)b.parentNode.removeChild(b);},400);}}catch(e){}},8000);</script>
 <div id="errBox" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#D32F2F;color:#fff;padding:10px 14px;font:13px/1.5 -apple-system,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.35);">
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
     <div>
@@ -61,7 +61,7 @@
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.126.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.127.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1008,7 +1008,7 @@
   </div>
 </div>
 
-<script src="assets/app.56b7cd8f.js" defer></script>
+<script src="assets/app.057a3c82.js" defer></script>
 <div id="liupaiModal" class="liupai-panel-overlay" style="display:none;" onclick="if(event.target===this)closeLiupaiModal()">
   <div class="liupai-card">
     <div class="liupai-title"><span>🧩 流派参数面板</span><button class="liupai-close" onclick="window.closeLiupaiModal()">×</button></div>
