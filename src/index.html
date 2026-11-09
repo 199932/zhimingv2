@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.127.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.127.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.127.0-20261109';
+const ZHIMING_BUILD = 'v2.127.1-20261109';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -27592,6 +27592,7 @@ function renderBody(){
     var omega=125.04-1934.136*T;
     return norm360(trueLon-0.00569-0.00478*sinD(omega)); // 视黄经
   }
+  try{ window.__sunLon=sunLon; }catch(_){} /* 调试钩子：tests用（顶层即挂） */
   /* ---- 月亮黄经（主项，误差~0.25°，占星够用）---- */
   function moonLon(jdv){
     var T=(jdv-2451545.0)/36525;
@@ -27639,6 +27640,7 @@ function renderBody(){
     var gx=pl.xyz.x+sx.x, gy=pl.xyz.y+sx.y, gz=pl.xyz.z+sx.z; /* v2.123.1 符号修复: sx是太阳的地心向量(=太阳日心-地球日心=-地球日心向量), 行星地心=行星日心-地球日心=行星日心+sx——原减号致内行星距角爆炸(金星离太阳恒<47°,旧版算出226°) */
     return {lon:norm360(Math.atan2(gy,gx)*RAD), lat:Math.atan2(gz,Math.sqrt(gx*gx+gy*gy))*RAD};
   }
+  try{ window.__planetGeo=planetGeo; }catch(_){} /* 调试钩子：tests物理不变量用 */
   // [a, e, I, L, long.peri, long.node] + 每世纪变化率
   var PL=[
     {n:'水星', a:[0.38709843,0.00000000], e:[0.20563661,0.00002123], i:[7.00559432,-0.00590158], L:[252.25090655,149472.67486623], w:[77.45779628,0.16047689], O:[48.33076593,-0.12534081]},
@@ -27649,7 +27651,7 @@ function renderBody(){
     {n:'天王星', a:[19.18797948,-0.00020455], e:[0.04685740,-0.00001550], i:[0.77263783,-0.00242939], L:[313.23218413,428.48202785], w:[170.95427630,0.40805281], O:[74.01692503,0.04240589]},
     {n:'海王星', a:[30.06952752,0.00006447], e:[0.00895439,0.00000818], i:[1.77004347,0.00035372], L:[-55.12002969,218.45945325], w:[44.96476227,-0.32241464], O:[131.78422574,-0.00508664]},
     {n:'冥王星', a:[39.48686035,-0.00031596], e:[0.24885238,0.00005170], i:[17.14104260,0.00004818], L:[238.92903833,145.20780515], w:[224.06891629,-0.04062942], O:[110.30393684,-0.01183482]}
-  ];
+  ];try{ window.__PL=PL; }catch(_){} /* 调试钩子：tests用（PL声明后才有值） */;
   function planetHelio(p,T){
     var a=p.a[0]+p.a[1]*T, e=p.e[0]+p.e[1]*T, I=p.i[0]+p.i[1]*T;
     var L=p.L[0]+p.L[1]*T, wbar=p.w[0]+p.w[1]*T, O=p.O[0]+p.O[1]*T;

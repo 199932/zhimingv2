@@ -75,3 +75,16 @@ node build.js   # src/index.html → 根产物（terser 压缩、内容哈希命
 - `sw.js` / `sitemap.xml` — 构建期自动注入（CACHE 版本=核心包哈希，PRECACHE 含全部 mod，lastmod=构建日）
 
 **约束**：跨块引用函数必须走 `typeof 守卫` 或 `window.__ensureMod(name)`；新 window 函数定义必须显式挂 window（`onclick` 直调依赖）。构建产物全部内容哈希命名——**漏升版本号物理不可能**，SW 字节随哈希变化自动触发更新。
+
+## 回归测试
+
+```bash
+python3 tests/core.test.py   # 内核断言（playwright 真环境，需本地起 :8899）
+```
+
+- **T1** planetGeo 物理不变量：水星距日≤28° / 金星≤47°（天文硬约束，内核符号/公式错必然爆）
+- **T2** 太阳黄经连续性：相邻天差值≈1°（Meeus 主项校验）
+- **T3** 大运 startYear = 出生年+(startSui-1)（虚岁换算 off-by-one 回归锚）
+- **T4** 大运单调性：步长+10 / 跨度9年
+
+新内核 bug 修复后应在此追加同形态断言（纯函数、可采样、物理不变量优先）。

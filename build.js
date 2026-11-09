@@ -111,8 +111,9 @@ let swTxt = fs.readFileSync(SWP, 'utf8');
 swTxt = swTxt.replace(/const CACHE = '[^']+';/, "const CACHE = 'zhiming_v2_" + APPHASH + "';");
 if (!swTxt.includes("zhiming_v2_" + APPHASH)) { console.error('sw CACHE inject miss'); process.exit(1); }
 swTxt = swTxt.replace(/'\.\/assets\/app(\.[0-9a-f]{8})?\.js'/, "'./assets/" + appHashed + "'"); // 幂等：兼容首次(app.js)与二次(旧hash)
+swTxt = swTxt.replace(/'(\.\/)?assets\/mod-[a-z]+\.[0-9a-f]{8}\.js'(,\s*)?/g, ""); // 幂等：先清全部旧 mod 条目（兼容有/无./前缀）
 for (const mv of Object.values(MOD_URLS)) {
-  if (!swTxt.includes(mv)) swTxt = swTxt.replace("'./assets/style.css'", "'" + mv + "', './assets/style.css'");
+  if (!swTxt.includes(mv.replace('assets/', './assets/'))) swTxt = swTxt.replace("'./assets/style.css'", "'./" + mv + "', './assets/style.css'");
 }
 if (!swTxt.includes(appHashed)) { console.error('sw PRECACHE inject miss'); process.exit(1); }
 fs.writeFileSync(SWP, swTxt);
