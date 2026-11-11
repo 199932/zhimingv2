@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.127.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.128.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2617,7 +2617,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.127.1-20261109';
+const ZHIMING_BUILD = 'v2.128.0-20261111';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -5127,6 +5127,7 @@ function switchAlmanac(off){
   const d = new Date(); d.setDate(d.getDate()+off);
   document.getElementById("almanac-body").innerHTML = renderAlmanac(d);
       try{ window._inkRender(); }catch(_e){}
+      try{ window._hecanMount(); }catch(_hme2){} /* 页内offset切换也重挂合参卡 */
     try{ window._inkRender(); }catch(_e){}
 }
 
@@ -6902,6 +6903,7 @@ document.addEventListener('keydown', function(e){
 }, true);
 function switchTab(page){
   try{ if(window.__ensureMod) window.__ensureMod('extra').catch(function(_me){}); }catch(_me0){} /* 附加模块合集后台预取（不阻塞,函数均有typeof守卫） */
+  try{ if(window.__ensureMod) window.__ensureMod('chart').catch(function(_mc0){}); }catch(_mc00){} /* 星盘模块预取（中西合参月相钩子+西玄页共用） */
   try{ window.__closeAllModals && window.__closeAllModals(); }catch(_){}
   try{ // 兜底清不在esc栈里的弹层(如择日dayPickerModal),切页即新上下文
     document.querySelectorAll('.modal-mask.show').forEach(function(m){ m.classList.remove('show'); });
@@ -6937,7 +6939,9 @@ function switchTab(page){
       const d = new Date(); d.setDate(d.getDate()+_almanacOffset);
       document.getElementById("almanac-body").innerHTML = renderAlmanac(d);
       try{ window._inkRender(); }catch(_e){}
+      try{ window._hecanMount(); }catch(_hme1){} /* 中西合参卡挂黄历页流尾 */
     try{ var _ns=document.getElementById('nowdoSlot'); if(_ns){ if(typeof window._nowDoCardHTML==='function') _ns.innerHTML=window._nowDoCardHTML(); else if(window.__ensureMod) window.__ensureMod('health').then(function(){ var _n2=document.getElementById('nowdoSlot'); if(_n2&&typeof window._nowDoCardHTML==='function') _n2.innerHTML=window._nowDoCardHTML(); }).catch(function(_nme){}); } }catch(_nsE){} /* 每次切黄历刷Top1=数据新鲜；mod-health懒加载就绪后补渲染 */
+    try{ if(window.__ensureMod) window.__ensureMod('chart').then(function(){ try{ window._hecanMount(); }catch(_he){} }).catch(function(_hme){}); }catch(_hme0){} /* 中西合参卡：chart模块就位后补渲染（月相钩子在mod-chart） */
     }
   }
   else if (page==="cal") {
@@ -9049,6 +9053,7 @@ function renderToday(){
       ${(typeof window.renderWidget_fortuneGrid==='function'?window.renderWidget_fortuneGrid(r):'<div style="color:var(--text-hint);padding:20px;text-align:center;font-size:12px;">运势组件加载中…</div>')}
     </div>
     <div id="nowdoSlot" style="margin-top:12px;">${(typeof window._nowDoCardHTML==='function')?window._nowDoCardHTML():''}</div>
+    
     <div class="today-widget-grid">
       ${(typeof window['renderWidget_5score']==='function'?window['renderWidget_5score'](r):'<div class="widget"><div class="widget-title">📊 5项分数</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
       ${(typeof window['renderWidget_dailyTarot']==='function'?window['renderWidget_dailyTarot'](r):'<div class="widget"><div class="widget-title">🎴 每日塔罗</div><div class="widget-body" style="color:var(--text-hint);padding:10px;font-size:11px;">组件加载中…</div></div>')}
@@ -20298,6 +20303,104 @@ window._shishenTodayHTML=function(almDate){
       +'</div>';
   }catch(_e){ return ''; }
 };
+/* ---- 中西合参·今日卡（v2.128.0）：中式十神倾向×西式月相倾向→同指/分歧，C钩子存档喂回测 ---- */
+window._hecanVec={ /* 十神→行动向量（理由引用ACT宜忌原文口径） */
+  '比肩':['启动','出力帮人、正面刚'], '劫财':['收敛','记账查漏，别大额支出'],
+  '食神':['表达','吃饭、做喜欢的事、输出创意'], '伤官':['表达','写东西、提创意（但别抬杠）'],
+  '偏财':['启动','小成本试机会、谈灵活合作'], '正财':['收敛','处理账务、踏实积累'],
+  '七杀':['启动','挑最硬的事打完、出出汗'], '正官':['收敛','走流程、见长辈、立规矩'],
+  '偏印':['内观','独处学习、啃难懂的东西'], '正印':['内观','学习求教、休息调养']
+};
+window._hecanMoon={ /* 月相→行动向量 */
+  '新月':['启动','新月宜许愿开新，把念头种下去'], '娥眉月':['启动','月光渐盈，推着新事往前走'],
+  '上弦月':['表达','上弦冲刺期，该出手就说'], '盈凸月':['表达','月近满，扩张表达事半功倍'],
+  '满月':['收敛','满月情绪放大——收尾、庆祝，别启动新事'], '亏凸月':['收敛','月渐亏，盘点收获、清掉尾巴'],
+  '下弦月':['内观','下弦月做减法，放下调整'], '残月':['内观','月尾休整，静养等新月']
+};
+window._hecanHTML=function(){
+  try{
+    var d=new Date();
+    /* —— 中式侧：十神（自给自足推导,与十神日记同口径） —— */
+    var zhong=null, zhongHTML='';
+    var _bz=null; try{ _bz=JSON.parse(localStorage.getItem('zhiming_bazi_v1')||'null'); }catch(_e0){}
+    if(_bz&&_bz.y&&_bz.m&&_bz.d){
+      var dayG=null;
+      try{ if(window._ssDayGanMemo&&window._ssDayGanMemo.dayGan) dayG=window._ssDayGanMemo.dayGan; }catch(_e1){}
+      if(!dayG){
+        var _r=null;
+        try{ if(typeof baziCalc==='function') _r=baziCalc({year:_bz.y,month:_bz.m,day:_bz.d,hour:_bz.h||12,minute:_bz.mi||0,gender:_bz.gender||'male',cityLng:_bz.lng||116.4,dontSave:true}); }catch(_e2){}
+        if(_r&&_r.pillars&&_r.pillars[2]&&_r.pillars[2].gz) dayG=_r.pillars[2].gz.charAt(0);
+      }
+      if(dayG){
+        var _idx=dayGanZhiIdxFromDate(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours());
+        var otherG=GAN[_idx%10];
+        var WX={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+        var YY={'甲':1,'乙':0,'丙':1,'丁':0,'戊':1,'己':0,'庚':1,'辛':0,'壬':1,'癸':0};
+        var SH={'木':'火','火':'土','土':'金','金':'水','水':'木'};
+        var KE={'木':'土','土':'水','水':'火','火':'金','金':'木'};
+        var dw=WX[dayG], ow=WX[otherG], sy=YY[dayG], oy=YY[otherG], ss='';
+        if(dw===ow) ss=(sy===oy?'比肩':'劫财');
+        else if(SH[dw]===ow) ss=(sy===oy?'食神':'伤官');
+        else if(KE[dw]===ow) ss=(sy===oy?'偏财':'正财');
+        else if(KE[ow]===dw) ss=(sy===oy?'七杀':'正官');
+        else if(SH[ow]===dw) ss=(sy===oy?'偏印':'正印');
+        if(ss){ zhong=window._hecanVec[ss]; zhongHTML='<b>'+ss+'日</b>（日主'+dayG+'×今日'+otherG+'）——中式倾向「<b>'+zhong[0]+'</b>」：'+zhong[1]; }
+      }
+    }
+    /* —— 西式侧：月相（mod-chart钩子,懒加载就位后可用） —— */
+    var xi=null, xiHTML='', mpName='';
+    if(typeof window.__moonLon==='function'&&typeof window.__sunLon==='function'){
+      var jd=Date.now()/86400000+2440587.5;
+      var mpAng=((window.__moonLon(jd)-window.__sunLon(jd))%360+360)%360;
+      var mpNames=[['新月',0],['娥眉月',45],['上弦月',90],['盈凸月',135],['满月',180],['亏凸月',225],['下弦月',270],['残月',315]];
+      var mp=mpNames[7][0];
+      for(var i2=0;i2<8;i2++){ if(mpAng>=mpNames[i2][1]&&mpAng<mpNames[i2][1]+45){ mp=mpNames[i2][0]; break; } }
+      mp=mp; xi=window._hecanMoon[mp]; mpName=mp;
+      xiHTML='<b>'+mp+'</b>（距角'+Math.round(mpAng)+'°）——西式倾向「<b>'+xi[0]+'</b>」：'+xi[1];
+    }
+    /* —— 合参判定 —— */
+    var verdict='';
+    if(zhong&&xi){
+      if(zhong[0]===xi[0]){
+        verdict='<div style="margin-top:8px;padding:9px 12px;border-radius:11px;background:rgba(62,155,107,.14);border:1px solid rgba(62,155,107,.4);font-size:13px;font-weight:700;color:#2E7D5B;">✅ 中西同指：今天适合「'+zhong[0]+'」——两套体系都这么说，放心做。</div>';
+      } else {
+        verdict='<div style="margin-top:8px;padding:9px 12px;border-radius:11px;background:rgba(192,57,43,.09);border:1px dashed rgba(192,57,43,.4);font-size:12.5px;color:#8A4A42;line-height:1.7;">⚡ 中西分歧——中式推你「'+zhong[0]+'」，西式要你「'+xi[0]+'」。两套体系打架时不硬凑：拿不准就先做小的那件，或者今天以体感为准。</div>';
+      }
+    } else {
+      verdict='<div style="margin-top:8px;padding:9px 12px;border-radius:11px;background:rgba(122,91,34,.08);font-size:12.5px;color:#9A8468;line-height:1.7;">'+(zhong?'':'🔐 建八字档案解锁中式个人侧（今日十神是中西互证的一半）；')+(xi?'':'星盘模块加载中，稍后自动补全。')+'</div>';
+    }
+    /* —— C钩子：合参存档（回测数据源） —— */
+    try{
+      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_hecan_v1')||'[]'); }catch(_e3){}
+      var today=new Date().toDateString(); var has=a.some(function(x){ return new Date(x.t).toDateString()===today; });
+      if(!has&&zhong&&xi){ /* 两侧都齐才记——补渲染后重过这里,避免污染回测数据 */
+        var _ss=(function(){ var m=zhongHTML.match(/<b>(\S+?)日</); return m?m[1]:''; })();
+        a.push({t:Date.now(), ss:(zhong?zhong[0]:'-'), mp:(xi?xi[0]:'-'), same:(zhong&&xi)?(zhong[0]===xi[0]):null, tenGod:_ss, moon:mpName});
+        if(a.length>90) a=a.slice(-90);
+        localStorage.setItem('zhiming_hecan_v1', JSON.stringify(a));
+      }
+    }catch(_e4){}
+    var cnt=0; try{ cnt=(JSON.parse(localStorage.getItem('zhiming_hecan_v1')||'[]')).length; }catch(_e5){}
+    return '<div style="background:linear-gradient(150deg,#1C2233,#12182A);border-radius:14px;padding:14px 15px;color:#E8ECF4;">'
+      +'<div style="font-size:14px;font-weight:800;">🌌 中西合参 · 今日 <span style="font-size:10.5px;font-weight:400;color:#8A93A8;">两套独立体系，互相印证才算数</span></div>'
+      +'<div style="margin-top:9px;padding:8px 11px;border-radius:10px;background:rgba(200,169,106,.1);font-size:12.5px;line-height:1.7;color:#E2D8C2;">'+(zhongHTML||'中式侧待解锁')+'</div>'
+      +'<div style="margin-top:6px;padding:8px 11px;border-radius:10px;background:rgba(124,158,199,.1);font-size:12.5px;line-height:1.7;color:#D4DCEA;">'+(xiHTML||'西式侧加载中')+'</div>'
+      +verdict
+      +'<div style="font-size:10.5px;color:#6B7488;margin-top:7px;text-align:center;">合参档案已记 '+cnt+' 天——攒够做中西命中率回测</div>'
+      +'</div>';
+  }catch(_e6){ return ''; }
+};
+window._hecanMount=function(){
+  try{
+    var ab=document.getElementById('almanac-body'); if(!ab) return;
+    var el=document.getElementById('hecanSlot');
+    if(!el){ el=document.createElement('div'); el.id='hecanSlot'; el.style.marginTop='12px'; ab.appendChild(el); }
+    if(typeof window._hecanHTML==='function') el.innerHTML=window._hecanHTML();
+  }catch(_e){}
+};
+window._hecanRefresh=function(){
+  try{ if(document.getElementById('hecanSlot')&&!window._hecanHTMLDone){ if(typeof window.__moonLon==='function'){ window._hecanHTMLDone=true; var el=document.getElementById('hecanSlot'); if(el) el.innerHTML=window._hecanHTML(); } } }catch(_e){}
+};
 /* ---- 择日·当日吉时：五鼠遁推时辰干支,按「天干五合>时生日干>同五行」排序取Top3 ---- */
 function _dayGoodHours(dayGan){
   var wxM={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
@@ -27621,6 +27724,7 @@ function renderBody(){
     return norm360(lon);
   }
 
+  try{ window.__moonLon=moonLon; }catch(_){} /* 调试钩子：中西合参卡月相用 */
   /* ---- Standish/JPL 开普勒式行星黄经（水~冥，误差 arcmin 级 1800-2050）---- */
   function sunXyz(jdv){
     var T=(jdv-2451545.0)/36525;
