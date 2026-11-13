@@ -35,6 +35,22 @@
 <link rel="preload" href="assets/app.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
   @keyframes maiRing{ 0%{opacity:.75;transform:translate(-50%,-50%) scale(.9);} 100%{opacity:0;transform:translate(-50%,-50%) scale(2.6);} }
   .pd-face{position:absolute;left:0;top:0;width:150px;height:200px;background:linear-gradient(165deg,#262A33,#1B1E26);border:1px solid #3A3F4A;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:inset 0 0 30px rgba(0,0,0,.35);}
+
+/* ==== UI 打磨 v2.129.1（今日运势+中式版块） ==== */
+.ft-card{padding:13px 10px 11px;}
+.ft-card .ft-emoji{font-size:19px;}
+.ft-card .ft-badge{padding:2px 6px;}
+.ft-card .ft-head{min-width:0;}
+.ft-card .ft-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.ft-ring-wrap{gap:10px;}
+.ft-quick{min-width:0;}
+.ft-tagline{font-weight:700;}
+.ft-summary{opacity:.85;}
+.pab .emj{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(139,111,71,.10);flex-shrink:0;font-size:15px;}
+body.theme-today .pab .emj,body.theme-wu .pab .emj,body.theme-al .pab .emj{background:rgba(0,0,0,.06);}
+body.theme-dark .pab .emj{background:rgba(255,255,255,.07);}
+.pab-qc{border-style:solid !important;}
+.pab-qc:hover{color:var(--text-sub);}
 </style>
 <style>
 /* ============================================================ */
@@ -1602,7 +1618,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1687,7 +1703,7 @@ body{ padding-bottom:160px; }
       <label><input type="radio" name="bz-gender" value="男" checked><span>男</span></label>
       <label><input type="radio" name="bz-gender" value="女"><span>女</span></label>
     </div></div>
-    <div class="form-row"><label>出生地 <span style="font-size:11px;color:var(--text-hint);font-weight:400;">（经度差仅在出生时间距离时辰交界 ±30 分钟内影响结果）</span></label>
+    <div class="form-row"><label>出生地 <span style="font-size:11px;color:var(--text-hint);font-weight:400;">（出生贴着时辰边界时才略有影响）</span></label>
       <input type="text" id="bz-city-f" placeholder="🔎 搜索城市（支持中文/拼音，无结果可直接填下方经纬度）" style="margin-bottom:6px;" oninput="filterCityOptions(this,document.getElementById('bz-city'))">
       <select id="bz-city" onchange="onCityChange()"></select>
       <div id="customLngWrap" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
@@ -2619,7 +2635,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.129.0-20261113';
+const ZHIMING_BUILD = 'v2.129.1-20261113';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -6904,6 +6920,7 @@ document.addEventListener('keydown', function(e){
   try{ if(window.__closeTopModal){ e.preventDefault(); window.__closeTopModal(); } }catch(_){}
 }, true);
 function switchTab(page){
+  try{ var _cb=document.getElementById('copyBar'); if(_cb&&_cb.style.display!=='none') _cb.style.display='none'; }catch(_cbH){} /* 切页即隐复制条 */
   try{ if(window.__ensureMod) window.__ensureMod('extra').catch(function(_me){}); }catch(_me0){} /* 附加模块合集后台预取（不阻塞,函数均有typeof守卫） */
   try{ if(window.__ensureMod) window.__ensureMod('chart').catch(function(_mc0){}); }catch(_mc00){} /* 星盘模块预取（中西合参月相钩子+西玄页共用） */
   try{ window.__closeAllModals && window.__closeAllModals(); }catch(_){}
@@ -17074,7 +17091,7 @@ const FORTUNE_DIMS = [
     color:"#d4a017", ring:"ftGold"
   },
   {
-    key:"love",emoji:"💕",title:"感情/桃花运",short:"人际关系与缘分",
+    key:"love",emoji:"💕",title:"桃花运",short:"人际关系与缘分",
     taglines:{top:"桃花爆棚！易遇心动之人",good:"人缘佳，新机会易出现",ok:"感情平稳，适合经营现有关系",warn:"沟通易出小摩擦，多点耐心",bad:"烂桃花警报，小心感情陷阱"},
     goodThings:[["宜","主动约喜欢的人见面"],["宜","表白或确认关系"],["宜","参加社交聚会认识新人"]],
     badThings:[["忌","冷战/冷暴力消耗感情"],["忌","在社交平台发表单身感慨"],["忌","轻易相信陌生人的甜言蜜语"]],
@@ -17154,11 +17171,11 @@ function hashDayScore(subKey, date, seedExtra, profileSeed){
   return 40 + (s % 61);
 }
 function _scoreClass(s){
-  if(s>=85) return {cls:"top", ring:"ftGold", grade:"top", badge:"🔥 极佳"};
-  if(s>=75) return {cls:"good", ring:"ftGold", grade:"good", badge:"✨ 良好"};
-  if(s>=65) return {cls:"ok", ring:"ftBlue", grade:"ok", badge:"🙂 平平"};
-  if(s>=55) return {cls:"warn", ring:"ftPurple", grade:"warn", badge:"⚠️ 小心"};
-  if(s>=45) return {cls:"warn", ring:"ftPurple", grade:"warn", badge:"🔻 谨慎"};
+  if(s>=85) return {cls:"top", ring:"ftGold", grade:"top", badge:"极佳"};
+  if(s>=75) return {cls:"good", ring:"ftGold", grade:"good", badge:"良好"};
+  if(s>=65) return {cls:"ok", ring:"ftBlue", grade:"ok", badge:"平平"};
+  if(s>=55) return {cls:"warn", ring:"ftPurple", grade:"warn", badge:"小心"};
+  if(s>=45) return {cls:"warn", ring:"ftPurple", grade:"warn", badge:"谨慎"};
   return {cls:"bad", ring:"ftRed", grade:"bad", badge:"⛔ 不宜"};
 }
 function _getGoodBadShichen(subKey, date, score, profileSeed){
@@ -17784,7 +17801,7 @@ function renderWidget_fortuneGrid(r){
         FDs.forEach(function(f2,i2){ if(f2.score>FDs[ti].score) ti=i2; if(f2.score<FDs[li].score) li=i2; });
         const ACT={overall:"顺着状态走，别拧巴",career:"要紧的事适合今天谈",wealth:"适合处理钱相关的事",love:"适合见想见的人",health:"身体在提醒你休息，别硬撑",villain:"少卷是非，话留三分",benefactor:"遇到长辈贵人，多请教一句",study:"适合啃硬骨头",travel:"适合出门办事",charm:"形象加分，见人有利"};
         const T=FDs[ti], L=FDs[li];
-        const box='margin:0 0 10px;padding:9px 12px;border-radius:10px;background:var(--bg-soft,rgba(0,0,0,.04));font-size:12px;line-height:1.7;color:var(--text);';
+        const box='margin:0 0 10px;padding:9px 12px;border-radius:10px;background:var(--bg-soft,rgba(0,0,0,.04));font-size:12px;line-height:1.7;color:var(--text);border-left:3px solid #C8A96A;';
         if(T.score-L.score>=8){
           brief='<div style="'+box+'">🧭 <b>今日解读：</b>【'+T.D.title+'】最顺（'+T.score+' 分），【'+L.D.title+'】偏弱（'+L.score+' 分）——'+(ACT[T.D.key]||'顺着状态走')+'；'+L.D.title+'上别硬来。</div>';
         }else{
