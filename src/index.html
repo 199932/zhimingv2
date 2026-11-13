@@ -1618,7 +1618,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.2</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.3</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2636,7 +2636,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.129.2-20261113';
+const ZHIMING_BUILD = 'v2.129.3-20261113';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -3625,58 +3625,158 @@ function validateJieqi(){
  * =======================================================*/
 const CITIES = {
   "直辖市":[
-    {n:"北京",lng:116.407,lat:39.904},{n:"上海",lng:121.473,lat:31.230},
-    {n:"天津",lng:117.200,lat:39.084},{n:"重庆",lng:106.551,lat:29.563}
+    {n:"北京",lng:116.407,lat:39.904,p:"beijing"},{n:"上海",lng:121.473,lat:31.230,p:"shanghai"},
+    {n:"天津",lng:117.200,lat:39.084,p:"tianjin"},{n:"重庆",lng:106.551,lat:29.563,p:"chongqing"}
   ],
   "一线城市":[
-    {n:"广州",lng:113.264,lat:23.129},{n:"深圳",lng:114.057,lat:22.543},
-    {n:"成都",lng:104.066,lat:30.572},{n:"杭州",lng:120.153,lat:30.287},
-    {n:"武汉",lng:114.305,lat:30.592},{n:"西安",lng:108.939,lat:34.341},
-    {n:"南京",lng:118.796,lat:32.060},{n:"苏州",lng:120.585,lat:31.299}
+    {n:"广州",lng:113.264,lat:23.129,p:"guangzhou"},{n:"深圳",lng:114.057,lat:22.543,p:"shenzhen"},
+    {n:"成都",lng:104.066,lat:30.572,p:"chengdu"},{n:"杭州",lng:120.153,lat:30.287,p:"hangzhou"},
+    {n:"武汉",lng:114.305,lat:30.592,p:"wuhan"},{n:"西安",lng:108.939,lat:34.341,p:"xian"},
+    {n:"南京",lng:118.796,lat:32.060,p:"nanjing"},{n:"苏州",lng:120.585,lat:31.299,p:"suzhou"}
   ],
   "华北":[
-    {n:"石家庄",lng:114.514,lat:38.042},{n:"太原",lng:112.548,lat:37.870},
-    {n:"呼和浩特",lng:111.751,lat:40.841},{n:"济南",lng:117.120,lat:36.651},
-    {n:"青岛",lng:120.382,lat:36.066},{n:"郑州",lng:113.625,lat:34.746}
+    {n:"石家庄",lng:114.514,lat:38.042,p:"shijiazhuang"},{n:"太原",lng:112.548,lat:37.870,p:"taiyuan"},
+    {n:"呼和浩特",lng:111.751,lat:40.841,p:"huhehaote"},{n:"济南",lng:117.120,lat:36.651,p:"jinan"},
+    {n:"青岛",lng:120.382,lat:36.066,p:"qingdao"},{n:"郑州",lng:113.625,lat:34.746,p:"zhengzhou"}
   ],
   "东北":[
-    {n:"沈阳",lng:123.429,lat:41.796},{n:"大连",lng:121.614,lat:38.914},
-    {n:"长春",lng:125.324,lat:43.886},{n:"哈尔滨",lng:126.642,lat:45.756}
+    {n:"沈阳",lng:123.429,lat:41.796,p:"shenyang"},{n:"大连",lng:121.614,lat:38.914,p:"dalian"},
+    {n:"长春",lng:125.324,lat:43.886,p:"changchun"},{n:"哈尔滨",lng:126.642,lat:45.756,p:"haerbin"}
   ],
   "华东":[
-    {n:"合肥",lng:117.283,lat:31.861},{n:"福州",lng:119.296,lat:26.074},
-    {n:"厦门",lng:118.089,lat:24.479},{n:"南昌",lng:115.892,lat:28.676},
-    {n:"宁波",lng:121.549,lat:29.868},{n:"无锡",lng:120.311,lat:31.491},
-    {n:"温州",lng:120.699,lat:27.994},{n:"徐州",lng:117.284,lat:34.205}
+    {n:"合肥",lng:117.283,lat:31.861,p:"hefei"},{n:"福州",lng:119.296,lat:26.074,p:"fuzhou"},
+    {n:"厦门",lng:118.089,lat:24.479,p:"xiamen"},{n:"南昌",lng:115.892,lat:28.676,p:"nanchang"},
+    {n:"宁波",lng:121.549,lat:29.868,p:"ningbo"},{n:"无锡",lng:120.311,lat:31.491,p:"wuxi"},
+    {n:"温州",lng:120.699,lat:27.994,p:"wenzhou"},{n:"徐州",lng:117.284,lat:34.205,p:"xuzhou"}
   ],
   "中南":[
-    {n:"长沙",lng:112.982,lat:28.194},{n:"珠海",lng:113.576,lat:22.271},
-    {n:"东莞",lng:113.751,lat:23.020},{n:"佛山",lng:113.122,lat:23.021},
-    {n:"南宁",lng:108.320,lat:22.824},{n:"海口",lng:110.330,lat:20.029},
-    {n:"三亚",lng:109.508,lat:18.247}
+    {n:"长沙",lng:112.982,lat:28.194,p:"changsha"},{n:"珠海",lng:113.576,lat:22.271,p:"zhuhai"},
+    {n:"东莞",lng:113.751,lat:23.020,p:"dongguan"},{n:"佛山",lng:113.122,lat:23.021,p:"foshan"},
+    {n:"南宁",lng:108.320,lat:22.824,p:"nanning"},{n:"海口",lng:110.330,lat:20.029,p:"haikou"},
+    {n:"三亚",lng:109.508,lat:18.247,p:"sanya"}
   ],
   "西南":[
-    {n:"贵阳",lng:106.630,lat:26.647},{n:"昆明",lng:102.832,lat:24.880},
-    {n:"拉萨",lng:91.140,lat:29.645},{n:"绵阳",lng:104.741,lat:31.464},
-    {n:"宜宾",lng:104.645,lat:28.753},{n:"丽江",lng:100.233,lat:26.872}
+    {n:"贵阳",lng:106.630,lat:26.647,p:"guiyang"},{n:"昆明",lng:102.832,lat:24.880,p:"kunming"},
+    {n:"拉萨",lng:91.140,lat:29.645,p:"lasa"},{n:"绵阳",lng:104.741,lat:31.464,p:"mianyang"},
+    {n:"宜宾",lng:104.645,lat:28.753,p:"yibin"},{n:"丽江",lng:100.233,lat:26.872,p:"lijiang"}
   ],
   "西北":[
-    {n:"兰州",lng:103.834,lat:36.061},{n:"银川",lng:106.232,lat:38.487},
-    {n:"西宁",lng:101.778,lat:36.617},{n:"乌鲁木齐",lng:87.617,lat:43.825},
-    {n:"西安",lng:108.939,lat:34.341}
+    {n:"兰州",lng:103.834,lat:36.061,p:"lanzhou"},{n:"银川",lng:106.232,lat:38.487,p:"yinchuan"},
+    {n:"西宁",lng:101.778,lat:36.617,p:"xining"},{n:"乌鲁木齐",lng:87.617,lat:43.825,p:"wulumuqi"},
   ],
   "港澳台":[
-    {n:"香港",lng:114.169,lat:22.319},{n:"澳门",lng:113.549,lat:22.199},
-    {n:"台北",lng:121.565,lat:25.033},{n:"高雄",lng:120.301,lat:22.627}
+    {n:"香港",lng:114.169,lat:22.319,p:"xianggang"},{n:"澳门",lng:113.549,lat:22.199,p:"aomen"},
+    {n:"台北",lng:121.565,lat:25.033,p:"taibei"},{n:"高雄",lng:120.301,lat:22.627,p:"gaoxiong"}
   ],
-  "海外":[
-    {n:"新加坡",lng:103.819,lat:1.352},{n:"东京",lng:139.691,lat:35.689},
-    {n:"首尔",lng:126.978,lat:37.566},{n:"曼谷",lng:100.501,lat:13.756},
-    {n:"吉隆坡",lng:101.686,lat:3.139},{n:"雅加达",lng:106.845,lat:-6.208},
-    {n:"孟买",lng:72.877,lat:19.076},{n:"迪拜",lng:55.270,lat:25.204},
-    {n:"莫斯科",lng:37.617,lat:55.755},{n:"柏林",lng:13.404,lat:52.520},
-    {n:"罗马",lng:12.496,lat:41.902},{n:"马德里",lng:-3.703,lat:40.417},
-    {n:"阿姆斯特丹",lng:4.904,lat:52.367},{n:"巴黎",lng:2.352,lat:48.856},
+    "河北":[
+    {n:"唐山",lng:118.18,lat:39.63,p:"tangshan"},{n:"保定",lng:115.48,lat:38.87,p:"baoding"},{n:"邯郸",lng:114.54,lat:36.63,p:"handan"},
+    {n:"廊坊",lng:116.70,lat:39.54,p:"langfang"},{n:"沧州",lng:116.86,lat:38.30,p:"cangzhou"},{n:"秦皇岛",lng:119.60,lat:39.94,p:"qinhuangdao"},
+    {n:"张家口",lng:114.88,lat:40.82,p:"zhangjiakou"},{n:"承德",lng:117.93,lat:40.97,p:"chengde"},{n:"衡水",lng:115.70,lat:37.73,p:"hengshui"}
+  ],
+  "山西":[
+    {n:"大同",lng:113.30,lat:40.08,p:"datong"},{n:"临汾",lng:111.52,lat:36.09,p:"linfen"},{n:"运城",lng:111.00,lat:35.03,p:"yuncheng"},
+    {n:"长治",lng:113.11,lat:36.19,p:"changzhi"},{n:"晋中",lng:112.75,lat:37.69,p:"jinzhong"},{n:"忻州",lng:112.73,lat:38.42,p:"xinzhou"},
+    {n:"阳泉",lng:113.58,lat:37.86,p:"yangquan"},{n:"朔州",lng:112.43,lat:39.33,p:"shuozhou"}
+  ],
+  "内蒙古":[
+    {n:"包头",lng:109.84,lat:40.66,p:"baotou"},{n:"鄂尔多斯",lng:109.99,lat:39.82,p:"eerduosi"},{n:"赤峰",lng:118.92,lat:42.26,p:"chifeng"},{n:"通辽",lng:122.26,lat:43.65,p:"tongliao"}
+  ],
+  "辽宁":[
+    {n:"鞍山",lng:122.99,lat:41.11,p:"anshan"},{n:"抚顺",lng:123.96,lat:41.87,p:"fushun"},{n:"锦州",lng:121.14,lat:41.13,p:"jinzhou"},
+    {n:"营口",lng:122.24,lat:40.67,p:"yingkou"},{n:"盘锦",lng:122.07,lat:41.12,p:"panjin"},{n:"葫芦岛",lng:120.84,lat:40.71,p:"huludao"},{n:"丹东",lng:124.38,lat:40.13,p:"dadong"}
+  ],
+  "吉林":[
+    {n:"吉林",lng:126.55,lat:43.84,p:"jilin"},{n:"延边",lng:129.47,lat:42.90,p:"yanbian"},{n:"四平",lng:124.37,lat:43.17,p:"siping"},{n:"松原",lng:124.82,lat:45.14,p:"songyuan"}
+  ],
+  "黑龙江":[
+    {n:"齐齐哈尔",lng:123.92,lat:47.35,p:"qiqihaer"},{n:"牡丹江",lng:129.63,lat:44.55,p:"mudanjiang"},{n:"大庆",lng:125.10,lat:46.59,p:"daqing"},{n:"佳木斯",lng:130.32,lat:46.80,p:"jiamusi"}
+  ],
+  "江苏":[
+    {n:"常州",lng:119.97,lat:31.81,p:"changzhou"},{n:"南通",lng:120.86,lat:32.01,p:"nantong"},{n:"扬州",lng:119.42,lat:32.39,p:"yangzhou"},
+    {n:"镇江",lng:119.45,lat:32.20,p:"zhenjiang"},{n:"泰州",lng:119.92,lat:32.46,p:"taizhou"},{n:"盐城",lng:120.16,lat:33.35,p:"yancheng"},
+    {n:"淮安",lng:119.02,lat:33.61,p:"huaian"},{n:"连云港",lng:119.22,lat:34.60,p:"lianyungang"},{n:"宿迁",lng:118.28,lat:33.96,p:"suqian"}
+  ],
+  "浙江":[
+    {n:"嘉兴",lng:120.76,lat:30.75,p:"jiaxing"},{n:"绍兴",lng:120.58,lat:30.03,p:"shaoxing"},{n:"金华",lng:119.65,lat:29.08,p:"jinhua"},
+    {n:"台州",lng:121.42,lat:28.66,p:"taizhou"},{n:"湖州",lng:120.09,lat:30.89,p:"huzhou"},{n:"义乌",lng:120.08,lat:29.31,p:"yiwu"},
+    {n:"丽水",lng:119.92,lat:28.45,p:"lishui"},{n:"衢州",lng:118.87,lat:28.94,p:"quzhou"},{n:"舟山",lng:122.21,lat:29.99,p:"zhoushan"}
+  ],
+  "安徽":[
+    {n:"芜湖",lng:118.38,lat:31.33,p:"wuhu"},{n:"马鞍山",lng:118.51,lat:31.67,p:"maanshan"},{n:"安庆",lng:117.05,lat:30.53,p:"anqing"},
+    {n:"淮南",lng:117.02,lat:32.63,p:"huainan"},{n:"蚌埠",lng:117.39,lat:32.92,p:"bengbu"},{n:"阜阳",lng:115.82,lat:32.89,p:"fuyang"},{n:"滁州",lng:118.32,lat:32.30,p:"chuzhou"}
+  ],
+  "福建":[
+    {n:"泉州",lng:118.68,lat:24.87,p:"quanzhou"},{n:"漳州",lng:117.65,lat:24.51,p:"zhangzhou"},{n:"莆田",lng:119.01,lat:25.45,p:"putian"},{n:"宁德",lng:119.55,lat:26.66,p:"ningde"}
+  ],
+  "江西":[
+    {n:"赣州",lng:114.94,lat:25.85,p:"ganzhou"},{n:"九江",lng:116.00,lat:29.71,p:"jiujiang"},{n:"宜春",lng:114.42,lat:27.80,p:"yichun"},
+    {n:"吉安",lng:114.99,lat:27.11,p:"jian"},{n:"上饶",lng:117.94,lat:28.45,p:"shangrao"}
+  ],
+  "山东":[
+    {n:"淄博",lng:118.05,lat:36.78,p:"zibo"},{n:"烟台",lng:121.39,lat:37.52,p:"yantai"},{n:"潍坊",lng:119.16,lat:36.70,p:"weifang"},
+    {n:"临沂",lng:118.35,lat:35.05,p:"linyi"},{n:"济宁",lng:116.59,lat:35.41,p:"jining"},{n:"泰安",lng:117.13,lat:36.20,p:"taian"},
+    {n:"威海",lng:122.12,lat:37.51,p:"weihai"},{n:"德州",lng:116.36,lat:37.43,p:"dezhou"},{n:"聊城",lng:115.98,lat:36.46,p:"liaocheng"},
+    {n:"菏泽",lng:115.48,lat:35.23,p:"heze"},{n:"日照",lng:119.53,lat:35.42,p:"rizhao"}
+  ],
+  "河南":[
+    {n:"洛阳",lng:112.45,lat:34.62,p:"luoyang"},{n:"开封",lng:114.30,lat:34.80,p:"kaifeng"},{n:"新乡",lng:113.93,lat:35.30,p:"xinxiang"},
+    {n:"南阳",lng:112.53,lat:33.00,p:"nanyang"},{n:"许昌",lng:113.85,lat:34.04,p:"xuchang"},{n:"安阳",lng:114.39,lat:36.10,p:"anyang"},
+    {n:"商丘",lng:115.65,lat:34.41,p:"shangqiu"},{n:"周口",lng:114.65,lat:33.63,p:"zhoukou"},{n:"信阳",lng:114.09,lat:32.15,p:"xinyang"}
+  ],
+  "湖北":[
+    {n:"宜昌",lng:111.29,lat:30.69,p:"yichang"},{n:"襄阳",lng:112.12,lat:32.01,p:"xiangyang"},{n:"荆州",lng:112.24,lat:30.32,p:"jingzhou"},
+    {n:"十堰",lng:110.80,lat:32.63,p:"shiyan"},{n:"孝感",lng:113.92,lat:30.92,p:"xiaogan"},{n:"黄冈",lng:114.87,lat:30.45,p:"huanggang"}
+  ],
+  "湖南":[
+    {n:"株洲",lng:113.13,lat:27.83,p:"zhuzhou"},{n:"湘潭",lng:112.94,lat:27.83,p:"xiangtan"},{n:"衡阳",lng:112.57,lat:26.89,p:"hengyang"},
+    {n:"岳阳",lng:113.13,lat:29.37,p:"yueyang"},{n:"常德",lng:111.69,lat:29.04,p:"changde"},{n:"郴州",lng:113.03,lat:25.79,p:"chenzhou"},{n:"益阳",lng:112.36,lat:28.55,p:"yiyang"}
+  ],
+  "广东":[
+    {n:"汕头",lng:116.68,lat:23.35,p:"shantou"},{n:"中山",lng:113.39,lat:22.52,p:"zhongshan"},{n:"惠州",lng:114.42,lat:23.11,p:"huizhou"},
+    {n:"江门",lng:113.08,lat:22.58,p:"jiangmen"},{n:"湛江",lng:110.36,lat:21.27,p:"zhanjiang"},{n:"肇庆",lng:112.47,lat:23.05,p:"zhaoqing"},
+    {n:"潮州",lng:116.63,lat:23.66,p:"chaozhou"},{n:"揭阳",lng:116.37,lat:23.55,p:"jieyang"},{n:"清远",lng:113.06,lat:23.68,p:"qingyuan"},
+    {n:"韶关",lng:113.60,lat:24.81,p:"shaoguan"},{n:"茂名",lng:110.93,lat:21.66,p:"maoming"},{n:"梅州",lng:116.12,lat:24.29,p:"meizhou"}
+  ],
+  "广西":[
+    {n:"桂林",lng:110.29,lat:25.28,p:"guilin"},{n:"柳州",lng:109.42,lat:24.33,p:"liuzhou"},{n:"玉林",lng:110.18,lat:22.65,p:"yulin"},
+    {n:"梧州",lng:111.28,lat:23.48,p:"wuzhou"},{n:"北海",lng:109.12,lat:21.48,p:"beihai"}
+  ],
+  "四川":[
+    {n:"德阳",lng:104.40,lat:31.13,p:"deyang"},{n:"南充",lng:106.11,lat:30.84,p:"nanchong"},{n:"乐山",lng:103.77,lat:29.55,p:"leshan"},
+    {n:"泸州",lng:105.44,lat:28.87,p:"luzhou"},{n:"自贡",lng:104.78,lat:29.34,p:"zigong"},{n:"达州",lng:107.47,lat:31.21,p:"dazhou"},
+    {n:"遂宁",lng:105.59,lat:30.53,p:"suining"},{n:"眉山",lng:103.83,lat:30.06,p:"meishan"}
+  ],
+  "贵州":[
+    {n:"遵义",lng:106.93,lat:27.73,p:"zunyi"},{n:"安顺",lng:105.95,lat:26.25,p:"anshun"},{n:"六盘水",lng:104.83,lat:26.59,p:"liupanshui"},{n:"毕节",lng:105.28,lat:27.28,p:"bijie"}
+  ],
+  "云南":[
+    {n:"曲靖",lng:103.80,lat:25.50,p:"qujing"},{n:"玉溪",lng:102.55,lat:24.35,p:"yuxi"},{n:"大理",lng:100.27,lat:25.61,p:"dali"},
+    {n:"丽江",lng:100.23,lat:26.86,p:"lijiang"},{n:"普洱",lng:101.00,lat:22.79,p:"puer"}
+  ],
+  "陕西":[
+    {n:"宝鸡",lng:107.24,lat:34.36,p:"baoji"},{n:"咸阳",lng:108.71,lat:34.33,p:"xianyang"},{n:"渭南",lng:109.50,lat:34.50,p:"weinan"},
+    {n:"榆林",lng:109.73,lat:38.28,p:"yulin"},{n:"汉中",lng:107.02,lat:33.07,p:"hanzhong"},{n:"延安",lng:109.49,lat:36.59,p:"yanan"}
+  ],
+  "甘肃":[
+    {n:"天水",lng:105.72,lat:34.58,p:"tianshui"},{n:"白银",lng:104.17,lat:36.55,p:"baiyin"},{n:"张掖",lng:100.45,lat:38.93,p:"zhangye"},{n:"酒泉",lng:98.50,lat:39.72,p:"jiuquan"}
+  ],
+  "宁夏":[
+    {n:"吴忠",lng:106.20,lat:37.99,p:"wuzhong"},{n:"中卫",lng:105.20,lat:37.50,p:"zhongwei"}
+  ],
+  "新疆":[
+    {n:"喀什",lng:75.99,lat:39.47,p:"kashi"},{n:"伊犁",lng:81.32,lat:43.92,p:"yili"},{n:"库尔勒",lng:86.15,lat:41.76,p:"kuerle"},{n:"哈密",lng:93.51,lat:42.83,p:"hami"}
+  ],
+  "西藏":[
+    {n:"日喀则",lng:88.88,lat:29.27,p:"rikaze"},{n:"林芝",lng:94.36,lat:29.65,p:"linzhi"}
+  ],
+"海外":[
+    {n:"新加坡",lng:103.819,lat:1.352,p:"xinjiapo"},{n:"东京",lng:139.691,lat:35.689,p:"dongjing"},
+    {n:"首尔",lng:126.978,lat:37.566,p:"shouer"},{n:"曼谷",lng:100.501,lat:13.756,p:"mangu"},
+    {n:"吉隆坡",lng:101.686,lat:3.139,p:"jilongpo"},{n:"雅加达",lng:106.845,lat:-6.208},
+    {n:"孟买",lng:72.877,lat:19.076,p:"mengmai"},{n:"迪拜",lng:55.270,lat:25.204,p:"dibai"},
+    {n:"莫斯科",lng:37.617,lat:55.755,p:"mosike"},{n:"柏林",lng:13.404,lat:52.520,p:"bolin"},
+    {n:"罗马",lng:12.496,lat:41.902,p:"luoma"},{n:"马德里",lng:-3.703,lat:40.417},
+    {n:"阿姆斯特丹",lng:4.904,lat:52.367,p:"amusitedan"},{n:"巴黎",lng:2.352,lat:48.856,p:"bali"},
     {n:"伦敦",lng:-0.128,lat:51.508},{n:"纽约",lng:-74.006,lat:40.712},
     {n:"洛杉矶",lng:-118.243,lat:34.052},{n:"旧金山",lng:-122.419,lat:37.774},
     {n:"多伦多",lng:-79.383,lat:43.653},{n:"温哥华",lng:-123.120,lat:49.282},
@@ -3696,7 +3796,7 @@ const CITIES = {
     CITIES[prevKey] = prev;
   }
   _p("华北",[
-    {n:"保定",lng:115.464,lat:38.873},{n:"唐山",lng:118.180,lat:39.624},
+    {n:"保定",lng:115.464,lat:38.873,p:"baoding"},{n:"唐山",lng:118.180,lat:39.624,p:"tangshan"},
     {n:"秦皇岛",lng:119.613,lat:39.937},{n:"邯郸",lng:114.540,lat:36.612},
     {n:"邢台",lng:114.482,lat:37.069},{n:"张家口",lng:114.887,lat:40.823},
     {n:"承德",lng:117.939,lat:40.963},{n:"廊坊",lng:116.684,lat:39.538},
@@ -18454,7 +18554,78 @@ const RC_KEY='zhiming_v2_recent_cities';
 function getRecentCities(){try{return JSON.parse(localStorage.getItem(RC_KEY)||'[]')}catch(e){return []}}
 function saveRecentCity(k){const rc=getRecentCities();const i=rc.indexOf(k);if(i>=0)rc.splice(i,1);rc.unshift(k);if(rc.length>3)rc.length=3;try{localStorage.setItem(RC_KEY,JSON.stringify(rc))}catch(e){}}
 function filterCityOptions(f,s){const q=(f.value||'').trim().toLowerCase();let total=0;s.querySelectorAll('optgroup').forEach(o=>{let n=0;o.querySelectorAll('option').forEach(p=>{const m=!q||p.textContent.toLowerCase().includes(q);p.style.display=m?'':'none';if(m)n++});o.style.display=n?'':'none';total+=n});if(q&&total===0){try{showToast('未找到相关城市','warn',1000);}catch(_){}}}try{window.filterCityOptions=filterCityOptions;}catch(_){}
-function upgradeCityPickers(){['bz-city','qm-city','gz-city'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const w=document.createElement('div');w.className='city-picker';s.parentNode.insertBefore(w,s);w.appendChild(s);const r=document.createElement('div');r.className='recent-cities';r.innerHTML='最近：';getRecentCities().forEach(k=>{let n=null;for(const g in CITIES){const x=CITIES[g].find(c=>(isNaN(c.lng)?'__custom__':String(c.lng))===k);if(x){n=x.n;break}}if(!n)return;const b=document.createElement('button');b.textContent=n;b.onclick=()=>{s.value=k;s.dispatchEvent(new Event('change'));filterCityOptions(f,s)};r.appendChild(b)});const f=document.createElement('input');f.className='city-filter';f.placeholder='搜索城市...';f.addEventListener('input',()=>filterCityOptions(f,s));w.insertBefore(r,s);w.insertBefore(f,s);s.addEventListener('change',()=>saveRecentCity(s.value))})}
+function upgradeCityPickers(){['bz-city','qm-city','gz-city','chart-city'].forEach(id=>{const s=document.getElementById(id);if(!s||s._cpUpgraded)return;s._cpUpgraded=true;const w=document.createElement('div');w.className='city-picker';s.parentNode.insertBefore(w,s);w.appendChild(s);const d=document.createElement('div');d.className='city-display-btn';d.setAttribute('role','button');d.setAttribute('tabindex','0');const upd=()=>{let t='';try{t=s.options[s.selectedIndex]?s.options[s.selectedIndex].textContent:'';}catch(_){}d.innerHTML='<span class="cd-name">'+(t||'点击选择城市')+'</span><span class="cd-arrow">▾</span>';};upd();s.addEventListener('change',()=>{upd();saveRecentCity(s.value);});d.onclick=()=>{try{window._openCityPick(id);}catch(_e){}};s.parentNode.insertBefore(d,s);s.style.display='none';const r=document.createElement('div');r.className='recent-cities';r.innerHTML='最近：';getRecentCities().forEach(k=>{let n=null;for(const g in CITIES){const x=CITIES[g].find(c=>(isNaN(c.lng)?'__custom__':String(c.lng))===k);if(x){n=x.n;break}}if(!n)return;const b=document.createElement('button');b.textContent=n;b.onclick=()=>{s.value=k;s.dispatchEvent(new Event('change'))};r.appendChild(b)});w.insertBefore(r,s);s.addEventListener('change',()=>saveRecentCity(s.value))})}
+/* ---- 城市搜索弹层 (v2.129.3) ---- */
+var _CP_FLAT=null; function _cpFlat(){ if(_CP_FLAT) return _CP_FLAT; _CP_FLAT=[]; for(var g in CITIES){ CITIES[g].forEach(function(c){ if(c&&c.n&&!isNaN(c.lng)) _CP_FLAT.push(c); }); } return _CP_FLAT; }
+window._openCityPick=function(selId){
+  try{
+    var m=document.getElementById('cityPickModal'); if(!m) return;
+    m._targetId=selId;
+    var q=document.getElementById('cpm-q'); if(q) q.value='';
+    var hot=document.getElementById('cpm-hot');
+    var rec=getRecentCities().slice(0,4);
+    var rh='';
+    rec.forEach(function(k){ var c=_cpFindByLng(k); if(c) rh+='<button class="cpm-chip" onclick="window._cityChoose(\''+c.n+'\',\''+c.lng+'\',\''+(c.lat||'')+'\')">🕘 '+c.n+'</button>'; });
+    var HN=['北京','上海','广州','深圳','杭州','成都','重庆','武汉','西安','南京','苏州','天津'];
+    var hh=''; HN.forEach(function(nm){ var c=_cpFindByName(nm); if(c) hh+='<button class="cpm-chip" onclick="window._cityChoose(\''+c.n+'\',\''+c.lng+'\',\''+(c.lat||'')+'\')">'+c.n+'</button>'; });
+    hot.innerHTML=(rh?'<div class="cpm-sec">最近使用</div>'+rh:'')+(hh?'<div class="cpm-sec">热门城市</div>'+hh:'');
+    _cityRenderList('');
+    m.style.display='flex';
+    setTimeout(function(){ try{ q&&q.focus(); }catch(_e){} },120);
+  }catch(_e1){}
+};
+function _cpFindByName(n){ var a=_cpFlat(); for(var i=0;i<a.length;i++) if(a[i].n===n) return a[i]; return null; }
+function _cpFindByLng(k){ var a=_cpFlat(); k=String(k); for(var i=0;i<a.length;i++) if(String(a[i].lng)===k) return a[i]; return null; }
+window._cityFilter=function(){
+  try{
+    var q=document.getElementById('cpm-q'); var v=(q&&q.value||'').trim().toLowerCase();
+    _cityRenderList(v);
+  }catch(_e){}
+};
+function _cityRenderList(q){
+  try{
+    var list=document.getElementById('cpm-list'); if(!list) return;
+    var a=_cpFlat(); var hits=[];
+    a.forEach(function(c){
+      var n=c.n||'',p=c.p||'';
+      if(!q || n.toLowerCase().indexOf(q)>=0 || p.indexOf(q)>=0) hits.push(c);
+    });
+    if(!hits.length){ list.innerHTML='<div class="cpm-empty">没找到？直接用下方经纬度自定义栏填坐标</div>'; return; }
+    if(hits.length>80) hits=hits.slice(0,80);
+    var h='';
+    hits.forEach(function(c){ h+='<div class="cpm-item" onclick="window._cityChoose(\''+c.n+'\',\''+c.lng+'\',\''+(c.lat||'')+'\')"><span class="ci-n">'+c.n+'</span><span class="ci-p">'+(c.lng||'')+'°E</span></div>'; });
+    list.innerHTML=h;
+  }catch(_e1){}
+}
+window._cityChoose=function(name,lng,lat){
+  try{
+    var m=document.getElementById('cityPickModal');
+    var sel=m&&m._targetId?document.getElementById(m._targetId):null;
+    if(!sel){ _closeCPM(); return; }
+    var done=false;
+    for(var i=0;i<sel.options.length;i++){
+      var o=sel.options[i];
+      if(o.textContent===name){ sel.value=o.value; done=true; break; }
+    }
+    if(!done&&m._targetId==='bz-city'){
+      var li=document.getElementById('bz-customLng'); var la=document.getElementById('bz-customLat');
+      if(li) li.value=lng; if(la) la.value=lat;
+      try{ var w2=document.getElementById('customLngWrap'); if(w2) w2.style.display='flex'; }catch(_e2){}
+      try{ onCityChange(); }catch(_e3){}
+    }
+    if(done) try{ sel.dispatchEvent(new Event('change')); }catch(_e4){}
+    try{ window.showToast&&window.showToast('已选：'+name,'ok',1200); }catch(_e5){}
+    _closeCPM();
+  }catch(_e6){}
+};
+window._closeCityPick=function(ev){
+  if(ev&&ev.target&&ev.target.classList&&ev.target.classList.contains('cpm-mask')){ _closeCPM(); return; }
+  if(!ev){ _closeCPM(); }
+};
+function _closeCPM(){ var m=document.getElementById('cityPickModal'); if(m) m.style.display='none'; }
+window._cpDebugFlatCount=function(){ return _cpFlat().length; };
+try{ window.upgradeCityPickers=upgradeCityPickers; }catch(_){}
+setTimeout(function(){ try{ upgradeCityPickers(); }catch(_e){} }, 0);
 const _HS='h5,.desc-title,.desc-sub-title,.card-title,.bz-five-title,.bz-wuxing-title,.bz-wx-result,.aspect-title';
 function makeLongResultCollapsible(I,R){const E=document.getElementById(I);if(!E)return;const H=Array.from(E.querySelectorAll(_HS)).filter(h=>h.closest('#'+I));if(!H.length)return;const T=h=>{const t=h.textContent.trim();return t.length>20?t.slice(0,20):t};H.forEach(h=>{const B=[];let n=h.nextSibling;while(n){if(n.nodeType===1&&n.matches(_HS))break;B.push(n);n=n.nextSibling}if(!B.length)return;const W=document.createElement('div');W.className='result-block collapsible';W.dataset.title=T(h);const d=document.createElement('div');d.className='rb-header';d.innerHTML=`<span class="rb-title">${T(h)}</span><span class="rb-arrow">\u25BE</span>`;d.onclick=()=>W.classList.toggle('collapsed');const b=document.createElement('div');b.className='rb-body';h.parentNode.insertBefore(W,h);W.appendChild(d);W.appendChild(b);b.appendChild(h);B.forEach(s=>b.appendChild(s));if(R&&R.defaultCollapsed&&R.defaultCollapsed(T(h)))W.classList.add('collapsed')})}
 /* 批次C 自测 */
@@ -27912,20 +28083,9 @@ function renderBody(){
   }
 
   /* ---- 城市（经度东正，时区按 UTC 偏移小时）---- */
-  var CITIES=[ /* [名, 东经, 北纬, 时区UTC偏移] */
-    ['北京',116.41,39.90,8],['上海',121.47,31.23,8],['广州',113.26,23.13,8],['深圳',114.06,22.54,8],['杭州',120.16,30.27,8],
-    ['成都',104.07,30.57,8],['重庆',106.55,29.56,8],['武汉',114.31,30.59,8],['西安',108.94,34.34,8],['南京',118.80,32.06,8],
-    ['苏州',120.58,31.30,8],['天津',117.20,39.08,8],['长沙',112.94,28.23,8],['郑州',113.63,34.75,8],['青岛',120.38,36.07,8],
-    ['合肥',117.28,31.82,8],['福州',119.30,26.07,8],['厦门',118.09,24.48,8],['济南',117.12,36.65,8],['沈阳',123.43,41.81,8],
-    ['大连',121.62,38.91,8],['哈尔滨',126.63,45.80,8],['长春',125.32,43.88,8],['石家庄',114.51,38.04,8],['太原',112.55,37.87,8],
-    ['昆明',102.83,24.88,8],['贵阳',106.63,26.65,8],['南宁',108.37,22.82,8],['南昌',115.86,28.68,8],['海口',110.32,20.03,8],
-    ['兰州',103.83,36.06,8],['西宁',101.78,36.62,8],['银川',106.23,38.49,8],['乌鲁木齐',87.62,43.83,8],['呼和浩特',111.75,40.84,8],
-    ['拉萨',91.11,29.65,8],['香港',114.17,22.32,8],['澳门',113.55,22.20,8],['台北',121.56,25.03,8],['高雄',120.31,22.62,8],
-    ['东京',139.69,35.68,9],['首尔',126.98,37.57,9],['新加坡',103.82,1.35,8],['曼谷',100.50,13.76,7],['吉隆坡',101.69,3.14,8],
-    ['悉尼',151.21,-33.87,10],['墨尔本',144.96,-37.81,10],['奥克兰',174.76,-36.85,12],['伦敦',-0.13,51.51,0],['巴黎',2.35,48.86,1],
-    ['柏林',13.40,52.52,1],['莫斯科',37.62,55.76,3],['迪拜',55.27,25.20,4],['纽约',-74.01,40.71,-5],['洛杉矶',-118.24,34.05,-8],
-    ['旧金山',-122.42,37.77,-8],['西雅图',-122.33,47.61,-8],['芝加哥',-87.63,41.88,-6],['多伦多',-79.38,43.65,-5],['温哥华',-123.12,49.28,-8]
-  ];
+  var CITIES=[ /* [名,东经,北纬,UTC偏移] 由块2 CITIES 同步生成 (v2.129.3) */
+    ['北京',116.407,39.904,8],['上海',121.473,31.230,8],['天津',117.200,39.084,8],['重庆',106.551,29.563,8],['广州',113.264,23.129,8],['深圳',114.057,22.543,8],['成都',104.066,30.572,8],['杭州',120.153,30.287,8],['武汉',114.305,30.592,8],['西安',108.939,34.341,8],['南京',118.796,32.060,8],['苏州',120.585,31.299,8],['石家庄',114.514,38.042,8],['太原',112.548,37.870,8],['呼和浩特',111.751,40.841,8],['济南',117.120,36.651,8],['青岛',120.382,36.066,8],['郑州',113.625,34.746,8],['沈阳',123.429,41.796,8],['大连',121.614,38.914,8],['长春',125.324,43.886,8],['哈尔滨',126.642,45.756,8],['合肥',117.283,31.861,8],['福州',119.296,26.074,8],['厦门',118.089,24.479,8],['南昌',115.892,28.676,8],['宁波',121.549,29.868,8],['无锡',120.311,31.491,8],['温州',120.699,27.994,8],['徐州',117.284,34.205,8],['长沙',112.982,28.194,8],['珠海',113.576,22.271,8],['东莞',113.751,23.020,8],['佛山',113.122,23.021,8],['南宁',108.320,22.824,8],['海口',110.330,20.029,8],['三亚',109.508,18.247,8],['贵阳',106.630,26.647,8],['昆明',102.832,24.880,8],['拉萨',91.140,29.645,8],['绵阳',104.741,31.464,8],['宜宾',104.645,28.753,8],['丽江',100.233,26.872,8],['兰州',103.834,36.061,8],['银川',106.232,38.487,8],['西宁',101.778,36.617,8],['乌鲁木齐',87.617,43.825,8],['香港',114.169,22.319,8],['澳门',113.549,22.199,8],['台北',121.565,25.033,8],['高雄',120.301,22.627,8],['唐山',118.18,39.63,8],['保定',115.48,38.87,8],['邯郸',114.54,36.63,8],['廊坊',116.70,39.54,8],['沧州',116.86,38.30,8],['秦皇岛',119.60,39.94,8],['张家口',114.88,40.82,8],['承德',117.93,40.97,8],['衡水',115.70,37.73,8],['大同',113.30,40.08,8],['临汾',111.52,36.09,8],['运城',111.00,35.03,8],['长治',113.11,36.19,8],['晋中',112.75,37.69,8],['忻州',112.73,38.42,8],['阳泉',113.58,37.86,8],['朔州',112.43,39.33,8],['包头',109.84,40.66,8],['鄂尔多斯',109.99,39.82,8],['赤峰',118.92,42.26,8],['通辽',122.26,43.65,8],['鞍山',122.99,41.11,8],['抚顺',123.96,41.87,8],['锦州',121.14,41.13,8],['营口',122.24,40.67,8],['盘锦',122.07,41.12,8],['葫芦岛',120.84,40.71,8],['丹东',124.38,40.13,8],['吉林',126.55,43.84,8],['延边',129.47,42.90,8],['四平',124.37,43.17,8],['松原',124.82,45.14,8],['齐齐哈尔',123.92,47.35,8],['牡丹江',129.63,44.55,8],['大庆',125.10,46.59,8],['佳木斯',130.32,46.80,8],['常州',119.97,31.81,8],['南通',120.86,32.01,8],['扬州',119.42,32.39,8],['镇江',119.45,32.20,8],['泰州',119.92,32.46,8],['盐城',120.16,33.35,8],['淮安',119.02,33.61,8],['连云港',119.22,34.60,8],['宿迁',118.28,33.96,8],['嘉兴',120.76,30.75,8],['绍兴',120.58,30.03,8],['金华',119.65,29.08,8],['台州',121.42,28.66,8],['湖州',120.09,30.89,8],['义乌',120.08,29.31,8],['丽水',119.92,28.45,8],['衢州',118.87,28.94,8],['舟山',122.21,29.99,8],['芜湖',118.38,31.33,8],['马鞍山',118.51,31.67,8],['安庆',117.05,30.53,8],['淮南',117.02,32.63,8],['蚌埠',117.39,32.92,8],['阜阳',115.82,32.89,8],['滁州',118.32,32.30,8],['泉州',118.68,24.87,8],['漳州',117.65,24.51,8],['莆田',119.01,25.45,8],['宁德',119.55,26.66,8],['赣州',114.94,25.85,8],['九江',116.00,29.71,8],['宜春',114.42,27.80,8],['吉安',114.99,27.11,8],['上饶',117.94,28.45,8],['淄博',118.05,36.78,8],['烟台',121.39,37.52,8],['潍坊',119.16,36.70,8],['临沂',118.35,35.05,8],['济宁',116.59,35.41,8],['泰安',117.13,36.20,8],['威海',122.12,37.51,8],['德州',116.36,37.43,8],['聊城',115.98,36.46,8],['菏泽',115.48,35.23,8],['日照',119.53,35.42,8],['洛阳',112.45,34.62,8],['开封',114.30,34.80,8],['新乡',113.93,35.30,8],['南阳',112.53,33.00,8],['许昌',113.85,34.04,8],['安阳',114.39,36.10,8],['商丘',115.65,34.41,8],['周口',114.65,33.63,8],['信阳',114.09,32.15,8],['宜昌',111.29,30.69,8],['襄阳',112.12,32.01,8],['荆州',112.24,30.32,8],['十堰',110.80,32.63,8],['孝感',113.92,30.92,8],['黄冈',114.87,30.45,8],['株洲',113.13,27.83,8],['湘潭',112.94,27.83,8],['衡阳',112.57,26.89,8],['岳阳',113.13,29.37,8],['常德',111.69,29.04,8],['郴州',113.03,25.79,8],['益阳',112.36,28.55,8],['汕头',116.68,23.35,8],['中山',113.39,22.52,8],['惠州',114.42,23.11,8],['江门',113.08,22.58,8],['湛江',110.36,21.27,8],['肇庆',112.47,23.05,8],['潮州',116.63,23.66,8],['揭阳',116.37,23.55,8],['清远',113.06,23.68,8],['韶关',113.60,24.81,8],['茂名',110.93,21.66,8],['梅州',116.12,24.29,8],['桂林',110.29,25.28,8],['柳州',109.42,24.33,8],['玉林',110.18,22.65,8],['梧州',111.28,23.48,8],['北海',109.12,21.48,8],['德阳',104.40,31.13,8],['南充',106.11,30.84,8],['乐山',103.77,29.55,8],['泸州',105.44,28.87,8],['自贡',104.78,29.34,8],['达州',107.47,31.21,8],['遂宁',105.59,30.53,8],['眉山',103.83,30.06,8],['遵义',106.93,27.73,8],['安顺',105.95,26.25,8],['六盘水',104.83,26.59,8],['毕节',105.28,27.28,8],['曲靖',103.80,25.50,8],['玉溪',102.55,24.35,8],['大理',100.27,25.61,8],['普洱',101.00,22.79,8],['宝鸡',107.24,34.36,8],['咸阳',108.71,34.33,8],['渭南',109.50,34.50,8],['榆林',109.73,38.28,8],['汉中',107.02,33.07,8],['延安',109.49,36.59,8],['天水',105.72,34.58,8],['白银',104.17,36.55,8],['张掖',100.45,38.93,8],['酒泉',98.50,39.72,8],['吴忠',106.20,37.99,8],['中卫',105.20,37.50,8],['喀什',75.99,39.47,8],['伊犁',81.32,43.92,8],['库尔勒',86.15,41.76,8],['哈密',93.51,42.83,8],['日喀则',88.88,29.27,8],['林芝',94.36,29.65,8],['新加坡',103.819,1.352,8],['东京',139.691,35.689,9],['首尔',126.978,37.566,9],['曼谷',100.501,13.756,7],['吉隆坡',101.686,3.139,8],['雅加达',106.845,-6.208,8],['孟买',72.877,19.076,5.5],['迪拜',55.270,25.204,4],['莫斯科',37.617,55.755,3],['柏林',13.404,52.520,1],['罗马',12.496,41.902,1],['马德里',-3.703,40.417,8],['阿姆斯特丹',4.904,52.367,1],['巴黎',2.352,48.856,1],['伦敦',-0.128,51.508,8],['纽约',-74.006,40.712,8],['洛杉矶',-118.243,34.052,8],['旧金山',-122.419,37.774,8],['多伦多',-79.383,43.653,8],['温哥华',-123.120,49.282,8],['悉尼',151.209,-33.868,8]
+  ];;
 
   /* ---- 相位 ---- */
   var ASPECTS=[{n:'合相',ang:0,orb:8,c:'#49B3FC'},{n:'六合',ang:60,orb:3,c:'#61AB83'},{n:'刑相',ang:90,orb:6,c:'#F58323'},{n:'三合',ang:120,orb:5,c:'#61AB83'},{n:'冲相',ang:180,orb:6,c:'#F58323'}];
@@ -28823,6 +28983,7 @@ function renderBody(){
         wrapped._chartWrapped='1';
         window.switchSec=wrapped;
       }
+      try{ var _cc2=document.getElementById('chart-city'); if(_cc2&&_cc2.options.length) _cc2.dispatchEvent(new Event('change')); }catch(_e7){}
     }catch(_e){}
   };
 })();
@@ -30648,5 +30809,37 @@ setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
 })();
 
 </script>
+
+<!-- 城市搜索弹层 (v2.129.3) -->
+<div id="cityPickModal" class="cpm-mask" style="display:none;" onclick="window._closeCityPick(event)">
+  <div class="cpm-box" onclick="event.stopPropagation()">
+    <div class="cpm-head">
+      <input type="text" id="cpm-q" placeholder="🔎 输入城市名或拼音（如：杭 / hangzhou）" oninput="window._cityFilter()">
+      <button class="cpm-x" onclick="window._closeCityPick()">✕</button>
+    </div>
+    <div id="cpm-hot" class="cpm-hot"></div>
+    <div id="cpm-list" class="cpm-list"></div>
+  </div>
+</div>
+<style>
+.city-display-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--card);color:var(--text);font-size:14px;cursor:pointer;margin-bottom:6px;transition:border-color .15s;}
+.city-display-btn:active{border-color:var(--pri,#8B6F47);}
+.city-display-btn .cd-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.city-display-btn .cd-arrow{color:var(--text-hint);font-size:12px;}
+.cpm-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
+.cpm-box{width:100%;max-width:520px;max-height:76vh;display:flex;flex-direction:column;background:var(--card,#fff);border-radius:18px 18px 0 0;padding:14px 14px 20px;box-shadow:0 -8px 40px rgba(0,0,0,.35);}
+.cpm-head{display:flex;gap:8px;align-items:center;}
+.cpm-head input{flex:1;padding:11px 14px;border-radius:12px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;outline:none;}
+.cpm-x{width:36px;height:36px;border-radius:10px;border:none;background:rgba(0,0,0,.06);color:var(--text-sub);font-size:15px;flex-shrink:0;}
+.cpm-hot{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 4px;}
+.cpm-sec{width:100%;font-size:11px;color:var(--text-hint);margin-top:2px;}
+.cpm-chip{padding:6px 12px;border-radius:14px;border:1px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:12.5px;cursor:pointer;}
+.cpm-chip:active{background:var(--pri,#8B6F47);color:#fff;}
+.cpm-list{flex:1;overflow-y:auto;margin-top:6px;border-top:1px solid var(--card-border);padding-top:6px;min-height:200px;}
+.cpm-item{display:flex;justify-content:space-between;align-items:center;padding:11px 10px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);}
+.cpm-item:active{background:rgba(139,111,71,.12);}
+.cpm-item .ci-p{font-size:11px;color:var(--text-hint);}
+.cpm-empty{padding:30px 12px;text-align:center;font-size:12.5px;color:var(--text-hint);line-height:1.8;}
+</style>
 </body>
 </html>
