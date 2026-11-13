@@ -1618,7 +1618,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.3</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.4</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2636,7 +2636,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.129.3-20261113';
+const ZHIMING_BUILD = 'v2.129.4-20261113';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -18556,7 +18556,7 @@ function saveRecentCity(k){const rc=getRecentCities();const i=rc.indexOf(k);if(i
 function filterCityOptions(f,s){const q=(f.value||'').trim().toLowerCase();let total=0;s.querySelectorAll('optgroup').forEach(o=>{let n=0;o.querySelectorAll('option').forEach(p=>{const m=!q||p.textContent.toLowerCase().includes(q);p.style.display=m?'':'none';if(m)n++});o.style.display=n?'':'none';total+=n});if(q&&total===0){try{showToast('未找到相关城市','warn',1000);}catch(_){}}}try{window.filterCityOptions=filterCityOptions;}catch(_){}
 function upgradeCityPickers(){['bz-city','qm-city','gz-city','chart-city'].forEach(id=>{const s=document.getElementById(id);if(!s||s._cpUpgraded)return;s._cpUpgraded=true;const w=document.createElement('div');w.className='city-picker';s.parentNode.insertBefore(w,s);w.appendChild(s);const d=document.createElement('div');d.className='city-display-btn';d.setAttribute('role','button');d.setAttribute('tabindex','0');const upd=()=>{let t='';try{t=s.options[s.selectedIndex]?s.options[s.selectedIndex].textContent:'';}catch(_){}d.innerHTML='<span class="cd-name">'+(t||'点击选择城市')+'</span><span class="cd-arrow">▾</span>';};upd();s.addEventListener('change',()=>{upd();saveRecentCity(s.value);});d.onclick=()=>{try{window._openCityPick(id);}catch(_e){}};s.parentNode.insertBefore(d,s);s.style.display='none';const r=document.createElement('div');r.className='recent-cities';r.innerHTML='最近：';getRecentCities().forEach(k=>{let n=null;for(const g in CITIES){const x=CITIES[g].find(c=>(isNaN(c.lng)?'__custom__':String(c.lng))===k);if(x){n=x.n;break}}if(!n)return;const b=document.createElement('button');b.textContent=n;b.onclick=()=>{s.value=k;s.dispatchEvent(new Event('change'))};r.appendChild(b)});w.insertBefore(r,s);s.addEventListener('change',()=>saveRecentCity(s.value))})}
 /* ---- 城市搜索弹层 (v2.129.3) ---- */
-var _CP_FLAT=null; function _cpFlat(){ if(_CP_FLAT) return _CP_FLAT; _CP_FLAT=[]; for(var g in CITIES){ CITIES[g].forEach(function(c){ if(c&&c.n&&!isNaN(c.lng)) _CP_FLAT.push(c); }); } return _CP_FLAT; }
+var _CP_FLAT=null; function _cpFlat(){ if(_CP_FLAT) return _CP_FLAT; _CP_FLAT=[]; for(var g in CITIES){ CITIES[g].forEach(function(c){ if(c&&c.n&&!isNaN(c.lng)) _CP_FLAT.push({n:c.n,lng:c.lng,lat:c.lat,p:c.p,g:g}); }); } return _CP_FLAT; }
 window._openCityPick=function(selId){
   try{
     var m=document.getElementById('cityPickModal'); if(!m) return;
@@ -18591,9 +18591,12 @@ function _cityRenderList(q){
       if(!q || n.toLowerCase().indexOf(q)>=0 || p.indexOf(q)>=0) hits.push(c);
     });
     if(!hits.length){ list.innerHTML='<div class="cpm-empty">没找到？直接用下方经纬度自定义栏填坐标</div>'; return; }
-    if(hits.length>80) hits=hits.slice(0,80);
-    var h='';
-    hits.forEach(function(c){ h+='<div class="cpm-item" onclick="window._cityChoose(\''+c.n+'\',\''+c.lng+'\',\''+(c.lat||'')+'\')"><span class="ci-n">'+c.n+'</span><span class="ci-p">'+(c.lng||'')+'°E</span></div>'; });
+    if(hits.length>120) hits=hits.slice(0,120);
+    var h='', lastG=null;
+    hits.forEach(function(c){
+      if(c.g!==lastG){ h+='<div class="cpm-g">'+c.g+'</div>'; lastG=c.g; }
+      h+='<div class="cpm-item" onclick="window._cityChoose(\''+c.n+'\',\''+c.lng+'\',\''+(c.lat||'')+'\')"><span class="ci-n">'+c.n+'</span><span class="ci-p">'+(c.lng||'')+'°E</span></div>';
+    });
     list.innerHTML=h;
   }catch(_e1){}
 }
@@ -30840,6 +30843,8 @@ setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
 .cpm-item:active{background:rgba(139,111,71,.12);}
 .cpm-item .ci-p{font-size:11px;color:var(--text-hint);}
 .cpm-empty{padding:30px 12px;text-align:center;font-size:12.5px;color:var(--text-hint);line-height:1.8;}
+.cpm-g{width:100%;font-size:11px;color:#8B6F47;padding:9px 10px 3px;font-weight:800;letter-spacing:.05em;}
+.cpm-item{margin-left:6px;}
 </style>
 </body>
 </html>
