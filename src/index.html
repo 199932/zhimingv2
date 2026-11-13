@@ -1602,7 +1602,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.128.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2063,6 +2063,8 @@ body{ padding-bottom:160px; }
     <button class="btn-primary" onclick="window._chartGo()">★ 排我的星盘</button>
   </div>
   <div class="result" id="chart-result" aria-live="polite"></div>
+  <button class="btn-primary" onclick="window._hecanReport()">🌌 你的命·两套语言（八字 × 星盘）</button>
+  <div class="result" id="hecanReport" aria-live="polite"></div>
   <div class="card">
     <div class="card-title">🌠 今晚抬头看星</div>
     <div style="font-size:12.5px;color:var(--text-sub);margin-bottom:10px;line-height:1.7;">行星、月亮、十五颗亮星此刻的真实方位——切时间看几点最好看，开罗盘让图跟着手机转。纯天文历算，离线可算。</div>
@@ -2617,7 +2619,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.128.0-20261111';
+const ZHIMING_BUILD = 'v2.129.0-20261113';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -27943,6 +27945,92 @@ function renderBody(){
   window._chartHouseMean=HOUSE_MEAN;
   window._chartMoonPhase=moonPhase;
   window._chartSunSignToday=function(){ var jdv=jd(new Date().getFullYear(),new Date().getMonth()+1,new Date().getDate(),12,true); return signOf(sunLon(jdv)); };
+  /* ---- 你的命·两套语言（v2.128.0）：八字×星盘合参长报告，纯本地规则判词 ---- */
+  var _SIGN_ELEM=['火','土','风','水','火','土','风','水','火','土','风','水']; /* 白羊起按星座序 */
+  var _ASPECTS=[[0,'合相','融合聚焦——两颗星的能量拧成一股'],[60,'六合','顺滑助力——配合起来不费力'],[90,'刑','卡点张力——容易较劲的地方'],[120,'拱','天赋顺流——天生顺的那条路'],[180,'冲','对拉博弈——两股力互相拉扯']];
+  window._hecanReport=function(){
+    try{
+      var dv=document.getElementById('chart-date').value;
+      var tv=document.getElementById('chart-time').value||'12:00';
+      var ci=parseInt(document.getElementById('chart-city').value,10)||0;
+      var y,m,d,h,mi;
+      if(dv){ var p=dv.split('-'), t=tv.split(':'); y=+p[0]; m=+p[1]; d=+p[2]; h=+t[0]; mi=+t[1]; }
+      else { var _bz=null; try{ _bz=JSON.parse(localStorage.getItem('zhiming_bazi_v1')||'null'); }catch(_e0){}
+        if(_bz&&_bz.y&&_bz.m&&_bz.d){ y=_bz.y; m=_bz.m; d=_bz.d; h=_bz.h||12; mi=_bz.mi||0; }
+        else { window.showToast&&window.showToast('先排个星盘或建八字档案','err',1800); return; } }
+      var ch=window._chartCalc(y,m,d,h,mi,ci);
+      if(!ch){ window.showToast&&window.showToast('城市没选中','err',1500); return; }
+      var r=null;
+      try{ if(typeof baziCalc==='function') r=baziCalc({year:y,month:m,day:d,hour:h,minute:mi,gender:'male',cityLng:(_chartCities[ci]&&_chartCities[ci].lng)||116.4,dontSave:true}); }catch(_e1){}
+      var signOf=window._chartSignOf, SIGNS=window._chartSIGNS;
+      var sun=signOf(ch.lons['太阳']), moon=signOf(ch.lons['月亮']), asc=signOf(ch.asc);
+      /* —— 西式元素分布 —— */
+      var ELEM={'火':0,'土':0,'风':0,'水':0};
+      var names=['太阳','月亮','水星','金星','火星','木星','土星','天王星','海王星','冥王星'];
+      names.forEach(function(nm){ var sg=signOf(ch.lons[nm]); var idx=SIGNS.findIndex(function(x){return x.n===sg.name;}); if(idx>=0) ELEM[_SIGN_ELEM[idx]]++; });
+      var elemMax='火', elemMin='火';
+      Object.keys(ELEM).forEach(function(k){ if(ELEM[k]>ELEM[elemMax]) elemMax=k; if(ELEM[k]<ELEM[elemMin]) elemMin=k; });
+      /* —— 相位计算（容许度：日月10°,其余7°） —— */
+      var ph=[];
+      for(var a=0;a<names.length;a++) for(var b=a+1;b<names.length;b++){
+        var l1=ch.lons[names[a]], l2=ch.lons[names[b]];
+        var sep=Math.abs(((l1-l2)%360+360)%360); if(sep>180) sep=360-sep;
+        var tol=(names[a]==='太阳'||names[b]==='太阳'||names[a]==='月亮'||names[b]==='月亮')?10:7;
+        for(var k2=0;k2<5;k2++){ var target=_ASPECTS[k2][0];
+          if(Math.abs(sep-target)<=tol){ ph.push({a:names[a],b:names[b],asp:_ASPECTS[k2][1],why:_ASPECTS[k2][2],orb:Math.abs(sep-target)}); break; } }
+      }
+      ph.sort(function(x,y){ return x.orb-y.orb; });
+      var conj=ph.filter(function(x){return x.asp==='合相';}).length;
+      var hard=ph.filter(function(x){return x.asp==='刑'||x.asp==='冲';}).length;
+      var soft=ph.filter(function(x){return x.asp==='拱'||x.asp==='六合';}).length;
+      var pattern = conj>=3?'聚焦型':(hard>=3?'张力型':'顺流型');
+      var patternWhy = pattern==='聚焦型'?'好几颗星拧在一起——能量集中，认准的事一头扎进去':(pattern==='张力型'?'刑冲相位多——能量内部拉扯，动力来自不安分':'和谐相位为主——顺的地方多，容易走得稳');
+      /* —— 中式侧 —— */
+      var zhongHTML='<div style="color:#B89A62;">⚠️ 八字模块未就绪，中式侧待补</div>';
+      var zhongData=null;
+      if(r&&r.wxScore){
+        zhongData=r;
+        var wxMax='金'; Object.keys(r.wxScore).forEach(function(k){ if(r.wxScore[k]>r.wxScore[wxMax]) wxMax=k; });
+        var bars=Object.entries(r.wxScore).map(function(kv){ var w=kv[1]; var tot=Object.values(r.wxScore).reduce(function(x2,y2){return x2+y2;},0)||1;
+          return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;"><span style="width:30px;font-size:12px;color:#C9B98F;">'+kv[0]+'</span><div style="flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.08);"><div style="width:'+Math.round(w/tot*100)+'%;height:100%;border-radius:5px;background:linear-gradient(90deg,#C8A96A,#E0C98C);"></div></div><span style="width:22px;font-size:11px;color:#8A93A8;text-align:right;">'+w+'</span></div>'; }).join('');
+        zhongHTML='<div style="font-size:13.5px;font-weight:800;color:#E0C98C;">'+r.dayGan+'（'+({'甲':'阳木','乙':'阴木','丙':'阳火','丁':'阴火','戊':'阳土','己':'阴土','庚':'阳金','辛':'阴金','壬':'阳水','癸':'阴水'}[r.dayGan]||'')+'）日主 · <b>'+r.wangshuai+'</b></div>'
+          +'<div style="margin-top:8px;">'+bars+'</div>'
+          +(r.lack&&r.lack.length?'<div style="font-size:12.5px;color:#C9B98F;margin-top:7px;">缺：'+r.lack.join('、')+'　喜用：'+(r.xiYong||[]).join('、')+'</div>':'<div style="font-size:12.5px;color:#C9B98F;margin-top:7px;">五行俱全　喜用：'+(r.xiYong||[]).join('、')+'</div>')
+          +(r.topTenGod?'<div style="font-size:12.5px;color:#C9B98F;margin-top:4px;">主导十神：'+r.topTenGod+'</div>':'');
+      }
+      /* —— 西式块 —— */
+      var elemBars=Object.entries(ELEM).map(function(kv){ var tot=10;
+        return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;"><span style="width:30px;font-size:12px;color:#9FB6D9;">'+kv[0]+'</span><div style="flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.08);"><div style="width:'+Math.round(kv[1]/tot*100)+'%;height:100%;border-radius:5px;background:linear-gradient(90deg,#6E92C4,#8FB0DB);"></div></div><span style="width:22px;font-size:11px;color:#8A93A8;text-align:right;">'+kv[1]+'</span></div>'; }).join('');
+      var phHTML=ph.slice(0,4).map(function(x2){ return '<div style="font-size:12.5px;color:#C9D4E5;margin-top:5px;line-height:1.7;">· <b>'+x2.a+' '+x2.asp+' '+x2.b+'</b>（'+x2.orb.toFixed(1)+'°）—— '+x2.why+'</div>'; }).join('')||'<div style="font-size:12px;color:#8A93A8;">主相位不显著</div>';
+      var xiHTML='<div style="font-size:13.5px;font-weight:800;color:#9FC3E8;">☀'+sun.name+' 🌙'+moon.name+' ↑'+asc.name+'</div>'
+        +'<div style="margin-top:8px;">'+elemBars+'</div>'
+        +'<div style="font-size:12.5px;color:#9FB6D9;margin-top:7px;">主色：'+elemMax+'系（最少：'+elemMin+'系）</div>'
+        +'<div style="margin-top:6px;">'+phHTML+'</div>';
+      /* —— 合参三维度+判词 —— */
+      var zhongState=r?(r.wangshuai==='偏旺'?'能量足':(r.wangshuai==='偏弱'?'宜蓄力':'均衡')):'—';
+      var comboKey=(r?r.wangshuai:'中和')+'|'+pattern;
+      var comboText={'偏旺|聚焦型':'火力集中——选一个方向打透，别平均用力。','偏旺|张力型':'能量大但内耗也大——学会给自己泄压，别事事较劲。','偏旺|顺流型':'势能充足路又顺——警惕的是太顺了懒得换挡。','中和|聚焦型':'底子稳、方向准——是能长期深耕的配置。','中和|张力型':'表面平稳内里有劲——别被自己的平静骗了，要给张力找出口。','中和|顺流型':'均衡且顺——最怕的不是难，是散，认准一件事就够。','偏弱|聚焦型':'能量不算满但够专注——少线多点，把一件事做深就赢。','偏弱|张力型':'别硬扛——借力打力，把刑冲的拉扯变成左右手。','偏弱|顺流型':'顺的地方守住即可——蓄力比冲刺重要，慢就是快。'};
+      var verdict=comboText[comboKey]||'两套语言互为注脚。';
+      var lackPara=(zhongData&&zhongData.lack&&zhongData.lack.length)?('中式说你八字缺<b>'+zhongData.lack.join('、')+'</b>'):('中式说你五行俱全');
+      var hecanHTML='<div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(200,169,106,.07);border:1px solid rgba(200,169,106,.22);">'
+        +'<div style="font-size:13px;font-weight:700;color:#D9C58F;">① 强度结构对读</div>'
+        +'<div style="font-size:12.5px;color:#C9C0A8;margin-top:5px;line-height:1.75;">中式：'+zhongState+'　西式：'+pattern+'（'+patternWhy+'）</div></div>'
+        +'<div style="margin-top:8px;padding:10px 12px;border-radius:12px;background:rgba(110,146,196,.07);border:1px solid rgba(110,146,196,.22);">'
+        +'<div style="font-size:13px;font-weight:700;color:#9FC3E8;">② 薄弱处对读</div>'
+        +'<div style="font-size:12.5px;color:#B8C4D8;margin-top:5px;line-height:1.75;">'+lackPara+'；西式说你<b>'+elemMin+'系</b>星最少——两套都指向你身上比较薄的那块，补齐方向：'+(r&&r.xiYong&&r.xiYong.length?('多接触'+r.xiYong.join('、')+'相关的环境与状态'):'顺其自然补足')+'。</div></div>'
+        +'<div style="margin-top:8px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(200,169,106,.16),rgba(110,146,196,.14));border:1px solid rgba(200,169,106,.3);">'
+        +'<div style="font-size:14px;font-weight:800;color:#EAD9AE;">③ 合参判词</div>'
+        +'<div style="font-size:13px;color:#E8E2D2;margin-top:6px;line-height:1.8;">中式的主色是<b style="color:#E0C98C;">'+(zhongData?(function(){var mx='金';Object.keys(zhongData.wxScore).forEach(function(k){if(zhongData.wxScore[k]>zhongData.wxScore[mx])mx=k;});return mx;})():'—')+'</b>，西式的主色是<b style="color:#9FC3E8;">'+elemMax+'</b>。'+verdict+'</div></div>';
+      var out='<div style="background:linear-gradient(150deg,#1C2233,#12182A);border-radius:14px;padding:15px;color:#E8ECF4;">'
+        +'<div style="font-size:15px;font-weight:900;">🌌 你的命·两套语言 <span style="font-size:10.5px;font-weight:400;color:#8A93A8;">八字 × 星盘 合参报告</span></div>'
+        +'<div style="margin-top:10px;padding:11px 13px;border-radius:12px;background:rgba(200,169,106,.1);">'+zhongHTML+'</div>'
+        +'<div style="margin-top:8px;padding:11px 13px;border-radius:12px;background:rgba(110,146,196,.1);">'+xiHTML+'</div>'
+        +hecanHTML
+        +'<div style="font-size:10.5px;color:#6B7488;margin-top:9px;text-align:center;line-height:1.7;">两套体系独立计算、互相注脚——同一批出生数据，两套语言描述同一个你<br>性别按中性排盘（大运不分男女），仅供自省参考</div></div>';
+      var el2=document.getElementById('hecanReport');
+      if(el2){ el2.innerHTML=out; el2.scrollIntoView({behavior:'smooth',block:'start'}); }
+    }catch(_e9){ try{ window.showToast&&window.showToast('生成失败：'+String(_e9).slice(0,40),'err',2000); }catch(_e10){} }
+  };
   window._chartMoonToday=function(){ var now=new Date(); var jdv=jd(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours()+now.getMinutes()/60,true); return signOf(moonLon(jdv)); };
   window._chartRetroToday=function(){ var now=new Date(); var jdv=jd(now.getFullYear(),now.getMonth()+1,now.getDate(),now.getHours()+now.getMinutes()/60,true); return retroList(jdv); };
 
