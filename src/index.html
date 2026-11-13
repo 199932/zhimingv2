@@ -1618,7 +1618,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.2</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -1714,7 +1714,8 @@ body{ padding-bottom:160px; }
       </div>
     </div>
     <div id="bz-tst" class="tst-info" style="display:none;"></div>
-    <button class="btn-primary" onclick="window.calcBazi()">开 始 排 盘</button></div>
+    <button class="btn-secondary" style="margin-bottom:8px;" onclick="window._baziOneClick()">⚡ 用我的档案直接排</button>
+      <button class="btn-primary" onclick="window.calcBazi()">开 始 排 盘</button></div>
     <div class="result" id="bz-result"></div>
     <div class="card" id="cn-western-view" style="display:none;margin-top:12px;">
       <div class="card-title">🌐 西方视角 · 星座与灵数</div>
@@ -2635,7 +2636,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.129.1-20261113';
+const ZHIMING_BUILD = 'v2.129.2-20261113';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -7113,6 +7114,70 @@ let _lastBaziResult = null;
 /* ============================================================ */
 /* Section JS-04 核心模块 (八字+回测/五格/周易)                 */
 /* ============================================================ */
+/* ---- 人话版+档案一键排+合参入口 (v2.129.2) ---- */
+function _baziRenHuaHTML(r){
+  try{
+    if(!r||!r.dayGan||!r.wxScore) return '';
+    var CH={'甲':'一棵大树','乙':'一株藤草','丙':'一轮太阳','丁':'一盏灯火','戊':'一座山岳','己':'一亩田土','庚':'一把刀剑','辛':'一颗珠玉','壬':'一条江河','癸':'一场雨露'};
+    var CN={'甲':'正直有担当，认准就不回头','乙':'柔韧会借力，能屈能伸','丙':'热烈外放，自带能量场','丁':'细腻聚焦，暗处也发光','戊':'厚重可靠，稳得住场','己':'包容务实，默默成事','庚':'果断硬朗，说断就断','辛':'精致敏感，藏着锋芒','壬':'灵动善谋，不拘一格','癸':'聪慧内敛，润物无声'};
+    var WXX={'甲':'阳木','乙':'阴木','丙':'阳火','丁':'阴火','戊':'阳土','己':'阴土','庚':'阳金','辛':'阴金','壬':'阳水','癸':'阴水'};
+    var CHW={'木':['生长力','想做的事能持续做下去'],'火':['感染力','能带动人和场'],'土':['稳定力','别人乱你不乱'],'金':['决断力','该出手时不含糊'],'水':['应变力','总有办法']};
+    var mx='木',mv=-1,tot=0;
+    for(var k in r.wxScore){ tot+=(r.wxScore[k]||0); if((r.wxScore[k]||0)>mv){ mv=r.wxScore[k]||0; mx=k; } }
+    var s1='',s2='',s3='';
+    if(r.wangshuai) s1='你是<b>'+r.dayGan+'（'+(WXX[r.dayGan]||'')+'）日主，'+r.wangshuai+'</b>——像'+(CH[r.dayGan]||'')+'：'+(CN[r.dayGan]||'')+'。';
+    if(tot&&CHW[mx]) s2='命里<b>'+mx+'最旺</b>——'+CHW[mx][0]+'是你的本钱：'+CHW[mx][1]+'。';
+    if(r.xiYong&&r.xiYong.length){
+      s3='喜用<b>'+r.xiYong.join('、')+'</b>，平时多接触相关的环境与状态，顺势补。';
+      if(r.wangshuai==='偏弱') s3+='命偏弱——记住：蓄力比冲刺重要。';
+      else if(r.wangshuai==='偏旺') s3+='命偏旺——学会给自己泄力，别事事较劲。';
+    }
+    return '<div style="margin-bottom:12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(139,111,71,.12),rgba(139,111,71,.05));border:1px solid rgba(139,111,71,.32);">'
+      +'<div style="font-size:13.5px;font-weight:800;color:#8B6F47;">⚡ 30 秒看懂你的命</div>'
+      +(s1?'<div style="margin-top:7px;font-size:12.5px;line-height:1.85;color:var(--text);">'+s1+'</div>':'')
+      +(s2?'<div style="font-size:12.5px;line-height:1.85;color:var(--text);">'+s2+'</div>':'')
+      +(s3?'<div style="font-size:12.5px;line-height:1.85;color:var(--text);">'+s3+'</div>':'')
+      +'</div>';
+  }catch(_e){ return ''; }
+}
+function _baziWestGateHTML(){
+  return '<div style="margin-top:12px;padding:11px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(110,146,196,.10),rgba(110,146,196,.04));border:1px solid rgba(110,146,196,.28);display:flex;align-items:center;gap:10px;">'
+    +'<div style="flex:1;font-size:12.5px;line-height:1.7;color:var(--text-sub);"><b style="color:#6E92C4;">🌌 两套语言对照</b><br>八字说完了，星盘那套语言怎么说你？</div>'
+    +'<button class="btn-secondary" style="width:auto;flex-shrink:0;" onclick="window._baziToChart()">对照看看</button></div>';
+}
+window._baziOneClick=function(){
+  try{
+    var _bz=null; try{ _bz=JSON.parse(localStorage.getItem('zhiming_bazi_v1')||'null'); }catch(_e){}
+    if(!_bz||!_bz.y||!_bz.m||!_bz.d){ window.showToast&&window.showToast('先建八字档案（右上角「我」）','err',2000); return; }
+    document.getElementById("bz-year").value=_bz.y;
+    document.getElementById("bz-month").value=_bz.m;
+    document.getElementById("bz-day").value=_bz.d;
+    if(_bz.h) document.getElementById("bz-hour").value=_bz.h;
+    if(_bz.mi!=null) document.getElementById("bz-minute").value=_bz.mi;
+    var gd=_bz.gender==='female'?'女':'男';
+    var rr=document.querySelector('input[name="bz-gender"][value="'+gd+'"]');
+    if(rr) rr.checked=true;
+    if(_bz.cityName){ var ci=document.getElementById("bz-city"); if(ci&&!ci.value) ci.value=_bz.cityName; }
+    window.calcBazi();
+  }catch(_e1){ try{ window.showToast&&window.showToast('档案排盘失败','err',1500); }catch(_e2){} }
+};
+window._baziToChart=function(){
+  try{
+    var _bz=null; try{ _bz=JSON.parse(localStorage.getItem('zhiming_bazi_v1')||'null'); }catch(_e){}
+    if(!_bz||!_bz.y){ window.showToast&&window.showToast('先建八字档案','err',1800); return; }
+    try{
+      var cd=document.getElementById('chart-date');
+      if(cd) cd.value=_bz.y+'-'+String(_bz.m).padStart(2,'0')+'-'+String(_bz.d).padStart(2,'0');
+      var ct=document.getElementById('chart-time');
+      if(ct) ct.value=String(_bz.h||12).padStart(2,'0')+':'+String(_bz.mi||0).padStart(2,'0');
+      var cc=document.getElementById('chart-city');
+      if(cc&&_bz.cityName){ for(var i2=0;i2<cc.options.length;i2++){ if(String(cc.options[i2].text).indexOf(_bz.cityName)>=0){ cc.value=cc.options[i2].value; break; } } }
+    }catch(_e1){}
+    try{ window.switchTab&&window.switchTab('wu'); }catch(_e2){}
+    try{ window.switchSec&&window.switchSec('wu','wu10'); }catch(_e3){}
+    setTimeout(function(){ try{ window._hecanReport&&window._hecanReport(); }catch(_e4){} },450);
+  }catch(_e5){}
+};
 function calcBazi(){
   const __lp = (typeof window.getLiupai === 'function') ? window.getLiupai() : DEFAULT_LIU_PAI;
   const y=+document.getElementById("bz-year").value;
@@ -7416,7 +7481,7 @@ function calcBazi(){
       html += '<div class="hint">※ 出生于 23:00-24:00（晚子时）：本盘按「换日派」以次日日柱起盘。早晚子时归派历来有争议，子平正统多用换日，结果仅供参考。</div>';
     }
   }catch(_){}
-  document.getElementById("bz-result").innerHTML = enhanceResultHtml(html);
+  document.getElementById("bz-result").innerHTML = _baziRenHuaHTML(r) + enhanceResultHtml(html) + _baziWestGateHTML();
   try{ updateWesternViewPanel(); }catch(_){}
   try{
     var __bzr = document.getElementById("bz-result");
