@@ -1618,7 +1618,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.4</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.5</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2636,7 +2636,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.129.4-20261113';
+const ZHIMING_BUILD = 'v2.129.5-20261114';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -20620,9 +20620,13 @@ window._hecanHTML=function(){
     var verdict='';
     if(zhong&&xi){
       if(zhong[0]===xi[0]){
-        verdict='<div style="margin-top:8px;padding:9px 12px;border-radius:11px;background:rgba(62,155,107,.14);border:1px solid rgba(62,155,107,.4);font-size:13px;font-weight:700;color:#2E7D5B;">✅ 中西同指：今天适合「'+zhong[0]+'」——两套体系都这么说，放心做。</div>';
+        var _det='<details style="margin-top:7px;"><summary style="font-size:11px;color:#8AA89A;cursor:pointer;">⌄ 看判定过程（两边各自怎么算的）</summary>'
+          +'<div style="margin-top:6px;font-size:11.5px;line-height:1.8;color:#B9C4B5;">中式推演链：日主'+(zhongHTML.match(/日主(.)/)||['',''])[1]+'×今日'+(zhongHTML.match(/今日(.)/)||['',''])[1]+'→推'+(zhongHTML.match(/<b>(\S+?)日</)||['',''])[1]+'→行动向量「'+zhong[0]+'」。西式推演链：日月距角'+mpAng+'°→判'+mp+'→行动向量「'+xi[0]+'」。两条链各自独立，落点相同——这就是互证。</div></details>';
+        verdict='<div style="margin-top:8px;padding:9px 12px;border-radius:11px;background:rgba(62,155,107,.14);border:1px solid rgba(62,155,107,.4);font-size:13px;font-weight:700;color:#2E7D5B;">✅ 中西同指：今天适合「'+zhong[0]+'」——两套体系都这么说，放心做。'+_det+'</div>';
       } else {
-        verdict='<div style="margin-top:8px;padding:9px 12px;border-radius:11px;background:rgba(192,57,43,.09);border:1px dashed rgba(192,57,43,.4);font-size:12.5px;color:#8A4A42;line-height:1.7;">⚡ 中西分歧——中式推你「'+zhong[0]+'」，西式要你「'+xi[0]+'」。两套体系打架时不硬凑：拿不准就先做小的那件，或者今天以体感为准。</div>';
+        var _det2='<details style="margin-top:7px;"><summary style="font-size:11px;color:#A88E8A;cursor:pointer;">⌄ 看判定过程（两边各自怎么算的）</summary>'
+          +'<div style="margin-top:6px;font-size:11.5px;line-height:1.8;color:#C4B5B2;">中式推演链：日主'+(zhongHTML.match(/日主(.)/)||['',''])[1]+'×今日'+(zhongHTML.match(/今日(.)/)||['',''])[1]+'→'+(zhongHTML.match(/<b>(\S+?)日</)||['',''])[1]+'→「'+zhong[0]+'」。西式推演链：距角'+mpAng+'°→'+mp+'→「'+xi[0]+'」。两条链落点不同——诚实标注分歧，不硬凑。分歧日不是谁错：两种能量都在，选适合你的那条，或都小做一点。</div></details>';
+        verdict='<div style="margin-top:8px;padding:9px 12px;border-radius:11px;background:rgba(192,57,43,.09);border:1px dashed rgba(192,57,43,.4);font-size:12.5px;color:#8A4A42;line-height:1.7;">⚡ 中西分歧——中式推你「'+zhong[0]+'」，西式要你「'+xi[0]+'」。两套体系打架时不硬凑：拿不准就先做小的那件，或者今天以体感为准。'+_det2+'</div>';
       }
     } else {
       verdict='<div style="margin-top:8px;padding:9px 12px;border-radius:11px;background:rgba(122,91,34,.08);font-size:12.5px;color:#9A8468;line-height:1.7;">'+(zhong?'':'🔐 建八字档案解锁中式个人侧（今日十神是中西互证的一半）；')+(xi?'':'星盘模块加载中，稍后自动补全。')+'</div>';
@@ -28271,6 +28275,23 @@ function renderBody(){
         +'<div style="margin-top:10px;padding:11px 13px;border-radius:12px;background:rgba(200,169,106,.1);">'+zhongHTML+'</div>'
         +'<div style="margin-top:8px;padding:11px 13px;border-radius:12px;background:rgba(110,146,196,.1);">'+xiHTML+'</div>'
         +hecanHTML
+        +(function(){
+          try{
+            if(!zhongData) return '';
+            var _lack=(zhongData.lack&&zhongData.lack.length)?zhongData.lack[0]:null;
+            var _weak=null,_min=1e9; Object.keys(zhongData.wxScore).forEach(function(k){ if(zhongData.wxScore[k]<_min){_min=zhongData.wxScore[k];_weak=k;} });
+            var _l=_lack||_weak;
+            var BU={'金':'穿白色/金属色，去西边散步，早点睡——金主收敛，作息规律就是养金','木':'桌上放绿植，晨间出门走走、伸伸懒腰——木主生长，清晨的舒展就是养木','水':'多喝温水，穿深色，睡前听雨声或静坐十分钟——水主静藏，睡前那口气就是养水','火':'晒太阳、动到微微出汗、点暖色灯——火主温通，出汗就是点火','土':'规律吃饭别跳餐，穿大地色，整理房间——土主安顿，把环境理顺就是养土'};
+            var ELMCN={'火':['启动力','想到就动手：把悬了很久的小事今天就办了，别攒'],'土':['落地力','身体优先：吃饭睡觉运动定时间，让身体先稳住'],'风':['表达力','把想法写下来或说出来——找人说，别只在脑子里转'],'水':['感受力','给自己留独处十分钟，觉察一下情绪再决定']};
+            var s1=_l&&BU[_l]?'<b style="color:#E0C98C;">养'+_l+'</b>（中式侧）：'+BU[_l]:'';
+            var s2=(typeof elemMin!=='undefined'&&ELMCN[elemMin])?'<b style="color:#9FC3E8;">练'+ELMCN[elemMin][0]+'</b>（西式侧）：'+ELMCN[elemMin][1]:'';
+            var s3=zhongData.wangshuai==='偏弱'?'<b>当下优先级</b>：命偏弱，两套语言也都指向薄处——这阶段补短比扬长优先，蓄力就是进攻。':(zhongData.wangshuai==='偏旺'?'<b>当下优先级</b>：命偏旺——用强项去做事，但注意别透支，学会给自己泄力。':'<b>当下优先级</b>：命局中和——按部就班就是节奏，挑上面两条当日常即可。');
+            var li=[s1,s2,s3].filter(Boolean).map(function(x){ return '<div style="margin-top:6px;font-size:12.5px;line-height:1.8;color:#E8E2D2;">· '+x+'</div>'; }).join('');
+            return '<div style="margin-top:10px;padding:11px 13px;border-radius:12px;background:rgba(62,155,107,.08);border:1px solid rgba(62,155,107,.25);"><div style="font-size:14px;font-weight:800;color:#8FD4AE;">🎯 行动建议——怎么把这套命用起来</div>'+li+'</div>';
+          }catch(_aErr){ return ''; }
+        })()
+        +'<details style="margin-top:9px;"><summary style="font-size:11px;color:#6B7488;cursor:pointer;">📐 这套报告怎么算的（方法论透明）</summary>'
+        +'<div style="margin-top:6px;font-size:11.5px;line-height:1.8;color:#8A93A8;">中式侧：出生数据排四柱→日主旺衰→五行打分→缺与喜用→主导十神。西式侧：同一批出生数据算行星黄经（Meeus/Standish 天文历算，相位精度0.4°）→日月升→四元素分布→主要相位。两侧各自独立计算，全程本机完成，不上传任何数据。合参规则：只做结构对读（强度对强度、薄弱对薄弱），不做五行与四元素的硬映射（各家说法不一，硬编反而失真）；同指=两侧判词落同一格，分歧=诚实标注。合参档案逐日累积，攒两周后出同指命中率——用你自己的记录检验这套体系。</div></details>'
         +'<div style="font-size:10.5px;color:#6B7488;margin-top:9px;text-align:center;line-height:1.7;">两套体系独立计算、互相注脚——同一批出生数据，两套语言描述同一个你<br>性别按中性排盘（大运不分男女），仅供自省参考</div></div>';
       var el2=document.getElementById('hecanReport');
       if(el2){ el2.innerHTML=out; el2.scrollIntoView({behavior:'smooth',block:'start'}); }
