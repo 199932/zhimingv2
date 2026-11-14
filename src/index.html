@@ -914,9 +914,14 @@ body.theme-dark .tmc-ji .yj-tag{background:#5a2a28;color:#f0a090;}
 .w-fest-tip{font-size:10px;color:var(--text-hint);}
 .w-radar{display:flex;align-items:center;justify-content:center;}
 .w-radar svg{width:100%;max-width:120px;height:auto;}
-.w-people{display:flex;align-items:center;gap:8px;}
-.w-p-emoji{font-size:36px;line-height:1;flex-shrink:0;}
-.w-p-info{flex:1;min-width:0;}
+.w-people{display:flex;align-items:center;gap:7px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;}
+.w-p-emoji{font-size:30px;line-height:1;flex-shrink:0;cursor:pointer;transition:transform .12s;}
+.w-p-emoji:active{transform:scale(.88);}
+.w-p-info{flex:1;min-width:0;cursor:pointer;}
+.w-p-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.w-p-meta{font-size:11px;white-space:normal;line-height:1.35;}
+.w-p-actions{display:flex;flex-direction:column;gap:2px;flex-shrink:0;}
+.w-p-btn{min-width:26px;min-height:24px;padding:0 4px;}
 .w-p-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .w-p-meta{font-size:10px;color:var(--text-sub);margin-top:2px;line-height:1.3;}
 .w-p-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
@@ -1618,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.129.9</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.130.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2636,7 +2641,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.129.9-20261114';
+const ZHIMING_BUILD = 'v2.130.1-20261115';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -17127,15 +17132,15 @@ function renderWidget_peopleShortcut(r){
   const emoji = p && p.emoji ? p.emoji : "👤";
   const name = p && p.name ? p.name : "暂无档案";
   const meta = p ? (p.month && p.day ? `${p.month}/${p.day} · ${ZODIAC_12[r.zodiacIdx]?.name||""}座` : "未设生日") : "打开档案创建";
-  const editOnclick = `onclick="window.openProfileForm(${p?('\''+p.id+'\''):'null'})"`;
+  /* 编辑入口走document级委托(.w-p-emoji/.w-p-info),防真机事件链丢click */
   const cycleHint = (allP.length<=1) ? `onclick="try{window.showToast&&window.showToast('只有一个档案，点头像即可编辑','info',1600)}catch(_e){}" style="opacity:.3;cursor:not-allowed;"` : "";
   const leftOnclick = (allP.length>1) ? `onclick="window.cyclePeopleShortcut(-1)"` : cycleHint;
   const rightOnclick = (allP.length>1) ? `onclick="window.cyclePeopleShortcut(1)"` : cycleHint;
   return `<div class="widget">
     <div class="widget-title">⭐ 人物快捷</div>
     <div class="widget-body"><div class="w-people" style="user-select:none;-webkit-user-select:none;">
-      <div class="w-p-emoji" ${editOnclick} style="cursor:pointer;" title="编辑档案">${emoji}<span style="font-size:9px;margin-left:-2px;vertical-align:top;">✏️</span></div>
-      <div class="w-p-info" ${editOnclick} style="cursor:pointer;">
+      <div class="w-p-emoji" title="编辑档案">${emoji}<span style="font-size:9px;margin-left:-2px;vertical-align:top;">✏️</span></div>
+      <div class="w-p-info">
         <div class="w-p-name">${name}</div>
         <div class="w-p-meta">${meta}</div>
       </div>
@@ -17147,6 +17152,35 @@ function renderWidget_peopleShortcut(r){
   </div>`;
 }
 try{window.renderWidget_peopleShortcut=renderWidget_peopleShortcut;}catch(_){}
+/* 人物快捷卡编辑入口:document级委托(内联onclick在真机浏览器事件链上可能被长按AI菜单/重渲吞掉) */
+try{
+  if(!window._psEditBound){
+    window._psEditBound=true;
+    document.addEventListener('click',function(e){
+      try{
+        var t=e.target;
+        if(!t||!t.closest) return;
+        if(t.closest('.w-p-btn')) return; /* 箭头走切人,不进编辑 */
+        var hit=t.closest('.w-p-emoji')||t.closest('.w-p-info');
+        if(!hit) return;
+        var cur=(typeof window.getActiveProfile==='function')?window.getActiveProfile():null;
+        /* 正确序列:先开档案弹层(profileFormArea随之渲染),再展开编辑表单 */
+        if(typeof window.openProfileModal==='function'){
+          window.openProfileModal();
+          setTimeout(function(){
+            try{
+              if(typeof window.openProfileForm==='function') window.openProfileForm(cur?cur.id:null);
+              var a=document.getElementById('profileFormArea');
+              if(a&&a.innerHTML) try{ a.scrollIntoView({block:'center'}); }catch(_e3){}
+            }catch(_e2){}
+          },120);
+        } else if(typeof window.openProfileForm==='function'){
+          window.openProfileForm(cur?cur.id:null);
+        }
+      }catch(_pse){ }
+    },false);
+  }
+}catch(_psb){}
 function cyclePeopleShortcut(dir){
   try {
     const allP = loadProfiles();
