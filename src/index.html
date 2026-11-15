@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.131.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.132.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2429,7 +2429,12 @@ body{ padding-bottom:160px; }
   </div>
 </div>
 
-<div class="modal-mask" id="profileModal" onclick="if(event.target===this)closeProfileModal()">
+<div class="modal-mask" id="lyModal" onclick="if(event.target===this)__closeModalById('lyModal')">
+  <div class="modal" style="max-width:420px;width:92%;max-height:82vh;overflow-y:auto;">
+    <div id="lyModalBody"></div>
+  </div>
+</div>
+
   <div class="modal">
     <div class="modal-head">
       <h3>📇 人物档案</h3>
@@ -2641,7 +2646,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.131.1-20261115';
+const ZHIMING_BUILD = 'v2.132.0-20261116';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4539,12 +4544,101 @@ function __ganZhiJiXiong(gan, zhi, r){
   const ganXi = __wxIsXi(ganWX, r);
   const zhiXi = __wxIsXi(zhiWX, r);
   const sum = ganXi + zhiXi;
-  if (sum >= 2) return {score:1, label:"大吉", detail:`干${ganWX}支${zhiWX}皆为喜用`};
-  if (sum === 1) return {score:0.5, label:"吉", detail: ganXi===1 ? `干${ganWX}为喜用，支${zhiWX}平` : `干${ganWX}平，支${zhiWX}为喜用`};
-  if (sum === 0) return {score:0, label:"平", detail: ganXi===0 ? "干支皆平" : `干${ganWX}${ganXi===1?'喜':'忌'}，支${zhiWX}${zhiXi===1?'喜':'忌'}，吉凶参半`};
-  if (sum === -1) return {score:-0.5, label:"凶", detail: ganXi===-1 ? `干${ganWX}为忌神，支${zhiWX}平` : `干${ganWX}平，支${zhiWX}为忌神`};
-  return {score:-1, label:"大凶", detail:`干${ganWX}支${zhiWX}皆为忌神`};
+  if (sum >= 2) return {score:1, label:"旺", detail:`干${ganWX}支${zhiWX}皆为喜用——能量顶格的月份`};
+  if (sum === 1) return {score:0.5, label:"顺", detail: ganXi===1 ? `干${ganWX}为喜用，支${zhiWX}平——顺风，适合推进` : `干${ganWX}平，支${zhiWX}为喜用——顺风，适合推进`};
+  if (sum === 0) return {score:0, label:"稳", detail: ganXi===0 ? "干支皆平——平稳月，按计划走" : `干${ganWX}${ganXi===1?'喜':'忌'}，支${zhiWX}${zhiXi===1?'喜':'忌'}，吉凶参半——平稳月`};
+  if (sum === -1) return {score:-0.5, label:"滞", detail: ganXi===-1 ? `干${ganWX}为忌神，支${zhiWX}平——摩擦偏多，慢就是快` : `干${ganWX}平，支${zhiWX}为忌神——摩擦偏多，慢就是快`};
+  return {score:-1, label:"阻", detail:`干${ganWX}支${zhiWX}皆为忌神——阻力月，守字当头，不是判决`};
 }
+
+/* ═══ 流月「因命解命」解读引擎（v2.132.0） ═══ */
+window._lyExplain=function(pt, r){
+  try{
+    if(!pt||!r) return '';
+    var dayG=r.dayGan||'甲';
+    var dayWX=window.WUXING_GAN?window.WUXING_GAN[dayG]:'木';
+    var ws=r.wangshuai||'中和';
+    var parts=pt.wx?pt.wx.split('/'):['?','?'];
+    var ganWX=parts[0]||'?', zhiWX=parts[1]||'?';
+    var SH={"金":"水","水":"木","木":"火","火":"土","土":"金"},KE={"金":"木","木":"土","土":"水","水":"火","火":"金"};
+    /* 现象段 */
+    var ph0;
+    if(ganWX===zhiWX){ ph0=pt.gz+'月——干支同属'+ganWX+'，'+ganWX+'气在这个月顶格。'; }
+    else{ ph0=pt.gz+'月——天干走'+ganWX+'、地支走'+zhiWX+'，两股气都在场。'; }
+    /* 机理段：流月干 vs 日主 */
+    var jihui='';
+    var rel='';
+    if(KE[dayWX]===ganWX){ rel='ke'; jihui='这股'+ganWX+'正压着你的'+dayWX+'（'+dayG+'日主）——外部节奏在拿捏你，事情推着你走。'; }
+    else if(SH[dayWX]===ganWX){ rel='shengwo'; jihui=ganWX+'在给你的'+dayWX+'输送底气——这是个进补的月，学东西、找支持、养状态都顺。'; }
+    else if(KE[ganWX]===dayWX){ rel='woke'; jihui='你的'+dayWX+'反过来辖制'+ganWX+'——是你出手拿东西的窗口，也是最费劲的点，想要就得主动够。'; }
+    else if(SH[ganWX]===dayWX){ rel='wosheng'; jihui='你的'+dayWX+'在往外生'+ganWX+'——表达和消耗同时在放大，输出别超载。'; }
+    else{ rel='tong'; jihui='和你同属'+ganWX+'的气聚堆——同类人扎堆，竞争与合作一起上门。'; }
+    /* 身强弱补一句 */
+    if(ws==='偏旺'&&rel==='ke'){ jihui+='好在你本身偏旺，扛得住这种锤炼——熬过去就是你的本事。'; }
+    else if(ws==='偏弱'&&rel==='ke'){ jihui+='你本身偏弱，这个月尤其要注意省着劲，别硬扛。'; }
+    else if(ws==='偏弱'&&(rel==='shengwo'||rel==='tong')){ jihui+='身弱遇生扶，这个月是可以喘口气养精蓄锐的窗口。'; }
+    /* 领域段：十神→人话 */
+    var SSY={
+      '比肩':['同辈/朋友/竞争者','合作与竞争一起上门，边界要划清'],
+      '劫财':['钱和人缘','破小财的风险高，合伙、借贷要格外谨慎'],
+      '食神':['表达/创作/吃喝','适合输出、创作、享受生活，节奏可以放松'],
+      '伤官':['锋芒和表达','嘴上功夫旺，容易出成绩也容易得罪人，说话留三分'],
+      '偏财':['意外之财和机会','快钱和机会窗口多，抓得准就是你的，抓不准别贪'],
+      '正财':['固定收入','正事主线上的钱和踏实积累，适合经营本职'],
+      '七杀':['高压规则和强敌','外部压力大、任务重，是淬炼也是消耗，量力而行'],
+      '正官':['名分/规则/体制','考核、合同、职位这些「名分」的事是主线，规矩内办事'],
+      '偏印':['冷门领域和独处','适合钻研冷门、深度学习，也容易感到孤独'],
+      '正印':['正统学习和庇护','贵人/长辈/证书/学习是主线，缺什么补什么']
+    };
+    var ss=SSY[pt.ganShi]||['命局相关的事','具体影响看实际处境'];
+    var sc=pt.jiXiong?pt.jiXiong.score:0;
+    var lingyu;
+    if(sc>0){ lingyu='顺风集中在「'+ss[0]+'」——'+ss[1]+'。这个领域的事值得加码推进。'; }
+    else if(sc<0){ lingyu='冲击集中在「'+ss[0]+'」——'+ss[1]+'。这个领域的事容易卡壳，别硬推，缓一缓再动。'; }
+    else{ lingyu='波动点在「'+ss[0]+'」——'+ss[1]+'。不好不坏，看你怎么用。'; }
+    /* 行动段：五档 */
+    var act;
+    if(sc>=1){ act='<b>守字换攻字</b>：全年级别的窗口期。值得做：主动出击、谈大事、上新台阶。注意：旺月易过劳，节奏留一口气。'; }
+    else if(sc===0.5){ act='<b>顺风推进</b>：阻力小，适合往前赶。值得做：把上月卡住的事再推一把。注意：顺不代表没坑，大决定还是要过一夜。'; }
+    else if(sc===0){ act='<b>按计划走</b>：平稳月，没有大喜也没有大坑。值得做：日常该干嘛干嘛，稳住节奏就是赢。'; }
+    else if(sc===-0.5){ act='<b>慢就是快</b>：摩擦偏多，推进慢是常态，别急着自责。值得做：小步推进、多听意见。绕开：关键谈判、大额投入。'; }
+    else{ act='<b>守字当头</b>：大动作缓一缓、合同细看、别硬顶。值得做：复盘、打基础、养身体。绕开：正面冲突、重大签约、辞职跳槽。'; }
+    /* 组装 */
+    var gcol=sc>=1?'#5B8C3E':sc===0.5?'#7CB342':sc===0?'#B8860B':sc===-0.5?'#E67E22':'#C0392B';
+    var h='<div style="padding:16px 14px;">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">';
+    h+='<span style="font-size:18px;font-weight:800;">'+pt.label+' · '+pt.gz+'</span>';
+    h+='<span class="badge" style="background:'+gcol+'22;color:'+gcol+';font-weight:800;">'+pt.score+'分 · '+(pt.jiXiong?pt.jiXiong.label:'')+'</span></div>';
+    h+='<div style="font-size:10px;color:var(--text-hint);margin-bottom:10px;">'+dayG+'日主 · '+ws+' · 当月十神：'+pt.ganShi+'</div>';
+    h+='<div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:10px 12px;margin-bottom:8px;">';
+    h+='<div style="font-size:11px;color:var(--pri);font-weight:700;margin-bottom:3px;">🌤 这个月的天气</div>';
+    h+='<div style="font-size:12.5px;line-height:1.7;">'+ph0+'</div></div>';
+    h+='<div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:10px 12px;margin-bottom:8px;">';
+    h+='<div style="font-size:11px;color:var(--pri);font-weight:700;margin-bottom:3px;">🧭 对你的命意味着什么</div>';
+    h+='<div style="font-size:12.5px;line-height:1.7;">'+jihui+'</div></div>';
+    h+='<div style="background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:10px 12px;margin-bottom:8px;">';
+    h+='<div style="font-size:11px;color:var(--pri);font-weight:700;margin-bottom:3px;">🎯 凶/顺在哪个方面</div>';
+    h+='<div style="font-size:12.5px;line-height:1.7;">'+lingyu+'</div></div>';
+    h+='<div style="background:var(--pri-light);border-radius:12px;padding:10px 12px;margin-bottom:8px;">';
+    h+='<div style="font-size:11px;color:var(--pri-dark);font-weight:700;margin-bottom:3px;">✅ 这个月怎么办</div>';
+    h+='<div style="font-size:12.5px;line-height:1.7;">'+act+'</div></div>';
+    h+='<div style="font-size:10.5px;color:var(--text-hint);text-align:center;line-height:1.6;">命理看的是能量倾向，不是判决。<br>阻月是提醒省着劲，不是让你躺平认命。</div>';
+    h+='</div>';
+    return h;
+  }catch(_e){ return '<div style="padding:20px;">解读生成失败，稍后再试。</div>'; }
+};
+window._lyOpen=function(idx){
+  try{
+    var ctx=window._lyCtx;
+    if(!ctx||!ctx.ly||!ctx.ly[idx]) { try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
+    var pt=ctx.ly[idx];
+    var html=window._lyExplain(pt, ctx.r);
+    var body=document.getElementById('lyModalBody');
+    if(body) body.innerHTML=html;
+    window.__openModalById('lyModal');
+  }catch(_e){}
+};
+
 function calcDayunLiunianJiXiong(r){
   if (!r.dayun || !r.liunian) return null;
   // 给每步大运加喜忌
@@ -7367,12 +7461,13 @@ function calcBazi(){
         </tr>`;
       });
       h += `</tbody></table></div>
-      <div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 吉凶判定：以日干五行+身强弱定喜忌，天干五行+地支五行合判（皆喜=大吉，一喜一平=吉，一喜一忌=平，一忌一平=凶，皆忌=大凶）。</div>
+      <div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 判定：以日干五行+身强弱定喜忌，干支五行合判——皆喜=旺（95）、一喜一平=顺（83）、参半=稳（70）、一忌一平=滞（58）、皆忌=阻（45）。分数是能量倾向，不是吉凶判决；点流月圆点可看因你而解的详细说明。</div>
       </div>`;
     }
     // === 流月运势（未来12个月趋势折线，喜用神评分） ===
     const ly = r.liuyue || [];
     if (ly.length === 12){
+      try{ window._lyCtx={ly:ly, r:r}; }catch(_lyc){}
       const W=360,H=158,PX=30,PT=24,PB=40;
       const yv=v=>PT+(H-PT-PB)*(100-v)/55;
       const xs=ly.map((pt,i)=>PX+i*(W-PX-16)/(ly.length-1));
@@ -7387,18 +7482,18 @@ function calcBazi(){
         const tag=isHi?'<text x="'+cx+'" y="'+(cy-10)+'" font-size="9" fill="#5B8C3E" text-anchor="middle" font-weight="700">高峰 '+pt.score+'</text>'
               :(isLo?'<text x="'+cx+'" y="'+(cy+16)+'" font-size="9" fill="#B0A488" text-anchor="middle">蓄力 '+pt.score+'</text>':"");
         const gzTag='<text x="'+cx+'" y="'+(H-26)+'" font-size="8.5" fill="var(--text-hint)" text-anchor="middle">'+pt.gz+'</text>';
-        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isHi||isLo?4.5:3)+'" fill="'+c+'"><title>'+pt.label+' '+pt.gz+'('+pt.wx+') 十神:'+pt.ganShi+' '+pt.jiXiong.label+' — '+pt.jiXiong.detail+'</title></circle>'+tag+gzTag
+        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isHi||isLo?4.5:5)+'" fill="'+c+'" style="cursor:pointer;" onclick="window._lyOpen('+i+')" ><title>'+pt.label+' '+pt.gz+'('+pt.wx+') 十神:'+pt.ganShi+' '+pt.jiXiong.label+' — 点按查看完整解读</title></circle>'+tag+gzTag
           +'<text x="'+cx+'" y="'+(H-12)+'" font-size="9.5" fill="var(--text-sub)" text-anchor="middle">'+pt.label+'</text>';
       }).join("");
       h += '<div class="card"><div class="card-title">📈 未来 12 个月 · 流月运势（喜用神评分）</div>';
       h += '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;" role="img" aria-label="未来十二个月流月运势折线图">';
       h += '<polyline points="'+poly+'" fill="none" stroke="var(--pri)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+dots+'</svg>';
       h += '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px;font-size:10px;color:var(--text-hint);">';
-      [["大吉 95","#5B8C3E"],["吉 83","#7CB342"],["平 70","#B8860B"],["凶 58","#E67E22"],["大凶 45","#C0392B"]].forEach(x=>{
+      [["旺 95","#5B8C3E"],["顺 83","#7CB342"],["稳 70","#B8860B"],["滞 58","#E67E22"],["阻 45","#C0392B"]].forEach(x=>{
         h += '<span><span style="display:inline-block;width:8px;height:8px;background:'+x[1]+';border-radius:50%;margin-right:3px;vertical-align:middle;"></span>'+x[0]+'</span>';
       });
       h += '</div>';
-      h += '<div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 流月干支按节气月（年上起月法），吉凶以命局喜用神合判；悬停数据点可查看当月干支与十神。命理推演仅供娱乐参考。</div></div>';
+      h += '<div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 流月干支按节气月（年上起月法），吉凶以命局喜用神合判；<b style="color:var(--pri);">点任意圆点</b>可展开当月「因你而解」的完整解读。命理看的是能量倾向，不是判决——阻月是提醒省着劲，不是让你躺平认命。</div></div>';
     }
     // === 合冲刑害 ===
     const hc = r.hechong || [];
