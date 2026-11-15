@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.130.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.131.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2641,7 +2641,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.130.1-20261115';
+const ZHIMING_BUILD = 'v2.131.0-20261115';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -26317,6 +26317,182 @@ window._nowDoCardHTML = function(){ /* Top1卡：v2.116 迁至黄历页运势格
     +(_nd.alts.length?'<div style="margin-top:8px;font-size:11.5px;color:var(--text-hint);">备选：'+_nd.alts.map(function(a){ return a.big; }).join(' · ')+'</div>':'')
     +'</div></div>';
 };
+
+/* ═══ 此刻的声音——三场景环境音景(WebAudio纯合成):睡前雨/午休风/减压溪 ═══ */
+var NS_SCENES=[
+  {k:'night', n:'睡前 · 雨落屋檐', icon:'🌧️', desc:'棕噪铺底+零星雨滴——躺下后放空,不用耳机,外放刚刚好', dft:30},
+  {k:'noon',  n:'午休 · 林间微风', icon:'🌿', desc:'轻风掠过+远处偶有鸟鸣——默认 15 分钟自动淡出,不睡过头', dft:15},
+  {k:'ease',  n:'减压 · 溪水石上', icon:'🍃', desc:'水泡滑音+流水声,每 4 秒一声轻钵——跟着它做箱式呼吸(吸4屏4呼4停4)', dft:20}
+];
+var _nsCtx=null,_nsNodes=null,_nsTimers=[],_nsScene=null,_nsMins=15,_nsEndAt=0,_nsGain=null;
+window._nsDefScene=function(){ var h=new Date().getHours(); return (h>=22||h<6)?'night':(h>=12&&h<14)?'noon':'ease'; };
+window._nsPlaying=function(){ return !!(_nsCtx&&_nsScene); };
+window._nsNoiseBuf=function(ctx,type){
+  var len=ctx.sampleRate*2, b=ctx.createBuffer(1,len,ctx.sampleRate), d=b.getChannelData(0);
+  var last=0;
+  for(var i=0;i<len;i++){ var w=Math.random()*2-1; if(type==='brown'){ last=(last+0.02*w)/1.02; d[i]=last*3.2; } else d[i]=w; }
+  return b;
+};
+window._nsStart=function(k,mins){
+  try{
+    window._nsStop();
+    var sc=NS_SCENES.find(function(x){return x.k===k;})||NS_SCENES[0];
+    _nsScene=k; _nsMins=mins||sc.dft;
+    var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    var ctx=new AC(); _nsCtx=ctx;
+    if(ctx.state==='suspended'){ ctx.resume(); }
+    var master=ctx.createGain(); master.gain.value=0.85; master.connect(ctx.destination); _nsGain=master;
+    var nodes=[];
+    function noiseSrc(type){ var src=ctx.createBufferSource(); src.buffer=window._nsNoiseBuf(ctx,type); src.loop=true; return src; }
+    if(k==='night'){
+      /* 棕噪底(雨幕) */
+      var n=noiseSrc('brown'), lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=420;
+      var g1=ctx.createGain(); g1.gain.value=0.5; n.connect(lp); lp.connect(g1); g1.connect(master); n.start(); nodes.push(n);
+      /* 零星雨滴:短带通burst */
+      _nsTimers.push(setInterval(function(){
+        if(Math.random()<0.35){
+          var t=ctx.currentTime;
+          var src=ctx.createBufferSource(); src.buffer=window._nsNoiseBuf(ctx,'white');
+          var bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1400+Math.random()*900; bp.Q.value=9;
+          var g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.14+Math.random()*0.1,t+0.012); g.gain.exponentialRampToValueAtTime(0.0001,t+0.09);
+          src.connect(bp); bp.connect(g); g.connect(master); src.start(t); src.stop(t+0.12);
+        }
+      },160));
+    } else if(k==='noon'){
+      /* 粉噪风:白噪低通+慢LFO呼吸感 */
+      var n2=noiseSrc('white'), lp2=ctx.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=520; lp2.Q.value=0.6;
+      var g2=ctx.createGain(); g2.gain.value=0.28;
+      var lfo=ctx.createOscillator(); lfo.frequency.value=0.07;
+      var lg=ctx.createGain(); lg.gain.value=180; lfo.connect(lg); lg.connect(lp2.frequency); lfo.start();
+      n2.connect(lp2); lp2.connect(g2); g2.connect(master); n2.start(); nodes.push(n2,lfo);
+      /* 偶发鸟鸣:两连滑音 */
+      _nsTimers.push(setInterval(function(){
+        if(Math.random()<0.30){
+          var t=ctx.currentTime, f0=2200+Math.random()*1200;
+          for(var i=0;i<2;i++){
+            var o=ctx.createOscillator(); o.type='sine';
+            var g=ctx.createGain();
+            o.frequency.setValueAtTime(f0,t+i*0.16); o.frequency.exponentialRampToValueAtTime(f0*1.35,t+i*0.16+0.07); o.frequency.exponentialRampToValueAtTime(f0*0.92,t+i*0.16+0.13);
+            g.gain.setValueAtTime(0.0001,t+i*0.16); g.gain.exponentialRampToValueAtTime(0.06,t+i*0.16+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.16+0.14);
+            o.connect(g); g.connect(master); o.start(t+i*0.16); o.stop(t+i*0.16+0.16);
+          }
+        }
+      },2400));
+    } else {
+      /* 溪水:带通白噪底+水泡上滑 */
+      var n3=noiseSrc('white'), bp3=ctx.createBiquadFilter(); bp3.type='bandpass'; bp3.frequency.value=1100; bp3.Q.value=0.8;
+      var g3=ctx.createGain(); g3.gain.value=0.3;
+      var lfo3=ctx.createOscillator(); lfo3.frequency.value=0.11;
+      var lg3=ctx.createGain(); lg3.gain.value=260; lfo3.connect(lg3); lg3.connect(bp3.frequency); lfo3.start();
+      n3.connect(bp3); bp3.connect(g3); g3.connect(master); n3.start(); nodes.push(n3,lfo3);
+      _nsTimers.push(setInterval(function(){
+        if(Math.random()<0.5){
+          var t=ctx.currentTime, f=240+Math.random()*300;
+          var o=ctx.createOscillator(); o.type='sine';
+          var g=ctx.createGain();
+          o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*2.6+Math.random()*200,t+0.08);
+          g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.10,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
+          o.connect(g); g.connect(master); o.start(t); o.stop(t+0.13);
+        }
+      },520));
+      /* 呼吸提示钵:4秒一声轻ping(箱式呼吸节拍) */
+      _nsTimers.push(setInterval(function(){
+        var t=ctx.currentTime;
+        var o=ctx.createOscillator(); o.type='sine'; o.frequency.value=220;
+        var o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=442;
+        var g=ctx.createGain();
+        g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.09,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);
+        o.connect(g); o2.connect(g); g.connect(master);
+        o.start(t); o.stop(t+1.5); o2.start(t); o2.stop(t+1.5);
+      },4000));
+    }
+    _nsNodes=nodes;
+    _nsEndAt=Date.now()+_nsMins*60000;
+    /* 结束前20s淡出 */
+    var remainMs=_nsMins*60000;
+    _nsTimers.push(setTimeout(function(){
+      try{ if(_nsGain){ var t=ctx.currentTime; _nsGain.gain.setValueAtTime(_nsGain.gain.value,t); _nsGain.gain.linearRampToValueAtTime(0.0001,t+18); } }catch(_e){}
+    },Math.max(0,remainMs-20000)));
+    _nsTimers.push(setTimeout(function(){ window._nsStop(true); },remainMs+19000));
+    try{ window.showToast&&window.showToast(sc.icon+' '+sc.n.split('·')[1]+'——'+_nsMins+' 分钟后自动淡出','ok',1800); }catch(_e){}
+  }catch(_e){}
+};
+window._nsStop=function(silent){
+  try{
+    _nsTimers.forEach(function(t){ clearInterval(t); clearTimeout(t); });
+    _nsTimers=[];
+    if(_nsGain&&_nsCtx){ try{ var t=_nsCtx.currentTime; _nsGain.gain.setValueAtTime(_nsGain.gain.value,t); _nsGain.gain.linearRampToValueAtTime(0.0001,t+0.6); }catch(_e){} }
+    var nodes=_nsNodes, ctx=_nsCtx;
+    setTimeout(function(){ try{ (nodes||[]).forEach(function(n){ try{n.stop();}catch(_e){} }); if(ctx) ctx.close(); }catch(_e){} },700);
+  }catch(_e){}
+  _nsCtx=null; _nsNodes=null; _nsScene=null; _nsGain=null;
+  try{ window._nsSyncBtn&&window._nsSyncBtn(); }catch(_e){}
+};
+window._nsPick=function(k){
+  try{
+    var sc=NS_SCENES.find(function(x){return x.k===k;});
+    if(window._nsPlaying()){ window._nsStop(); setTimeout(function(){ window._nsStart(k,_nsMinsFor(k)); },300); }
+    else { window._nsStart(k,_nsMinsFor(k)); }
+    window._nsSyncBtn();
+  }catch(_e){}
+};
+window._nsMinsFor=function(k){ var sc=NS_SCENES.find(function(x){return x.k===k;})||NS_SCENES[0]; return _nsMins||sc.dft; };
+window._nsSetMins=function(m){
+  _nsMins=m;
+  try{
+    var chips=document.querySelectorAll('[data-nsm]');
+    for(var i=0;i<chips.length;i++){ chips[i].classList.toggle('active', parseInt(chips[i].getAttribute('data-nsm'),10)===m); }
+  }catch(_e){}
+  if(window._nsPlaying()){ /* 播放中改时长=重设结束时间 */
+    _nsEndAt=Date.now()+m*60000;
+    try{ window.showToast&&window.showToast('已改为 '+m+' 分钟（当前播放照旧,下轮生效）','info',1500); }catch(_e){}
+  }
+};
+window._nsToggle=function(){
+  if(window._nsPlaying()) window._nsStop();
+  else window._nsStart(_nsScene||window._nsDefScene(), _nsMinsFor(_nsScene||window._nsDefScene()));
+  window._nsSyncBtn();
+};
+window._nsSyncBtn=function(){
+  try{
+    var b=document.getElementById('nsMain');
+    if(!b) return;
+    if(window._nsPlaying()){
+      var sc=NS_SCENES.find(function(x){return x.k===_nsScene;})||NS_SCENES[0];
+      var left=Math.max(0,Math.ceil((_nsEndAt-Date.now())/60000));
+      b.textContent='⏸ 停止 '+sc.icon+' '+sc.n.split('·')[1]+'（剩约 '+left+' 分钟）';
+    } else {
+      b.textContent='▶ 播放';
+    }
+    var chips=document.querySelectorAll('[data-nss]');
+    for(var i=0;i<chips.length;i++){ chips[i].classList.toggle('active', chips[i].getAttribute('data-nss')===_nsScene); }
+  }catch(_e){}
+};
+window._nowSoundHTML=function(){
+  try{
+    var def=window._nsDefScene();
+    var playing=window._nsPlaying();
+    var cur=playing?_nsScene:def;
+    var sc=NS_SCENES.find(function(x){return x.k===cur;})||NS_SCENES[0];
+    var chips=NS_SCENES.map(function(x){
+      return '<button class="switch-btn'+(x.k===cur?' active':'')+'" data-nss="'+x.k+'" onclick="window._nsPick(\''+x.k+'\')" style="flex:1;font-size:11.5px;padding:8px 4px;">'+x.icon+' '+x.n.split('·')[1]+'</button>';
+    }).join('');
+    var mins=[15,30,60,0].map(function(m){
+      var lbl=m===0?'不限':m+' 分';
+      var act=(playing?false:(m===(_nsMins||sc.dft)))||(playing&&_nsMins===m);
+      return '<button class="switch-btn'+(act?' active':'')+'" data-nsm="'+m+'" onclick="window._nsSetMins('+m+')" style="flex:1;font-size:11px;padding:6px 2px;">'+lbl+'</button>';
+    }).join('');
+    return '<div class="widget" style="grid-column:1/-1;"><div class="widget-title">🎧 此刻的声音</div><div class="widget-body" style="padding:12px;">'
+      +'<div style="font-size:12px;color:var(--text-hint);line-height:1.6;">按你打开的时刻配好了默认场景——'+(def==='night'?'现在是睡觉时段':def==='noon'?'现在是午休时段':'适合来点减压')+'。全是本机实时合成,不联网,外放就行。</div>'
+      +'<div style="display:flex;gap:6px;margin-top:9px;">'+chips+'</div>'
+      +'<div style="font-size:11.5px;color:var(--text-hint);margin-top:8px;line-height:1.6;">'+sc.desc+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:8px;">'+mins+'</div>'
+      +'<button id="nsMain" class="switch-btn active" onclick="window._nsToggle()" style="width:100%;margin-top:9px;">'+(playing?'⏸ 停止':'▶ 播放')+'</button>'
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:6px;text-align:center;">※ 到点自动淡出,不会突然停;睡前场景配声场(耳机双耳节拍)效果更佳</div>'
+      +'</div></div>';
+  }catch(_e){ return ''; }
+};
+
 function renderBody(){
       var el=document.getElementById('health-body'); if(!el||el.dataset.done) return;
       var h='';
@@ -26326,6 +26502,7 @@ function renderBody(){
         +'<div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--text);">4-7-8 呼吸 · 失眠速救</div>'
         +'<div style="font-size:12px;color:var(--text-hint);margin-top:2px;">吸 4 秒 → 屏 7 秒 → 呼 8 秒，4 轮，困意自然来</div></div>'
         +'<div style="font-size:16px;color:var(--pri);">▶</div></div></div>';
+      try{ h+=window._nowSoundHTML(); }catch(_nsh){}
       var saved=null;
       try{ saved=JSON.parse(localStorage.getItem('zhiming_constitution_v1')||'null'); }catch(_){}
       var _bz0=_baziCons();
