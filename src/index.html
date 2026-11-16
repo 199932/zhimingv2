@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.132.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.133.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2646,7 +2646,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.132.0-20261116';
+const ZHIMING_BUILD = 'v2.133.0-20261116';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -7316,12 +7316,33 @@ function calcBazi(){
   const dg = r.dayGan, dwx = WUXING_GAN[dg];
   const PWX_LABEL = {"木":"木日","火":"火日","土":"土日","金":"金日","水":"水日"};
   const pwxLabel = PWX_LABEL[dwx]||"";
-  const personality = TEXT.bazi.personality[dg] || "";
   const brief = TEXT.bazi.dayStemBrief[dg] || "";
-  const career = TEXT.bazi.career[dwx] || "";
+  /* ── 因命解命(v2.133.0):四段模板全部接入命局实数,术语人话化 ── */
+  const _meWX = (function(){ try{ if(!r.wxScore) return null; var tt=Object.values(r.wxScore).reduce(function(a,b){return a+b;},0)||1; return Math.round(r.wxScore[dwx]*100/tt); }catch(_ewx){ return null; } })();
+  const personality = (TEXT.bazi.personality[dg] || "") + (_meWX!==null
+    ? `<br><br><b style="color:var(--pri);">放到你的命局里看：</b>${dwx}在你命里约占 ${_meWX}%${_meWX>=30?'——这类特质在你身上相当鲜明，是别人认你的标签。':_meWX>=15?'——强度适中，平时未必总意识到，关键场合会显现出来。':'——这份特质偏隐性，不是你没有，而是要主动用它才出彩。'}`
+    : "");
+  const WX_CAREER={"木":"教育、文创、医养、植物相关","火":"能源电力、传媒内容、餐饮娱乐","土":"地产建筑、农产仓储、咨询中介","金":"金融、机械、科技硬件、司法","水":"物流贸易、旅游出行、饮品水产"};
+  const _xyOther=(r.xiYong||[]).filter(x=>x!==dwx);
+  const career = (TEXT.bazi.career[dwx] || "") + (_xyOther.length
+    ? `<br><br><b style="color:var(--pri);">结合你的喜用神（${r.xiYong.join("、")}）</b>：传统五行行业对应里，${_xyOther.map(x=>x+'系的方向（'+WX_CAREER[x]+'）').join('；')}值得留意。行业说只是传统参考，现实里你的能力和机会才是主变量。`
+    : "");
   const health = TEXT.bazi.health[dwx] || "";
-  const love = TEXT.bazi.love.general + "<br>" + (r.gender==="男"?TEXT.bazi.love.male:TEXT.bazi.love.female);
-  const wealth = TEXT.bazi.wealth.general + "<br>" + TEXT.bazi.wealth.tip;
+  const _tongwo = _meWX!==null ? _meWX : 0;
+  const _shishang = null; /* 我生五行占比 */
+  const _SH={"金":"水","水":"木","木":"火","火":"土","土":"金"};
+  const _woSheng = (function(){ try{ if(!r.wxScore) return 0; var tt=Object.values(r.wxScore).reduce(function(a,b){return a+b;},0)||1; return Math.round(r.wxScore[_SH[dwx]]*100/tt); }catch(_ewx2){ return 0; } })();
+  const love = "地支之间的冲撞与牵绊（术语叫刑冲合害）会放大感情的起伏——那是外部节奏，能商量、能磨合，不是死局。"
+    + "<br>" + (r.gender==="男"
+      ? "男命里管钱的那颗星（财星，术语叫「我克者」）同时也代表姻缘。你命里"+dwx+"占约 "+_tongwo+"%"+(_tongwo>=30?'——同辈竞争的气场偏强，感情里多主动沟通、少猜来猜去。':_tongwo>=15?'——竞争感适中，把沟通做扎实感情就稳。':'——竞争气场不强，感情路相对清爽。')
+      : "女命里管姻缘的那颗星（官星，术语叫「克我者」）讲究一位为贵。你往外生的"+_SH[dwx]+"占约 "+_woSheng+"%"+(_woSheng>=30?'——表达和挑剔的气场偏强，对伴侣多一分欣赏、少一分改造欲。':_woSheng>=15?'——有点小挑剔但可控，互相磨合就好。':'——宽容度天然较高，感情磨合成本低。'));
+  const wealth = (r.wangshuai==='偏旺'
+      ? "<b style='color:var(--pri);'>你的命局偏旺——能担财</b>：机会来了接得住，大方去挣；也别贪快，正业之财更长久。"
+      : r.wangshuai==='偏弱'
+      ? "<b style='color:var(--pri);'>你的命局偏弱——财多反为累</b>：别贪多，抓正业之财更稳；合作分利比自己硬扛聪明。"
+      : "<b style='color:var(--pri);'>你的命局中和——财运跟大流</b>：稳扎稳打最合适，不必刻意追财。")
+    + "<br>偏财是机会财、快钱（副业、投资、意外之得），正财是工资和正业的钱——你的现实处境决定主次，别拿命理当投资依据。"
+    + "<br>" + TEXT.bazi.wealth.tip;
   const wsTip = r.wangshuai==="偏旺"?TEXT.bazi.wangshuaiStrong:r.wangshuai==="偏弱"?TEXT.bazi.wangshuaiWeak:TEXT.bazi.wangshuaiBalanced;
   const TG_COLOR = {"比劫":"#8B6F47","食伤":"#D4463A","财":"#C9A54B","官杀":"#4A8BC8","印":"#3E9B5E"};
   const TG_DESC = {
