@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.133.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.134.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2646,7 +2646,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.133.0-20261116';
+const ZHIMING_BUILD = 'v2.134.0-20261116';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4637,6 +4637,118 @@ window._lyOpen=function(idx){
     if(body) body.innerHTML=html;
     window.__openModalById('lyModal');
   }catch(_e){}
+};
+
+
+/* ═══ 命局一页纸·因命主线（v2.134.0）+ 大运叙事 ═══ */
+window._SS_STORY={
+  '比劫':{w:'自我意志强、朋友圈热闹，但容易跟人较劲、不肯服输',x:'独处多于扎堆——有时候需要主动找人搭伙，别一个人扛'},
+  '食伤':{w:'点子多、表达欲强，思维活，但容易想得多、说得快、耐不住',x:'表达偏含蓄——好东西容易闷在心里，要刻意练输出'},
+  '财':{w:'务实重行动，眼里都是机会，但容易忙于追利忘了养自己',x:'对钱和机会的敏感度偏低——理财和抓机会要刻意练习'},
+  '官杀':{w:'规矩意识强、扛得住责任、自我要求高，但容易绷得太紧',x:'不喜欢被管、规则感偏弱——签合同立规矩的时候要格外上心'},
+  '印':{w:'爱学习、有靠山感、内在丰盈，但想得多、行动慢半拍',x:'学习资源和贵人缘要主动争取——等人送不如自己够'}
+};
+window._WX_ACTION={
+  '木':'学习成长、靠近能带你进步的人、养绿植多走路',
+  '火':'多晒太阳多运动、亮出自己、把表达和社交打开',
+  '土':'规律作息、踏实积累、一次只做一件事',
+  '金':'断舍离、给自己立规矩、聚焦收敛别摊开',
+  '水':'允许流动和休息、多思考复盘、蓄力别硬冲'
+};
+window._DY_CAT={'比肩':'比劫','劫财':'比劫','伤官':'食伤','食神':'食伤','偏财':'财','正财':'财','七杀':'官杀','正官':'官杀','偏印':'印','正印':'印'};
+window._DY_THEME={
+  '比劫':'自我成长与合作竞争——这十年"你是谁"是主课题，闯劲足但防合伙纠纷',
+  '食伤':'表达与探索——点子和才华集中释放，适合学新东西开新路，防口舌',
+  '财':'务实积累——钱和机会的十年，适合攒本事也攒钱，防透支身体去追',
+  '官杀':'责任与淬炼——担子重、规矩多，扛过去地位就立住了，防过度紧绷',
+  '印':'学习与蓄力——学识、证书、贵人缘集中窗口，适合深耕，防想太多做得少'
+};
+window._byStoryHTML=function(r){
+  try{
+    if(!r||!r.dayGan) return '';
+    var parts=[];
+    /* 1.核心矛盾:十神五大类最强vs最弱 */
+    var sc=r.shiShenCount||{};
+    var keys=['比劫','食伤','财','官杀','印'];
+    var top=keys[0],low=keys[0],tv=-1,lv=99;
+    keys.forEach(function(k){ var v=sc[k]||0; if(v>tv){tv=v;top=k;} if(v<lv){lv=v;low=k;} });
+    var total=keys.reduce(function(a,k){return a+(sc[k]||0);},0)||1;
+    var st=window._SS_STORY;
+    var p1='<div style="font-size:12.5px;line-height:1.8;">你的命局里<b style="color:var(--pri);">'+top+'之气最旺</b>（强度 '+(tv/total*5).toFixed(1)+'/5）——'+st[top].w+'。'
+      +'<b>'+low+'之气最弱</b>——'+st[low].x+'。<br><span style="color:var(--text-hint);">这一强一弱，就是你命里的主旋律：把 '+top+' 的优势用足，把 '+low+' 的短板当功课。</span></div>';
+    /* 2.人生主调:喜用忌神 */
+    var ws=r.wangshuai||'中和';
+    var xy=r.xiYong||[];
+    var dwx=WUXING_GAN[r.dayGan]||'木';
+    var jiList=['木','火','土','金','水'].filter(function(w){ try{ return __wxIsXi(w,r)===-1; }catch(_e){ return false; } });
+    var wsTxt=ws==='偏旺'?'偏旺（自我能量足，适合泄出去而不是憋着）':ws==='偏弱'?'偏弱（需要充电补给，别硬扛）':'中和（能量平衡，稳住就是赢）';
+    var p2='<div style="font-size:12.5px;line-height:1.8;">日主'+r.dayGan+'（'+dwx+'），命局'+wsTxt+'。'
+      +(xy.length?('<b style="color:#3E9B5E;">'+xy.join('、')+'</b>是给你充电的五行——多用它们，状态就上来。'):'')
+      +(jiList.length?('<b style="color:#C0392B;">'+jiList.join('、')+'</b>是耗你的——不是不能碰，是用量要控制，别在耗你的人事物上过度停留。'):'')
+      +'</div>';
+    /* 3.节奏:当前大运+下步预告 */
+    var p3=''; var cur=null,next=null;
+    var nowY=new Date().getFullYear();
+    try{
+      var dl=(r.dayun&&r.dayun.list)||[];
+      var sui=nowY-(r.input&&r.input.year?r.input.year:nowY)+1;
+      dl.forEach(function(d){ if(sui>=d.startSui&&sui<=d.endSui) cur=d; });
+      if(cur){ var di=dl.indexOf(cur); next=dl[di+1]||null; }
+    }catch(_e){}
+    if(cur){
+      var cjd=cur.jiXiong?cur.jiXiong.label:'稳';
+      var ccol=cur.jiXiong&&cur.jiXiong.score>=0.5?'#5B8C3E':cur.jiXiong&&cur.jiXiong.score<=-0.5?'#C0392B':'#B8860B';
+      var th=window._DY_THEME[window._DY_CAT[cur.ganShi]||cur.ganShi]||'十年一变的节奏——把握主题，顺势而为';
+      p3='<div style="font-size:12.5px;line-height:1.8;">你正走在<b>第'+cur.step+'步大运 '+cur.gz+'</b>（'+cur.startSui+'-'+cur.endSui+'岁，'+cur.startYear+'-'+cur.endYear+'）——十年主题：<b style="color:'+ccol+'">'+cur.ganShi+'当令 · '+cjd+'</b>。'+th+'。'
+        +(next?('<br><span style="color:var(--text-hint);">'+(cur.endYear-nowY+1)+' 年后换入 '+next.gz+'（'+(window._DY_CAT[next.ganShi]||next.ganShi)+'运）——'+((window._DY_THEME[window._DY_CAT[next.ganShi]||next.ganShi]||'').split('——')[1]||'把握新主题')+'，可以提前铺路。</span>'):'')
+        +'</div>';
+    }
+    /* 4.此刻:流年+流月 */
+    var p4='';
+    try{
+      var ln=(r.liunian||[]).find(function(l){ return l.gz&&String(l.year||'')===String(nowY); })||(r.liunian&&r.liunian[0]);
+      var lm=(r.liuyue||[])[new Date().getMonth()];
+      var scLn=ln&&ln.jiXiong?ln.jiXiong.score:0, scLm=lm&&lm.jiXiong?lm.jiXiong.score:0;
+      var sum=scLn+scLm;
+      var mix=sum>=1?'今年和眼下都在顺风口——该出手时就出手，别磨蹭。':sum>=0?'年月都平稳——按计划走，稳住节奏就是赢。':'当前处在蓄力段——阻力是提醒，不是判决；省着劲，把基础打厚。';
+      p4='<div style="font-size:12.5px;line-height:1.8;">今年'+(ln?('是 '+ln.gz+'年（'+(ln.jiXiong?ln.jiXiong.label:'稳')+'）'):'')+'，眼下'+(lm?('是 '+lm.gz+'月（'+(lm.jiXiong?lm.jiXiong.label:'稳')+'）'):'')+'——'+mix+'</div>';
+    }catch(_e4){}
+    /* 5.当下最该经营 */
+    var p5='';
+    if(xy.length){
+      var a1=window._WX_ACTION[xy[0]]||'', a2=xy[1]?window._WX_ACTION[xy[1]]||'':'';
+      p5='<div style="font-size:12.5px;line-height:1.8;">别贪多，先把一件事做实：<b style="color:var(--pri);">多用'+xy[0]+'——'+a1+'</b>。'+(a2?('<br>顺手补'+xy[1]+'：'+a2+'。'):'')+'</div>';
+    }
+    return '<div class="card" style="border-color:var(--pri);border-width:1.5px;"><div class="card-title">🧭 你的命，一页纸</div>'
+      +'<div style="padding:2px 4px;">'
+      +'<div style="font-size:11px;color:var(--pri);font-weight:800;margin:8px 0 4px;">① 核心矛盾</div>'+p1
+      +'<div style="font-size:11px;color:var(--pri);font-weight:800;margin:10px 0 4px;">② 人生主调</div>'+p2
+      +(p3?('<div style="font-size:11px;color:var(--pri);font-weight:800;margin:10px 0 4px;">③ 十年节奏</div>'+p3):'')
+      +(p4?('<div style="font-size:11px;color:var(--pri);font-weight:800;margin:10px 0 4px;">④ 此刻</div>'+p4):'')
+      +(p5?('<div style="font-size:11px;color:var(--pri);font-weight:800;margin:10px 0 4px;">⑤ 当下最该经营</div>'+p5):'')
+      +'<div style="font-size:10px;color:var(--text-hint);margin-top:10px;text-align:center;">命理看倾向，不判死刑；这张纸是地图，路还是你自己走。</div>'
+      +'</div></div>';
+  }catch(_e){ return ''; }
+};
+window._dyStoryHTML=function(r){
+  try{
+    if(!r||!r.dayun||!r.dayun.list) return '';
+    var nowY=new Date().getFullYear();
+    var sui=nowY-(r.input&&r.input.year?r.input.year:nowY)+1;
+    var cur=null,next=null;
+    r.dayun.list.forEach(function(d){ if(sui>=d.startSui&&sui<=d.endSui) cur=d; });
+    if(cur){ var i=r.dayun.list.indexOf(cur); next=r.dayun.list[i+1]||null; }
+    if(!cur) return '';
+    var th=(window._DY_THEME[window._DY_CAT[cur.ganShi]||cur.ganShi]||'').split('——');
+    var jx=cur.jiXiong||{label:'稳',score:0};
+    var opp=jx.score>=0.5?'机会：顺风的十年，值得把大事放在这十年里办。':jx.score<=-0.5?'功课：这十年磨性子，慢就是快，别跟大势硬碰。':'节奏：平稳十年，按自己的计划推进就好。';
+    var h='<div style="background:var(--pri-light);border-radius:12px;padding:11px 13px;margin-top:10px;">';
+    h+='<div style="font-size:12px;font-weight:800;color:var(--pri-dark);margin-bottom:5px;">⏳ 你正走的十年：'+cur.gz+'运（'+cur.startSui+'-'+cur.endSui+'岁 · '+cur.startYear+'-'+cur.endYear+'）· '+jx.label+'</div>';
+    h+='<div style="font-size:12px;line-height:1.75;">主题：'+cur.ganShi+'——'+(th[1]||th[0])+'。'+opp;
+    h+=(next?('<br><span style="color:var(--text-hint);">提前看：'+(cur.endYear-nowY+1)+' 年后进入 '+next.gz+'（'+(window._DY_CAT[next.ganShi]||next.ganShi)+'运），趋势切换前把该收的尾收掉。</span>'):'');
+    h+='</div></div>';
+    return h;
+  }catch(_e){ return ''; }
 };
 
 function calcDayunLiunianJiXiong(r){
@@ -7365,7 +7477,7 @@ function calcBazi(){
   const tgExplain = Object.entries(r.shiShenCount)
     .filter(([k,v])=>v > 0.3)
     .map(([k,v])=>`<div style="font-size:11px;color:var(--text-sub);margin-top:4px;line-height:1.5;"><b style="color:${TG_COLOR[k]}">${k}</b>（强度 ${v}）：${TG_DESC[k]||""}</div>`).join("");
-  const html = `
+  const html = (typeof window._byStoryHTML==='function'?window._byStoryHTML(r):'') + `
   <div class="card">
     <div class="card-title">四柱八字<span class="liupai-badge">流派:十神综合权重</span></div>
     <div class="pillars">
@@ -7455,6 +7567,7 @@ function calcBazi(){
     const dy = r.dayun;
     if (dy){
       h += `<div class="card"><div class="card-title">大运 (${dy.isShun?"顺排":"逆排"}，起运 ${dy.qiYunSui} 岁)</div>`;
+      try{ h += (typeof window._dyStoryHTML==='function'?window._dyStoryHTML(r):''); }catch(_dys){}
       h += `<div style="font-size:11px;color:var(--text-hint);margin-bottom:8px;">起运依据：${dy.isShun?"阳男/阴女顺排，从出生到下一个节":"阴男/阳女逆排，从上一个节到出生"}，${dy.qiYunDays}天÷3=${dy.qiYunSuiRaw}岁，虚岁取整 ${dy.qiYunSui} 岁起运。每步大运管10年。</div>`;
       h += `<div style="overflow-x:auto;"><table class="dayun-tbl" style="width:100%;border-collapse:collapse;font-size:12px;">
         <thead><tr style="background:var(--bg);">
