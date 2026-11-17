@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.134.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.135.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2646,7 +2646,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.134.0-20261116';
+const ZHIMING_BUILD = 'v2.135.0-20261117';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4730,6 +4730,38 @@ window._byStoryHTML=function(r){
       +'</div></div>';
   }catch(_e){ return ''; }
 };
+
+/* ═══ 十神组合解读（v2.135.0）——命理经典组合因命实判 ═══ */
+window._ssComboHTML=function(r){
+  try{
+    var c=r.ssDetail; if(!c) return '';
+    var ws=r.wangshuai||'中和';
+    var hits=[];
+    function n(k){ return c[k]||0; }
+    /* 判定表(经典命理组合,粗判) */
+    if(n('伤官')>=1&&n('正官')>=1) hits.push(['伤官见官','伤官 '+n('伤官')+' 个、正官 '+n('正官')+' 个','傲气撞上规矩——你既有才华锋芒，又生活在规则和考核里，顶撞与自我约束的拉扯是常态','把锋芒用在事上，不用在人上：跟规则较劲之前，先想清楚你要的是什么']);
+    if(n('正官')>=1&&(n('正印')>=1||n('偏印')>=1)) hits.push(['官印相生','正官 '+n('正官')+' 个、印星 '+(n('正印')+n('偏印'))+' 个','体制滋养——责任给你带来成长和庇护，越担责越有贵人','适合走正规路线：名分、证书、平台，该争取就争取']);
+    if(n('食神')>=1&&n('七杀')>=1) hits.push(['食神制杀','食神 '+n('食神')+' 个、七杀 '+n('七杀')+' 个','才华化压力——高压环境反而能出你的活，七杀是磨刀石，食神是你的刀','压力别硬扛也别躲：把它变成具体的项目和作品']);
+    if(n('偏印')>=1&&n('食神')>=1) hits.push(['枭印夺食','偏印 '+n('偏印')+' 个、食神 '+n('食神')+' 个','想得多压住表达——内在的顾虑容易掐灭你的输出','行动前别过度盘算：想七分就动手，剩下三分在路上补']);
+    if((n('比肩')+n('劫财'))>=2&&(n('偏财')+n('正财'))>=1) hits.push(['比劫夺财',(n('比肩')+n('劫财'))+' 个比劫、财星 '+(n('偏财')+n('正财'))+' 个','身边人分你的蛋糕——合作和竞争一起上门，钱的事容易有人插一手','合伙、借贷、担保先把账算清楚，丑话说在前头']);
+    if((n('偏财')+n('正财'))>=2&&n('七杀')+n('正官')>=1&&ws==='偏弱') hits.push(['财滋弱杀','财星 '+(n('偏财')+n('正财'))+' 个、官杀 '+(n('七杀')+n('正官'))+' 个、且身弱','钱生压力——你在用资源换地位和担子，代价是自己的能量','别用健康换位置：接事前先掂量身体和时间']);
+    if(n('伤官')>=1&&(n('正印')>=1||n('偏印')>=1)) hits.push(['伤官配印','伤官 '+n('伤官')+' 个、印星 '+(n('正印')+n('偏印'))+' 个','才华有靠山——表达背后有学识撑着，能说也能做','组合难得：把输出产品化（文章/作品/课程），你的天花板比一般人高']);
+    if(n('正官')>=1&&n('七杀')>=1) hits.push(['官杀混杂','正官 '+n('正官')+' 个、七杀 '+n('七杀')+' 个','两套规矩打架——既想守规则又想突破规则，方向感容易被稀释','自己定主调：要么走正规路线做深，要么自己开路做宽，别两头都要']);
+    if(!hits.length) return '<div style="margin-top:10px;padding:9px 12px;background:var(--bg);border-radius:8px;font-size:12px;line-height:1.7;color:var(--text-sub);">⚔️ 十神关系相对清纯——没有典型的组合张力，格局趋向均衡。这类命局的可塑性高，路怎么走更多看你自己。</div>';
+    var h='<div class="card"><div class="card-title">⚔️ 你的十神组合</div>';
+    h+='<div style="font-size:10px;color:var(--text-hint);margin-bottom:6px;">按经典命理组合规则实判——命中即解读，没命中不硬凑。</div>';
+    hits.slice(0,4).forEach(function(x){
+      h+='<div style="margin-bottom:9px;padding-bottom:9px;border-bottom:1px dashed var(--line);">';
+      h+='<div style="font-size:13px;font-weight:800;">'+x[0]+' <span style="font-size:10px;color:var(--text-hint);font-weight:400;">('+x[1]+')</span></div>';
+      h+='<div style="font-size:12px;line-height:1.7;margin-top:3px;">'+x[2]+'</div>';
+      h+='<div style="font-size:12px;line-height:1.7;margin-top:3px;color:var(--pri);">→ '+x[3]+'</div></div>';
+    });
+    if(hits.length>4) h+='<div style="font-size:10px;color:var(--text-hint);">还有 '+(hits.length-4)+' 个次要组合，先专注上面的主线。</div>';
+    h+='</div>';
+    return h;
+  }catch(_e){ return ''; }
+};
+
 window._dyStoryHTML=function(r){
   try{
     if(!r||!r.dayun||!r.dayun.list) return '';
@@ -4783,6 +4815,21 @@ function calcDayunLiunianJiXiong(r){
     r.geju = calcGeju(r);
     r.dayunJiXiong = calcDayunLiunianJiXiong(r);
     r.liuyue = calcLiuyue(r);
+    /* 十神细分计数(天干1计+藏干1计)——供组合解读 */
+    try{
+      var _GYY={"甲":1,"乙":0,"丙":1,"丁":0,"戊":1,"己":0,"庚":1,"辛":0,"壬":1,"癸":0};
+      var _dg=r.dayGan;
+      var _ssf=function(og){ var dw=WUXING_GAN[_dg],ow=WUXING_GAN[og],dy=_GYY[_dg],oy=_GYY[og],sy=(dy===oy);
+        if(_dg===og) return "比肩"; if(dw===ow) return sy?"比肩":"劫财";
+        var SH2={"金":"水","水":"木","木":"火","火":"土","土":"金"},KE2={"金":"木","木":"土","土":"水","水":"火","火":"金"};
+        if(SH2[dw]===ow) return sy?"食神":"伤官"; if(KE2[dw]===ow) return sy?"偏财":"正财";
+        if(KE2[ow]===dw) return sy?"七杀":"正官"; if(SH2[ow]===dw) return sy?"偏印":"正印"; return "?"; };
+      var _cnt={};
+      ['比肩','劫财','食神','伤官','偏财','正财','七杀','正官','偏印','正印'].forEach(function(k){ _cnt[k]=0; });
+      (r.pillars||[]).forEach(function(pl){ if(pl.gz&&pl.gz[0]){ var n1=_ssf(pl.gz[0]); if(_cnt[n1]!==undefined)_cnt[n1]+=1; } });
+      (r.pillars||[]).forEach(function(pl){ (pl.zhiCangArr||[]).forEach(function(c){ var n2=c.ss||_ssf(c.g); if(_cnt[n2]!==undefined)_cnt[n2]+=1; }); });
+      r.ssDetail=_cnt;
+    }catch(_esd){}
     return r;
   };
 })();
@@ -7506,6 +7553,7 @@ function calcBazi(){
     ${tgTopHtml}
     <div style="margin-top:10px;padding:8px 10px;background:var(--bg);border-radius:8px;">${tgExplain}</div>
   </div>
+  ${(typeof window._ssComboHTML==='function'?window._ssComboHTML(r):'')}
   <div class="card">
     <div class="card-title">五行分布</div>
     ${wxHtml}
