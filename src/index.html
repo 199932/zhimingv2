@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.135.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.136.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2647,7 +2647,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.135.1-20261117';
+const ZHIMING_BUILD = 'v2.136.0-20261118';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4628,6 +4628,19 @@ window._lyExplain=function(pt, r){
     return h;
   }catch(_e){ return '<div style="padding:20px;">解读生成失败，稍后再试。</div>'; }
 };
+
+window._lynOpen=function(idx){
+  try{
+    var ctx=window._lynCtx;
+    if(!ctx||!ctx.ly||!ctx.ly[idx]) { try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
+    var pt=ctx.ly[idx];
+    var html=window._lyExplain(pt, ctx.r);
+    var body=document.getElementById('lyModalBody');
+    if(body) body.innerHTML=html;
+    window.__openModalById('lyModal');
+  }catch(_e){}
+};
+
 window._lyOpen=function(idx){
   try{
     var ctx=window._lyCtx;
@@ -7726,12 +7739,14 @@ function calcBazi(){
     }
     // === 流年（未来12年） ===
     const ln = r.liunian || [];
+    try{ window._lynCtx={ly:ln.map(function(l){ return {label:l.year+' 年', gz:l.gz, ganShi:l.ganShi, wx:l.wx, jiXiong:l.jiXiong, score:Math.round(70+(l.jiXiong?l.jiXiong.score:0)*25)}; }), r:r}; }catch(_lync){}
     h += `<div class="card"><div class="card-title">流年 (未来12年·逐年干支与十神+吉凶)</div>`;
+    h += `<div style="font-size:10px;color:var(--text-hint);margin-bottom:6px;">点任意年份可展开「因你而解」的完整解读。</div>`;
     h += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">`;
-    ln.forEach(l=>{
+    ln.forEach(function(l,li){
       const jx = l.jiXiong || {score:0,label:"平",detail:""};
       const jxColor = jx.score>=1?"#5B8C3E":jx.score>0?"#7CB342":jx.score===0?"#B8860B":jx.score>-1?"#E67E22":"#C0392B";
-      h += `<div style="border:1px solid var(--line);border-radius:6px;padding:6px 4px;text-align:center;background:var(--bg);border-top:3px solid ${jxColor};" title="${jx.detail}">
+      h += `<div style="border:1px solid var(--line);border-radius:6px;padding:6px 4px;text-align:center;background:var(--bg);border-top:3px solid ${jxColor};cursor:pointer;" title="点按查看完整解读" onclick="window._lynOpen(${li})">
         <div style="font-size:11px;color:var(--text-hint);">${l.year}</div>
         <div style="font-weight:700;font-size:14px;margin:2px 0;">${l.gz}</div>
         <div style="font-size:10px;color:var(--text-hint);">${l.wx}</div>
@@ -7739,7 +7754,7 @@ function calcBazi(){
         <div style="font-size:11px;font-weight:700;color:${jxColor};margin-top:2px;">${jx.label}</div>
       </div>`;
     });
-    h += `</div><div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 流年十神=流年天干相对日干的关系；吉凶=流年干支五行喜忌合判（同大运判定规则）。</div>`;
+    h += `</div><div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 流年十神=流年天干相对日干的关系；吉凶=流年干支五行喜忌合判（同大运判定规则）。命理看倾向，不是判决。</div>`;
     h += `</div>`;
     return h;
   })()}
@@ -20894,10 +20909,53 @@ window._hecanHTML=function(){
       +'<div style="margin-top:9px;padding:8px 11px;border-radius:10px;background:rgba(200,169,106,.1);font-size:12.5px;line-height:1.7;color:#E2D8C2;">'+(zhongHTML||'中式侧待解锁')+'</div>'
       +'<div style="margin-top:6px;padding:8px 11px;border-radius:10px;background:rgba(124,158,199,.1);font-size:12.5px;line-height:1.7;color:#D4DCEA;">'+(xiHTML||'西式侧加载中')+'</div>'
       +verdict
-      +'<div style="font-size:10.5px;color:#6B7488;margin-top:7px;text-align:center;">合参档案已记 '+cnt+' 天——攒够做中西命中率回测</div>'
+      +(window._hecanAudit?window._hecanAudit():'')
+      +'<div style="font-size:10.5px;color:#6B7488;margin-top:7px;text-align:center;">合参档案已记 '+cnt+' 天——预测×体感，纯本地对账</div>'
       +'</div>';
   }catch(_e6){ return ''; }
 };
+
+/* ═══ 合参对账（v2.136.0）：预测×体感，纯本地回测 ═══ */
+window._hecanAudit=function(){
+  try{
+    var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_hecan_v1')||'[]'); }catch(_e1){ }
+    var d=[]; try{ d=JSON.parse(localStorage.getItem('zhiming_v2_diary')||'[]'); }catch(_e2){}
+    if(!a.length) return '';
+    var moodByDay={};
+    (d||[]).forEach(function(e){ if(e&&e.date&&e.mood) moodByDay[e.date]=e.mood; });
+    var joined=[], sameN=0, tot=0, seen={};
+    (a||[]).forEach(function(x){
+      var day=new Date(x.t); var key=day.getFullYear()+'-'+String(day.getMonth()+1).padStart(2,'0')+'-'+String(day.getDate()).padStart(2,'0');
+      if(seen[key]) return; seen[key]=1;
+      tot++; if(x.same===true) sameN++;
+      if(moodByDay[key]) joined.push({ss:x.ss, mood:moodByDay[key]});
+    });
+    var h='';
+    if(joined.length>=3){
+      var yang=joined.filter(function(x){return x.ss==='启动'||x.ss==='表达';});
+      var yin=joined.filter(function(x){return x.ss==='收敛'||x.ss==='内观';});
+      var yN=yang.length, iN=yin.length;
+      var yangJoy=yN?yang.filter(function(x){return x.mood===1;}).length:0;
+      var yinCalm=iN?yin.filter(function(x){return x.mood===2;}).length:0;
+      var sameRate=tot?Math.round(sameN/tot*100):0;
+      h+='<div style="margin-top:9px;padding:9px 11px;border-radius:10px;background:rgba(124,158,199,.08);">';
+      h+='<div style="font-size:11.5px;font-weight:800;color:#B8C4DC;">📊 对账（近 '+tot+' 天预测 · '+joined.length+' 天有你的体感）</div>';
+      h+='<div style="font-size:11.5px;line-height:1.7;color:#C8D2E4;margin-top:4px;">两套体系同指率 <b style="color:#C8A96A;">'+sameRate+'%</b>'+(sameRate>=60?'——多数日子中西互相印证，这份解读的可信度在线。':'——两套语言常各说各话，看卡时以你自己的体感为准。')+'</div>';
+      if(yN&&iN){
+        var msg;
+        if(yangJoy>yinCalm) msg='动起来的日子（启动/表达）你确实记了更多 😄，静的日子更 😐——预测与体感对上了。';
+        else if(yangJoy<yinCalm) msg='有意思：静的日子你反而更常记 😄——你的节奏和常理反着来，这条线索值钱。';
+        else msg='两组体感还看不出明显差——继续攒，别急。';
+        h+='<div style="font-size:11.5px;line-height:1.7;color:#C8D2E4;margin-top:3px;">启动/表达日 '+yN+' 天（😄 '+yangJoy+' 次）vs 收敛/内观日 '+iN+' 天（😐 '+yinCalm+' 次）——'+msg+'</div>';
+      }
+      h+='</div>';
+    } else {
+      h+='<div style="margin-top:9px;padding:9px 11px;border-radius:10px;background:rgba(124,158,199,.08);font-size:11.5px;line-height:1.7;color:#8A93A8;">📊 对账：已攒 '+tot+' 天预测，其中 '+joined.length+' 天有体感记录——每天看卡+记心情，攒到 7 天出第一份可信对账。</div>';
+    }
+    return h;
+  }catch(_e){ return ''; }
+};
+
 window._hecanMount=function(){
   try{
     var ab=document.getElementById('almanac-body'); if(!ab) return;
