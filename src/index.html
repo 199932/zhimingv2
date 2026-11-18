@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.137.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.138.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2647,7 +2647,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.137.1-20261118';
+const ZHIMING_BUILD = 'v2.138.0-20261118';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -16103,6 +16103,13 @@ function renderProfilesUI(){
       <div style="font-size:11px;color:var(--text-hint);margin-top:8px;line-height:1.6;">包含：档案、占卜历史、日记、成长签到与归档、回测记录。导出为 JSON 存本机；导入会覆盖现有同名数据（会先跟你确认）。数据从不离开你的设备。</div>
     </div>
   `;
+  /* 断点续填:叉掉弹层时表单开着→重开自动回到那张表单 */
+  try{
+    if(window._pfResumeId){
+      var _rid=window._pfResumeId; window._pfResumeId=null;
+      openProfileForm(_rid==='__new__'?null:_rid);
+    }
+  }catch(_pr){}
 }
 function quickAddProfile(tpl){
   // 打开创建表单并预填关系信息；生日留空由用户填写（避免静默生成假生日档案）
@@ -16173,7 +16180,7 @@ function openProfileForm(id){
       </div>
       <div class="form-row"><label>备注（可选）</label><input type="text" id="pf-note" placeholder="如：客户/朋友/客户A" value="${p.note||""}"></div>
       <div style="display:flex;gap:8px;">
-        <button class="btn-secondary" style="flex:1;" onclick="document.getElementById('profileFormArea').innerHTML='';">取消</button>
+        <button class="btn-secondary" style="flex:1;" onclick="document.getElementById('profileFormArea').innerHTML='';window._profileEditingId=null;window._pfResumeId=null;">取消</button>
         <button class="btn-primary" style="flex:1;" onclick="window.submitProfileForm()">保 存</button>
       </div>
     </div>
@@ -16329,6 +16336,17 @@ function openProfileModal(){
   }
 }
 function closeProfileModal(){
+  /* 编辑中的表单还开着→记断点,重开弹层自动续填(v2.138.0) */
+  try{
+    var _fa=document.getElementById('profileFormArea');
+    if(_fa&&_fa.innerHTML&&window._profileEditingId) window._pfResumeId=window._profileEditingId;
+    else if(_fa&&_fa.innerHTML&&!window._profileEditingId) window._pfResumeId='__new__';
+  }catch(_pf){}
+  /* 连带关城市搜索弹层——不留在屏幕上游离 */
+  try{
+    var _cm=document.getElementById('cityPickModal');
+    if(_cm&&_cm.style.display!=='none') _cm.style.display='none';
+  }catch(_cp){}
   window.__closeModalById("profileModal");  // [Chrome83] 暴力修复
 }
 
@@ -31370,8 +31388,13 @@ setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
 <div id="cityPickModal" class="cpm-mask" style="display:none;" onclick="window._closeCityPick(event)">
   <div class="cpm-box" onclick="event.stopPropagation()">
     <div class="cpm-head">
-      <input type="text" id="cpm-q" placeholder="🔎 城市名 / 拼音 / 首字母（ly=洛阳）" oninput="window._cityFilter()">
-      <button class="cpm-x" onclick="window._closeCityPick()">✕</button>
+      <div style="width:100%;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:14px;font-weight:800;">🏙 选择城市 <span style="font-size:10.5px;font-weight:400;color:var(--text-hint);">选中后自动回填出生信息</span></div>
+          <button class="cpm-x" onclick="window._closeCityPick()">✕</button>
+        </div>
+        <input type="text" id="cpm-q" placeholder="🔎 城市名 / 拼音 / 首字母（ly=洛阳）· 也可输省名" oninput="window._cityFilter()">
+      </div>
     </div>
     <div id="cpm-hot" class="cpm-hot"></div>
     <div id="cpm-anchors" class="cpm-anchors"></div>
