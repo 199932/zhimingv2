@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.137.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.137.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2647,7 +2647,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.137.0-20261118';
+const ZHIMING_BUILD = 'v2.137.1-20261118';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4788,9 +4788,9 @@ window._dyStoryHTML=function(r){
     var th=(window._DY_THEME[window._DY_CAT[cur.ganShi]||cur.ganShi]||'').split('——');
     var jx=cur.jiXiong||{label:'稳',score:0};
     var opp=jx.score>=0.5?'机会：顺风的十年，值得把大事放在这十年里办。':jx.score<=-0.5?'功课：这十年磨性子，慢就是快，别跟大势硬碰。':'节奏：平稳十年，按自己的计划推进就好。';
-    var h='<div style="background:var(--pri-light);border-radius:12px;padding:11px 13px;margin-top:10px;">';
-    h+='<div style="font-size:12px;font-weight:800;color:var(--pri-dark);margin-bottom:5px;">⏳ 你正走的十年：'+cur.gz+'运（'+cur.startSui+'-'+cur.endSui+'岁 · '+cur.startYear+'-'+cur.endYear+'）· '+jx.label+'</div>';
-    h+='<div style="font-size:12px;line-height:1.75;">主题：'+cur.ganShi+'——'+(th[1]||th[0])+'。'+opp;
+    var h='<div style="background:var(--pri-light);border-radius:12px;padding:11px 13px;margin-top:10px;color:#5F4B33;">';
+    h+='<div style="font-size:12px;font-weight:800;color:#4A3B26;margin-bottom:5px;">⏳ 你正走的十年：'+cur.gz+'运（'+cur.startSui+'-'+cur.endSui+'岁 · '+cur.startYear+'-'+cur.endYear+'）· '+jx.label+'</div>';
+    h+='<div style="font-size:12px;line-height:1.75;color:#5F4B33;">主题：'+cur.ganShi+'——'+(th[1]||th[0])+'。'+opp;
     h+=(next?('<br><span style="color:var(--text-hint);">提前看：'+(cur.endYear-nowY+1)+' 年后进入 '+next.gz+'（'+(window._DY_CAT[next.ganShi]||next.ganShi)+'运），趋势切换前把该收的尾收掉。</span>'):'');
     h+='</div></div>';
     return h;
@@ -20989,8 +20989,8 @@ window._hecanAudit=function(){
       var yangJoy=yN?yang.filter(function(x){return x.mood===1;}).length:0;
       var yinCalm=iN?yin.filter(function(x){return x.mood===2;}).length:0;
       var sameRate=tot?Math.round(sameN/tot*100):0;
-      h+='<div style="margin-top:9px;padding:9px 11px;border-radius:10px;background:rgba(124,158,199,.08);">';
-      h+='<div style="font-size:11.5px;font-weight:800;color:#B8C4DC;">📊 对账（近 '+tot+' 天预测 · '+joined.length+' 天有你的体感）</div>';
+      h+='<details style="margin-top:9px;border-radius:10px;background:rgba(124,158,199,.08);padding:7px 11px;">';
+      h+='<summary style="font-size:11.5px;font-weight:800;color:#B8C4DC;cursor:pointer;list-style:none;">📊 对账（近 '+tot+' 天预测 · '+joined.length+' 天有你的体感）<span style="font-weight:400;color:#6B7488;"> ⌄</span></summary><div style="margin-top:6px;">';
       h+='<div style="font-size:11.5px;line-height:1.7;color:#C8D2E4;margin-top:4px;">两套体系同指率 <b style="color:#C8A96A;">'+sameRate+'%</b>'+(sameRate>=60?'——多数日子中西互相印证，这份解读的可信度在线。':'——两套语言常各说各话，看卡时以你自己的体感为准。')+'</div>';
       if(yN&&iN){
         var msg;
@@ -20999,7 +20999,7 @@ window._hecanAudit=function(){
         else msg='两组体感还看不出明显差——继续攒，别急。';
         h+='<div style="font-size:11.5px;line-height:1.7;color:#C8D2E4;margin-top:3px;">启动/表达日 '+yN+' 天（😄 '+yangJoy+' 次）vs 收敛/内观日 '+iN+' 天（😐 '+yinCalm+' 次）——'+msg+'</div>';
       }
-      h+='</div>';
+      h+='</div></details>';
     } else {
       h+='<div style="margin-top:9px;padding:9px 11px;border-radius:10px;background:rgba(124,158,199,.08);font-size:11.5px;line-height:1.7;color:#8A93A8;">📊 对账：已攒 '+tot+' 天预测，其中 '+joined.length+' 天有体感记录——每天看卡+记心情，攒到 7 天出第一份可信对账。</div>';
     }
