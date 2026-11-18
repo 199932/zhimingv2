@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.136.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.137.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2647,7 +2647,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.136.0-20261118';
+const ZHIMING_BUILD = 'v2.137.0-20261118';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -17928,6 +17928,54 @@ try{ window.gameTossCoin=gameTossCoin; window.gameSpinXlr=gameSpinXlr; window.ga
 /* ================= 双人合盘（简化口径：日柱干支关系+生肖关系） ================= */
 function _hpZhiIdx(year){ return ((year-4)%12+12)%12; }
 var WXS5=["木","火","土","金","水"];
+
+/* ═══ 合盘关系故事（v2.137.0）——双向生克×五行互补，把两个盘写成一段关系 ═══ */
+window._hpStory=function(ganA, ganB, wx, nmA, nmB){
+  try{
+    var SH={"金":"水","水":"木","木":"火","火":"土","土":"金"};
+    var KE={"金":"木","木":"土","土":"水","水":"火","火":"金"};
+    var W2C={"木":"生长","火":"热情","土":"安稳","金":"锐利","水":"流动"};
+    var W2O={"木":"一起把事情从零做起来","火":"把气氛和生活点着","土":"把日子过得踏实","金":"把该断的断清楚","水":"把僵局盘活"};
+    var wgA=WUXING_GAN[ganA], wgB=WUXING_GAN[ganB];
+    var rel=[];
+    if(SH[wgA]===wgB) rel.push(['A2B', nmA+'的能量在滋养'+nmB+'——'+nmA+'付出得多一点，像充电宝，注意别把自己耗空。']);
+    if(SH[wgB]===wgA) rel.push(['B2A', nmB+'的能量在滋养'+nmA+'——'+nmB+'是这段关系里的补给站，'+nmA+'记得说谢谢。']);
+    if(KE[wgA]===wgB) rel.push(['A2Bk', nmA+'能约束'+nmB+'——不是坏事：'+nmB+'发散的时候'+nmA+'踩得住刹车，但别把刹车当方向盘。']);
+    if(KE[wgB]===wgA) rel.push(['B2Ak', nmB+'能约束'+nmA+'——'+nmA+'可能偶尔觉得被管着；换个角度，那是有人愿意给你兜底。']);
+    if(wgA===wgB) rel.push(['same', '两个'+wgB+'——同类人，秒懂彼此的梗，也容易在同一个坑里一起栽。']);
+    if(!rel.length) rel.push(['flat', wgA+'与'+wgB+'互不生克——各自独立，谁也不粘谁，关系松紧自定。']);
+    var h='<div style="margin-top:10px;padding:11px 13px;background:var(--bg);border-radius:12px;border:1px solid var(--card-border);">';
+    h+='<div style="font-size:13px;font-weight:800;color:var(--pri-dark);margin-bottom:6px;">📖 你们的关系故事</div>';
+    /* ① 相互作用 */
+    h+='<div style="font-size:12px;line-height:1.75;">'+rel.map(function(x){return '· '+x[1];}).join('<br>')+'</div>';
+    /* ② 五行互补 */
+    if(wx){
+      var cm=[];
+      if(wx.strongB===wx.weakA) cm.push(nmA+'的弱项「'+wx.weakA+'」恰好是'+nmB+'的强项——在「'+W2O[wx.weakA]+'」这件事上，他能补你。');
+      if(wx.strongA===wx.weakB) cm.push(nmB+'的弱项「'+wx.weakB+'」恰好是'+nmA+'的强项——你补他。');
+      if(cm.length===2) cm.push('双向互补——合起来是一个更完整的整体。');
+      else if(!cm.length){
+        if(wx.strongA===wx.strongB) cm.push('两人都在「'+wx.strongA+'」上很强——共振：一起做事火花大，也容易抢同一个位置。');
+        else if(wx.weakA===wx.weakB) cm.push('两人都在「'+wx.weakA+'」上偏弱——这是你们的共同功课，别指望对方补，一起学。');
+        else cm.push('五行结构各过各的——互补不明显，靠相处磨合出默契。');
+      }
+      h+='<div style="font-size:12px;line-height:1.75;margin-top:6px;">'+cm.map(function(x){return '· '+x;}).join('<br>')+'</div>';
+    }
+    /* ③ 一句话 */
+    var wA=W2C[wgA], wB=W2C[wgB];
+    var one;
+    if(wgA===wgB) one='两个'+wA+'的人在一起——像两面镜子照来照去，你会从对方身上看清自己。';
+    else if(SH[wgA]===wgB) one=wA+'遇见'+wB+'——'+wA+'在成全'+wB+'。健康的关系里付出和回收要大致平衡，偶尔反过来让'+nmB+'照顾'+nmA+'，会很不一样。';
+    else if(SH[wgB]===wgA) one=wB+'遇见'+wA+'——'+wB+'在成全'+wA+'，被照顾的那位别当成理所当然。';
+    else if(KE[wgA]===wgB||KE[wgB]===wgA) one=wA+'遇上'+wB+'——天然带一点张力，磨得好叫互相成就，磨不好叫互相消耗。先搞清哪件事由谁说了算。';
+    else one=wA+'与'+wB+'——不粘不腻，各有天地，关系像两条并行的路，偶尔交汇时聊得最畅快。';
+    h+='<div style="font-size:12px;line-height:1.75;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--pri);">'+one+'</div>';
+    h+='<div style="font-size:10px;color:var(--text-hint);margin-top:6px;">以双方日主与八字五行为口径的简化判读——关系是两个人一起写的，命理只提供角色说明书。</div>';
+    h+='</div>';
+    return h;
+  }catch(_e){ return ''; }
+};
+
 function computeHePan(pA, pB){
   if(!pA||!pB) return null;
   var dA=new Date(parseInt(pA.year,10), parseInt(pA.month,10)-1, parseInt(pA.day,10));
@@ -17966,11 +18014,13 @@ function computeHePan(pA, pB){
         var weakB=WXS.slice().sort(function(x,y){return pB5[x]-pB5[y];})[0];
         var strongA=WXS.slice().sort(function(x,y){return pB5[y]-pB5[x];})[0];
         var strongB=WXS.slice().sort(function(x,y){return pA5[y]-pA5[x];})[0];
-        wx={a5:pA5,b5:pB5,weakA:weakA,weakB:weakB,strongA:strongA,strongB:strongB,compA:strongA===weakA,compB:strongB===weakB};
+        wx={a5:pA5,b5:pB5,weakA:weakA,weakB:weakB,strongA:strongA,strongB:strongB,compA:strongA===weakB,compB:strongB===weakA};
       }
     }
   }catch(_){}
-  return {score:score,grade:grade,items:items,gzA:gzA.gz,gzB:gzB.gz,sxA:sxA,sxB:sxB,wx:wx};
+  var _story='';
+  try{ _story=window._hpStory?window._hpStory(ganA, ganB, wx, (pA.name||'TA'), (pB.name||'对方')):''; }catch(_hs){}
+  return {score:score,grade:grade,items:items,gzA:gzA.gz,gzB:gzB.gz,sxA:sxA,sxB:sxB,wx:wx,story:_story};
 }
 function renderHePan(){
   var body=document.getElementById("hepanModalBody"); if(!body) return;
@@ -18011,7 +18061,8 @@ function runHePan(){
         +'<div style="padding:8px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);"><div style="font-size:11px;color:var(--text-hint);margin-bottom:5px;">'+(pA.emoji||'👤')+' '+(pA.name||'TA')+' 的八字</div>'+bars(r.wx.a5)+'</div>'
         +'<div style="padding:8px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);"><div style="font-size:11px;color:var(--text-hint);margin-bottom:5px;">'+(pB.emoji||'👤')+' '+(pB.name||'另一位')+' 的八字</div>'+bars(r.wx.b5)+'</div>'
         +'</div>'+compLine+'</div>';
-    })():'');
+    })():'')
+    +(r.story||'');
   document.getElementById('hpResult').innerHTML=html;
 }
 function openHePan(){ renderHePan(); window.__openModalById('hepanModal'); }
