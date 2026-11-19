@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.139.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.140.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2647,7 +2647,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.139.1-20261119';
+const ZHIMING_BUILD = 'v2.140.0-20261119';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4482,6 +4482,108 @@ window._lyExplain=function(pt, r){
     h+='</div>';
     return h;
   }catch(_e){ return '<div style="padding:20px;">解读生成失败，稍后再试。</div>'; }
+};
+
+
+/* ═══ 问命（v2.140.0）：你问，命答——四问判定引擎 ═══ */
+window._wenCardHTML=function(){
+  try{
+    if(!window._lynCtx||!window._lynCtx.r) return '';
+    var qs=[['career','💼','该不该跳槽'],['move','🏠','该不该搬去那个城市'],['love','❤️','这段感情要不要继续'],['money','💰','今年适合投资吗']];
+    var h='<div class="card"><div class="card-title">🧭 问命 <span style="font-weight:400;font-size:10px;color:var(--text-hint);">命理给倾向，决策是你的</span></div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+    qs.forEach(function(q){
+      h+='<button class="btn-secondary" style="width:auto;padding:10px 8px;font-size:12.5px;" onclick="window._wenAsk(\''+q[0]+'\')">'+q[1]+' '+q[2]+'</button>';
+    });
+    h+='</div><div id="wenAnswer"></div>';
+    h+='<div style="font-size:10px;color:var(--text-hint);margin-top:6px;">只回答命理能答的（五行与十神的倾向），答不了的直说。大事还要看现实条件。</div>';
+    h+='</div>';
+    return h;
+  }catch(_e){ return ''; }
+};
+window._wenAsk=function(key){
+  try{
+    var r=window._lynCtx&&window._lynCtx.r;
+    if(!r){ try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
+    var now=new Date(); var nowY=now.getFullYear();
+    var ln=r.liunian&&(r.liunian.find(function(l){return l.year===nowY;})||r.liunian[0]);
+    var cur=r.dayun&&r.dayun.list&&(r.dayun.list.find(function(d){return nowY>=d.startYear&&nowY<=d.endYear;})||r.dayun.list[r.dayun.list.length-1]);
+    var next=(cur&&r.dayun.list)?r.dayun.list[r.dayun.list.indexOf(cur)+1]:null;
+    var dayZ=r.dayZhi, dayG=r.dayGan;
+    var zhiI={"子":0,"丑":1,"寅":2,"卯":3,"辰":4,"巳":5,"午":6,"未":7,"申":8,"酉":9,"戌":10,"亥":11};
+    var lnZ=ln?ln.gz.charAt(1):''; var lnG=ln?ln.gz.charAt(0):'';
+    var lnSS=ln?ln.ganShi:''; var lnGZ=ln?ln.gz:'';
+    var body='', verdict='', ev=[];
+    var SS_JD={ "正官":["官杀","克你的那个字透出来——新机会与新约束同时到位。","能担起来就动：约束变多的位置往往也是位置变大的位置。挑下家看『限制』是清晰的还是糊涂的。"],
+      "七杀":["官杀","七杀透干——压力型机会年，想动很正常。","动的窗口开着，但压力也是真的：新位置大概率比现在累。先问自己要的是『更大』还是『更舒服』。"],
+      "正印":["印星","印星主年——学习、证书、背景加持的收益大于换地方。","今年攒筹码比花筹码划算：考个证、补个学历、把专业攒厚。明年再动不迟。"],
+      "偏印":["印星","偏印透干——适合深耕技能、走专业路线。","换工作不如换深度：同一份工作做出别人做不出的东西，比换个东家值钱。"],
+      "食神":["食伤","食神主年——才华输出的年份，你的价值看得见。","想跳就带着作品跳：今年做出的东西是最好的谈判筹码。"],
+      "伤官":["食伤","伤官主年——憋不住想表达、想换是本能。","伤官年跳槽要管住嘴：面试别吐槽老东家，谈判别把话说死。带着成果、收着脾气，动得成。"],
+      "正财":["财星","财星透干——为钱而动的念头会特别强。","先算清账再动：新机会看实际到手和稳定性，别只盯涨幅。命里财来，挑稳的拿。"],
+      "偏财":["财星","偏财透干——机会型的钱在向你招手。","偏财要快但要稳：窗口开的时点别拖太久，条款一定要落纸面。"],
+      "比肩":["比劫","比劫主年——竞争者多，跳槽是在抢位置。","手上有真 offer 再动，别裸辞去挤独木桥。防画饼：谈好的写进合同才算数。"],
+      "劫财":["比劫","劫财透干——今年跳槽容易遇到抢食的。","大环境竞争烈：内部转岗比外部跳槽更划算，先看看脚下有没有路。"] };
+    var JD_RES={"官杀":"可动——挑约束清晰的下家","印星":"先不动——今年攒筹码","食伤":"可动——带着成果跳","财星":"可动——账算清再动","比劫":"有真 offer 再动"};
+    if(key==='career'){
+      var jd=SS_JD[lnSS]||["平","流年干对你日主无明显生克——工作大方向看你自己安排。","不构成明显的动或留信号：按现实条件做决定，命理今年不抢戏。"];
+      var cat=jd[0];
+      verdict=JD_RES[cat]||'按现实安排';
+      body='今年是 '+lnGZ+' 年，流年天干 '+lnG+' 对你日主 '+dayG+' 是<b>『'+lnSS+'』</b>——'+jd[1]+'<br>'+jd[2];
+      ev.push('流年 '+lnGZ+'：流年干十神='+lnSS+'（对日主 '+dayG+'）');
+      if(cur&&cur.endYear-nowY<=1){ body+='<br><b>另：你正处在十年换挡的尾巴上</b>（'+cur.gz+'运到 '+cur.endYear+' 年）——换挡期大动作放在新运开局更顺，今年先谈条件、明年再落地也来得及。'; ev.push('当前大运 '+cur.gz+'（'+cur.startYear+'-'+cur.endYear+'）：换挡期'); }
+      if(next){ ev.push('下一运 '+next.gz+'（'+next.startYear+' 起）：'+(window._DY_CAT&&window._DY_CAT[next.ganShi]||next.ganShi)); }
+    } else if(key==='move'){
+      var yima=(window.__SHEN_SHA_TABLE?__SHEN_SHA_TABLE.yima:{})[dayZ];
+      var lnI=zhiI[lnZ]!==undefined?zhiI[lnZ]:-1, dayI=zhiI[dayZ]!==undefined?zhiI[dayZ]:-1;
+      var chongJ=(dayI>=0&&lnI>=0&&window.SX_CHONG&&SX_CHONG[lnI]===dayI);
+      var heJ=(dayI>=0&&lnI>=0&&window.SX_HE&&SX_HE[lnI]===dayI);
+      var xiY=(r.xiYong&&r.xiYong[0])||'';
+      var dirMap={"火":"南方","水":"北方","木":"东方","金":"西方","土":"本地或中原"};
+      if(chongJ){ verdict='动象强——主动选比被动好'; body='今年 '+lnGZ+'，流年地支 '+lnZ+'<b>冲你的日支 '+dayZ+'（坐下）</b>——环境变动是今年的主旋律。冲不是坏事：被动被冲不如主动选，你想搬的那个方向，命理不反对。'; ev.push('流年支 '+lnZ+' 冲日支 '+dayZ+'（六冲）'); }
+      else if(lnZ===yima){ verdict='驿马到位——想动就是时机'; body='今年流年地支 '+lnZ+' 正好是你的<b>驿马位</b>（日支 '+dayZ+' 查驿马在 '+yima+'）——驿马主奔波迁移。今年搬、今年换城市，是顺水推舟。'; ev.push('流年支 '+lnZ+' = 日支查驿马位（'+dayZ+'→'+yima+'）'); }
+      else if(heJ){ verdict='留象——今年适合扎根'; body='今年流年地支 '+lnZ+' <b>合你的日支 '+dayZ+'</b>——合主安顿、主聚。今年适合在现在的地方扎深根：换城市这种大动，放到合劲过去再说。'; ev.push('流年支 '+lnZ+' 合日支 '+dayZ+'（六合）'); }
+      else { verdict='动静不明显——看现实需要'; body='今年 '+lnGZ+'，与你的日支既不冲也不合，驿马也未临位——命理对搬家今年不给出明显倾向。搬不搬，按工作、家庭这些现实因素定就好。'; ev.push('流年支 '+lnZ+' 与日支 '+dayZ+'：不冲不合'); }
+      if(chongJ||lnZ===yima){ if(xiY&&dirMap[xiY]){ body+='<br><b>方位参考</b>：你喜用神是『'+xiY+'』——传统方位学里对应<b>'+dirMap[xiY]+'</b>方向。挑城市时可以把这个当一条参考线（简化口径，别当唯一标准）。'; ev.push('喜用神 '+xiY+' → 方位 '+dirMap[xiY]); } }
+    } else if(key==='love'){
+      var taohua=(window.__SHEN_SHA_TABLE?__SHEN_SHA_TABLE.taohua:{})[dayZ];
+      var lnI2=zhiI[lnZ]!==undefined?zhiI[lnZ]:-1, dayI2=zhiI[dayZ]!==undefined?zhiI[dayZ]:-1;
+      var chongL=(dayI2>=0&&lnI2>=0&&window.SX_CHONG&&SX_CHONG[lnI2]===dayI2);
+      var heL=(dayI2>=0&&lnI2>=0&&window.SX_HE&&SX_HE[lnI2]===dayI2);
+      if(chongL){ verdict='考验年——冲是「动」，不是「分」'; body='今年 '+lnGZ+'，流年冲<b>日支（夫妻宫）'+dayZ+'</b>——关系会经受考验：聚少离多、口角变多，都是「冲」的表现形式。但受冲≠必分：冲主『大动』，可能是分手，也可能是同居、订婚这种大变化。<b>给自己一个月观察期</b>再下结论，别在情绪最冲的时候拍板。'; ev.push('流年支 '+lnZ+' 冲夫妻宫 '+dayZ+'（日支六冲）'); }
+      else if(heL){ verdict='增进窗口——该推进就推进'; body='今年流年 <b>合进你的夫妻宫（日支 '+dayZ+'）</b>——关系升温的窗口。暧昧的往前走一步，稳定的可以聊未来。合的年份不推进，窗口过了就要再等。'; ev.push('流年支 '+lnZ+' 合夫妻宫 '+dayZ+'（六合）'); }
+      else if(lnZ===taohua){ verdict='桃花旺年——看你要什么'; body='今年流年地支 '+lnZ+' 坐你的<b>桃花位</b>（日支 '+dayZ+' 查桃花在 '+taohua+'）——异性缘旺年。单身的社交往前走；有伴的享受魅力也守住边界，桃花旺对稳定关系是双刃剑。'; ev.push('流年支 '+lnZ+' = 桃花位（'+dayZ+'→'+taohua+'）'); }
+      else { verdict='平稳年——感情跟大势走'; body='今年 '+lnGZ+'，夫妻宫 '+dayZ+' 既不受冲也不受合，桃花未临——感情今年没有大的天象信号。关系好不好，看你们自己经营。'; ev.push('夫妻宫 '+dayZ+' 与流年 '+lnZ+'：无冲无合'); }
+      body+='<br><b>想看更细的两人互动</b>：成长页 → 人物档案 → 双人合盘，那边用两个人的盘说话。';
+    } else if(key==='money'){
+      var jd2=SS_JD[lnSS]||["平","流年干无明显生克——投资不是今年的主题。","别为了『动一动』而动钱：没有信号就是信号，守住现金流比找机会重要。"];
+      var cat2=jd2[0];
+      if(cat2==='财星'){ verdict=(r.wangshuai==='偏弱')?'看得见抓不住——防守':'求财窗口开——正业为主';
+        body='今年流年干 '+lnG+' 是<b>『'+lnSS+'』</b>——财星主年，求财的窗口开着。'+(r.wangshuai==='偏弱'?'<b>但你的命局偏弱——财多反为累</b>：看得见的钱未必拿得住，别上杠杆，别碰高波动，拿稳现金流的正业之财。':'你的命局'+(r.wangshuai==='偏旺'?'偏旺——能担财':'中和——按大流走')+'，正业之财更长久，投机仓位压小。');
+        ev.push('流年干十神='+lnSS+'（财星主年）'); ev.push('命局旺衰='+r.wangshuai);
+      } else if(cat2==='比劫'){ verdict='防破财——别跟风'; body='今年流年干是<b>『'+lnSS+'』</b>——比劫争财年，最大的风险是<b>跟着别人投</b>。今年所有拉你入伙的项目，多想三天再回话；合伙的钱、借出去的钱，都要按收不回来的假设来安排。'; ev.push('流年干十神='+lnSS+'（比劫争财）');
+      } else if(cat2==='印星'){ verdict='求稳——投资自己最划算'; body='今年流年干是<b>『'+lnSS+'』</b>——印星主年，适合『充电型』的投入：课程、证书、工具、健康。定存和稳健理财比投机划算，市场的热闹跟你关系不大。'; ev.push('流年干十神='+lnSS+'（印星主稳）');
+      } else { verdict='观望——不为动而动'; body='今年流年干是<b>『'+lnSS+'』</b>——'+jd2[1]+jd2[2]; ev.push('流年干十神='+lnSS+'（中性）'); }
+    } else { return; }
+    /* 存档钩子：回测数据源（每问每天一条） */
+    try{
+      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_wenming_v1')||'[]'); }catch(_e1){}
+      var today=new Date().toDateString();
+      if(!a.some(function(x){ return x.q===key&&new Date(x.t).toDateString()===today; })){
+        a.push({t:Date.now(), q:key, v:verdict, y:lnGZ});
+        if(a.length>60) a=a.slice(-60);
+        localStorage.setItem('zhiming_wenming_v1', JSON.stringify(a));
+      }
+    }catch(_e2){}
+    var h='<div style="margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
+    h+='<div style="font-size:13px;font-weight:800;">🎯 倾向：<span style="color:var(--pri);">'+verdict+'</span></div>';
+    h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;">'+body+'</div>';
+    h+='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">⌄ 看判定过程（'+ev.length+' 条依据）</summary><div style="font-size:11px;line-height:1.7;color:var(--text-hint);margin-top:5px;">'+ev.map(function(x){return '· '+x;}).join('<br>')+'</div></details>';
+    h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">命理给的是倾向不是保证——大事还要看现实条件。这是工具，不是答案。</div>';
+    h+='</div>';
+    var el=document.getElementById('wenAnswer');
+    if(el){ el.innerHTML=h; try{ el.scrollIntoView({block:'nearest'}); }catch(_e3){} }
+  }catch(_e4){}
 };
 
 window._lynOpen=function(idx){
@@ -7611,6 +7713,7 @@ function calcBazi(){
     });
     h += `</div><div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 流年十神=流年天干相对日干的关系；吉凶=流年干支五行喜忌合判（同大运判定规则）。命理看倾向，不是判决。</div>`;
     h += `</div>`;
+    h += (window._wenCardHTML?window._wenCardHTML():'');
     return h;
   })()}
   <div class="hint">提示：本结果基于简化版命理模型，仅供娱乐参考</div>
@@ -23802,6 +23905,26 @@ function _lenormandAIEnhance(cards, spreadType){
       h+=lines.length?'<div style="margin-top:4px;">'+lines.join('<br>')+'</div>':'';
       h+='<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--card-border);font-size:11.5px;color:var(--text-hint);">复盘只看本机记录，不上传。留痕越多，月底越懂自己。</div>';
     }
+    /* 流月对账(v2.140.0): 本月流月判定×实际情绪记录——诚实对上/对不上 */
+    try{
+      var _r=(window._lynCtx&&window._lynCtx.r)?window._lynCtx.r:null;
+      var _ly=_r&&_r.liuyue?_r.liuyue.find(function(x){return x.month===(m+1);}):null;
+      var _moodCnt=moods.length;
+      var _joy=moods.filter(function(e){return e.mood===1;}).length;
+      var _heavy=moods.filter(function(e){return e.mood===3||e.mood===4;}).length;
+      if(_ly&&_moodCnt>=3){
+        var _lv=_ly.score>=85?'旺':(_ly.score>=70?'顺':'阻滞');
+        var _aud='<div style="margin-top:8px;"><details style="padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--card-border);"><summary style="font-size:11.5px;cursor:pointer;color:var(--text-sub);">⚖ 流月对账：命理说这个月'+_lv+' · 你记了 '+_moodCnt+' 笔情绪</summary><div style="font-size:11.5px;line-height:1.75;color:var(--text-sub);margin-top:6px;">';
+        _aud+='本月流月干支 '+_ly.gz+'（'+_ly.ganShi+'），判定词「'+_lv+'」。你记了 '+_moodCnt+' 笔情绪：😄 '+_joy+' 次，😟/😡 '+_heavy+' 次。';
+        var _concl;
+        if(_lv==='阻滞'&&_joy<_heavy) _concl='判定与体感对上了——阻滞月情绪偏沉，记得这不算失败，是节奏。';
+        else if(_lv==='阻滞'&&_joy>=_heavy) _concl='有意思：命理说阻滞，你却记了不少开心——要么你在低谷里硬撑出了彩，要么判定对你不灵。两种都值得记住。';
+        else if(_lv!=='阻滞'&&_heavy>_joy) _concl='命理说顺，你却多记了沉情绪——流年好不代表事事顺，具体的压力命理看不见，体感说了算。';
+        else _concl='判定与体感对上了——这个月的节奏和命理的推演一致。';
+        _aud+=_concl+'</div></details></div>';
+        h+=_aud;
+      }
+    }catch(_la){}
     h+='</div></div>';
     return h;
   }
