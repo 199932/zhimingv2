@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.139.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.139.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2647,7 +2647,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.139.0-20261119';
+const ZHIMING_BUILD = 'v2.139.1-20261119';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -18733,7 +18733,10 @@ window._openCityPick=function(selId){
       var anc=document.getElementById('cpm-anchors'); if(anc) anc.innerHTML=anchors;
     }catch(_e6){}
     _cityRenderList('');
-    m.style.display='flex';
+    /* v2.139.1: 走__openModalById统一通道——历史原因所有modal-mask弹层都被打z=999999!important,
+       城市弹层旧class z=9999永远被压在档案/其它弹层后面(TA真机实锤);同z后开+DOM靠后=正常盖住 */
+    try{ window.__openModalById('cityPickModal',{alignItems:'flex-start',padding:'4vh 14px 16px 14px',zIndex:'999999'}); }
+    catch(_op){ m.style.display='flex'; }
     try{ q&&q.focus({preventScroll:true}); }catch(_e){ try{ q&&q.focus(); }catch(_e2){} } /* 用户手势内同步focus:移动端软键盘才弹 */
   }catch(_e1){}
 };
@@ -18789,7 +18792,10 @@ window._closeCityPick=function(ev){
   if(ev&&ev.target&&ev.target.classList&&ev.target.classList.contains('cpm-mask')){ _closeCPM(); return; }
   if(!ev){ _closeCPM(); }
 };
-function _closeCPM(){ var m=document.getElementById('cityPickModal'); if(m) m.style.display='none'; }
+function _closeCPM(){
+  try{ if(window.__closeModalById){ window.__closeModalById('cityPickModal'); return; } }catch(_ec){}
+  var m=document.getElementById('cityPickModal'); if(m) m.style.display='none';
+}
 window._cpDebugFlatCount=function(){ return _cpFlat().length; };
 window._cpJumpGroup=function(btn){
   try{
@@ -31261,7 +31267,7 @@ setTimeout(function(){ try{ window._tarotDiaryInit(); }catch(_e){} },600);
 .city-display-btn:active{border-color:var(--pri,#8B6F47);}
 .city-display-btn .cd-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .city-display-btn .cd-arrow{color:var(--text-hint);font-size:12px;}
-.cpm-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding-top:4vh;backdrop-filter:blur(3px);}
+.cpm-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999999;display:flex;align-items:flex-start;justify-content:center;padding-top:4vh;backdrop-filter:blur(3px);}
 .cpm-box{width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;background:var(--card,#fff);border-radius:0 0 18px 18px;padding:12px 14px 16px;box-shadow:0 8px 40px rgba(0,0,0,.35);}
 .cpm-head{display:flex;gap:8px;align-items:center;}
 .cpm-head input{flex:1;padding:11px 14px;border-radius:12px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;outline:none;}
