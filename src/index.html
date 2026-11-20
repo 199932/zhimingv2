@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.140.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.141.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2647,7 +2647,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.140.0-20261119';
+const ZHIMING_BUILD = 'v2.141.0-20261120';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4485,6 +4485,41 @@ window._lyExplain=function(pt, r){
 };
 
 
+/* ═══ 流年12月能量曲线（v2.141.0）：流月score拧成全年节奏一眼看 ═══ */
+window._liuyueWaveHTML=function(){
+  try{
+    var r=window._lynCtx&&window._lynCtx.r;
+    if(!r||!r.liuyue||!r.liuyue.length) return '';
+    var ly=r.liuyue.slice(0,12);
+    var W=326,H=88,pad=6;
+    var min=40,max=95;
+    var pts=ly.map(function(x,i){
+      var vx=pad+i*(W-pad*2)/(ly.length-1);
+      var vy=H-10-((x.score-min)/(max-min))*(H-26);
+      return {x:Math.round(vx*10)/10,y:Math.round(vy*10)/10,m:x.month,sc:x.score,gz:x.gz};
+    });
+    var peak=pts.reduce(function(a,b){return b.sc>a.sc?b:a;});
+    var low=pts.reduce(function(a,b){return b.sc<a.sc?b:a;});
+    var nowM=new Date().getMonth()+1;
+    var poly=pts.map(function(p2){return p2.x+','+p2.y;}).join(' ');
+    var dots=pts.map(function(p2){
+      var col=(p2.sc>=85?'#C25E4C':(p2.sc>=70?'#8A9A5B':'#B0876A'));
+      var isNow=(p2.m===nowM);
+      return '<circle cx="'+p2.x+'" cy="'+p2.y+'" r="'+(isNow?5:3)+'" fill="'+col+'"'+(isNow?' stroke="#4A3B26" stroke-width="1.5"':'')+'/><text x="'+p2.x+'" y="'+(H-1)+'" font-size="7" text-anchor="middle" fill="var(--text-hint)">'+p2.m+'</text>'+(isNow?'<text x="'+p2.x+'" y="'+(p2.y-8)+'" font-size="7.5" text-anchor="middle" fill="#4A3B26" font-weight="700">今</text>':'');
+    }).join('');
+    var monthNames=['','正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
+    var h='<div class="card"><div class="card-title">📈 未来 12 个月的节奏 <span style="font-weight:400;font-size:10px;color:var(--text-hint);">流月能量曲线·点月份看细账</span></div>';
+    h+='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;">';
+    h+='<polyline points="'+poly+'" fill="none" stroke="#8A6410" stroke-width="1.6" opacity=".75"/>';
+    h+=dots+'</svg>';
+    var peakMN=monthNames[peak.m]||(peak.m+'月'), lowMN=monthNames[low.m]||(low.m+'月');
+    h+='<div style="font-size:12px;line-height:1.8;margin-top:7px;">未来 12 个月，你的流月高峰在 <b>'+peakMN+'（'+peak.gz+'）</b>——要办的大事、开的口子，往那几个月里放；低谷在 <b>'+lowMN+'（'+low.gz+'）</b>——那阵子蓄力别硬冲，稳住基本盘。</div>';
+    h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:4px;">柱色：暖红=旺 · 橄榄=顺 · 棕=滞（判定规则同流月表）。曲线是全年大势，具体某月点上面流月表看四段细账。</div>';
+    h+='</div>';
+    return h;
+  }catch(_e){ return ''; }
+};
+
 /* ═══ 问命（v2.140.0）：你问，命答——四问判定引擎 ═══ */
 window._wenCardHTML=function(){
   try{
@@ -4497,6 +4532,19 @@ window._wenCardHTML=function(){
     });
     h+='</div><div id="wenAnswer"></div>';
     h+='<div style="font-size:10px;color:var(--text-hint);margin-top:6px;">只回答命理能答的（五行与十神的倾向），答不了的直说。大事还要看现实条件。</div>';
+    try{
+      var _hist=[]; try{ _hist=JSON.parse(localStorage.getItem('zhiming_wenming_v1')||'[]'); }catch(_e5){}
+      if(_hist.length){
+        var _qn={career:'💼跳槽',move:'🏠搬家',love:'❤️感情',money:'💰投资'};
+        _hist=_hist.slice(-12).reverse();
+        h+='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">📜 问过 '+_hist.length+' 次（点开回看）</summary><div style="font-size:11px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
+        _hist.forEach(function(x){
+          var d=new Date(x.t);
+          h+='· '+(d.getMonth()+1)+'/'+d.getDate()+' '+(_qn[x.q]||x.q)+'——'+(x.v||'')+'<br>';
+        });
+        h+='</div></details>';
+      }
+    }catch(_e6){}
     h+='</div>';
     return h;
   }catch(_e){ return ''; }
@@ -4748,7 +4796,13 @@ window._dyStoryHTML=function(r){
     var h='<div style="background:var(--pri-light);border-radius:12px;padding:11px 13px;margin-top:10px;color:#5F4B33;">';
     h+='<div style="font-size:12px;font-weight:800;color:#4A3B26;margin-bottom:5px;">⏳ 你正走的十年：'+cur.gz+'运（'+cur.startSui+'-'+cur.endSui+'岁 · '+cur.startYear+'-'+cur.endYear+'）· '+jx.label+'</div>';
     h+='<div style="font-size:12px;line-height:1.75;color:#5F4B33;">主题：'+cur.ganShi+'——'+(th[1]||th[0])+'。'+opp;
-    h+=(next?('<br><span style="color:var(--text-hint);">提前看：'+(cur.endYear-nowY+1)+' 年后进入 '+next.gz+'（'+(window._DY_CAT[next.ganShi]||next.ganShi)+'运），趋势切换前把该收的尾收掉。</span>'):'');
+    if(next){
+      var _dLeft=Math.ceil((new Date(next.startYear,0,1)-new Date(nowY,(new Date()).getMonth(),(new Date()).getDate()))/86400000);
+      var _dTxt=_dLeft>365?Math.round(_dLeft/365*10)/10+' 年':(_dLeft>30?Math.round(_dLeft/30)+' 个月':_dLeft+' 天');
+      var _dyCat=window._DY_CAT?(window._DY_CAT[next.ganShi]||next.ganShi):next.ganShi;
+      var _dyTh=(function(){ var _m2={"正官":["把事情做正","靠规则与信誉上位"],"七杀":["扛硬仗","在压力里立住自己"],"正财":["稳步求财","把收入结构做扎实"],"偏财":["抓机会","灵活变现但别赌"],"正印":["深耕与背书","考证学习攒专业"],"偏印":["偏门深耕","走专业冷门路线"],"食神":["输出与享受","把手艺做成产品"],"伤官":["表达与突破","用作品说话"],"比肩":["并肩作战","找对人一起干"],"劫财":["守财防分利","合作先谈清楚"]}; return _m2[next.ganShi]||[next.ganShi,"顺势而为"]; })();
+      h+='<br><span style="color:var(--text-hint);">⏳ 换运倒数：还有 <b style="color:var(--pri);">'+_dTxt+'</b>进入 '+next.gz+'运（'+_dyCat+'——主题是'+_dyTh[0]+'，'+_dyTh[1]+'）。换挡前 6 个月把该收的尾收掉、别开新的大摊子，新运开局轻装上阵。</span>';
+    }
     h+='</div></div>';
     return h;
   }catch(_e){ return ''; }
@@ -7713,6 +7767,7 @@ function calcBazi(){
     });
     h += `</div><div style="font-size:10px;color:var(--text-hint);margin-top:6px;">※ 流年十神=流年天干相对日干的关系；吉凶=流年干支五行喜忌合判（同大运判定规则）。命理看倾向，不是判决。</div>`;
     h += `</div>`;
+    h += (window._liuyueWaveHTML?window._liuyueWaveHTML():'');
     h += (window._wenCardHTML?window._wenCardHTML():'');
     return h;
   })()}
