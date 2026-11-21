@@ -1847,6 +1847,8 @@ body{ padding-bottom:160px; }
       <p class="hint">流派说明：<b>时家奇门 · 拆补法定局 · 阴阳二遁 · 转盘飞布 · 值符值使</b></p>
       <button class="btn-primary" type="submit">排　局</button>
     </form></div>
+
+
     <div class="result" id="qm-result"></div>
     <div class="foot-disclaimer">※ 奇门排盘结果仅供娱乐参考，流派众多，版本差异属正常现象</div>
   </div>
@@ -1918,7 +1920,9 @@ body{ padding-bottom:160px; }
         <textarea id="xlr-question" placeholder="例如：此事能否成？近况走向如何？"></textarea>
       </div>
       <button class="btn-primary" onclick="window.calcXiaoliuren()">起　课</button>
+      <button class="btn-secondary" style="width:100%;margin-top:7px;font-size:12px;" onclick="window._xlrNowFill()">✨ 用当下时辰填（农历月日+此刻时辰，直接起课）</button>
     </div>
+    <div id="xlrHistWrap"></div>
     <div class="result" id="xlr-result"></div>
     <div class="foot-disclaimer">※ 小六壬为马前课改良简化版，仅供娱乐参考，不构成人生决策建议</div>
   </div>
@@ -9011,6 +9015,36 @@ function buildXlrShichenSelect(){
   if (!sel) return;
   sel.innerHTML = SHICHEN_12.map((n,i)=>`<option value="${i}">${n}时（${SHICHEN_RANGE[i]}）</option>`).join("");
 }
+
+window._xlrNowFill=function(){
+  try{
+    var d=new Date();
+    var lu=window.solar2lunar?window.solar2lunar(d.getFullYear(),d.getMonth()+1,d.getDate()):null;
+    if(lu){
+      var mEl=document.getElementById('xlr-month'); var dEl=document.getElementById('xlr-day'); var sEl=document.getElementById('xlr-shichen');
+      if(mEl) mEl.value=lu.month;
+      if(dEl) dEl.value=lu.day;
+      if(sEl) sEl.value=(window._shichenNow?window._shichenNow():0);
+    }
+    window.calcXiaoliuren();
+  }catch(_e){ try{ _alert2("自动填失败，手动填吧"); }catch(_e2){} }
+};
+window._xlrHistShow=function(){
+  try{
+    var w=document.getElementById('xlrHistWrap');
+    if(!w) return;
+    var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_xlr_v1')||'[]'); }catch(_e3){}
+    if(!a.length){ w.innerHTML=''; return; }
+    a=a.slice(-12).reverse();
+    var h='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">🖐 掐过 '+a.length+' 次（回看）</summary><div style="font-size:11px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
+    a.forEach(function(x){
+      var d=new Date(x.t);
+      h+='· '+(d.getMonth()+1)+'/'+d.getDate()+' 报 '+x.n.join(',')+' → <b>'+x.g+'</b>'+(x.q?('<span style="color:var(--text-hint);">「'+x.q+'」</span>'):'')+'<br>';
+    });
+    h+='</div></details>';
+    w.innerHTML=h;
+  }catch(_e4){}
+};
 const XIAOLIUREN_DATA = [
   {name:"大安", wx:"木", fang:"东方", shou:"青龙", jx:"吉", cls:"tag-good",
    kw:["安定","平稳","静止"],
@@ -9070,6 +9104,14 @@ function calcXiaoliuren(){
   const shiName = SHICHEN_12[shiIdx]+"时";
   const route = `大安→留连→速喜→赤口→小吉→空亡 顺数 ${mo}月、${da}日、${shiName}`;
   const resultObj = {daxian: g.name, gongIdx, shiName, shiIdx, month:mo, day:da, jx:g.jx, wx:g.wx, fang:g.fang, shou:g.shou, name:g.name, kw:g.kw, career:g.career, love:g.love, decision:g.decision, route};
+  if(!isDirect){
+    try{
+      var _ha=[]; try{ _ha=JSON.parse(localStorage.getItem('zhiming_xlr_v1')||'[]'); }catch(_he1){}
+      _ha.push({t:Date.now(), n:[mo,da,shiIdx+1], g:g.name, q:question.slice(0,30)});
+      if(_ha.length>30) _ha=_ha.slice(-30);
+      localStorage.setItem('zhiming_xlr_v1', JSON.stringify(_ha));
+    }catch(_he2){}
+  }
   if(isDirect) return resultObj;  // 直调模式跳 DOM
   const html = `
     ${question?`<div class="card"><div class="card-title">所问之事</div><div class="desc-text"><b style="color:var(--pri-dark);">${_esc(question)}</b></div></div>`:""}
@@ -9099,7 +9141,7 @@ function calcXiaoliuren(){
     </div>
     <div class="hint">※ 小六壬为诸葛孔明马前课改良简化版，六宫循环取象，仅供娱乐参考。</div>
   `;
-  document.getElementById("xlr-result").innerHTML = enhanceResultHtml(html);
+  document.getElementById("xlr-result").innerHTML = enhanceResultHtml(html); try{ window._xlrHistShow&&window._xlrHistShow(); }catch(_hs){};
   try{
     var __xlrr = document.getElementById("xlr-result");
     if(__xlrr && typeof renderActSuggestXlr==='function'){

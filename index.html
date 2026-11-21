@@ -32,7 +32,7 @@
 <meta name="theme-color" content="#8B6F47">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" id="pwaAppleIcon">
-<link rel="preload" href="assets/app.33cccf45.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
+<link rel="preload" href="assets/app.571ae3cb.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
   @keyframes maiRing{ 0%{opacity:.75;transform:translate(-50%,-50%) scale(.9);} 100%{opacity:0;transform:translate(-50%,-50%) scale(2.6);} }
   .pd-face{position:absolute;left:0;top:0;width:150px;height:200px;background:linear-gradient(165deg,#262A33,#1B1E26);border:1px solid #3A3F4A;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:inset 0 0 30px rgba(0,0,0,.35);}
 
@@ -301,6 +301,8 @@ body.theme-dark .pab .emj{background:rgba(255,255,255,.07);}
       <p class="hint">流派说明：<b>时家奇门 · 拆补法定局 · 阴阳二遁 · 转盘飞布 · 值符值使</b></p>
       <button class="btn-primary" type="submit">排　局</button>
     </form></div>
+
+
     <div class="result" id="qm-result"></div>
     <div class="foot-disclaimer">※ 奇门排盘结果仅供娱乐参考，流派众多，版本差异属正常现象</div>
   </div>
@@ -372,7 +374,9 @@ body.theme-dark .pab .emj{background:rgba(255,255,255,.07);}
         <textarea id="xlr-question" placeholder="例如：此事能否成？近况走向如何？"></textarea>
       </div>
       <button class="btn-primary" onclick="window.calcXiaoliuren()">起　课</button>
+      <button class="btn-secondary" style="width:100%;margin-top:7px;font-size:12px;" onclick="window._xlrNowFill()">✨ 用当下时辰填（农历月日+此刻时辰，直接起课）</button>
     </div>
+    <div id="xlrHistWrap"></div>
     <div class="result" id="xlr-result"></div>
     <div class="foot-disclaimer">※ 小六壬为马前课改良简化版，仅供娱乐参考，不构成人生决策建议</div>
   </div>
@@ -1033,7 +1037,7 @@ body.theme-dark .pab .emj{background:rgba(255,255,255,.07);}
   </div>
 </div>
 
-<script src="assets/app.33cccf45.js" defer></script>
+<script src="assets/app.571ae3cb.js" defer></script>
 <div id="liupaiModal" class="liupai-panel-overlay" style="display:none;" onclick="if(event.target===this)closeLiupaiModal()">
   <div class="liupai-card">
     <div class="liupai-title"><span>🧩 流派参数面板</span><button class="liupai-close" onclick="window.closeLiupaiModal()">×</button></div>
