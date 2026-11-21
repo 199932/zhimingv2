@@ -1694,6 +1694,7 @@ body{ padding-bottom:160px; }
     <div class="subtab" data-sec="cnGame">🎮 趣味互动</div>
     <div class="subtab" data-sec="cn8">🔮 六爻纳甲</div>
     <div class="subtab" data-sec="cn9">💭 解梦</div>
+    <div class="subtab" data-sec="cn10">👑 紫微</div>
   </div>
   <!-- 八字 -->
   <div class="section active" id="sec-cn1">
@@ -2020,6 +2021,26 @@ body{ padding-bottom:160px; }
       <div class="foot-disclaimer" style="margin-top:8px;">※ 梦的解读是意象参考不是预言；醒来时的情绪才是真正的钥匙</div>
     </div>
   </div>
+  <div class="section" id="sec-cn10">
+    <div class="card" id="zwCard">
+      <div class="card-title">👑 紫微斗数 <span style="font-weight:400;font-size:10px;color:var(--text-hint);">帝座星盘·第二套语言</span></div>
+      <div style="font-size:11.5px;color:var(--text-sub);line-height:1.7;margin-bottom:8px;">八字看干支气数，紫微看星曜落宫——同一份档案，两套语言互相印证。取档案生日与出生时辰起盘。</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+        <input type="number" id="zw-year" placeholder="出生年" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;">
+        <input type="number" id="zw-month" placeholder="月" min="1" max="12" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;">
+        <input type="number" id="zw-day" placeholder="日" min="1" max="31" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;">
+        <select id="zw-hour" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;"></select>
+      <script>document.addEventListener("DOMContentLoaded",function(){ setTimeout(function(){ try{ if(window._zwFillHours) window._zwFillHours(); }catch(_e){} },300); });</script>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-primary" style="flex:1;" onclick="window._zwFromProfile()">📋 用档案生日起盘</button>
+        <button class="btn-secondary" style="width:auto;" onclick="window._zwGo()">起盘</button>
+      </div>
+      <div id="zw-result" style="margin-top:10px;"></div>
+      <div class="foot-disclaimer" style="margin-top:8px;">※ 紫微为传统象征体系，与八字互相参看；解不说教，只给看自己的新角度</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ===== 西玄主Tab ===== -->
@@ -4537,6 +4558,208 @@ window._liuyueWaveHTML=function(){
     h+='</div>';
     return h;
   }catch(_e){ return ''; }
+};
+
+/* ═══ 紫微斗数（v2.144.0）：安命宫·五行局·十四主星·四化——第二套中式语言 ═══ */
+window._ZW_STAR={
+  "紫微":{t:"帝星",d:"主心骨强，天生要撑场面——坐哪一宫，那宫就是你人生的舞台。"},
+  "天机":{t:"军师星",d:"脑子转得快，多谋善变——点子多，但容易想太多。"},
+  "太阳":{t:"贵星",d:"付出型人格，照亮别人——热情慷慨，也怕被泼冷水。"},
+  "武曲":{t:"财星",d:"行动派，话不多但落地——对钱和目标敏感，狠得下心。"},
+  "天同":{t:"福星",d:"随和知足，福气自带来——容易安逸，也容易懒。"},
+  "廉贞":{t:"囚星",d:"外冷内热，原则性强——爱憎分明，感情藏在规矩下面。"},
+  "天府":{t:"库星",d:"稳，会攒——天生带资源感，守成有余进取偏缓。"},
+  "太阴":{t:"月星",d:"细腻温柔，顾家——情绪有潮汐，富想象力也富积蓄。"},
+  "贪狼":{t:"桃花星",d:"欲望与好奇都旺——人生不怕重开，多才多艺应酬强。"},
+  "巨门":{t:"暗星",d:"口才与怀疑并存——爱问为什么，靠嘴吃饭也容易因嘴惹事。"},
+  "天相":{t:"印星",d:"靠谱参谋，协调型好手——惯于周全他人，自己是第二位。"},
+  "天梁":{t:"荫星",d:"老成，天生爱管事护人——像长辈一样操心，也被人当靠山。"},
+  "七杀":{t:"将星",d:"冲劲大，人生爱折腾——宁折不弯，起落都来得猛。"},
+  "破军":{t:"耗星",d:"破旧立新——不破不立，人生是几次大重装。"}
+};
+window._ZW_SIHUA={
+  "甲":{"禄":"廉贞","权":"破军","科":"武曲","忌":"太阳"},
+  "乙":{"禄":"天机","权":"天梁","科":"紫微","忌":"太阴"},
+  "丙":{"禄":"天同","权":"天机","科":"文昌","忌":"廉贞"},
+  "丁":{"禄":"太阴","权":"天同","科":"天机","忌":"巨门"},
+  "戊":{"禄":"贪狼","权":"太阴","科":"右弼","忌":"天机"},
+  "己":{"禄":"武曲","权":"贪狼","科":"天梁","忌":"文曲"},
+  "庚":{"禄":"太阳","权":"武曲","科":"太阴","忌":"天同"},
+  "辛":{"禄":"巨门","权":"太阳","科":"文曲","忌":"文昌"},
+  "壬":{"禄":"天梁","权":"紫微","科":"左辅","忌":"武曲"},
+  "癸":{"禄":"破军","权":"巨门","科":"太阴","忌":"贪狼"}
+};
+window._ZW_TIANGAN_LU={"甲":2,"乙":4,"丙":6,"丁":8,"戊":0,"己":2,"庚":4,"辛":6,"壬":8,"癸":0}; /* 五虎遁:甲己丙寅起/乙庚戊/丙辛庚/丁壬壬/戊癸甲——寅=idx2 */
+window.calcZiwei=function(inp){
+  /* inp: {year,month,day,hour} 公历 year年 month月 day日 hour时辰序0-11(子=0) */
+  try{
+    var ZHI=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+    var GAN=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+    var y=inp.year, mo=inp.month, dd=inp.day, h=inp.hour;
+    /* 农历 */
+    var lu=window.solar2lunar?window.solar2lunar(y,mo,dd):null;
+    if(!lu) return null;
+    var lMonth=lu.month, lDay=lu.day;
+    /* 年干: 用农历年(公历1-2月还在农历上一年) */
+    var yGanIdx=((lu.year-1984)%10+10)%10;
+    var yGan=GAN[yGanIdx];
+    /* 安命宫: 寅起正月顺数至生月 → 月宫; 月宫起子时逆数至生时 */
+    var yueGong=(2+((lMonth-1)%12))%12; /* 寅=idx2 */
+    var mingGong=((yueGong-h)%12+12)%12;
+    var shenGong=((yueGong+h)%12)%12;
+    /* 十二宫名(逆布) */
+    var GONG_NAMES=["命宫","兄弟","夫妻","子女","财帛","疾厄","迁移","交友","事业","田宅","福德","父母"];
+    var palaces=[];
+    for(var i=0;i<12;i++){
+      var zhiIdx=((mingGong-i)%12+12)%12;
+      palaces.push({zhiIdx:zhiIdx, zhi:ZHI[zhiIdx], name:GONG_NAMES[i], stars:[]});
+    }
+    /* 宫干: 五虎遁 */
+    var yinGanStart={"甲":2,"乙":4,"丙":6,"丁":8,"戊":0,"己":2,"庚":4,"辛":6,"壬":8,"癸":0}; /* 五虎遁:甲己丙寅起/乙庚戊/丙辛庚/丁壬壬/戊癸甲寅 */
+    var s0=yinGanStart[yGan];
+    palaces.forEach(function(pal){
+      pal.gan=GAN[(s0+pal.zhiIdx-2+120)%10]; /* 寅(idx2)起顺 */
+    });
+    /* 五行局: 命宫干支纳音 */
+    var mingPal=palaces[0];
+    var mingGz=mingPal.gan+mingPal.zhi;
+    var ny=window.nayinGZ?window.nayinGZ(mingGz):null;
+    var juMap={"水":2,"木":3,"金":4,"土":5,"火":6};
+    var ju=ny?juMap[ny.charAt(ny.length-1)]:null;
+    if(!ju){ /* 纳音名末字: 海中金→金 */
+      for(var kk in juMap){ if(ny&&ny.indexOf(kk)>=0){ ju=juMap[kk]; break; } }
+    }
+    if(!ju) ju=2;
+    /* 安紫微: 局数除生日 */
+    var zwIdx;
+    if(lDay<=ju){ zwIdx={"2":1,"3":4,"4":11,"5":6,"6":9}[ju]; } /* 水二丑 木三辰 金四亥 土五午 火六酉: 六五四三二酉午亥辰丑 */
+    else{
+      var q=Math.ceil(lDay/ju), borrow=q*ju-lDay;
+      var steps=(borrow%2===0)?(q+borrow):(q-borrow);
+      zwIdx=((2+steps-1)%12+12)%12; /* 寅=idx2起, steps=1→寅 */
+    }
+    /* 天府: 对称 */
+    var tfMap={0:4,1:3,2:2,3:1,4:0,5:11,6:10,7:9,8:8,9:7,10:6,11:5};
+    var tfIdx=tfMap[zwIdx];
+    /* 紫微系(逆) */
+    var ziXi=[["紫微",0],["天机",-1],["太阳",-3],["武曲",-4],["天同",-5],["廉贞",-8]];
+    var fuXi=[["天府",0],["太阴",1],["贪狼",2],["巨门",3],["天相",4],["天梁",5],["七杀",6],["破军",10]];
+    ziXi.forEach(function(x){
+      var idx=((zwIdx+x[1])%12+12)%12;
+      var pal=palaces.find(function(pp){return pp.zhiIdx===idx;});
+      if(pal) pal.stars.push(x[0]);
+    });
+    fuXi.forEach(function(x){
+      var idx=((tfIdx+x[1])%12+12)%12;
+      var pal=palaces.find(function(pp){return pp.zhiIdx===idx;});
+      if(pal) pal.stars.push(x[0]);
+    });
+    /* 四化标记 */
+    var sh=window._ZW_SIHUA[yGan];
+    var sihua=[];
+    ["禄","权","科","忌"].forEach(function(k){
+      var st=sh[k];
+      sihua.push({star:st,type:k});
+      palaces.forEach(function(pal){
+        var si=pal.stars.indexOf(st);
+        if(si>=0) pal.stars[si]=st+(k==="禄"?"禄":k==="权"?"权":k==="科"?"科":"忌");
+      });
+    });
+    /* 身宫所属宫 */
+    var shenPal=palaces.find(function(pp){return pp.zhiIdx===shenGong;});
+    var r={lunarYear:lu.year, lunarMonth:lMonth, lunarDay:lDay, yGan:yGan,
+      mingZhi:ZHI[mingGong], mingGan:mingPal.gan, mingGz:mingGz,
+      shenZhi:ZHI[shenGong], shenGongName:shenPal?shenPal.name:"",
+      ju:ju, juName:({"2":"水二局","3":"木三局","4":"金四局","5":"土五局","6":"火六局"})[ju],
+      zwZhi:ZHI[zwIdx], tfZhi:ZHI[tfIdx],
+      palaces:palaces, sihua:sihua, shichen:h};
+    return r;
+  }catch(_e){ return null; }
+};
+window._zwFillHours=function(){
+  var sel=document.getElementById('zw-hour');
+  if(!sel||sel.options.length) return;
+  var ZHI=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+  var B=["夜半","鸡鸣","平旦","日出","食时","隅中","日中","日昳","晡时","日入","黄昏","人定"];
+  for(var i=0;i<12;i++){
+    var op=document.createElement('option');
+    op.value=i; op.textContent=ZHI[i]+'时('+B[i]+')';
+    sel.appendChild(op);
+  }
+  sel.value=Math.floor(((new Date().getHours()+1)%24)/2);
+};
+window._zwFromProfile=function(){
+  try{
+    var p=window.getActiveProfile?window.getActiveProfile():null;
+    if(!p||!p.year){ try{ window.showToast&&window.showToast('先在档案里建生日','info',1800); }catch(_e){} return; }
+    document.getElementById('zw-year').value=p.year;
+    document.getElementById('zw-month').value=p.month;
+    document.getElementById('zw-day').value=p.day;
+    var h=0;
+    if(p.hour!==undefined&&p.hour!==null&&p.hour!==''){
+      h=Math.floor(((parseInt(p.hour,10)+1)%24)/2);
+    }
+    document.getElementById('zw-hour').value=h;
+    window._zwGo();
+  }catch(_e){ try{ window.showToast&&window.showToast('起盘失败','info',1500); }catch(_e2){} }
+};
+window._zwGo=function(){
+  try{
+    var y=parseInt(document.getElementById('zw-year').value,10);
+    var m=parseInt(document.getElementById('zw-month').value,10);
+    var d=parseInt(document.getElementById('zw-day').value,10);
+    var h=parseInt(document.getElementById('zw-hour').value,10);
+    if(!y||!m||!d||isNaN(h)){ try{ window.showToast&&window.showToast('填全生日再起盘','info',1600); }catch(_e){} return; }
+    var r=window.calcZiwei({year:y,month:m,day:d,hour:h});
+    if(!r){ try{ window.showToast&&window.showToast('排盘失败','info',1500); }catch(_e2){} return; }
+    window._zwRender(r);
+    try{
+      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_zw_v1')||'[]'); }catch(_e3){}
+      var mp=r.palaces[0].stars.length?r.palaces[0].stars.join('·'):'空宫借'+(r.palaces[6].stars.join('·')||'对宫');
+      a.push({t:Date.now(), d:y+'-'+m+'-'+d, g:mp});
+      if(a.length>20) a=a.slice(-20);
+      localStorage.setItem('zhiming_zw_v1', JSON.stringify(a));
+    }catch(_e4){}
+  }catch(_e5){}
+};
+window._zwRender=function(r){
+  try{
+    var h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
+    h+='<div style="font-size:11px;color:var(--text-hint);">农历 '+r.lunarMonth+'月'+r.lunarDay+'日 · '+r.yGan+'年 · 时辰序'+(r.shichen+1)+'</div>';
+    h+='<div style="margin-top:6px;font-size:13px;font-weight:800;">命宫 '+r.mingGan+r.mingZhi+' · '+r.juName+' · 身宫在'+r.shenZhi+'('+r.shenGongName+')</div>';
+    /* 命宫解读 */
+    var mp=r.palaces[0];
+    var starTxt=mp.stars.length?mp.stars.join('、'):'(无主星——借对宫'+r.palaces[6].stars.join('、')+'看)';
+    h+='<div style="margin-top:8px;"><b style="color:var(--pri);">👑 命宫('+mp.gan+mp.zhi+')主星：'+starTxt+'</b></div>';
+    var shown={};
+    mp.stars.forEach(function(st){
+      var base=st.replace(/[禄权科忌]/g,'');
+      if(shown[base]) return; shown[base]=1;
+      var sd=window._ZW_STAR[base];
+      if(sd) h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;"><b>'+base+'·'+sd.t+'</b>——'+sd.d+'</div>';
+    });
+    if(!mp.stars.length){
+      r.palaces[6].stars.forEach(function(st){
+        var base=st.replace(/[禄权科忌]/g,'');
+        var sd=window._ZW_STAR[base];
+        if(sd) h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;"><b>'+base+'·'+sd.t+'</b>(借)——'+sd.d+'</div>';
+      });
+    }
+    /* 四化 */
+    h+='<div style="font-size:11.5px;line-height:1.8;margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;color:var(--text-sub);"><b>生年四化('+r.yGan+'年)：</b>';
+    h+=r.sihua.map(function(x){return '<span style="color:var(--pri);">'+x.star+'化'+x.type+'</span>';}).join(' · ');
+    h+='——禄=顺流的资源，权=主导的劲，科=被看见的名，忌=要还的功课。落在哪个宫，功课就在哪。</div>';
+    /* 十二宫一览 */
+    h+='<details style="margin-top:8px;"><summary style="font-size:11.5px;cursor:pointer;color:var(--text-sub);">♟ 十二宫全览（点开看每宫主星）</summary><div style="font-size:12px;line-height:1.9;color:var(--text-sub);margin-top:6px;">';
+    r.palaces.forEach(function(pal){
+      var isM=(pal.name==='命宫');
+      h+='<div'+(isM?' style="font-weight:700;color:var(--pri);"':'')+'>'+pal.name+'('+pal.gan+pal.zhi+')：'+(pal.stars.length?pal.stars.join('、'):'空宫')+'</div>';
+    });
+    h+='</div></details>';
+    h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">和八字对读：八字说气数，紫微说舞台——两套语言指向一致时，答案就更可信。</div>';
+    h+='</div>';
+    document.getElementById('zw-result').innerHTML=h;
+  }catch(_e){}
 };
 
 /* ═══ 周公解梦（v2.143.0）：晨间记梦——本地梦象词表×人话 ═══ */

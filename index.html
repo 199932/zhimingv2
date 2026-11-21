@@ -32,7 +32,7 @@
 <meta name="theme-color" content="#8B6F47">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <link rel="apple-touch-icon" id="pwaAppleIcon">
-<link rel="preload" href="assets/app.9202ac87.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
+<link rel="preload" href="assets/app.9cc136d7.js" as="script"><style>#boot{position:fixed;inset:0;z-index:99999;background:#f5f1e8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease;}#boot.off{opacity:0;pointer-events:none;}#boot .b-logo{font-size:44px;font-weight:900;letter-spacing:6px;color:#6B5CA5;font-family:serif;}#boot .b-sub{font-size:12px;color:#9a917f;letter-spacing:2px;}#boot .b-spin{width:26px;height:26px;border:3px solid #e3dccd;border-top-color:#6B5CA5;border-radius:50%;animation:bspin .8s linear infinite;}@keyframes bspin{to{transform:rotate(360deg)}}@media(prefers-color-scheme:dark){#boot{background:#17141f}#boot .b-sub{color:#5f5870}}  @keyframes maiBeat{ 0%{transform:translate(-50%,-50%) scale(.75);opacity:.7;} 18%{transform:translate(-50%,-50%) scale(1.45);opacity:1;} 55%{transform:translate(-50%,-50%) scale(1.05);opacity:.85;} 100%{transform:translate(-50%,-50%) scale(1);opacity:.9;} }
   @keyframes maiRing{ 0%{opacity:.75;transform:translate(-50%,-50%) scale(.9);} 100%{opacity:0;transform:translate(-50%,-50%) scale(2.6);} }
   .pd-face{position:absolute;left:0;top:0;width:150px;height:200px;background:linear-gradient(165deg,#262A33,#1B1E26);border:1px solid #3A3F4A;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:inset 0 0 30px rgba(0,0,0,.35);}
 
@@ -148,6 +148,7 @@ body.theme-dark .pab .emj{background:rgba(255,255,255,.07);}
     <div class="subtab" data-sec="cnGame">🎮 趣味互动</div>
     <div class="subtab" data-sec="cn8">🔮 六爻纳甲</div>
     <div class="subtab" data-sec="cn9">💭 解梦</div>
+    <div class="subtab" data-sec="cn10">👑 紫微</div>
   </div>
   <!-- 八字 -->
   <div class="section active" id="sec-cn1">
@@ -474,6 +475,26 @@ body.theme-dark .pab .emj{background:rgba(255,255,255,.07);}
       <div class="foot-disclaimer" style="margin-top:8px;">※ 梦的解读是意象参考不是预言；醒来时的情绪才是真正的钥匙</div>
     </div>
   </div>
+  <div class="section" id="sec-cn10">
+    <div class="card" id="zwCard">
+      <div class="card-title">👑 紫微斗数 <span style="font-weight:400;font-size:10px;color:var(--text-hint);">帝座星盘·第二套语言</span></div>
+      <div style="font-size:11.5px;color:var(--text-sub);line-height:1.7;margin-bottom:8px;">八字看干支气数，紫微看星曜落宫——同一份档案，两套语言互相印证。取档案生日与出生时辰起盘。</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+        <input type="number" id="zw-year" placeholder="出生年" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;">
+        <input type="number" id="zw-month" placeholder="月" min="1" max="12" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;">
+        <input type="number" id="zw-day" placeholder="日" min="1" max="31" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;">
+        <select id="zw-hour" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;"></select>
+      <script>document.addEventListener("DOMContentLoaded",function(){ setTimeout(function(){ try{ if(window._zwFillHours) window._zwFillHours(); }catch(_e){} },300); });</script>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-primary" style="flex:1;" onclick="window._zwFromProfile()">📋 用档案生日起盘</button>
+        <button class="btn-secondary" style="width:auto;" onclick="window._zwGo()">起盘</button>
+      </div>
+      <div id="zw-result" style="margin-top:10px;"></div>
+      <div class="foot-disclaimer" style="margin-top:8px;">※ 紫微为传统象征体系，与八字互相参看；解不说教，只给看自己的新角度</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ===== 西玄主Tab ===== -->
@@ -1052,7 +1073,7 @@ body.theme-dark .pab .emj{background:rgba(255,255,255,.07);}
   </div>
 </div>
 
-<script src="assets/app.9202ac87.js" defer></script>
+<script src="assets/app.9cc136d7.js" defer></script>
 <div id="liupaiModal" class="liupai-panel-overlay" style="display:none;" onclick="if(event.target===this)closeLiupaiModal()">
   <div class="liupai-card">
     <div class="liupai-title"><span>🧩 流派参数面板</span><button class="liupai-close" onclick="window.closeLiupaiModal()">×</button></div>
