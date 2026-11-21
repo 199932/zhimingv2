@@ -1693,6 +1693,7 @@ body{ padding-bottom:160px; }
     <div class="subtab" data-sec="cn7d">📐 大六壬</div>
     <div class="subtab" data-sec="cnGame">🎮 趣味互动</div>
     <div class="subtab" data-sec="cn8">🔮 六爻纳甲</div>
+    <div class="subtab" data-sec="cn9">💭 解梦</div>
   </div>
   <!-- 八字 -->
   <div class="section active" id="sec-cn1">
@@ -2006,6 +2007,18 @@ body{ padding-bottom:160px; }
     </div>
     <div class="result" id="result-cn7" aria-live="polite"></div>
     <div class="foot-disclaimer">※ 大六壬全课解挂实装中，当前输出为结构化排课，仅供娱乐参考</div>
+  </div>
+  <div class="section" id="sec-cn9">
+    <div class="card" id="mengCard">
+      <div class="card-title">💭 解梦 · 记一笔 <span style="font-weight:400;font-size:10px;color:var(--text-hint);">周公意象×现代视角</span></div>
+      <div id="mengTimeHint" style="font-size:11px;color:var(--text-hint);margin-bottom:8px;"></div>
+      <textarea id="meng-input" placeholder="梦里发生了什么？一句话就行——梦见在大水里追一条鱼…" style="width:100%;min-height:72px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:13px;line-height:1.6;resize:vertical;"></textarea>
+      <button class="btn-primary" style="width:100%;margin-top:8px;" onclick="window._mengGo()">💭 解这个梦</button>
+      <div id="meng-result" style="margin-top:10px;"></div>
+      <div id="mengHistWrap"></div>
+      <script>document.addEventListener("DOMContentLoaded",function(){ setTimeout(function(){ try{ if(window._mengTimeHint) window._mengTimeHint(); if(window._mengHist) window._mengHist(); }catch(_e){} },300); });</script>
+      <div class="foot-disclaimer" style="margin-top:8px;">※ 梦的解读是意象参考不是预言；醒来时的情绪才是真正的钥匙</div>
+    </div>
   </div>
 </div>
 
@@ -2365,6 +2378,8 @@ body{ padding-bottom:160px; }
     <div class="result" id="ly-result"></div>
     <div class="foot-disclaimer">※ 六爻结果基于公开的纳甲装卦规则推演，仅供娱乐与自我觉察，请理性参考、不构成人生决策建议</div>
   </div>
+
+
 
 
 <!-- ===== 成长中心主Tab ===== -->
@@ -4522,6 +4537,137 @@ window._liuyueWaveHTML=function(){
     h+='</div>';
     return h;
   }catch(_e){ return ''; }
+};
+
+/* ═══ 周公解梦（v2.143.0）：晨间记梦——本地梦象词表×人话 ═══ */
+window.MENG_DATA=[
+ {k:['被追','追赶','追我','追杀','逃跑','逃不掉'],name:'追赶',wx:'心火',trad:'梦里被人追赶，传统解为「有事先压着没处理」，躲的是心里那件没办完的事。',mind:'现代心理学里这是最经典的焦虑梦——白天越回避什么，梦里越追你。',act:'醒来想想：最近哪件事你一直在拖着？把它拆成三步做完，追你的东西就停了。'},
+ {k:['坠落','掉下去','掉下悬崖','踏空'],name:'坠落',wx:'心火',trad:'坠梦传统主「失稳」——地位、关系或内心的支撑在变。',mind:'多数坠梦发生在入睡肌抽跃，身体先坠、梦才跟上；反复做则常与失控感有关。',act:'最近是不是有件事你「够不着」？抓不住的就先放下，能抓住的攥紧。'},
+ {k:['考试','答题','没复习','考题'],name:'考试',wx:'心火',trad:'梦里赶考，旧说主「面临检验」——你心里正在被某件事考验。',mind:'成年人做考试梦，多是现实中有个「要交答卷」的事悬着。',act:'把悬着的那件事列出来，写第一步，梦就会松。'},
+ {k:['迟到','赶不上','错过车','没赶上','误了'],name:'迟到',wx:'心火',trad:'迟到梦传统主「机会焦虑」——怕来不及、怕错过。',mind:'心理学里这是时间压力梦，常出现在日程过载的阶段。',act:'删掉日程里最不重要的一件事，给自己留一次「来得及」。'},
+ {k:['迷路','找不到路','走不出','迷了'],name:'迷路',wx:'心火',trad:'迷路主「方向未定」——现实里你正站在岔路口。',mind:'梦里找不到路，常是白天「选项太多」的反面表达。',act:'别急着选。写下两个选项你最怕失去什么，答案就清楚了。'},
+ {k:['没穿衣服','裸体','光着','衣服没了'],name:'无衣',wx:'心火',trad:'裸体梦传统主「怕被看穿」，遮掩的事怕露出来。',mind:'多与暴露焦虑有关：怕在人前出丑、怕秘密被知道。',act:'想想你在谁面前不自在——那种不自在就是梦的来源。'},
+ {k:['掉牙','牙齿掉','牙掉了','牙齿松动'],name:'掉牙',wx:'金',trad:'周公解梦最出名的梦象：传统说「亲疏变动」或「口舌」。',mind:'现代更常见的是与成长、失去控制感有关。',act:'留意最近的告别、疏远或「咬不动」的事——牙松的那块现实在哪，就在哪用力。'},
+ {k:['去世的人','死人','故去','过世','去世','已故'],name:'亡者',wx:'土',trad:'传统解为「思念所系」，梦见已故亲人多是心里在对话，不是坏兆。',mind:'心理学视为记忆与情感的整理——大脑在用最熟悉的人处理情绪。',act:'醒来发暖就当是一次探望；发沉，就给在世的家人打个电话。'},
+ {k:['蛇','蛇缠','被蛇','蛇咬','大蛇'],name:'蛇',wx:'火',trad:'蛇传统双解：主财（钱串子）也主烦恼纠缠，看梦里你的情绪。',mind:'蛇常象征变形与再生，或让你紧张的人/事。',act:'梦里怕蛇=现实有让你不舒服的纠缠；不怕=最近有进财或转变的苗头。'},
+ {k:['大水','河水','海水','洪水','水'],name:'大水',wx:'水',trad:'水主财与情：水清为吉、水浊主烦，大水漫主情绪漫过堤。',mind:'水在梦里几乎就是情绪本身——平静、湍急、深浅都对应心情。',act:'回想梦里水的样子：静的还是冲的？和你最近的心情几乎同频。'},
+ {k:['下雨','暴雨','雨中','淋雨'],name:'雨',wx:'水',trad:'雨传统主润泽与情绪释放，久旱逢雨为大吉。',mind:'雨天梦常见于压力释放期——心里的东西正在落下来。',act:'醒来若是轻松的，说明你正在排掉什么，好事。'},
+ {k:['雪','下雪','大雪','雪地'],name:'雪',wx:'水',trad:'雪主覆盖与沉淀，传统说心事暂歇。',mind:'雪是情绪的静音键——梦见雪多是想安静、想停一停。',act:'给自己安排一小时没有输入的时间，雪的梦是身体在要它。'},
+ {k:['游泳','戏水','泡水'],name:'游泳',wx:'水',trad:'入水而不沉，传统解为驾驭情感与财路。',mind:'能游=你对情绪有掌控感，是不错的信号。',act:'最近你处理情绪的方式是对的，保持。'},
+ {k:['溺水','淹没','沉底','憋气'],name:'溺水',wx:'水',trad:'溺水主被情绪淹没——事压人，不是水坏事。',mind:'常见的过载梦：信息、任务或关系把人没过头顶。',act:'先浮上来再说：从清单里划掉两件，别救全部。'},
+ {k:['鱼','钓鱼','抓鱼','大鱼','鱼群'],name:'鱼',wx:'水',trad:'鱼谐音余，传统主财、主余裕，是吉梦。',mind:'鱼也常与潜意识、灵感有关——水里的想法浮上来了。',act:'最近冒出的主意值得记下来，鱼上钩了就别空手。'},
+ {k:['船','坐船','开船','渡船','划船'],name:'船',wx:'水',trad:'船主渡——换阶段、换环境、渡过难关。',mind:'船的状态=你的状态：稳稳开=过渡顺利，漏水=过渡吃紧。',act:'你正在换挡期，看看船在梦里稳不稳，就知道节奏该怎么调。'},
+ {k:['着火','火灾','大火','烧'],name:'火',wx:'火',trad:'火主旺也主急——势头猛，脾气也猛。',mind:'火与激情、愤怒同源：梦里火烧得旺，现实中情绪也在烧。',act:'旺要趁热做事，急要先灭火——分清梦里是哪一种。'},
+ {k:['灯亮','点灯','台灯','灯火','灯'],name:'灯',wx:'火',trad:'灯主明——困惑将解，路快看清了。',mind:'灯是意识照亮潜意识的象征，常见于想通的前夜。',act:'把最近想不通的事睡前想一遍，答案常在第二天早上。'},
+ {k:['日出','朝阳','烈日','太阳'],name:'太阳',wx:'火',trad:'太阳主运旺——传统里极吉，主运势上行。',mind:'太阳与希望感直接相关，梦见日出多是心里有盼头。',act:'把那个盼头写成一句话贴在显眼处，让它照进来。'},
+ {k:['爆炸','爆炸声','轰'],name:'爆炸',wx:'火',trad:'爆炸主突然的释放——压了很久的东西炸开了。',mind:'常与压抑的愤怒或突发的变化对应。',act:'最近有没说出口的话？找个出口说出来，别让它在梦里炸。'},
+ {k:['大树','树倒','爬树','树林','树'],name:'树',wx:'木',trad:'树主根基与生长——枝繁主家兴，树倒主根基动。',mind:'树=你的成长状态：抽芽、茂盛、还是被砍，都是自己的写照。',act:'想想你的根扎在哪（关系/工作/习惯），那棵树要不要浇水。'},
+ {k:['开花','花开','桃花'],name:'花',wx:'木',trad:'花开主喜事将近，传统吉象。',mind:'花与被看见、绽放感相关——你可能在期待被认可。',act:'把做得好的事展示出来，花期就该开。'},
+ {k:['森林','丛林'],name:'森林',wx:'木',trad:'森林主深与藏——有宝藏也有迷雾。',mind:'茂密=选择与可能性多；黑暗=未知带来的不安。',act:'挑一条小路走深一点，别在入口徘徊。'},
+ {k:['飞鸟','鸟叫','群鸟','抓鸟','鸟'],name:'鸟',wx:'木',trad:'鸟主消息——飞来主信至，飞走主别离。',mind:'鸟=想法的自由度，笼中鸟=被捆住的才华。',act:'最近会有消息进来，留意；同时想想你的哪件想做的事被关着。'},
+ {k:['见龙','飞龙','龙形','龙'],name:'龙',wx:'木',trad:'龙为至吉之象，主大志与大变，古人以梦龙为贵。',mind:'龙=你心里的大版本——野心在梦里现身。',act:'梦龙之夜适合立长志——把那个不敢想的想法定下来。'},
+ {k:['怀孕','怀了','胎动','产子'],name:'孕育',wx:'木',trad:'孕妇主新事将成——不限于生育，一切怀着的计划。',mind:'怀孕梦=你在酝酿一个新身份或新项目。',act:'那个酝酿中的计划，给它一个启动日。'},
+ {k:['婴儿','抱婴儿','新生儿'],name:'婴儿',wx:'木',trad:'婴儿主新生与责任同来——新的开始是柔弱的。',mind:'新生事物刚起步，需要保护。',act:'对刚起步的事（关系/项目/习惯）温柔点，别拔苗。'},
+ {k:['结婚','婚礼','穿婚纱','娶','嫁'],name:'婚礼',wx:'木',trad:'婚主结合——两件事、两种身份正在合并。',mind:'婚礼梦常与承诺有关：准备承诺、或怕承诺。',act:'你正在合并什么？想清楚要不要签这一份心理婚约。'},
+ {k:['刀子','被刀','拿刀','剪刀','刀'],name:'刀',wx:'金',trad:'刀主断——断舍离、决断、切割关系。',mind:'刀=决策的锋利度，梦里握刀=你有权决定。',act:'有一件事需要你落刀决定——梦里已经提示你了。'},
+ {k:['捡钱','现金','钱包','发财'],name:'得财',wx:'金',trad:'梦得财传统有两解：主进项，也主耗——虚财梦常反着来。',mind:'钱梦与自我价值感关联大于真的钱。',act:'梦见捡钱别当真，想想最近什么让你觉得值——那才是真财。'},
+ {k:['丢钱','钱包丢','破财','丢东西','丢了'],name:'失物',wx:'金',trad:'丢物主患得患失——怕失去正在拥有的。',mind:'恐惧失去的梦，多出现在得到不久之后。',act:'把重要的东西（文件/关系/健康）做一次保全动作，心就安了。'},
+ {k:['金子','黄金','元宝'],name:'金',wx:'金',trad:'金主实值——与虚财相对，是真积累之象。',mind:'金=硬价值：技能、健康、信用。',act:'投资那种越放越值钱的东西，包括你自己。'},
+ {k:['开车','坐车','刹车','车'],name:'车',wx:'金',trad:'车主人生方向与掌控——谁开车、路顺不顺是关键。',mind:'开车=掌控感；副驾=被带着走；刹车失灵=失控焦虑。',act:'梦里你开车吗？不开的话，想想现实中哪件事你把方向盘交出去了。'},
+ {k:['坐飞机','起飞','航班'],name:'飞机',wx:'金',trad:'飞主远行与大跨越，起飞吉，延误主时机未到。',mind:'飞机=快速升级的愿望或焦虑。',act:'你想快点到下一个阶段——检查引擎（身体/储蓄/技能）够不够。'},
+ {k:['流血','受伤','伤口','血'],name:'血伤',wx:'火',trad:'血主耗也主警讯——提醒身体与情绪在失守。',mind:'受伤=现实里某处正在漏气。',act:'体检、睡觉、断舍一段消耗你的关系——先止血再谋进。'},
+ {k:['爬山','山顶','大山','登山','山'],name:'山',wx:'土',trad:'山主阻与贵——靠山、障碍、登顶之志。',mind:'爬山=长期目标，梦里山的高度=你觉得目标多大。',act:'把大目标切成十段坡，爬一段歇一段，别抬头看山顶太久。'},
+ {k:['房子','新房子','装修','房间','房'],name:'房',wx:'土',trad:'房主自身与心房——房子的样子就是你对现状的观感。',mind:'心理学经典：房子=自我。新房子=新身份，破房子=疲惫的自我。',act:'梦里房子哪间屋最亮？那方面就是你心里最踏实的部分。'},
+ {k:['搬新家','搬家了','搬走','搬家'],name:'搬家',wx:'土',trad:'搬家主迁与变——环境、身份、圈子的更换。',mind:'搬家梦常见于想换个活法的时期。',act:'想搬的可能是心态不只是住处——先搬心里那间。'},
+ {k:['坟地','坟墓','墓'],name:'坟',wx:'土',trad:'坟主藏与过往——旧事入土，也主财库（民俗）。',mind:'梦见坟常是旧阶段正在告别。',act:'有什么事该正式埋了？给个仪式感，翻篇。'},
+ {k:['泥土','土地','田','耕地'],name:'土地',wx:'土',trad:'土主根基与积累——种什么收什么。',mind:'土地梦=你在评估值得长期投入的事。',act:'种一棵长期主义的树：技能、关系或储蓄，选一块田。'},
+ {k:['地震','地动','塌','地陷'],name:'地震',wx:'土',trad:'地动主根基不稳——底层假设在动摇。',mind:'常见于价值观重构期：曾经确信的事不再确信。',act:'别慌，地震是把旧结构晃松——正好重建更合身的。'},
+ {k:['棺材','棺木'],name:'棺材',wx:'木',trad:'民俗谐音官财——升官发财，棺材梦反为大吉。',mind:'棺=旧我入殓，新我登场的仪式。',act:'某个旧身份该退休了，让它体面退场。'},
+ {k:['剪头发','头发掉','剪发','理发'],name:'理发',wx:'金',trad:'发主烦恼丝——剪发主去烦，也主改制。',mind:'理发=整理自我形象，想换状态。',act:'想换发型或换状态就去做，身体先动，心会跟上。'},
+ {k:['追车','赶火车','赶飞机','赶车'],name:'赶车',wx:'心火',trad:'追车主怕错过节拍——时机焦虑。',mind:'和迟到梦同源：节奏被日程拉扯。',act:'下一班车总会来。把错过恐惧换成下一班思维。'},
+ {k:['找厕所','厕所','尿急'],name:'寻厕',wx:'水',trad:'生理映射梦——身体的信号，也主找出口。',mind:'有时候梦没那么多深意，它只是身体在喊话。',act:'先去上个厕所。真的。'},
+ {k:['会飞','飞行','飞翔','飞起来'],name:'飞行',wx:'木',trad:'飞主超脱与能力上扬——传统吉梦，主志得意满。',mind:'飞行=掌控与自由感。飞得吃力=自由但负担重。',act:'你在自由期——选一件平时不敢做的事试飞。'},
+ {k:['大笑','笑醒','开心'],name:'笑',wx:'火',trad:'梦中大笑主喜至，古人以笑梦为吉兆。',mind:'积极情绪梦=心理恢复的标志。',act:'好心态不是白来的，你正在恢复期——别硬撑新重活。'},
+ {k:['梦哭','哭醒','流泪','哭'],name:'哭',wx:'水',trad:'梦中哭，传统解为释放——郁结将散，反向为吉。',mind:'梦哭是情绪排水，醒来轻=排掉了，醒来沉=还没排完。',act:'醒来轻就翻篇；醒来沉，找个人把那件事说出来。'},
+ {k:['教室','同学','老师','校园','学校'],name:'校园',wx:'木',trad:'重回校园主怀念简单，也主课题未完。',mind:'校园=被评价的时期——现实中你又在被评分。',act:'谁在给你打分？那份评价真的重要吗？'},
+ {k:['老房子','老家','外婆家','童年的家','旧家'],name:'旧宅',wx:'土',trad:'旧宅主根与来处——回望来路。',mind:'常见于转折期：往前走之前，心会回老房子看一眼。',act:'跟过去的自己说句话，然后往前走，别住回去。'},
+ {k:['清泉','泉水','清澈'],name:'清泉',wx:'水',trad:'水清为至吉——心明、财清、路净。',mind:'清澈=此刻的情绪状态很健康。',act:'记住此刻的透亮感，重要决定放在这种状态下做。'},
+ {k:['照相','镜头','自拍','拍照'],name:'拍照',wx:'金',trad:'留影主记录与被记住。',mind:'相机梦=你想留住某些正在流逝的东西。',act:'有什么正在流逝？写下来——比照片更能留住它。'},
+ {k:['黑猫','猫叫','猫'],name:'猫',wx:'木',trad:'猫主灵性与女性缘，也主若即若离的关系。',mind:'猫=独立性——你或你身边的人正在不想被驯服。',act:'给彼此一点猫的距离，关系反而近。'},
+ {k:['被狗追','狗叫','爱犬','狗'],name:'狗',wx:'土',trad:'狗主忠与友——狗亲主友至，犬吠主口舌。',mind:'狗=忠诚与守护，梦里狗的状态=你对支持系统的感受。',act:'想想你的狗（支持你的人）最近喂了没有——关系要喂。'},
+ {k:['老虎','狮子','猛兽'],name:'猛兽',wx:'木',trad:'虎主威与险——压力源巨大，但也可能是你自己的力量。',mind:'猛兽=被压抑的攻击性或欲望，它追你=你不敢承认它。',act:'别跑。回头看看它要什么——多半是你不敢要的东西。'},
+ {k:['走远路','步行','长途'],name:'远行',wx:'土',trad:'步行主脚踏实地——慢但扎实。',mind:'走路梦=你在用笨办法推进重要的事。',act:'笨办法不丢人，别被别人的飞机分心。'},
+ {k:['过桥','桥断','桥上','桥'],name:'桥',wx:'木',trad:'桥主过渡——从一段到另一段的连接。',mind:'桥=转变中的支持结构，桥断=你担心支撑不够。',act:'过渡期多备一个支撑（人/钱/plan B），桥稳心就稳。'},
+ {k:['电梯','上楼','下楼','楼梯'],name:'升降',wx:'土',trad:'升降主地位变动——上主进，下主暂退。',mind:'电梯不受控=对升降的失控感。',act:'你能控制的是楼层按钮（选择），不是电梯速度（时机）。'}
+];
+window._mengTimeHint=function(){
+  var el=document.getElementById('mengTimeHint');
+  if(!el) return;
+  var h=new Date().getHours();
+  if(h>=23||h<5) el.innerHTML='🌙 现在是深夜——今晚的梦明早记，刚醒时的细节最全。';
+  else if(h>=5&&h<10) el.innerHTML='🌅 早晨是记梦黄金档——趁刷牙前写下它。';
+  else el.innerHTML='💭 白天想起的梦也有效——记关键词就行。';
+};
+window._mengGo=function(){
+  try{
+    var inp=document.getElementById('meng-input');
+    var txt=(inp.value||'').trim();
+    if(!txt){ try{ window.showToast&&window.showToast('先写下梦里发生了什么','info',1600); }catch(_e){} return; }
+    var hits=[];
+    window.MENG_DATA.forEach(function(d){
+      for(var i=0;i<d.k.length;i++){
+        if(txt.indexOf(d.k[i])>=0){ hits.push(d); break; }
+      }
+    });
+    var h='';
+    if(!hits.length){
+      h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
+      h+='<div style="font-size:13px;font-weight:800;">🌙 这个梦不在词表里——说实话比硬解好</div>';
+      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:6px;">梦的解读没有标准答案，你自己醒来那一瞬的情绪才是钥匙：<b>心慌的梦多是压力的回声，轻松的梦多是期待的投影</b>。回想一下：醒来时你是放松的，还是心有余悸？</div>';
+      h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:4px;">如果反复做同一个梦，那它一定有事要说——把梦写细一点再来。</div>';
+      h+='</div>';
+    }else{
+      var main=hits[0];
+      var second=hits[1]||null;
+      h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
+      h+='<div style="text-align:center;margin:2px 0 4px;"><span style="font-size:26px;font-weight:800;letter-spacing:4px;color:var(--pri);">'+main.name+'之梦</span><span style="font-size:12px;color:var(--text-hint);margin-left:8px;">五行属'+main.wx+'</span></div>';
+      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:6px;"><b>🀄 传统这么说：</b>'+main.trad+'</div>';
+      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:4px;"><b>🧠 现代怎么看：</b>'+main.mind+'</div>';
+      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:4px;"><b>👉 你可以：</b>'+main.act+'</div>';
+      if(second){
+        h+='<div style="font-size:11.5px;line-height:1.7;color:var(--text-hint);margin-top:8px;border-top:1px dashed var(--card-border);padding-top:6px;">梦还碰到「'+second.name+'」象——'+second.mind+'</div>';
+      }
+      if(hits.length>2){
+        h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:4px;">这个梦意象很稠（命中'+hits.length+'个梦象）——主看前两象，其余是背景。</div>';
+      }
+      h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">梦是心事的信使不是判决书——同一个梦，醒来情绪不同，解读方向就不同。</div>';
+      h+='</div>';
+    }
+    document.getElementById('meng-result').innerHTML=h;
+    try{
+      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_meng_v1')||'[]'); }catch(_e1){}
+      a.push({t:Date.now(), q:txt.slice(0,40), g:hits.length?hits[0].name:'未入表'});
+      if(a.length>30) a=a.slice(-30);
+      localStorage.setItem('zhiming_meng_v1', JSON.stringify(a));
+      window._mengHist();
+    }catch(_e2){}
+  }catch(_e3){}
+};
+window._mengHist=function(){
+  try{
+    var w=document.getElementById('mengHistWrap');
+    if(!w) return;
+    var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_meng_v1')||'[]'); }catch(_e4){}
+    if(!a.length){ w.innerHTML=''; return; }
+    a=a.slice(-12).reverse();
+    var h='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">💭 记过 '+a.length+' 个梦（回看）</summary><div style="font-size:11px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
+    a.forEach(function(x){
+      var d=new Date(x.t);
+      h+='· '+(d.getMonth()+1)+'/'+d.getDate()+' 「'+x.q+'」→ <b>'+x.g+'</b><br>';
+    });
+    h+='</div></details>';
+    w.innerHTML=h;
+  }catch(_e5){}
 };
 
 /* ═══ 问命（v2.140.0）：你问，命答——四问判定引擎 ═══ */

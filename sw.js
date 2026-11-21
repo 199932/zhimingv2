@@ -1,5 +1,5 @@
-const CACHE = 'zhiming_v2_571ae3cb';
-const PRECACHE = ['./', './index.html', './widget.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './donate-qr.png', './assets/app.571ae3cb.js', './assets/mod-health.bd66c892.js', './assets/mod-chart.89fb9c64.js', './assets/mod-extra.cc83b40e.js', './assets/style.css', './og-card.png'];
+const CACHE = 'zhiming_v2_9202ac87';
+const PRECACHE = ['./', './index.html', './widget.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './donate-qr.png', './assets/app.9202ac87.js', './assets/mod-health.bd66c892.js', './assets/mod-chart.89fb9c64.js', './assets/mod-extra.cc83b40e.js', './assets/style.css', './og-card.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
