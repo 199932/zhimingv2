@@ -62,12 +62,17 @@ let appOut = appJs;
   const tmp = path.join(ROOT, 'assets', '.app.tmp.js');
   const outT = path.join(ROOT, 'assets', '.app.out.tmp.js');
   fs.writeFileSync(tmp, appJs);
+  const TERSER = path.join(ROOT, 'node_modules', '.bin', 'terser'); /* lockfile钉版本,离线可构建 */
   try {
-    execSync('npx --no-install terser ' + tmp + ' -c passes=2 --ecma 2017 -o ' + outT + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
+    execSync(TERSER + ' ' + tmp + ' -c passes=2 --ecma 2017 -o ' + outT + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
   } catch (e) {
     fs.rmSync(outT, { force: true });
-    console.error('FATAL: terser 压缩失败——拒绝裸包上线: ' + String(e.message).slice(0, 300));
-    process.exit(1);
+    if (process.env.ALLOW_RAW === '1') { console.warn('ALLOW_RAW=1: 本地调试用未压缩产物继续'); appOut = appJs; }
+    else {
+      console.error('FATAL: terser 主包压缩失败——拒绝裸包上线: ' + String(e.message).slice(0, 300));
+      console.error('修法: npm ci 后重跑；临时绕过请显式 ALLOW_RAW=1（仅限本地调试）');
+      process.exit(1);
+    }
   }
   appOut = fs.readFileSync(outT, 'utf8');
   fs.unlinkSync(tmp);
@@ -84,11 +89,16 @@ for (const [mname, bidx, header] of MODS) {
   fs.writeFileSync(tmpM, src);
   const mh = path.join(ASSETS, 'mod-' + mname + '.js');
   try {
-    execSync('npx --no-install terser ' + tmpM + ' -c passes=2 --ecma 2017 -o ' + mh + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
+    const TERSER2 = path.join(ROOT, 'node_modules', '.bin', 'terser');
+    execSync(TERSER2 + ' ' + tmpM + ' -c passes=2 --ecma 2017 -o ' + mh + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
   } catch (e) {
     fs.rmSync(mh, { force: true });
-    console.error('FATAL: terser mod-' + mname + ' 压缩失败——拒绝裸包上线: ' + String(e.message).slice(0, 300));
-    process.exit(1);
+    if (process.env.ALLOW_RAW === '1') { console.warn('ALLOW_RAW=1: mod-' + mname + ' 用未压缩产物继续'); fs.copyFileSync(tmpM, mh); }
+    else {
+      console.error('FATAL: terser mod-' + mname + ' 压缩失败——拒绝裸包上线: ' + String(e.message).slice(0, 300));
+      console.error('修法: npm ci 后重跑；临时绕过请显式 ALLOW_RAW=1（仅限本地调试）');
+      process.exit(1);
+    }
   }
   fs.unlinkSync(tmpM);
   const mtxt = fs.readFileSync(mh, 'utf8');
