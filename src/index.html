@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.146.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.146.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2046,7 +2046,37 @@ body{ padding-bottom:160px; }
     </div>
   </div>
 
-</div>
+  <div class="section" id="sec-cn8">
+    <div class="card"><div class="card-title">🔮 六爻纳甲 · 传统六爻（纳甲筮法）</div>
+      <div class="form-row"><label>所问之事</label><input type="text" id="ly-question" placeholder="如：这份工作机会如何？" maxlength="50"></div>
+      <div class="form-row"><label>问事类别</label><div class="inputs">
+        <select id="ly-type">
+          <option value="work">💼 事业 / 工作</option>
+          <option value="wealth">💰 财运</option>
+          <option value="love">💕 感情</option>
+          <option value="study">📚 学业 / 考试</option>
+          <option value="health">🛡 健康</option>
+          <option value="travel">✈️ 出行</option>
+          <option value="legal">⚖ 官司 / 纠纷</option>
+          <option value="other">✨ 其他</option>
+        </select></div></div>
+      <div class="hint">起卦以当前时刻为问事之时（自动取今日日柱定六神）</div>
+      <div class="zhouyi-row">
+        <div class="coin" id="ly-c1" onclick="window.lyFlip(0)">字</div>
+        <div class="coin" id="ly-c2" onclick="window.lyFlip(1)">字</div>
+        <div class="coin" id="ly-c3" onclick="window.lyFlip(2)">背</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn-primary" onclick="window.lyCast()">🪙 摇 · 记一爻（共6爻）</button>
+        <button class="btn-secondary" onclick="window.lyAuto()">🎲 一键起卦</button>
+        <button class="btn-secondary" onclick="window.lyReset()">↺ 重摇</button>
+      </div>
+      <div class="hint" style="margin-top:8px;" id="lyYaoHint">点击三枚硬币切换字/背，再点「摇·记一爻」，逐爻从初爻摇至上爻</div>
+    </div>
+    <div class="result" id="ly-result"></div>
+    <div class="foot-disclaimer">※ 六爻结果基于公开的纳甲装卦规则推演，仅供娱乐与自我觉察，请理性参考、不构成人生决策建议</div>
+  </div>
+  </div>
 
 <!-- ===== 西玄主Tab ===== -->
 <div class="page" id="page-wu">
@@ -2374,36 +2404,7 @@ body{ padding-bottom:160px; }
   <div id="sub-cal-fav" class="sub-sec hidden"></div>
 </section>
   <!-- 六爻纳甲 -->
-  <div class="section" id="sec-cn8">
-    <div class="card"><div class="card-title">🔮 六爻纳甲 · 传统六爻（纳甲筮法）</div>
-      <div class="form-row"><label>所问之事</label><input type="text" id="ly-question" placeholder="如：这份工作机会如何？" maxlength="50"></div>
-      <div class="form-row"><label>问事类别</label><div class="inputs">
-        <select id="ly-type">
-          <option value="work">💼 事业 / 工作</option>
-          <option value="wealth">💰 财运</option>
-          <option value="love">💕 感情</option>
-          <option value="study">📚 学业 / 考试</option>
-          <option value="health">🛡 健康</option>
-          <option value="travel">✈️ 出行</option>
-          <option value="legal">⚖ 官司 / 纠纷</option>
-          <option value="other">✨ 其他</option>
-        </select></div></div>
-      <div class="hint">起卦以当前时刻为问事之时（自动取今日日柱定六神）</div>
-      <div class="zhouyi-row">
-        <div class="coin" id="ly-c1" onclick="window.lyFlip(0)">字</div>
-        <div class="coin" id="ly-c2" onclick="window.lyFlip(1)">字</div>
-        <div class="coin" id="ly-c3" onclick="window.lyFlip(2)">背</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-        <button class="btn-primary" onclick="window.lyCast()">🪙 摇 · 记一爻（共6爻）</button>
-        <button class="btn-secondary" onclick="window.lyAuto()">🎲 一键起卦</button>
-        <button class="btn-secondary" onclick="window.lyReset()">↺ 重摇</button>
-      </div>
-      <div class="hint" style="margin-top:8px;" id="lyYaoHint">点击三枚硬币切换字/背，再点「摇·记一爻」，逐爻从初爻摇至上爻</div>
-    </div>
-    <div class="result" id="ly-result"></div>
-    <div class="foot-disclaimer">※ 六爻结果基于公开的纳甲装卦规则推演，仅供娱乐与自我觉察，请理性参考、不构成人生决策建议</div>
-  </div>
+
 
 
 
@@ -2692,7 +2693,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.146.0-20261122';
+const ZHIMING_BUILD = 'v2.146.1-20261122';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
