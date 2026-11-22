@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.145.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.146.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2031,6 +2031,11 @@ body{ padding-bottom:160px; }
         <input type="number" id="zw-day" placeholder="日" min="1" max="31" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;">
         <select id="zw-hour" style="padding:9px 8px;border-radius:10px;border:1.5px solid var(--card-border);background:var(--bg,#f7f7f7);color:var(--text);font-size:14px;"></select>
       <script>document.addEventListener("DOMContentLoaded",function(){ setTimeout(function(){ try{ if(window._zwFillHours) window._zwFillHours(); }catch(_e){} },300); });</script>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--text-sub);">性别(定大限顺逆)：</span>
+        <button id="zw-m" class="switch-btn active" style="width:auto;flex:1;" onclick="window._zwGender('m')">男</button>
+        <button id="zw-f" class="switch-btn" style="width:auto;flex:1;" onclick="window._zwGender('f')">女</button>
       </div>
       <div style="display:flex;gap:6px;">
         <button class="btn-primary" style="flex:1;" onclick="window._zwFromProfile()">📋 用档案生日起盘</button>
@@ -2687,7 +2692,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.145.0-20261122';
+const ZHIMING_BUILD = 'v2.146.0-20261122';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4697,14 +4702,30 @@ window.calcZiwei=function(inp){
     });
     /* 身宫所属宫 */
     var shenPal=palaces.find(function(pp){return pp.zhiIdx===shenGong;});
-    var r={lunarYear:lu.year, lunarMonth:lMonth, lunarDay:lDay, yGan:yGan,
+    /* 大限: 阳男阴女顺行(地支顺), 阴男阳女逆行; 起限岁=局数 */
+    var yangGan={"甲":1,"丙":1,"戊":1,"庚":1,"壬":1,"乙":0,"丁":0,"己":0,"辛":0,"癸":0}[yGan];
+    var gender=inp.gender||'m';
+    var forward=(yangGan&&gender==='m')||(!yangGan&&gender==='f');
+    var daxian=[];
+    for(var di=0;di<12;di++){
+      var dxIdx=forward?((mingGong+di)%12):((mingGong-di)%12+12)%12;
+      var dpal=palaces.find(function(pp){return pp.zhiIdx===((dxIdx%12)+12)%12;});
+      daxian.push({start:ju+di*10, end:ju+di*10+9, name:dpal?dpal.name:'', zhiIdx:((dxIdx%12)+12)%12});
+    }
+    var r={lunarYear:lu.year, lunarMonth:lMonth, lunarDay:lDay, yGan:yGan, gender:gender, forward:forward,
       mingZhi:ZHI[mingGong], mingGan:mingPal.gan, mingGz:mingGz,
       shenZhi:ZHI[shenGong], shenGongName:shenPal?shenPal.name:"",
       ju:ju, juName:({"2":"水二局","3":"木三局","4":"金四局","5":"土五局","6":"火六局"})[ju],
       zwZhi:ZHI[zwIdx], tfZhi:ZHI[tfIdx],
-      palaces:palaces, sihua:sihua, shichen:h};
+      palaces:palaces, sihua:sihua, shichen:h, daxian:daxian, juStart:ju};
     return r;
   }catch(_e){ return null; }
+};
+window._zwGender=function(g){
+  var m=document.getElementById('zw-m'), f=document.getElementById('zw-f');
+  if(!m||!f) return;
+  m.classList.toggle('active',g==='m');
+  f.classList.toggle('active',g==='f');
 };
 window._zwFillHours=function(){
   var sel=document.getElementById('zw-hour');
@@ -4730,6 +4751,7 @@ window._zwFromProfile=function(){
       h=Math.floor(((parseInt(p.hour,10)+1)%24)/2);
     }
     document.getElementById('zw-hour').value=h;
+    if(window._zwGender) window._zwGender(p.gender==='f'?'f':'m');
     window._zwGo();
   }catch(_e){ try{ window.showToast&&window.showToast('起盘失败','info',1500); }catch(_e2){} }
 };
@@ -4740,7 +4762,8 @@ window._zwGo=function(){
     var d=parseInt(document.getElementById('zw-day').value,10);
     var h=parseInt(document.getElementById('zw-hour').value,10);
     if(!y||!m||!d||isNaN(h)){ try{ window.showToast&&window.showToast('填全生日再起盘','info',1600); }catch(_e){} return; }
-    var r=window.calcZiwei({year:y,month:m,day:d,hour:h});
+    var gender=(document.getElementById('zw-f')&&document.getElementById('zw-f').classList.contains('active'))?'f':'m';
+    var r=window.calcZiwei({year:y,month:m,day:d,hour:h,gender:gender});
     if(!r){ try{ window.showToast&&window.showToast('排盘失败','info',1500); }catch(_e2){} return; }
     window._zwRender(r);
     try{
@@ -4832,6 +4855,44 @@ window._zwRender=function(r){
       var mean=({"禄":"带着顺流的资源——这是你的福气区","权":"你天生想主导——劲往这使，别撒手","科":"容易被看见——名声从这来","忌":"是你要还的功课——别怕，还了就轻"})[x2.type];
       h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:3px;"><b style="color:var(--pri);">'+x2.star+'化'+x2.type+'入'+pal.name+'</b>——'+(window._ZW_GONG_READ[pal.name]||'')+'，'+mean+'。</div>';
     });
+    /* 大限: 当前虚岁定位 */
+    try{
+      var nowY=new Date().getFullYear();
+      var vx=nowY-r.lunarYear+1;
+      var cur=r.daxian.find(function(dx){return vx>=dx.start&&vx<=dx.end;});
+      if(cur){
+        var cpal=r.palaces.find(function(pp){return pp.zhiIdx===cur.zhiIdx;});
+        h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🏆 十年大限（'+(r.forward?'顺行':'逆行')+'·'+r.juName+'起限）</b></div>';
+        h+='<div style="margin-top:6px;padding:10px 12px;border-radius:10px;background:var(--pri);color:#fff;">';
+        h+='<div style="font-size:14px;font-weight:800;">'+cur.start+'-'+cur.end+'岁 · '+cur.name+'大限 <span style="font-weight:400;font-size:11px;opacity:.85;">(你正走这限)</span></div>';
+        var cstars=cpal?cpal.stars.map(function(st){return st.replace(/[禄权科忌]/g,'');}):[];
+        if(cstars.length){
+          cstars.forEach(function(st){
+            var sd=window._ZW_STAR[st];
+            var gr=window._ZW_GONG_STAR[st]&&window._ZW_GONG_STAR[st][cpal.name];
+            if(sd) h+='<div style="font-size:12px;line-height:1.7;margin-top:4px;opacity:.95;"><b>'+st+'·'+sd.t+'</b>'+(gr?'——'+gr:'——'+sd.d)+'</div>';
+          });
+        }else{
+          h+='<div style="font-size:12px;line-height:1.7;margin-top:4px;opacity:.9;">本限无主星——借对宫来看，主题偏'+(window._ZW_GONG_READ[cur.name]||'')+'。</div>';
+        }
+        h+='<div style="font-size:11px;line-height:1.7;margin-top:5px;opacity:.9;">这十年的舞台是「'+(window._ZW_GONG_READ[cur.name]||cur.name)+'」——大限的事，以十年为单位看趋势，别拿它定明天。</div>';
+        h+='</div>';
+        h+='<details style="margin-top:7px;"><summary style="font-size:11.5px;cursor:pointer;color:var(--text-hint);">♟ 十二限全览</summary><div style="font-size:11.5px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
+        r.daxian.forEach(function(dx){
+          var dp=r.palaces.find(function(pp){return pp.zhiIdx===dx.zhiIdx;});
+          var on=vx>=dx.start&&vx<=dx.end;
+          h+='<div'+(on?' style="color:var(--pri);font-weight:700;"':'')+'>'+dx.start+'-'+dx.end+'岁 '+dx.name+'宫'+(dp&&dp.stars.length?'('+dp.stars.join('·')+')':'(空)')+(on?' ←当前':'')+'</div>';
+        });
+        h+='</div></details>';
+        /* 流年太岁 */
+        var zh="子丑寅卯辰巳午未申酉戌亥";
+        var thisYearZhi=zh[(nowY-4)%12];
+        var tyPal=r.palaces.find(function(pp){return pp.zhi===thisYearZhi;});
+        if(tyPal){
+          h+='<div style="font-size:11.5px;line-height:1.8;color:var(--text-sub);margin-top:7px;">📌 今年('+nowY+thisYearZhi+')太岁落在你的<b>'+tyPal.name+'</b>——'+(window._ZW_GONG_READ[tyPal.name]||'')+'今年被点灯，这宫的事会活跃。</div>';
+        }
+      }
+    }catch(_dx){}
     h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">和八字对读：八字说气数，紫微说舞台——两套语言指向一致时，答案就更可信。</div>';
     h+='</div>';
     document.getElementById('zw-result').innerHTML=h;
