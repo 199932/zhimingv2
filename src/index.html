@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.141.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.145.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2687,7 +2687,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.141.0-20261120';
+const ZHIMING_BUILD = 'v2.145.0-20261122';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4577,6 +4577,36 @@ window._ZW_STAR={
   "七杀":{t:"将星",d:"冲劲大，人生爱折腾——宁折不弯，起落都来得猛。"},
   "破军":{t:"耗星",d:"破旧立新——不破不立，人生是几次大重装。"}
 };
+window._ZW_GONG_READ={
+  "命宫":"你这个人本身的底色",
+  "兄弟":"手足与平辈缘",
+  "夫妻":"感情与伴侣——你爱人的方式",
+  "子女":"子女与创作（作品也算孩子）",
+  "财帛":"钱怎么来怎么流",
+  "疾厄":"身体与情绪的地基",
+  "迁移":"出外机遇与环境",
+  "交友":"朋友与合伙人",
+  "事业":"事业的路数",
+  "田宅":"家宅与不动产",
+  "福德":"内心福气与精神状态",
+  "父母":"长辈缘与庇护"
+};
+window._ZW_GONG_STAR={
+ "紫微":{"财帛":"钱来得体面，靠地位与格局生财——面子能变现。","事业":"天生的主位——要么掌权要么当老板，打工也要做核心层。","夫妻":"眼光高，伴侣要「配得上」——强强联合，别找软柿子。","迁移":"出外有地位——离开原生地反而更能发挥，贵人层级高。"},
+ "天机":{"财帛":"脑子生财，点子变现快——但容易见好就收赚辛苦差价。","事业":"靠脑吃饭——策划、技术、咨询，越复杂越好玩。","夫妻":"灵魂共鸣优先——要聊得来，闷葫芦和傻白甜都不行。","迁移":"动中生财——出差、换环境点子就多，适合机动性强的生活。"},
+ "太阳":{"财帛":"钱为面子与人脉服务——赚得光明，也花得大方。","事业":"公开舞台型——曝光度越高越旺，教育传播传媒皆宜。","夫妻":"容易爱上付出型的人——给光也发热，别烫着对方。","迁移":"对外发光——社交场上你的名气大于实力本身。"},
+ "武曲":{"财帛":"天生理财手——对钱敏感、敢投敢收，财帛宫最强配置之一。","事业":"执行力就是事业——金融、工程、硬核赛道吃香。","夫妻":"感情硬朗——行动代替情话，另一半常嫌你不浪漫。","迁移":"外地打硬仗——出外靠真本事，人情牌反而不灵。"},
+ "天同":{"财帛":"财缘随缘——不缺小钱，大钱要靠养成习惯攒。","事业":"安稳为先——大平台、慢节奏，福气在坚持里。","夫妻":"随缘享福型——感情不折腾，但要防太佛被辜负。","迁移":"出外有福——到哪里都有人罩，懒散也会被环境治好。"},
+ "廉贞":{"财帛":"钱与原则绑定——该赚的赚，脏钱一分不碰。","事业":"纪律型强人——风控、品质、规则多的地方你称王。","夫妻":"爱得深也管得严——原则问题不让步，软肋藏最深。","迁移":"出外守规矩——异地谨慎处好事半功倍。"},
+ "天府":{"财帛":"天生财库——能存住钱，越到中年库越厚。","事业":"守成型主管——管人管钱管仓库，越稳的盘子越交给你。","夫妻":"求稳——找的是人生合伙人，不是心跳加速器。","迁移":"外乡有库——出外反而攒得下资源，适合异地发展。"},
+ "太阴":{"财帛":"细水长流的财——靠储蓄、不动产与安稳收入慢慢厚。","事业":"幕后运筹型——策划、研究、财务，安静处出大活。","夫妻":"温柔体贴挂——会照顾人，也渴望被细腻对待。","迁移":"近乡情浓——离太远心里空，别跑太远。"},
+ "贪狼":{"财帛":"财路宽、来路活——应酬与人脉都能变钱，但手也散。","事业":"多线开花——应酬、娱乐、创意，人多的行业有你发挥。","夫妻":"桃花旺——选择多，考验的是收心。","迁移":"外面世界精彩——人脉与机会都在路上，坐不住是天性。"},
+ "巨门":{"财帛":"靠嘴生财——咨询、销售、内容，说话就是你的印钞机。","事业":"靠专业口才立身——律师、讲师、自媒体，观点就是生意。","夫妻":"沟通即命门——话说开了没事，憋着必出事。","迁移":"出外防口舌——异乡是非多，少站队多做事。"},
+ "天相":{"财帛":"理财稳健派——不追高不冒进，帮人管钱比给自己赚更在行。","事业":"完美的二号位——辅佐、协调、行政，离老大最近的参谋。","夫妻":"模范伴侣型——顾全大局，但记得你也有感受。","迁移":"出外有人帮——协调力在陌生环境里最值钱。"},
+ "天梁":{"财帛":"财来有线——适合铁饭碗与长线收入。","事业":"专业与资历为王——医疗、教育、监察，越老越吃香。","夫妻":"照顾者心态——容易找需要被照顾的，或被成熟的人吸引。","迁移":"异乡遇贵人——长辈缘旺，出门有靠。"},
+ "七杀":{"财帛":"敢赚敢赌——钱在起落里滚动，赢要会收手。","事业":"开疆型选手——新项目、新市场、救火队，越乱越显本事。","夫妻":"来得猛去得快——感情大起大落，晚婚反而稳。","迁移":"出外开疆——环境越新战意越足，远方才是主场。"},
+ "破军":{"财帛":"破而后立之财——换赛道才有大钱，守旧财反而耗。","事业":"变革者——旧模式到你手里必翻新，适合创业与重组。","夫妻":"感情里敢推倒重来——宁可重开不肯将就。","迁移":"漂泊命——换环境反而重生，留原地容易耗。"}
+};
 window._ZW_SIHUA={
   "甲":{"禄":"廉贞","权":"破军","科":"武曲","忌":"太阳"},
   "乙":{"禄":"天机","权":"天梁","科":"紫微","忌":"太阴"},
@@ -4756,6 +4786,52 @@ window._zwRender=function(r){
       h+='<div'+(isM?' style="font-weight:700;color:var(--pri);"':'')+'>'+pal.name+'('+pal.gan+pal.zhi+')：'+(pal.stars.length?pal.stars.join('、'):'空宫')+'</div>';
     });
     h+='</div></details>';
+    /* 四宫深读：财帛/事业/夫妻/迁移 */
+    var palaces_opp=function(r,pal){
+      var opp=r.palaces.find(function(pp){return pp.zhiIdx===((pal.zhiIdx+6)%12);});
+      return opp?(opp.stars.join('、')||'空宫'):'空宫';
+    };
+    var four=["财帛","事业","夫妻","迁移"];
+    var starShow=function(pal){
+      if(pal.stars.length) return pal.stars.join('、');
+      var opp=palaces_opp(r,pal);
+      return '空宫(借对宫'+opp+')';
+    };
+    h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🎯 人生四大事的宫位</b></div>';
+    four.forEach(function(gn){
+      var pal=r.palaces.find(function(pp){return pp.name===gn;});
+      if(!pal) return;
+      h+='<div style="margin-top:7px;"><b style="color:var(--pri);font-size:12px;">'+gn+'宫('+pal.gan+pal.zhi+')·'+(window._ZW_GONG_READ[gn]||'')+'</b></div>';
+      if(pal.stars.length){
+        pal.stars.forEach(function(st){
+          var base=st.replace(/[禄权科忌]/g,'');
+          var sd=window._ZW_STAR[base];
+          var gr=window._ZW_GONG_STAR[base]&&window._ZW_GONG_STAR[base][gn];
+          var tags=[];
+          r.sihua.forEach(function(x2){ if(x2.star===base) tags.push('化'+x2.type); });
+          h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:3px;"><b>'+st+(tags.length?('('+tags.join(',')+')'):'')+'</b>'+(sd?'（'+sd.t+'）：':'：')+(gr||'')+(sd&&!gr?sd.d:'')+'</div>';
+        });
+      }else{
+        var oppPal=r.palaces.find(function(pp){return pp.zhiIdx===((pal.zhiIdx+6)%12);});
+        h+='<div style="font-size:12px;line-height:1.8;color:var(--text-hint);margin-top:3px;">此宫无主星——借对宫'+(oppPal?oppPal.name:'')+'('+starShow(oppPal||pal)+')来看，观察力往'+(oppPal?oppPal.name:'')+'的方向借。</div>';
+        if(oppPal){
+          oppPal.stars.forEach(function(st){
+            var base=st.replace(/[禄权科忌]/g,'');
+            var gr=window._ZW_GONG_STAR[base]&&window._ZW_GONG_STAR[base][gn];
+            if(gr) h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:2px;"><b>'+base+'(借)</b>：'+gr+'</div>';
+          });
+        }
+      }
+    });
+    /* 四化落宫 */
+    h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🎈 生年四化落在哪</b></div>';
+    r.sihua.forEach(function(x2){
+      var pal=null;
+      r.palaces.forEach(function(pp){ if(pp.stars.some(function(ss){return ss.indexOf(x2.star)>=0;})) pal=pp; });
+      if(!pal) return;
+      var mean=({"禄":"带着顺流的资源——这是你的福气区","权":"你天生想主导——劲往这使，别撒手","科":"容易被看见——名声从这来","忌":"是你要还的功课——别怕，还了就轻"})[x2.type];
+      h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:3px;"><b style="color:var(--pri);">'+x2.star+'化'+x2.type+'入'+pal.name+'</b>——'+(window._ZW_GONG_READ[pal.name]||'')+'，'+mean+'。</div>';
+    });
     h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">和八字对读：八字说气数，紫微说舞台——两套语言指向一致时，答案就更可信。</div>';
     h+='</div>';
     document.getElementById('zw-result').innerHTML=h;
