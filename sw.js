@@ -26,8 +26,22 @@ self.addEventListener('fetch', e => {
 
   // 2026-11-09 重写（坑93）：旧实现缓存命中也 await 一次网络往返，弱网等满全程——注释与实现不一致。
   // 现策略：哈希资源（URL即版本）cache-first 纯秒回；其余（页面/静态）SWR——缓存命中立即返回+后台刷新，离线兜底保留。
-  const isHashed = /\/assets\/app[.-][0-9a-f]{8}\.js$/.test(url.pathname);
+  const isHashed = /\/assets\/(app|mod-[a-z]+)[.-][0-9a-f]{8}\.js$/.test(url.pathname);
+  const isLegacyApp = url.pathname.endsWith('/assets/app.js'); // 坑96退场：旧缓存设备裸名请求 → 重定向到当前 hash 版
   const isPage = url.pathname.endsWith('/') || url.pathname.endsWith('.html');
+  if (isLegacyApp) {
+    e.respondWith((async () => {
+      const all = await caches.open(CACHE);
+      const keys = await all.keys();
+      const hashed = keys.map(k => k.url).find(u => /\/assets\/app\.[0-9a-f]{8}\.js$/.test(u));
+      if (hashed) {
+        const res = await all.match(hashed);
+        if (res) return res;
+      }
+      return fetch(req);
+    })());
+    return;
+  }
   e.respondWith((async () => {
     const cached = await caches.match(req);
     if (cached) {

@@ -1,0 +1,13 @@
+{
+  "name": "zhiming-v2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "知命V2 纯本地命理 PWA——build 依赖钉版本保证产物可复现",
+  "scripts": {
+    "build": "node build.js",
+    "test": "python3 tests/core.test.py"
+  },
+  "devDependencies": {
+    "terser": "5.51.4"
+  }
+}

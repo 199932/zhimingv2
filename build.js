@@ -55,20 +55,24 @@ const appJs = '/* 知命V2 应用脚本（由 build.js 从 src/index.html 生成
   + '/* ==== Block 1: 主逻辑 ==== */\n' + jsParts[0]
   + '\n/* ==== Block 2: Phase3 注入 & boot 移除 ==== */\n' + jsParts[1] + '\n';
 fs.mkdirSync(ASSETS, { recursive: true });
-fs.writeFileSync(path.join(ASSETS, 'app.js'), appJs);
 
-// ---------- 4. 压缩 app.js（terser compress，不 mangle 保 onclick/全局名） ----------
+// ---------- 4. 压缩 app.js（terser compress，不 mangle 保 onclick/全局名）——fail-fast：压缩失败=构建失败，绝不让 1.4MB 裸包静默上线 ----------
 let appOut = appJs;
-try {
+{
   const tmp = path.join(ROOT, 'assets', '.app.tmp.js');
+  const outT = path.join(ROOT, 'assets', '.app.out.tmp.js');
   fs.writeFileSync(tmp, appJs);
-  execSync('npx terser ' + tmp + ' -c passes=2 --ecma 2017 -o ' + path.join(ASSETS, 'app.js') + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
+  try {
+    execSync('npx --no-install terser ' + tmp + ' -c passes=2 --ecma 2017 -o ' + outT + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
+  } catch (e) {
+    fs.rmSync(outT, { force: true });
+    console.error('FATAL: terser 压缩失败——拒绝裸包上线: ' + String(e.message).slice(0, 300));
+    process.exit(1);
+  }
+  appOut = fs.readFileSync(outT, 'utf8');
   fs.unlinkSync(tmp);
-  appOut = fs.readFileSync(path.join(ASSETS, 'app.js'), 'utf8');
+  fs.unlinkSync(outT);
   console.log('terser ok:', (appJs.length / 1024).toFixed(0) + 'KB ->', (appOut.length / 1024).toFixed(0) + 'KB');
-} catch (e) {
-  console.warn('terser failed, fallback to raw:', String(e.message).slice(0, 200));
-  // app.js 已是原始版
 }
 
 // ---------- 4b. 内容哈希产物 + mod 分块 + SW 注入 + sitemap lastmod（漏升版本号物理不可能） ----------
@@ -80,8 +84,12 @@ for (const [mname, bidx, header] of MODS) {
   fs.writeFileSync(tmpM, src);
   const mh = path.join(ASSETS, 'mod-' + mname + '.js');
   try {
-    execSync('npx terser ' + tmpM + ' -c passes=2 --ecma 2017 -o ' + mh + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
-  } catch (e) { fs.copyFileSync(tmpM, mh); console.warn('terser mod-' + mname + ' failed, raw fallback'); }
+    execSync('npx --no-install terser ' + tmpM + ' -c passes=2 --ecma 2017 -o ' + mh + ' 2>&1', { cwd: ROOT, stdio: 'pipe' });
+  } catch (e) {
+    fs.rmSync(mh, { force: true });
+    console.error('FATAL: terser mod-' + mname + ' 压缩失败——拒绝裸包上线: ' + String(e.message).slice(0, 300));
+    process.exit(1);
+  }
   fs.unlinkSync(tmpM);
   const mtxt = fs.readFileSync(mh, 'utf8');
   const mhash = crypto.createHash('sha256').update(mtxt).digest('hex').slice(0, 8);
@@ -101,9 +109,19 @@ const loaderJs = '\n/* ==== 模块懒加载器（build 注入） ==== */\n'
   + 'window.__ensureMod=function(n){ return window.__mods[n]||(window.__mods[n]=new Promise(function(res,rej){ var sc=document.createElement("script"); sc.src=window.__MOD_URLS[n]; sc.onload=function(){res()}; sc.onerror=function(){ delete window.__mods[n]; rej(new Error("mod load fail: "+n)); }; document.head.appendChild(sc); })); };\n';
 const APPHASH = crypto.createHash('sha256').update(appOut).digest('hex').slice(0, 8);
 const appHashed = 'app.' + APPHASH + '.js';
-fs.writeFileSync(path.join(ASSETS, 'app.js'), appOut + loaderJs);
+/* 坑96清账：兼容产物 assets/app.js 停止生成（SW legacy 映射先行，仓库不再双份 2.89MB） */
 fs.writeFileSync(path.join(ASSETS, appHashed), appOut + loaderJs);
 console.log('assets/' + appHashed + ':', ((appOut.length + loaderJs.length) / 1024).toFixed(0) + 'KB (hash=' + APPHASH + ')');
+
+// ---------- 4c. 体积预算（gzip 口径）——超限即失败,功能债的代价必须当场可见 ----------
+const gz = b => require('zlib').gzipSync(Buffer.from(b, 'utf8')).length;
+const appGz = gz(appOut + loaderJs);
+const BUDGET_APP_GZ = 500 * 1024;
+if (appGz > BUDGET_APP_GZ) {
+  console.error('FATAL: 主包 gzip ' + (appGz / 1024).toFixed(1) + 'KB 超预算 ' + (BUDGET_APP_GZ / 1024) + 'KB——先做文案外置/分块,再谈新功能');
+  process.exit(1);
+}
+console.log('体积预算: app gzip ' + (appGz / 1024).toFixed(1) + 'KB / ' + (BUDGET_APP_GZ / 1024) + 'KB OK');
 
 // sw.js：CACHE 版本=哈希、PRECACHE 注入哈希文件名（sw.js 字节随构建变化 → 浏览器自动检测更新）
 const SWP = path.join(ROOT, 'sw.js');
@@ -117,8 +135,10 @@ for (const mv of Object.values(MOD_URLS)) {
 }
 if (!swTxt.includes(appHashed)) { console.error('sw PRECACHE inject miss'); process.exit(1); }
 fs.writeFileSync(SWP, swTxt);
-// 清理旧哈希产物（保留 app.js 兼容旧缓存 index）
+// 清理旧哈希产物 + 兼容产物 app.js（SW legacy 映射已上线,离线旧设备经 SW 接住）
 fs.readdirSync(ASSETS).filter(f => /^app\.[0-9a-f]{8}\.js$/.test(f) && f !== appHashed).forEach(f => fs.unlinkSync(path.join(ASSETS, f)));
+const legacyApp = path.join(ASSETS, 'app.js');
+if (fs.existsSync(legacyApp)) fs.unlinkSync(legacyApp);
 
 // sitemap lastmod = 构建日（防过期）
 const SMP = path.join(ROOT, 'sitemap.xml');
