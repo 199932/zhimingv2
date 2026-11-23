@@ -128,7 +128,7 @@ console.log('assets/' + appHashed + ':', ((appOut.length + loaderJs.length) / 10
 // ---------- 4c. 体积预算（gzip 口径）——超限即失败,功能债的代价必须当场可见 ----------
 const gz = b => require('zlib').gzipSync(Buffer.from(b, 'utf8')).length;
 const appGz = gz(appOut + loaderJs);
-const BUDGET_APP_GZ = 500 * 1024;
+const BUDGET_APP_GZ = 450 * 1024; /* v2.147.2 Step3收紧——文案外置成果锁死(现400.8,余49KB) */
 if (appGz > BUDGET_APP_GZ) {
   console.error('FATAL: 主包 gzip ' + (appGz / 1024).toFixed(1) + 'KB 超预算 ' + (BUDGET_APP_GZ / 1024) + 'KB——先做文案外置/分块,再谈新功能');
   process.exit(1);
