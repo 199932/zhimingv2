@@ -49,6 +49,7 @@ const jsParts = scriptBlocks.map(b => lines.slice(b.start + 1, b.end).join('\n')
 const MODS = [
   ['health', 3, '/* 知命V2 养生调理模块（懒加载，勿手改） */\n'],
   ['chart',  4, '/* 知命V2 星盘模块（懒加载，勿手改） */\n'],
+  ['cities', 13, '/* 知命V2 城市库模块（懒加载，勿手改） */\n'],
   ['extra', null, '/* 知命V2 附加模块合集（食单/睡前/合盘/小卡，懒加载，勿手改） */\n']
 ];
 const appJs = '/* 知命V2 应用脚本（由 build.js 从 src/index.html 生成，勿手改） */\n'
@@ -84,7 +85,7 @@ let appOut = appJs;
 // mod 分块产物（各自 terser+hash）
 const MOD_URLS = {};
 for (const [mname, bidx, header] of MODS) {
-  const src = header + (bidx ? jsParts[bidx-1] : jsParts.slice(4).map((p,i)=>'\n/* ==== Block '+(i+5)+': 附加 ==== */\n'+p).join(''));
+  const src = header + (bidx ? jsParts[bidx-1] : jsParts.slice(4, 12).map((p,i)=>'\n/* ==== Block '+(i+5)+': 附加 ==== */\n'+p).join(''));
   const tmpM = path.join(ROOT, 'assets', '.mod.tmp.js');
   fs.writeFileSync(tmpM, src);
   const mh = path.join(ASSETS, 'mod-' + mname + '.js');
