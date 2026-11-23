@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.147.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.147.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2693,7 +2693,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.147.0-20261123';
+const ZHIMING_BUILD = 'v2.147.1-20261124';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4525,470 +4525,17 @@ window._liuyueWaveHTML=function(){
   }catch(_e){ return ''; }
 };
 
-/* ═══ 紫微斗数（v2.144.0）：安命宫·五行局·十四主星·四化——第二套中式语言 ═══ */
-window._ZW_STAR={
-  "紫微":{t:"帝星",d:"主心骨强，天生要撑场面——坐哪一宫，那宫就是你人生的舞台。"},
-  "天机":{t:"军师星",d:"脑子转得快，多谋善变——点子多，但容易想太多。"},
-  "太阳":{t:"贵星",d:"付出型人格，照亮别人——热情慷慨，也怕被泼冷水。"},
-  "武曲":{t:"财星",d:"行动派，话不多但落地——对钱和目标敏感，狠得下心。"},
-  "天同":{t:"福星",d:"随和知足，福气自带来——容易安逸，也容易懒。"},
-  "廉贞":{t:"囚星",d:"外冷内热，原则性强——爱憎分明，感情藏在规矩下面。"},
-  "天府":{t:"库星",d:"稳，会攒——天生带资源感，守成有余进取偏缓。"},
-  "太阴":{t:"月星",d:"细腻温柔，顾家——情绪有潮汐，富想象力也富积蓄。"},
-  "贪狼":{t:"桃花星",d:"欲望与好奇都旺——人生不怕重开，多才多艺应酬强。"},
-  "巨门":{t:"暗星",d:"口才与怀疑并存——爱问为什么，靠嘴吃饭也容易因嘴惹事。"},
-  "天相":{t:"印星",d:"靠谱参谋，协调型好手——惯于周全他人，自己是第二位。"},
-  "天梁":{t:"荫星",d:"老成，天生爱管事护人——像长辈一样操心，也被人当靠山。"},
-  "七杀":{t:"将星",d:"冲劲大，人生爱折腾——宁折不弯，起落都来得猛。"},
-  "破军":{t:"耗星",d:"破旧立新——不破不立，人生是几次大重装。"}
-};
-window._ZW_GONG_READ={
-  "命宫":"你这个人本身的底色",
-  "兄弟":"手足与平辈缘",
-  "夫妻":"感情与伴侣——你爱人的方式",
-  "子女":"子女与创作（作品也算孩子）",
-  "财帛":"钱怎么来怎么流",
-  "疾厄":"身体与情绪的地基",
-  "迁移":"出外机遇与环境",
-  "交友":"朋友与合伙人",
-  "事业":"事业的路数",
-  "田宅":"家宅与不动产",
-  "福德":"内心福气与精神状态",
-  "父母":"长辈缘与庇护"
-};
-window._ZW_GONG_STAR={
- "紫微":{"财帛":"钱来得体面，靠地位与格局生财——面子能变现。","事业":"天生的主位——要么掌权要么当老板，打工也要做核心层。","夫妻":"眼光高，伴侣要「配得上」——强强联合，别找软柿子。","迁移":"出外有地位——离开原生地反而更能发挥，贵人层级高。"},
- "天机":{"财帛":"脑子生财，点子变现快——但容易见好就收赚辛苦差价。","事业":"靠脑吃饭——策划、技术、咨询，越复杂越好玩。","夫妻":"灵魂共鸣优先——要聊得来，闷葫芦和傻白甜都不行。","迁移":"动中生财——出差、换环境点子就多，适合机动性强的生活。"},
- "太阳":{"财帛":"钱为面子与人脉服务——赚得光明，也花得大方。","事业":"公开舞台型——曝光度越高越旺，教育传播传媒皆宜。","夫妻":"容易爱上付出型的人——给光也发热，别烫着对方。","迁移":"对外发光——社交场上你的名气大于实力本身。"},
- "武曲":{"财帛":"天生理财手——对钱敏感、敢投敢收，财帛宫最强配置之一。","事业":"执行力就是事业——金融、工程、硬核赛道吃香。","夫妻":"感情硬朗——行动代替情话，另一半常嫌你不浪漫。","迁移":"外地打硬仗——出外靠真本事，人情牌反而不灵。"},
- "天同":{"财帛":"财缘随缘——不缺小钱，大钱要靠养成习惯攒。","事业":"安稳为先——大平台、慢节奏，福气在坚持里。","夫妻":"随缘享福型——感情不折腾，但要防太佛被辜负。","迁移":"出外有福——到哪里都有人罩，懒散也会被环境治好。"},
- "廉贞":{"财帛":"钱与原则绑定——该赚的赚，脏钱一分不碰。","事业":"纪律型强人——风控、品质、规则多的地方你称王。","夫妻":"爱得深也管得严——原则问题不让步，软肋藏最深。","迁移":"出外守规矩——异地谨慎处好事半功倍。"},
- "天府":{"财帛":"天生财库——能存住钱，越到中年库越厚。","事业":"守成型主管——管人管钱管仓库，越稳的盘子越交给你。","夫妻":"求稳——找的是人生合伙人，不是心跳加速器。","迁移":"外乡有库——出外反而攒得下资源，适合异地发展。"},
- "太阴":{"财帛":"细水长流的财——靠储蓄、不动产与安稳收入慢慢厚。","事业":"幕后运筹型——策划、研究、财务，安静处出大活。","夫妻":"温柔体贴挂——会照顾人，也渴望被细腻对待。","迁移":"近乡情浓——离太远心里空，别跑太远。"},
- "贪狼":{"财帛":"财路宽、来路活——应酬与人脉都能变钱，但手也散。","事业":"多线开花——应酬、娱乐、创意，人多的行业有你发挥。","夫妻":"桃花旺——选择多，考验的是收心。","迁移":"外面世界精彩——人脉与机会都在路上，坐不住是天性。"},
- "巨门":{"财帛":"靠嘴生财——咨询、销售、内容，说话就是你的印钞机。","事业":"靠专业口才立身——律师、讲师、自媒体，观点就是生意。","夫妻":"沟通即命门——话说开了没事，憋着必出事。","迁移":"出外防口舌——异乡是非多，少站队多做事。"},
- "天相":{"财帛":"理财稳健派——不追高不冒进，帮人管钱比给自己赚更在行。","事业":"完美的二号位——辅佐、协调、行政，离老大最近的参谋。","夫妻":"模范伴侣型——顾全大局，但记得你也有感受。","迁移":"出外有人帮——协调力在陌生环境里最值钱。"},
- "天梁":{"财帛":"财来有线——适合铁饭碗与长线收入。","事业":"专业与资历为王——医疗、教育、监察，越老越吃香。","夫妻":"照顾者心态——容易找需要被照顾的，或被成熟的人吸引。","迁移":"异乡遇贵人——长辈缘旺，出门有靠。"},
- "七杀":{"财帛":"敢赚敢赌——钱在起落里滚动，赢要会收手。","事业":"开疆型选手——新项目、新市场、救火队，越乱越显本事。","夫妻":"来得猛去得快——感情大起大落，晚婚反而稳。","迁移":"出外开疆——环境越新战意越足，远方才是主场。"},
- "破军":{"财帛":"破而后立之财——换赛道才有大钱，守旧财反而耗。","事业":"变革者——旧模式到你手里必翻新，适合创业与重组。","夫妻":"感情里敢推倒重来——宁可重开不肯将就。","迁移":"漂泊命——换环境反而重生，留原地容易耗。"}
-};
-window._ZW_SIHUA={
-  "甲":{"禄":"廉贞","权":"破军","科":"武曲","忌":"太阳"},
-  "乙":{"禄":"天机","权":"天梁","科":"紫微","忌":"太阴"},
-  "丙":{"禄":"天同","权":"天机","科":"文昌","忌":"廉贞"},
-  "丁":{"禄":"太阴","权":"天同","科":"天机","忌":"巨门"},
-  "戊":{"禄":"贪狼","权":"太阴","科":"右弼","忌":"天机"},
-  "己":{"禄":"武曲","权":"贪狼","科":"天梁","忌":"文曲"},
-  "庚":{"禄":"太阳","权":"武曲","科":"太阴","忌":"天同"},
-  "辛":{"禄":"巨门","权":"太阳","科":"文曲","忌":"文昌"},
-  "壬":{"禄":"天梁","权":"紫微","科":"左辅","忌":"武曲"},
-  "癸":{"禄":"破军","权":"巨门","科":"太阴","忌":"贪狼"}
-};
-window._ZW_TIANGAN_LU={"甲":2,"乙":4,"丙":6,"丁":8,"戊":0,"己":2,"庚":4,"辛":6,"壬":8,"癸":0}; /* 五虎遁:甲己丙寅起/乙庚戊/丙辛庚/丁壬壬/戊癸甲——寅=idx2 */
-window.calcZiwei=function(inp){
-  /* inp: {year,month,day,hour} 公历 year年 month月 day日 hour时辰序0-11(子=0) */
-  try{
-    var ZHI=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
-    var GAN=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
-    var y=inp.year, mo=inp.month, dd=inp.day, h=inp.hour;
-    /* 农历 */
-    var lu=window.solar2lunar?window.solar2lunar(y,mo,dd):null;
-    if(!lu) return null;
-    var lMonth=lu.month, lDay=lu.day;
-    /* 年干: 用农历年(公历1-2月还在农历上一年) */
-    var yGanIdx=((lu.year-1984)%10+10)%10;
-    var yGan=GAN[yGanIdx];
-    /* 安命宫: 寅起正月顺数至生月 → 月宫; 月宫起子时逆数至生时 */
-    var yueGong=(2+((lMonth-1)%12))%12; /* 寅=idx2 */
-    var mingGong=((yueGong-h)%12+12)%12;
-    var shenGong=((yueGong+h)%12)%12;
-    /* 十二宫名(逆布) */
-    var GONG_NAMES=["命宫","兄弟","夫妻","子女","财帛","疾厄","迁移","交友","事业","田宅","福德","父母"];
-    var palaces=[];
-    for(var i=0;i<12;i++){
-      var zhiIdx=((mingGong-i)%12+12)%12;
-      palaces.push({zhiIdx:zhiIdx, zhi:ZHI[zhiIdx], name:GONG_NAMES[i], stars:[]});
-    }
-    /* 宫干: 五虎遁 */
-    var yinGanStart={"甲":2,"乙":4,"丙":6,"丁":8,"戊":0,"己":2,"庚":4,"辛":6,"壬":8,"癸":0}; /* 五虎遁:甲己丙寅起/乙庚戊/丙辛庚/丁壬壬/戊癸甲寅 */
-    var s0=yinGanStart[yGan];
-    palaces.forEach(function(pal){
-      pal.gan=GAN[(s0+pal.zhiIdx-2+120)%10]; /* 寅(idx2)起顺 */
-    });
-    /* 五行局: 命宫干支纳音 */
-    var mingPal=palaces[0];
-    var mingGz=mingPal.gan+mingPal.zhi;
-    var ny=window.nayinGZ?window.nayinGZ(mingGz):null;
-    var juMap={"水":2,"木":3,"金":4,"土":5,"火":6};
-    var ju=ny?juMap[ny.charAt(ny.length-1)]:null;
-    if(!ju){ /* 纳音名末字: 海中金→金 */
-      for(var kk in juMap){ if(ny&&ny.indexOf(kk)>=0){ ju=juMap[kk]; break; } }
-    }
-    if(!ju) ju=2;
-    /* 安紫微: 局数除生日 */
-    var zwIdx;
-    if(lDay<=ju){ zwIdx={"2":1,"3":4,"4":11,"5":6,"6":9}[ju]; } /* 水二丑 木三辰 金四亥 土五午 火六酉: 六五四三二酉午亥辰丑 */
-    else{
-      var q=Math.ceil(lDay/ju), borrow=q*ju-lDay;
-      var steps=(borrow%2===0)?(q+borrow):(q-borrow);
-      zwIdx=((2+steps-1)%12+12)%12; /* 寅=idx2起, steps=1→寅 */
-    }
-    /* 天府: 对称 */
-    var tfMap={0:4,1:3,2:2,3:1,4:0,5:11,6:10,7:9,8:8,9:7,10:6,11:5};
-    var tfIdx=tfMap[zwIdx];
-    /* 紫微系(逆) */
-    var ziXi=[["紫微",0],["天机",-1],["太阳",-3],["武曲",-4],["天同",-5],["廉贞",-8]];
-    var fuXi=[["天府",0],["太阴",1],["贪狼",2],["巨门",3],["天相",4],["天梁",5],["七杀",6],["破军",10]];
-    ziXi.forEach(function(x){
-      var idx=((zwIdx+x[1])%12+12)%12;
-      var pal=palaces.find(function(pp){return pp.zhiIdx===idx;});
-      if(pal) pal.stars.push(x[0]);
-    });
-    fuXi.forEach(function(x){
-      var idx=((tfIdx+x[1])%12+12)%12;
-      var pal=palaces.find(function(pp){return pp.zhiIdx===idx;});
-      if(pal) pal.stars.push(x[0]);
-    });
-    /* 四化标记 */
-    var sh=window._ZW_SIHUA[yGan];
-    var sihua=[];
-    ["禄","权","科","忌"].forEach(function(k){
-      var st=sh[k];
-      sihua.push({star:st,type:k});
-      palaces.forEach(function(pal){
-        var si=pal.stars.indexOf(st);
-        if(si>=0) pal.stars[si]=st+(k==="禄"?"禄":k==="权"?"权":k==="科"?"科":"忌");
-      });
-    });
-    /* 身宫所属宫 */
-    var shenPal=palaces.find(function(pp){return pp.zhiIdx===shenGong;});
-    /* 大限: 阳男阴女顺行(地支顺), 阴男阳女逆行; 起限岁=局数 */
-    var yangGan={"甲":1,"丙":1,"戊":1,"庚":1,"壬":1,"乙":0,"丁":0,"己":0,"辛":0,"癸":0}[yGan];
-    var gender=inp.gender||'m';
-    var forward=(yangGan&&gender==='m')||(!yangGan&&gender==='f');
-    var daxian=[];
-    for(var di=0;di<12;di++){
-      var dxIdx=forward?((mingGong+di)%12):((mingGong-di)%12+12)%12;
-      var dpal=palaces.find(function(pp){return pp.zhiIdx===((dxIdx%12)+12)%12;});
-      daxian.push({start:ju+di*10, end:ju+di*10+9, name:dpal?dpal.name:'', zhiIdx:((dxIdx%12)+12)%12});
-    }
-    var r={lunarYear:lu.year, lunarMonth:lMonth, lunarDay:lDay, yGan:yGan, gender:gender, forward:forward,
-      mingZhi:ZHI[mingGong], mingGan:mingPal.gan, mingGz:mingGz,
-      shenZhi:ZHI[shenGong], shenGongName:shenPal?shenPal.name:"",
-      ju:ju, juName:({"2":"水二局","3":"木三局","4":"金四局","5":"土五局","6":"火六局"})[ju],
-      zwZhi:ZHI[zwIdx], tfZhi:ZHI[tfIdx],
-      palaces:palaces, sihua:sihua, shichen:h, daxian:daxian, juStart:ju};
-    return r;
-  }catch(_e){ return null; }
-};
-window._zwGender=function(g){
-  var m=document.getElementById('zw-m'), f=document.getElementById('zw-f');
-  if(!m||!f) return;
-  m.classList.toggle('active',g==='m');
-  f.classList.toggle('active',g==='f');
-};
-window._zwFillHours=function(){
-  var sel=document.getElementById('zw-hour');
-  if(!sel||sel.options.length) return;
-  var ZHI=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
-  var B=["夜半","鸡鸣","平旦","日出","食时","隅中","日中","日昳","晡时","日入","黄昏","人定"];
-  for(var i=0;i<12;i++){
-    var op=document.createElement('option');
-    op.value=i; op.textContent=ZHI[i]+'时('+B[i]+')';
-    sel.appendChild(op);
-  }
-  sel.value=Math.floor(((new Date().getHours()+1)%24)/2);
-};
-window._zwFromProfile=function(){
-  try{
-    var p=window.getActiveProfile?window.getActiveProfile():null;
-    if(!p||!p.year){ try{ window.showToast&&window.showToast('先在档案里建生日','info',1800); }catch(_e){} return; }
-    document.getElementById('zw-year').value=p.year;
-    document.getElementById('zw-month').value=p.month;
-    document.getElementById('zw-day').value=p.day;
-    var h=0;
-    if(p.hour!==undefined&&p.hour!==null&&p.hour!==''){
-      h=Math.floor(((parseInt(p.hour,10)+1)%24)/2);
-    }
-    document.getElementById('zw-hour').value=h;
-    if(window._zwGender) window._zwGender(p.gender==='f'?'f':'m');
-    window._zwGo();
-  }catch(_e){ try{ window.showToast&&window.showToast('起盘失败','info',1500); }catch(_e2){} }
-};
-window._zwGo=function(){
-  try{
-    var y=parseInt(document.getElementById('zw-year').value,10);
-    var m=parseInt(document.getElementById('zw-month').value,10);
-    var d=parseInt(document.getElementById('zw-day').value,10);
-    var h=parseInt(document.getElementById('zw-hour').value,10);
-    if(!y||!m||!d||isNaN(h)){ try{ window.showToast&&window.showToast('填全生日再起盘','info',1600); }catch(_e){} return; }
-    var gender=(document.getElementById('zw-f')&&document.getElementById('zw-f').classList.contains('active'))?'f':'m';
-    var r=window.calcZiwei({year:y,month:m,day:d,hour:h,gender:gender});
-    if(!r){ try{ window.showToast&&window.showToast('排盘失败','info',1500); }catch(_e2){} return; }
-    window._zwRender(r);
-    try{
-      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_zw_v1')||'[]'); }catch(_e3){}
-      var mp=r.palaces[0].stars.length?r.palaces[0].stars.join('·'):'空宫借'+(r.palaces[6].stars.join('·')||'对宫');
-      a.push({t:Date.now(), d:y+'-'+m+'-'+d, g:mp});
-      if(a.length>20) a=a.slice(-20);
-      localStorage.setItem('zhiming_zw_v1', JSON.stringify(a));
-    }catch(_e4){}
-  }catch(_e5){}
-};
-window._zwRender=function(r){
-  try{
-    var h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
-    h+='<div style="font-size:11px;color:var(--text-hint);">农历 '+r.lunarMonth+'月'+r.lunarDay+'日 · '+r.yGan+'年 · 时辰序'+(r.shichen+1)+'</div>';
-    h+='<div style="margin-top:6px;font-size:13px;font-weight:800;">命宫 '+r.mingGan+r.mingZhi+' · '+r.juName+' · 身宫在'+r.shenZhi+'('+r.shenGongName+')</div>';
-    /* 命宫解读 */
-    var mp=r.palaces[0];
-    var starTxt=mp.stars.length?mp.stars.join('、'):'(无主星——借对宫'+r.palaces[6].stars.join('、')+'看)';
-    h+='<div style="margin-top:8px;"><b style="color:var(--pri);">👑 命宫('+mp.gan+mp.zhi+')主星：'+starTxt+'</b></div>';
-    var shown={};
-    mp.stars.forEach(function(st){
-      var base=st.replace(/[禄权科忌]/g,'');
-      if(shown[base]) return; shown[base]=1;
-      var sd=window._ZW_STAR[base];
-      if(sd) h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;"><b>'+base+'·'+sd.t+'</b>——'+sd.d+'</div>';
-    });
-    if(!mp.stars.length){
-      r.palaces[6].stars.forEach(function(st){
-        var base=st.replace(/[禄权科忌]/g,'');
-        var sd=window._ZW_STAR[base];
-        if(sd) h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;"><b>'+base+'·'+sd.t+'</b>(借)——'+sd.d+'</div>';
-      });
-    }
-    /* 四化 */
-    h+='<div style="font-size:11.5px;line-height:1.8;margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;color:var(--text-sub);"><b>生年四化('+r.yGan+'年)：</b>';
-    h+=r.sihua.map(function(x){return '<span style="color:var(--pri);">'+x.star+'化'+x.type+'</span>';}).join(' · ');
-    h+='——禄=顺流的资源，权=主导的劲，科=被看见的名，忌=要还的功课。落在哪个宫，功课就在哪。</div>';
-    /* 十二宫一览 */
-    h+='<details style="margin-top:8px;"><summary style="font-size:11.5px;cursor:pointer;color:var(--text-sub);">♟ 十二宫全览（点开看每宫主星）</summary><div style="font-size:12px;line-height:1.9;color:var(--text-sub);margin-top:6px;">';
-    r.palaces.forEach(function(pal){
-      var isM=(pal.name==='命宫');
-      h+='<div'+(isM?' style="font-weight:700;color:var(--pri);"':'')+'>'+pal.name+'('+pal.gan+pal.zhi+')：'+(pal.stars.length?pal.stars.join('、'):'空宫')+'</div>';
-    });
-    h+='</div></details>';
-    /* 四宫深读：财帛/事业/夫妻/迁移 */
-    var palaces_opp=function(r,pal){
-      var opp=r.palaces.find(function(pp){return pp.zhiIdx===((pal.zhiIdx+6)%12);});
-      return opp?(opp.stars.join('、')||'空宫'):'空宫';
-    };
-    var four=["财帛","事业","夫妻","迁移"];
-    var starShow=function(pal){
-      if(pal.stars.length) return pal.stars.join('、');
-      var opp=palaces_opp(r,pal);
-      return '空宫(借对宫'+opp+')';
-    };
-    h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🎯 人生四大事的宫位</b></div>';
-    four.forEach(function(gn){
-      var pal=r.palaces.find(function(pp){return pp.name===gn;});
-      if(!pal) return;
-      h+='<div style="margin-top:7px;"><b style="color:var(--pri);font-size:12px;">'+gn+'宫('+pal.gan+pal.zhi+')·'+(window._ZW_GONG_READ[gn]||'')+'</b></div>';
-      if(pal.stars.length){
-        pal.stars.forEach(function(st){
-          var base=st.replace(/[禄权科忌]/g,'');
-          var sd=window._ZW_STAR[base];
-          var gr=window._ZW_GONG_STAR[base]&&window._ZW_GONG_STAR[base][gn];
-          var tags=[];
-          r.sihua.forEach(function(x2){ if(x2.star===base) tags.push('化'+x2.type); });
-          h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:3px;"><b>'+st+(tags.length?('('+tags.join(',')+')'):'')+'</b>'+(sd?'（'+sd.t+'）：':'：')+(gr||'')+(sd&&!gr?sd.d:'')+'</div>';
-        });
-      }else{
-        var oppPal=r.palaces.find(function(pp){return pp.zhiIdx===((pal.zhiIdx+6)%12);});
-        h+='<div style="font-size:12px;line-height:1.8;color:var(--text-hint);margin-top:3px;">此宫无主星——借对宫'+(oppPal?oppPal.name:'')+'('+starShow(oppPal||pal)+')来看，观察力往'+(oppPal?oppPal.name:'')+'的方向借。</div>';
-        if(oppPal){
-          oppPal.stars.forEach(function(st){
-            var base=st.replace(/[禄权科忌]/g,'');
-            var gr=window._ZW_GONG_STAR[base]&&window._ZW_GONG_STAR[base][gn];
-            if(gr) h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:2px;"><b>'+base+'(借)</b>：'+gr+'</div>';
-          });
-        }
-      }
-    });
-    /* 四化落宫 */
-    h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🎈 生年四化落在哪</b></div>';
-    r.sihua.forEach(function(x2){
-      var pal=null;
-      r.palaces.forEach(function(pp){ if(pp.stars.some(function(ss){return ss.indexOf(x2.star)>=0;})) pal=pp; });
-      if(!pal) return;
-      var mean=({"禄":"带着顺流的资源——这是你的福气区","权":"你天生想主导——劲往这使，别撒手","科":"容易被看见——名声从这来","忌":"是你要还的功课——别怕，还了就轻"})[x2.type];
-      h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:3px;"><b style="color:var(--pri);">'+x2.star+'化'+x2.type+'入'+pal.name+'</b>——'+(window._ZW_GONG_READ[pal.name]||'')+'，'+mean+'。</div>';
-    });
-    /* 大限: 当前虚岁定位 */
-    try{
-      var nowY=new Date().getFullYear();
-      var vx=nowY-r.lunarYear+1;
-      var cur=r.daxian.find(function(dx){return vx>=dx.start&&vx<=dx.end;});
-      if(cur){
-        var cpal=r.palaces.find(function(pp){return pp.zhiIdx===cur.zhiIdx;});
-        h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🏆 十年大限（'+(r.forward?'顺行':'逆行')+'·'+r.juName+'起限）</b></div>';
-        h+='<div style="margin-top:6px;padding:10px 12px;border-radius:10px;background:var(--pri);color:#fff;">';
-        h+='<div style="font-size:14px;font-weight:800;">'+cur.start+'-'+cur.end+'岁 · '+cur.name+'大限 <span style="font-weight:400;font-size:11px;opacity:.85;">(你正走这限)</span></div>';
-        var cstars=cpal?cpal.stars.map(function(st){return st.replace(/[禄权科忌]/g,'');}):[];
-        if(cstars.length){
-          cstars.forEach(function(st){
-            var sd=window._ZW_STAR[st];
-            var gr=window._ZW_GONG_STAR[st]&&window._ZW_GONG_STAR[st][cpal.name];
-            if(sd) h+='<div style="font-size:12px;line-height:1.7;margin-top:4px;opacity:.95;"><b>'+st+'·'+sd.t+'</b>'+(gr?'——'+gr:'——'+sd.d)+'</div>';
-          });
-        }else{
-          h+='<div style="font-size:12px;line-height:1.7;margin-top:4px;opacity:.9;">本限无主星——借对宫来看，主题偏'+(window._ZW_GONG_READ[cur.name]||'')+'。</div>';
-        }
-        h+='<div style="font-size:11px;line-height:1.7;margin-top:5px;opacity:.9;">这十年的舞台是「'+(window._ZW_GONG_READ[cur.name]||cur.name)+'」——大限的事，以十年为单位看趋势，别拿它定明天。</div>';
-        h+='</div>';
-        h+='<details style="margin-top:7px;"><summary style="font-size:11.5px;cursor:pointer;color:var(--text-hint);">♟ 十二限全览</summary><div style="font-size:11.5px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
-        r.daxian.forEach(function(dx){
-          var dp=r.palaces.find(function(pp){return pp.zhiIdx===dx.zhiIdx;});
-          var on=vx>=dx.start&&vx<=dx.end;
-          h+='<div'+(on?' style="color:var(--pri);font-weight:700;"':'')+'>'+dx.start+'-'+dx.end+'岁 '+dx.name+'宫'+(dp&&dp.stars.length?'('+dp.stars.join('·')+')':'(空)')+(on?' ←当前':'')+'</div>';
-        });
-        h+='</div></details>';
-        /* 流年太岁 */
-        var zh="子丑寅卯辰巳午未申酉戌亥";
-        var thisYearZhi=zh[(nowY-4)%12];
-        var tyPal=r.palaces.find(function(pp){return pp.zhi===thisYearZhi;});
-        if(tyPal){
-          h+='<div style="font-size:11.5px;line-height:1.8;color:var(--text-sub);margin-top:7px;">📌 今年('+nowY+thisYearZhi+')太岁落在你的<b>'+tyPal.name+'</b>——'+(window._ZW_GONG_READ[tyPal.name]||'')+'今年被点灯，这宫的事会活跃。</div>';
-        }
-      }
-    }catch(_dx){}
-    h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">和八字对读：八字说气数，紫微说舞台——两套语言指向一致时，答案就更可信。</div>';
-    h+='</div>';
-    document.getElementById('zw-result').innerHTML=h;
-  }catch(_e){}
-};
-
-/* ═══ 周公解梦（v2.143.0）：晨间记梦——本地梦象词表×人话 ═══ */
-window.MENG_DATA=[
- {k:['被追','追赶','追我','追杀','逃跑','逃不掉'],name:'追赶',wx:'心火',trad:'梦里被人追赶，传统解为「有事先压着没处理」，躲的是心里那件没办完的事。',mind:'现代心理学里这是最经典的焦虑梦——白天越回避什么，梦里越追你。',act:'醒来想想：最近哪件事你一直在拖着？把它拆成三步做完，追你的东西就停了。'},
- {k:['坠落','掉下去','掉下悬崖','踏空'],name:'坠落',wx:'心火',trad:'坠梦传统主「失稳」——地位、关系或内心的支撑在变。',mind:'多数坠梦发生在入睡肌抽跃，身体先坠、梦才跟上；反复做则常与失控感有关。',act:'最近是不是有件事你「够不着」？抓不住的就先放下，能抓住的攥紧。'},
- {k:['考试','答题','没复习','考题'],name:'考试',wx:'心火',trad:'梦里赶考，旧说主「面临检验」——你心里正在被某件事考验。',mind:'成年人做考试梦，多是现实中有个「要交答卷」的事悬着。',act:'把悬着的那件事列出来，写第一步，梦就会松。'},
- {k:['迟到','赶不上','错过车','没赶上','误了'],name:'迟到',wx:'心火',trad:'迟到梦传统主「机会焦虑」——怕来不及、怕错过。',mind:'心理学里这是时间压力梦，常出现在日程过载的阶段。',act:'删掉日程里最不重要的一件事，给自己留一次「来得及」。'},
- {k:['迷路','找不到路','走不出','迷了'],name:'迷路',wx:'心火',trad:'迷路主「方向未定」——现实里你正站在岔路口。',mind:'梦里找不到路，常是白天「选项太多」的反面表达。',act:'别急着选。写下两个选项你最怕失去什么，答案就清楚了。'},
- {k:['没穿衣服','裸体','光着','衣服没了'],name:'无衣',wx:'心火',trad:'裸体梦传统主「怕被看穿」，遮掩的事怕露出来。',mind:'多与暴露焦虑有关：怕在人前出丑、怕秘密被知道。',act:'想想你在谁面前不自在——那种不自在就是梦的来源。'},
- {k:['掉牙','牙齿掉','牙掉了','牙齿松动'],name:'掉牙',wx:'金',trad:'周公解梦最出名的梦象：传统说「亲疏变动」或「口舌」。',mind:'现代更常见的是与成长、失去控制感有关。',act:'留意最近的告别、疏远或「咬不动」的事——牙松的那块现实在哪，就在哪用力。'},
- {k:['去世的人','死人','故去','过世','去世','已故'],name:'亡者',wx:'土',trad:'传统解为「思念所系」，梦见已故亲人多是心里在对话，不是坏兆。',mind:'心理学视为记忆与情感的整理——大脑在用最熟悉的人处理情绪。',act:'醒来发暖就当是一次探望；发沉，就给在世的家人打个电话。'},
- {k:['蛇','蛇缠','被蛇','蛇咬','大蛇'],name:'蛇',wx:'火',trad:'蛇传统双解：主财（钱串子）也主烦恼纠缠，看梦里你的情绪。',mind:'蛇常象征变形与再生，或让你紧张的人/事。',act:'梦里怕蛇=现实有让你不舒服的纠缠；不怕=最近有进财或转变的苗头。'},
- {k:['大水','河水','海水','洪水','水'],name:'大水',wx:'水',trad:'水主财与情：水清为吉、水浊主烦，大水漫主情绪漫过堤。',mind:'水在梦里几乎就是情绪本身——平静、湍急、深浅都对应心情。',act:'回想梦里水的样子：静的还是冲的？和你最近的心情几乎同频。'},
- {k:['下雨','暴雨','雨中','淋雨'],name:'雨',wx:'水',trad:'雨传统主润泽与情绪释放，久旱逢雨为大吉。',mind:'雨天梦常见于压力释放期——心里的东西正在落下来。',act:'醒来若是轻松的，说明你正在排掉什么，好事。'},
- {k:['雪','下雪','大雪','雪地'],name:'雪',wx:'水',trad:'雪主覆盖与沉淀，传统说心事暂歇。',mind:'雪是情绪的静音键——梦见雪多是想安静、想停一停。',act:'给自己安排一小时没有输入的时间，雪的梦是身体在要它。'},
- {k:['游泳','戏水','泡水'],name:'游泳',wx:'水',trad:'入水而不沉，传统解为驾驭情感与财路。',mind:'能游=你对情绪有掌控感，是不错的信号。',act:'最近你处理情绪的方式是对的，保持。'},
- {k:['溺水','淹没','沉底','憋气'],name:'溺水',wx:'水',trad:'溺水主被情绪淹没——事压人，不是水坏事。',mind:'常见的过载梦：信息、任务或关系把人没过头顶。',act:'先浮上来再说：从清单里划掉两件，别救全部。'},
- {k:['鱼','钓鱼','抓鱼','大鱼','鱼群'],name:'鱼',wx:'水',trad:'鱼谐音余，传统主财、主余裕，是吉梦。',mind:'鱼也常与潜意识、灵感有关——水里的想法浮上来了。',act:'最近冒出的主意值得记下来，鱼上钩了就别空手。'},
- {k:['船','坐船','开船','渡船','划船'],name:'船',wx:'水',trad:'船主渡——换阶段、换环境、渡过难关。',mind:'船的状态=你的状态：稳稳开=过渡顺利，漏水=过渡吃紧。',act:'你正在换挡期，看看船在梦里稳不稳，就知道节奏该怎么调。'},
- {k:['着火','火灾','大火','烧'],name:'火',wx:'火',trad:'火主旺也主急——势头猛，脾气也猛。',mind:'火与激情、愤怒同源：梦里火烧得旺，现实中情绪也在烧。',act:'旺要趁热做事，急要先灭火——分清梦里是哪一种。'},
- {k:['灯亮','点灯','台灯','灯火','灯'],name:'灯',wx:'火',trad:'灯主明——困惑将解，路快看清了。',mind:'灯是意识照亮潜意识的象征，常见于想通的前夜。',act:'把最近想不通的事睡前想一遍，答案常在第二天早上。'},
- {k:['日出','朝阳','烈日','太阳'],name:'太阳',wx:'火',trad:'太阳主运旺——传统里极吉，主运势上行。',mind:'太阳与希望感直接相关，梦见日出多是心里有盼头。',act:'把那个盼头写成一句话贴在显眼处，让它照进来。'},
- {k:['爆炸','爆炸声','轰'],name:'爆炸',wx:'火',trad:'爆炸主突然的释放——压了很久的东西炸开了。',mind:'常与压抑的愤怒或突发的变化对应。',act:'最近有没说出口的话？找个出口说出来，别让它在梦里炸。'},
- {k:['大树','树倒','爬树','树林','树'],name:'树',wx:'木',trad:'树主根基与生长——枝繁主家兴，树倒主根基动。',mind:'树=你的成长状态：抽芽、茂盛、还是被砍，都是自己的写照。',act:'想想你的根扎在哪（关系/工作/习惯），那棵树要不要浇水。'},
- {k:['开花','花开','桃花'],name:'花',wx:'木',trad:'花开主喜事将近，传统吉象。',mind:'花与被看见、绽放感相关——你可能在期待被认可。',act:'把做得好的事展示出来，花期就该开。'},
- {k:['森林','丛林'],name:'森林',wx:'木',trad:'森林主深与藏——有宝藏也有迷雾。',mind:'茂密=选择与可能性多；黑暗=未知带来的不安。',act:'挑一条小路走深一点，别在入口徘徊。'},
- {k:['飞鸟','鸟叫','群鸟','抓鸟','鸟'],name:'鸟',wx:'木',trad:'鸟主消息——飞来主信至，飞走主别离。',mind:'鸟=想法的自由度，笼中鸟=被捆住的才华。',act:'最近会有消息进来，留意；同时想想你的哪件想做的事被关着。'},
- {k:['见龙','飞龙','龙形','龙'],name:'龙',wx:'木',trad:'龙为至吉之象，主大志与大变，古人以梦龙为贵。',mind:'龙=你心里的大版本——野心在梦里现身。',act:'梦龙之夜适合立长志——把那个不敢想的想法定下来。'},
- {k:['怀孕','怀了','胎动','产子'],name:'孕育',wx:'木',trad:'孕妇主新事将成——不限于生育，一切怀着的计划。',mind:'怀孕梦=你在酝酿一个新身份或新项目。',act:'那个酝酿中的计划，给它一个启动日。'},
- {k:['婴儿','抱婴儿','新生儿'],name:'婴儿',wx:'木',trad:'婴儿主新生与责任同来——新的开始是柔弱的。',mind:'新生事物刚起步，需要保护。',act:'对刚起步的事（关系/项目/习惯）温柔点，别拔苗。'},
- {k:['结婚','婚礼','穿婚纱','娶','嫁'],name:'婚礼',wx:'木',trad:'婚主结合——两件事、两种身份正在合并。',mind:'婚礼梦常与承诺有关：准备承诺、或怕承诺。',act:'你正在合并什么？想清楚要不要签这一份心理婚约。'},
- {k:['刀子','被刀','拿刀','剪刀','刀'],name:'刀',wx:'金',trad:'刀主断——断舍离、决断、切割关系。',mind:'刀=决策的锋利度，梦里握刀=你有权决定。',act:'有一件事需要你落刀决定——梦里已经提示你了。'},
- {k:['捡钱','现金','钱包','发财'],name:'得财',wx:'金',trad:'梦得财传统有两解：主进项，也主耗——虚财梦常反着来。',mind:'钱梦与自我价值感关联大于真的钱。',act:'梦见捡钱别当真，想想最近什么让你觉得值——那才是真财。'},
- {k:['丢钱','钱包丢','破财','丢东西','丢了'],name:'失物',wx:'金',trad:'丢物主患得患失——怕失去正在拥有的。',mind:'恐惧失去的梦，多出现在得到不久之后。',act:'把重要的东西（文件/关系/健康）做一次保全动作，心就安了。'},
- {k:['金子','黄金','元宝'],name:'金',wx:'金',trad:'金主实值——与虚财相对，是真积累之象。',mind:'金=硬价值：技能、健康、信用。',act:'投资那种越放越值钱的东西，包括你自己。'},
- {k:['开车','坐车','刹车','车'],name:'车',wx:'金',trad:'车主人生方向与掌控——谁开车、路顺不顺是关键。',mind:'开车=掌控感；副驾=被带着走；刹车失灵=失控焦虑。',act:'梦里你开车吗？不开的话，想想现实中哪件事你把方向盘交出去了。'},
- {k:['坐飞机','起飞','航班'],name:'飞机',wx:'金',trad:'飞主远行与大跨越，起飞吉，延误主时机未到。',mind:'飞机=快速升级的愿望或焦虑。',act:'你想快点到下一个阶段——检查引擎（身体/储蓄/技能）够不够。'},
- {k:['流血','受伤','伤口','血'],name:'血伤',wx:'火',trad:'血主耗也主警讯——提醒身体与情绪在失守。',mind:'受伤=现实里某处正在漏气。',act:'体检、睡觉、断舍一段消耗你的关系——先止血再谋进。'},
- {k:['爬山','山顶','大山','登山','山'],name:'山',wx:'土',trad:'山主阻与贵——靠山、障碍、登顶之志。',mind:'爬山=长期目标，梦里山的高度=你觉得目标多大。',act:'把大目标切成十段坡，爬一段歇一段，别抬头看山顶太久。'},
- {k:['房子','新房子','装修','房间','房'],name:'房',wx:'土',trad:'房主自身与心房——房子的样子就是你对现状的观感。',mind:'心理学经典：房子=自我。新房子=新身份，破房子=疲惫的自我。',act:'梦里房子哪间屋最亮？那方面就是你心里最踏实的部分。'},
- {k:['搬新家','搬家了','搬走','搬家'],name:'搬家',wx:'土',trad:'搬家主迁与变——环境、身份、圈子的更换。',mind:'搬家梦常见于想换个活法的时期。',act:'想搬的可能是心态不只是住处——先搬心里那间。'},
- {k:['坟地','坟墓','墓'],name:'坟',wx:'土',trad:'坟主藏与过往——旧事入土，也主财库（民俗）。',mind:'梦见坟常是旧阶段正在告别。',act:'有什么事该正式埋了？给个仪式感，翻篇。'},
- {k:['泥土','土地','田','耕地'],name:'土地',wx:'土',trad:'土主根基与积累——种什么收什么。',mind:'土地梦=你在评估值得长期投入的事。',act:'种一棵长期主义的树：技能、关系或储蓄，选一块田。'},
- {k:['地震','地动','塌','地陷'],name:'地震',wx:'土',trad:'地动主根基不稳——底层假设在动摇。',mind:'常见于价值观重构期：曾经确信的事不再确信。',act:'别慌，地震是把旧结构晃松——正好重建更合身的。'},
- {k:['棺材','棺木'],name:'棺材',wx:'木',trad:'民俗谐音官财——升官发财，棺材梦反为大吉。',mind:'棺=旧我入殓，新我登场的仪式。',act:'某个旧身份该退休了，让它体面退场。'},
- {k:['剪头发','头发掉','剪发','理发'],name:'理发',wx:'金',trad:'发主烦恼丝——剪发主去烦，也主改制。',mind:'理发=整理自我形象，想换状态。',act:'想换发型或换状态就去做，身体先动，心会跟上。'},
- {k:['追车','赶火车','赶飞机','赶车'],name:'赶车',wx:'心火',trad:'追车主怕错过节拍——时机焦虑。',mind:'和迟到梦同源：节奏被日程拉扯。',act:'下一班车总会来。把错过恐惧换成下一班思维。'},
- {k:['找厕所','厕所','尿急'],name:'寻厕',wx:'水',trad:'生理映射梦——身体的信号，也主找出口。',mind:'有时候梦没那么多深意，它只是身体在喊话。',act:'先去上个厕所。真的。'},
- {k:['会飞','飞行','飞翔','飞起来'],name:'飞行',wx:'木',trad:'飞主超脱与能力上扬——传统吉梦，主志得意满。',mind:'飞行=掌控与自由感。飞得吃力=自由但负担重。',act:'你在自由期——选一件平时不敢做的事试飞。'},
- {k:['大笑','笑醒','开心'],name:'笑',wx:'火',trad:'梦中大笑主喜至，古人以笑梦为吉兆。',mind:'积极情绪梦=心理恢复的标志。',act:'好心态不是白来的，你正在恢复期——别硬撑新重活。'},
- {k:['梦哭','哭醒','流泪','哭'],name:'哭',wx:'水',trad:'梦中哭，传统解为释放——郁结将散，反向为吉。',mind:'梦哭是情绪排水，醒来轻=排掉了，醒来沉=还没排完。',act:'醒来轻就翻篇；醒来沉，找个人把那件事说出来。'},
- {k:['教室','同学','老师','校园','学校'],name:'校园',wx:'木',trad:'重回校园主怀念简单，也主课题未完。',mind:'校园=被评价的时期——现实中你又在被评分。',act:'谁在给你打分？那份评价真的重要吗？'},
- {k:['老房子','老家','外婆家','童年的家','旧家'],name:'旧宅',wx:'土',trad:'旧宅主根与来处——回望来路。',mind:'常见于转折期：往前走之前，心会回老房子看一眼。',act:'跟过去的自己说句话，然后往前走，别住回去。'},
- {k:['清泉','泉水','清澈'],name:'清泉',wx:'水',trad:'水清为至吉——心明、财清、路净。',mind:'清澈=此刻的情绪状态很健康。',act:'记住此刻的透亮感，重要决定放在这种状态下做。'},
- {k:['照相','镜头','自拍','拍照'],name:'拍照',wx:'金',trad:'留影主记录与被记住。',mind:'相机梦=你想留住某些正在流逝的东西。',act:'有什么正在流逝？写下来——比照片更能留住它。'},
- {k:['黑猫','猫叫','猫'],name:'猫',wx:'木',trad:'猫主灵性与女性缘，也主若即若离的关系。',mind:'猫=独立性——你或你身边的人正在不想被驯服。',act:'给彼此一点猫的距离，关系反而近。'},
- {k:['被狗追','狗叫','爱犬','狗'],name:'狗',wx:'土',trad:'狗主忠与友——狗亲主友至，犬吠主口舌。',mind:'狗=忠诚与守护，梦里狗的状态=你对支持系统的感受。',act:'想想你的狗（支持你的人）最近喂了没有——关系要喂。'},
- {k:['老虎','狮子','猛兽'],name:'猛兽',wx:'木',trad:'虎主威与险——压力源巨大，但也可能是你自己的力量。',mind:'猛兽=被压抑的攻击性或欲望，它追你=你不敢承认它。',act:'别跑。回头看看它要什么——多半是你不敢要的东西。'},
- {k:['走远路','步行','长途'],name:'远行',wx:'土',trad:'步行主脚踏实地——慢但扎实。',mind:'走路梦=你在用笨办法推进重要的事。',act:'笨办法不丢人，别被别人的飞机分心。'},
- {k:['过桥','桥断','桥上','桥'],name:'桥',wx:'木',trad:'桥主过渡——从一段到另一段的连接。',mind:'桥=转变中的支持结构，桥断=你担心支撑不够。',act:'过渡期多备一个支撑（人/钱/plan B），桥稳心就稳。'},
- {k:['电梯','上楼','下楼','楼梯'],name:'升降',wx:'土',trad:'升降主地位变动——上主进，下主暂退。',mind:'电梯不受控=对升降的失控感。',act:'你能控制的是楼层按钮（选择），不是电梯速度（时机）。'}
-];
-window._mengTimeHint=function(){
-  var el=document.getElementById('mengTimeHint');
-  if(!el) return;
-  var h=new Date().getHours();
-  if(h>=23||h<5) el.innerHTML='🌙 现在是深夜——今晚的梦明早记，刚醒时的细节最全。';
-  else if(h>=5&&h<10) el.innerHTML='🌅 早晨是记梦黄金档——趁刷牙前写下它。';
-  else el.innerHTML='💭 白天想起的梦也有效——记关键词就行。';
-};
-window._mengGo=function(){
-  try{
-    var inp=document.getElementById('meng-input');
-    var txt=(inp.value||'').trim();
-    if(!txt){ try{ window.showToast&&window.showToast('先写下梦里发生了什么','info',1600); }catch(_e){} return; }
-    var hits=[];
-    window.MENG_DATA.forEach(function(d){
-      for(var i=0;i<d.k.length;i++){
-        if(txt.indexOf(d.k[i])>=0){ hits.push(d); break; }
-      }
-    });
-    var h='';
-    if(!hits.length){
-      h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
-      h+='<div style="font-size:13px;font-weight:800;">🌙 这个梦不在词表里——说实话比硬解好</div>';
-      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:6px;">梦的解读没有标准答案，你自己醒来那一瞬的情绪才是钥匙：<b>心慌的梦多是压力的回声，轻松的梦多是期待的投影</b>。回想一下：醒来时你是放松的，还是心有余悸？</div>';
-      h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:4px;">如果反复做同一个梦，那它一定有事要说——把梦写细一点再来。</div>';
-      h+='</div>';
-    }else{
-      var main=hits[0];
-      var second=hits[1]||null;
-      h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
-      h+='<div style="text-align:center;margin:2px 0 4px;"><span style="font-size:26px;font-weight:800;letter-spacing:4px;color:var(--pri);">'+main.name+'之梦</span><span style="font-size:12px;color:var(--text-hint);margin-left:8px;">五行属'+main.wx+'</span></div>';
-      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:6px;"><b>🀄 传统这么说：</b>'+main.trad+'</div>';
-      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:4px;"><b>🧠 现代怎么看：</b>'+main.mind+'</div>';
-      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:4px;"><b>👉 你可以：</b>'+main.act+'</div>';
-      if(second){
-        h+='<div style="font-size:11.5px;line-height:1.7;color:var(--text-hint);margin-top:8px;border-top:1px dashed var(--card-border);padding-top:6px;">梦还碰到「'+second.name+'」象——'+second.mind+'</div>';
-      }
-      if(hits.length>2){
-        h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:4px;">这个梦意象很稠（命中'+hits.length+'个梦象）——主看前两象，其余是背景。</div>';
-      }
-      h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">梦是心事的信使不是判决书——同一个梦，醒来情绪不同，解读方向就不同。</div>';
-      h+='</div>';
-    }
-    document.getElementById('meng-result').innerHTML=h;
-    try{
-      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_meng_v1')||'[]'); }catch(_e1){}
-      a.push({t:Date.now(), q:txt.slice(0,40), g:hits.length?hits[0].name:'未入表'});
-      if(a.length>30) a=a.slice(-30);
-      localStorage.setItem('zhiming_meng_v1', JSON.stringify(a));
-      window._mengHist();
-    }catch(_e2){}
-  }catch(_e3){}
-};
-window._mengHist=function(){
-  try{
-    var w=document.getElementById('mengHistWrap');
-    if(!w) return;
-    var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_meng_v1')||'[]'); }catch(_e4){}
-    if(!a.length){ w.innerHTML=''; return; }
-    a=a.slice(-12).reverse();
-    var h='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">💭 记过 '+a.length+' 个梦（回看）</summary><div style="font-size:11px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
-    a.forEach(function(x){
-      var d=new Date(x.t);
-      h+='· '+(d.getMonth()+1)+'/'+d.getDate()+' 「'+x.q+'」→ <b>'+x.g+'</b><br>';
-    });
-    h+='</div></details>';
-    w.innerHTML=h;
-  }catch(_e5){}
-};
+/* ═══ mod-zh 中式解读群懒加载 stubs（v2.147.1——真函数在块14，_zh_* 别名转发） ═══ */
+['zwGo','zwFromProfile','zwGender','zwFillHours','mengGo','mengHist','mengTimeHint','wenAsk','lynOpen','lyOpen'].forEach(function(n){
+  window['_'+n]=function(){
+    var a=arguments;
+    window.__ensureMod('zh').then(function(){
+      var f=window['_zh_'+n];
+      if(f) f.apply(null,a);
+      else if(window.showToast) window.showToast('解读模块加载中，稍候再试','info',1500);
+    }).catch(function(){ if(window.showToast) window.showToast('解读模块加载中，稍候再试','info',1500); });
+  };
+});
 
 /* ═══ 问命（v2.140.0）：你问，命答——四问判定引擎 ═══ */
 window._wenCardHTML=function(){
@@ -5019,114 +4566,7 @@ window._wenCardHTML=function(){
     return h;
   }catch(_e){ return ''; }
 };
-window._wenAsk=function(key){
-  try{
-    var r=window._lynCtx&&window._lynCtx.r;
-    if(!r){ try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
-    var now=new Date(); var nowY=now.getFullYear();
-    var ln=r.liunian&&(r.liunian.find(function(l){return l.year===nowY;})||r.liunian[0]);
-    var cur=r.dayun&&r.dayun.list&&(r.dayun.list.find(function(d){return nowY>=d.startYear&&nowY<=d.endYear;})||r.dayun.list[r.dayun.list.length-1]);
-    var next=(cur&&r.dayun.list)?r.dayun.list[r.dayun.list.indexOf(cur)+1]:null;
-    var dayZ=r.dayZhi, dayG=r.dayGan;
-    var zhiI={"子":0,"丑":1,"寅":2,"卯":3,"辰":4,"巳":5,"午":6,"未":7,"申":8,"酉":9,"戌":10,"亥":11};
-    var lnZ=ln?ln.gz.charAt(1):''; var lnG=ln?ln.gz.charAt(0):'';
-    var lnSS=ln?ln.ganShi:''; var lnGZ=ln?ln.gz:'';
-    var body='', verdict='', ev=[];
-    var SS_JD={ "正官":["官杀","克你的那个字透出来——新机会与新约束同时到位。","能担起来就动：约束变多的位置往往也是位置变大的位置。挑下家看『限制』是清晰的还是糊涂的。"],
-      "七杀":["官杀","七杀透干——压力型机会年，想动很正常。","动的窗口开着，但压力也是真的：新位置大概率比现在累。先问自己要的是『更大』还是『更舒服』。"],
-      "正印":["印星","印星主年——学习、证书、背景加持的收益大于换地方。","今年攒筹码比花筹码划算：考个证、补个学历、把专业攒厚。明年再动不迟。"],
-      "偏印":["印星","偏印透干——适合深耕技能、走专业路线。","换工作不如换深度：同一份工作做出别人做不出的东西，比换个东家值钱。"],
-      "食神":["食伤","食神主年——才华输出的年份，你的价值看得见。","想跳就带着作品跳：今年做出的东西是最好的谈判筹码。"],
-      "伤官":["食伤","伤官主年——憋不住想表达、想换是本能。","伤官年跳槽要管住嘴：面试别吐槽老东家，谈判别把话说死。带着成果、收着脾气，动得成。"],
-      "正财":["财星","财星透干——为钱而动的念头会特别强。","先算清账再动：新机会看实际到手和稳定性，别只盯涨幅。命里财来，挑稳的拿。"],
-      "偏财":["财星","偏财透干——机会型的钱在向你招手。","偏财要快但要稳：窗口开的时点别拖太久，条款一定要落纸面。"],
-      "比肩":["比劫","比劫主年——竞争者多，跳槽是在抢位置。","手上有真 offer 再动，别裸辞去挤独木桥。防画饼：谈好的写进合同才算数。"],
-      "劫财":["比劫","劫财透干——今年跳槽容易遇到抢食的。","大环境竞争烈：内部转岗比外部跳槽更划算，先看看脚下有没有路。"] };
-    var JD_RES={"官杀":"可动——挑约束清晰的下家","印星":"先不动——今年攒筹码","食伤":"可动——带着成果跳","财星":"可动——账算清再动","比劫":"有真 offer 再动"};
-    if(key==='career'){
-      var jd=SS_JD[lnSS]||["平","流年干对你日主无明显生克——工作大方向看你自己安排。","不构成明显的动或留信号：按现实条件做决定，命理今年不抢戏。"];
-      var cat=jd[0];
-      verdict=JD_RES[cat]||'按现实安排';
-      body='今年是 '+lnGZ+' 年，流年天干 '+lnG+' 对你日主 '+dayG+' 是<b>『'+lnSS+'』</b>——'+jd[1]+'<br>'+jd[2];
-      ev.push('流年 '+lnGZ+'：流年干十神='+lnSS+'（对日主 '+dayG+'）');
-      if(cur&&cur.endYear-nowY<=1){ body+='<br><b>另：你正处在十年换挡的尾巴上</b>（'+cur.gz+'运到 '+cur.endYear+' 年）——换挡期大动作放在新运开局更顺，今年先谈条件、明年再落地也来得及。'; ev.push('当前大运 '+cur.gz+'（'+cur.startYear+'-'+cur.endYear+'）：换挡期'); }
-      if(next){ ev.push('下一运 '+next.gz+'（'+next.startYear+' 起）：'+(window._DY_CAT&&window._DY_CAT[next.ganShi]||next.ganShi)); }
-    } else if(key==='move'){
-      var yima=(window.__SHEN_SHA_TABLE?__SHEN_SHA_TABLE.yima:{})[dayZ];
-      var lnI=zhiI[lnZ]!==undefined?zhiI[lnZ]:-1, dayI=zhiI[dayZ]!==undefined?zhiI[dayZ]:-1;
-      var chongJ=(dayI>=0&&lnI>=0&&window.SX_CHONG&&SX_CHONG[lnI]===dayI);
-      var heJ=(dayI>=0&&lnI>=0&&window.SX_HE&&SX_HE[lnI]===dayI);
-      var xiY=(r.xiYong&&r.xiYong[0])||'';
-      var dirMap={"火":"南方","水":"北方","木":"东方","金":"西方","土":"本地或中原"};
-      if(chongJ){ verdict='动象强——主动选比被动好'; body='今年 '+lnGZ+'，流年地支 '+lnZ+'<b>冲你的日支 '+dayZ+'（坐下）</b>——环境变动是今年的主旋律。冲不是坏事：被动被冲不如主动选，你想搬的那个方向，命理不反对。'; ev.push('流年支 '+lnZ+' 冲日支 '+dayZ+'（六冲）'); }
-      else if(lnZ===yima){ verdict='驿马到位——想动就是时机'; body='今年流年地支 '+lnZ+' 正好是你的<b>驿马位</b>（日支 '+dayZ+' 查驿马在 '+yima+'）——驿马主奔波迁移。今年搬、今年换城市，是顺水推舟。'; ev.push('流年支 '+lnZ+' = 日支查驿马位（'+dayZ+'→'+yima+'）'); }
-      else if(heJ){ verdict='留象——今年适合扎根'; body='今年流年地支 '+lnZ+' <b>合你的日支 '+dayZ+'</b>——合主安顿、主聚。今年适合在现在的地方扎深根：换城市这种大动，放到合劲过去再说。'; ev.push('流年支 '+lnZ+' 合日支 '+dayZ+'（六合）'); }
-      else { verdict='动静不明显——看现实需要'; body='今年 '+lnGZ+'，与你的日支既不冲也不合，驿马也未临位——命理对搬家今年不给出明显倾向。搬不搬，按工作、家庭这些现实因素定就好。'; ev.push('流年支 '+lnZ+' 与日支 '+dayZ+'：不冲不合'); }
-      if(chongJ||lnZ===yima){ if(xiY&&dirMap[xiY]){ body+='<br><b>方位参考</b>：你喜用神是『'+xiY+'』——传统方位学里对应<b>'+dirMap[xiY]+'</b>方向。挑城市时可以把这个当一条参考线（简化口径，别当唯一标准）。'; ev.push('喜用神 '+xiY+' → 方位 '+dirMap[xiY]); } }
-    } else if(key==='love'){
-      var taohua=(window.__SHEN_SHA_TABLE?__SHEN_SHA_TABLE.taohua:{})[dayZ];
-      var lnI2=zhiI[lnZ]!==undefined?zhiI[lnZ]:-1, dayI2=zhiI[dayZ]!==undefined?zhiI[dayZ]:-1;
-      var chongL=(dayI2>=0&&lnI2>=0&&window.SX_CHONG&&SX_CHONG[lnI2]===dayI2);
-      var heL=(dayI2>=0&&lnI2>=0&&window.SX_HE&&SX_HE[lnI2]===dayI2);
-      if(chongL){ verdict='考验年——冲是「动」，不是「分」'; body='今年 '+lnGZ+'，流年冲<b>日支（夫妻宫）'+dayZ+'</b>——关系会经受考验：聚少离多、口角变多，都是「冲」的表现形式。但受冲≠必分：冲主『大动』，可能是分手，也可能是同居、订婚这种大变化。<b>给自己一个月观察期</b>再下结论，别在情绪最冲的时候拍板。'; ev.push('流年支 '+lnZ+' 冲夫妻宫 '+dayZ+'（日支六冲）'); }
-      else if(heL){ verdict='增进窗口——该推进就推进'; body='今年流年 <b>合进你的夫妻宫（日支 '+dayZ+'）</b>——关系升温的窗口。暧昧的往前走一步，稳定的可以聊未来。合的年份不推进，窗口过了就要再等。'; ev.push('流年支 '+lnZ+' 合夫妻宫 '+dayZ+'（六合）'); }
-      else if(lnZ===taohua){ verdict='桃花旺年——看你要什么'; body='今年流年地支 '+lnZ+' 坐你的<b>桃花位</b>（日支 '+dayZ+' 查桃花在 '+taohua+'）——异性缘旺年。单身的社交往前走；有伴的享受魅力也守住边界，桃花旺对稳定关系是双刃剑。'; ev.push('流年支 '+lnZ+' = 桃花位（'+dayZ+'→'+taohua+'）'); }
-      else { verdict='平稳年——感情跟大势走'; body='今年 '+lnGZ+'，夫妻宫 '+dayZ+' 既不受冲也不受合，桃花未临——感情今年没有大的天象信号。关系好不好，看你们自己经营。'; ev.push('夫妻宫 '+dayZ+' 与流年 '+lnZ+'：无冲无合'); }
-      body+='<br><b>想看更细的两人互动</b>：成长页 → 人物档案 → 双人合盘，那边用两个人的盘说话。';
-    } else if(key==='money'){
-      var jd2=SS_JD[lnSS]||["平","流年干无明显生克——投资不是今年的主题。","别为了『动一动』而动钱：没有信号就是信号，守住现金流比找机会重要。"];
-      var cat2=jd2[0];
-      if(cat2==='财星'){ verdict=(r.wangshuai==='偏弱')?'看得见抓不住——防守':'求财窗口开——正业为主';
-        body='今年流年干 '+lnG+' 是<b>『'+lnSS+'』</b>——财星主年，求财的窗口开着。'+(r.wangshuai==='偏弱'?'<b>但你的命局偏弱——财多反为累</b>：看得见的钱未必拿得住，别上杠杆，别碰高波动，拿稳现金流的正业之财。':'你的命局'+(r.wangshuai==='偏旺'?'偏旺——能担财':'中和——按大流走')+'，正业之财更长久，投机仓位压小。');
-        ev.push('流年干十神='+lnSS+'（财星主年）'); ev.push('命局旺衰='+r.wangshuai);
-      } else if(cat2==='比劫'){ verdict='防破财——别跟风'; body='今年流年干是<b>『'+lnSS+'』</b>——比劫争财年，最大的风险是<b>跟着别人投</b>。今年所有拉你入伙的项目，多想三天再回话；合伙的钱、借出去的钱，都要按收不回来的假设来安排。'; ev.push('流年干十神='+lnSS+'（比劫争财）');
-      } else if(cat2==='印星'){ verdict='求稳——投资自己最划算'; body='今年流年干是<b>『'+lnSS+'』</b>——印星主年，适合『充电型』的投入：课程、证书、工具、健康。定存和稳健理财比投机划算，市场的热闹跟你关系不大。'; ev.push('流年干十神='+lnSS+'（印星主稳）');
-      } else { verdict='观望——不为动而动'; body='今年流年干是<b>『'+lnSS+'』</b>——'+jd2[1]+jd2[2]; ev.push('流年干十神='+lnSS+'（中性）'); }
-    } else { return; }
-    /* 存档钩子：回测数据源（每问每天一条） */
-    try{
-      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_wenming_v1')||'[]'); }catch(_e1){}
-      var today=new Date().toDateString();
-      if(!a.some(function(x){ return x.q===key&&new Date(x.t).toDateString()===today; })){
-        a.push({t:Date.now(), q:key, v:verdict, y:lnGZ});
-        if(a.length>60) a=a.slice(-60);
-        localStorage.setItem('zhiming_wenming_v1', JSON.stringify(a));
-      }
-    }catch(_e2){}
-    var h='<div style="margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
-    h+='<div style="font-size:13px;font-weight:800;">🎯 倾向：<span style="color:var(--pri);">'+verdict+'</span></div>';
-    h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;">'+body+'</div>';
-    h+='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">⌄ 看判定过程（'+ev.length+' 条依据）</summary><div style="font-size:11px;line-height:1.7;color:var(--text-hint);margin-top:5px;">'+ev.map(function(x){return '· '+x;}).join('<br>')+'</div></details>';
-    h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">命理给的是倾向不是保证——大事还要看现实条件。这是工具，不是答案。</div>';
-    h+='</div>';
-    var el=document.getElementById('wenAnswer');
-    if(el){ el.innerHTML=h; try{ el.scrollIntoView({block:'nearest'}); }catch(_e3){} }
-  }catch(_e4){}
-};
 
-window._lynOpen=function(idx){
-  try{
-    var ctx=window._lynCtx;
-    if(!ctx||!ctx.ly||!ctx.ly[idx]) { try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
-    var pt=ctx.ly[idx];
-    var html=window._lyExplain(pt, ctx.r);
-    var body=document.getElementById('lyModalBody');
-    if(body) body.innerHTML=html;
-    window.__openModalById('lyModal');
-  }catch(_e){}
-};
-
-window._lyOpen=function(idx){
-  try{
-    var ctx=window._lyCtx;
-    if(!ctx||!ctx.ly||!ctx.ly[idx]) { try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
-    var pt=ctx.ly[idx];
-    var html=window._lyExplain(pt, ctx.r);
-    var body=document.getElementById('lyModalBody');
-    if(body) body.innerHTML=html;
-    window.__openModalById('lyModal');
-  }catch(_e){}
-};
 
 
 /* ═══ 命局一页纸·因命主线（v2.134.0）+ 大运叙事 ═══ */
@@ -31979,6 +31419,588 @@ window.CITIES = {
    同时始终显示"自定义经纬度"输入框（见 HTML 里 customLngWrap），对精度要求极高（时辰交界）的用户直接填精确值。
 */
 </script>
+
+<script>
+/* ═══ mod-zh 中式解读群（v2.147.1 懒加载——紫微/解梦/问命/流月流年点按） ═══ */
+/* ═══ 紫微斗数（v2.144.0）：安命宫·五行局·十四主星·四化——第二套中式语言 ═══ */
+window._ZW_STAR={
+  "紫微":{t:"帝星",d:"主心骨强，天生要撑场面——坐哪一宫，那宫就是你人生的舞台。"},
+  "天机":{t:"军师星",d:"脑子转得快，多谋善变——点子多，但容易想太多。"},
+  "太阳":{t:"贵星",d:"付出型人格，照亮别人——热情慷慨，也怕被泼冷水。"},
+  "武曲":{t:"财星",d:"行动派，话不多但落地——对钱和目标敏感，狠得下心。"},
+  "天同":{t:"福星",d:"随和知足，福气自带来——容易安逸，也容易懒。"},
+  "廉贞":{t:"囚星",d:"外冷内热，原则性强——爱憎分明，感情藏在规矩下面。"},
+  "天府":{t:"库星",d:"稳，会攒——天生带资源感，守成有余进取偏缓。"},
+  "太阴":{t:"月星",d:"细腻温柔，顾家——情绪有潮汐，富想象力也富积蓄。"},
+  "贪狼":{t:"桃花星",d:"欲望与好奇都旺——人生不怕重开，多才多艺应酬强。"},
+  "巨门":{t:"暗星",d:"口才与怀疑并存——爱问为什么，靠嘴吃饭也容易因嘴惹事。"},
+  "天相":{t:"印星",d:"靠谱参谋，协调型好手——惯于周全他人，自己是第二位。"},
+  "天梁":{t:"荫星",d:"老成，天生爱管事护人——像长辈一样操心，也被人当靠山。"},
+  "七杀":{t:"将星",d:"冲劲大，人生爱折腾——宁折不弯，起落都来得猛。"},
+  "破军":{t:"耗星",d:"破旧立新——不破不立，人生是几次大重装。"}
+};
+window._ZW_GONG_READ={
+  "命宫":"你这个人本身的底色",
+  "兄弟":"手足与平辈缘",
+  "夫妻":"感情与伴侣——你爱人的方式",
+  "子女":"子女与创作（作品也算孩子）",
+  "财帛":"钱怎么来怎么流",
+  "疾厄":"身体与情绪的地基",
+  "迁移":"出外机遇与环境",
+  "交友":"朋友与合伙人",
+  "事业":"事业的路数",
+  "田宅":"家宅与不动产",
+  "福德":"内心福气与精神状态",
+  "父母":"长辈缘与庇护"
+};
+window._ZW_GONG_STAR={
+ "紫微":{"财帛":"钱来得体面，靠地位与格局生财——面子能变现。","事业":"天生的主位——要么掌权要么当老板，打工也要做核心层。","夫妻":"眼光高，伴侣要「配得上」——强强联合，别找软柿子。","迁移":"出外有地位——离开原生地反而更能发挥，贵人层级高。"},
+ "天机":{"财帛":"脑子生财，点子变现快——但容易见好就收赚辛苦差价。","事业":"靠脑吃饭——策划、技术、咨询，越复杂越好玩。","夫妻":"灵魂共鸣优先——要聊得来，闷葫芦和傻白甜都不行。","迁移":"动中生财——出差、换环境点子就多，适合机动性强的生活。"},
+ "太阳":{"财帛":"钱为面子与人脉服务——赚得光明，也花得大方。","事业":"公开舞台型——曝光度越高越旺，教育传播传媒皆宜。","夫妻":"容易爱上付出型的人——给光也发热，别烫着对方。","迁移":"对外发光——社交场上你的名气大于实力本身。"},
+ "武曲":{"财帛":"天生理财手——对钱敏感、敢投敢收，财帛宫最强配置之一。","事业":"执行力就是事业——金融、工程、硬核赛道吃香。","夫妻":"感情硬朗——行动代替情话，另一半常嫌你不浪漫。","迁移":"外地打硬仗——出外靠真本事，人情牌反而不灵。"},
+ "天同":{"财帛":"财缘随缘——不缺小钱，大钱要靠养成习惯攒。","事业":"安稳为先——大平台、慢节奏，福气在坚持里。","夫妻":"随缘享福型——感情不折腾，但要防太佛被辜负。","迁移":"出外有福——到哪里都有人罩，懒散也会被环境治好。"},
+ "廉贞":{"财帛":"钱与原则绑定——该赚的赚，脏钱一分不碰。","事业":"纪律型强人——风控、品质、规则多的地方你称王。","夫妻":"爱得深也管得严——原则问题不让步，软肋藏最深。","迁移":"出外守规矩——异地谨慎处好事半功倍。"},
+ "天府":{"财帛":"天生财库——能存住钱，越到中年库越厚。","事业":"守成型主管——管人管钱管仓库，越稳的盘子越交给你。","夫妻":"求稳——找的是人生合伙人，不是心跳加速器。","迁移":"外乡有库——出外反而攒得下资源，适合异地发展。"},
+ "太阴":{"财帛":"细水长流的财——靠储蓄、不动产与安稳收入慢慢厚。","事业":"幕后运筹型——策划、研究、财务，安静处出大活。","夫妻":"温柔体贴挂——会照顾人，也渴望被细腻对待。","迁移":"近乡情浓——离太远心里空，别跑太远。"},
+ "贪狼":{"财帛":"财路宽、来路活——应酬与人脉都能变钱，但手也散。","事业":"多线开花——应酬、娱乐、创意，人多的行业有你发挥。","夫妻":"桃花旺——选择多，考验的是收心。","迁移":"外面世界精彩——人脉与机会都在路上，坐不住是天性。"},
+ "巨门":{"财帛":"靠嘴生财——咨询、销售、内容，说话就是你的印钞机。","事业":"靠专业口才立身——律师、讲师、自媒体，观点就是生意。","夫妻":"沟通即命门——话说开了没事，憋着必出事。","迁移":"出外防口舌——异乡是非多，少站队多做事。"},
+ "天相":{"财帛":"理财稳健派——不追高不冒进，帮人管钱比给自己赚更在行。","事业":"完美的二号位——辅佐、协调、行政，离老大最近的参谋。","夫妻":"模范伴侣型——顾全大局，但记得你也有感受。","迁移":"出外有人帮——协调力在陌生环境里最值钱。"},
+ "天梁":{"财帛":"财来有线——适合铁饭碗与长线收入。","事业":"专业与资历为王——医疗、教育、监察，越老越吃香。","夫妻":"照顾者心态——容易找需要被照顾的，或被成熟的人吸引。","迁移":"异乡遇贵人——长辈缘旺，出门有靠。"},
+ "七杀":{"财帛":"敢赚敢赌——钱在起落里滚动，赢要会收手。","事业":"开疆型选手——新项目、新市场、救火队，越乱越显本事。","夫妻":"来得猛去得快——感情大起大落，晚婚反而稳。","迁移":"出外开疆——环境越新战意越足，远方才是主场。"},
+ "破军":{"财帛":"破而后立之财——换赛道才有大钱，守旧财反而耗。","事业":"变革者——旧模式到你手里必翻新，适合创业与重组。","夫妻":"感情里敢推倒重来——宁可重开不肯将就。","迁移":"漂泊命——换环境反而重生，留原地容易耗。"}
+};
+window._ZW_SIHUA={
+  "甲":{"禄":"廉贞","权":"破军","科":"武曲","忌":"太阳"},
+  "乙":{"禄":"天机","权":"天梁","科":"紫微","忌":"太阴"},
+  "丙":{"禄":"天同","权":"天机","科":"文昌","忌":"廉贞"},
+  "丁":{"禄":"太阴","权":"天同","科":"天机","忌":"巨门"},
+  "戊":{"禄":"贪狼","权":"太阴","科":"右弼","忌":"天机"},
+  "己":{"禄":"武曲","权":"贪狼","科":"天梁","忌":"文曲"},
+  "庚":{"禄":"太阳","权":"武曲","科":"太阴","忌":"天同"},
+  "辛":{"禄":"巨门","权":"太阳","科":"文曲","忌":"文昌"},
+  "壬":{"禄":"天梁","权":"紫微","科":"左辅","忌":"武曲"},
+  "癸":{"禄":"破军","权":"巨门","科":"太阴","忌":"贪狼"}
+};
+window._ZW_TIANGAN_LU={"甲":2,"乙":4,"丙":6,"丁":8,"戊":0,"己":2,"庚":4,"辛":6,"壬":8,"癸":0}; /* 五虎遁:甲己丙寅起/乙庚戊/丙辛庚/丁壬壬/戊癸甲——寅=idx2 */
+window.calcZiwei=function(inp){
+  /* inp: {year,month,day,hour} 公历 year年 month月 day日 hour时辰序0-11(子=0) */
+  try{
+    var ZHI=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+    var GAN=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"];
+    var y=inp.year, mo=inp.month, dd=inp.day, h=inp.hour;
+    /* 农历 */
+    var lu=window.solar2lunar?window.solar2lunar(y,mo,dd):null;
+    if(!lu) return null;
+    var lMonth=lu.month, lDay=lu.day;
+    /* 年干: 用农历年(公历1-2月还在农历上一年) */
+    var yGanIdx=((lu.year-1984)%10+10)%10;
+    var yGan=GAN[yGanIdx];
+    /* 安命宫: 寅起正月顺数至生月 → 月宫; 月宫起子时逆数至生时 */
+    var yueGong=(2+((lMonth-1)%12))%12; /* 寅=idx2 */
+    var mingGong=((yueGong-h)%12+12)%12;
+    var shenGong=((yueGong+h)%12)%12;
+    /* 十二宫名(逆布) */
+    var GONG_NAMES=["命宫","兄弟","夫妻","子女","财帛","疾厄","迁移","交友","事业","田宅","福德","父母"];
+    var palaces=[];
+    for(var i=0;i<12;i++){
+      var zhiIdx=((mingGong-i)%12+12)%12;
+      palaces.push({zhiIdx:zhiIdx, zhi:ZHI[zhiIdx], name:GONG_NAMES[i], stars:[]});
+    }
+    /* 宫干: 五虎遁 */
+    var yinGanStart={"甲":2,"乙":4,"丙":6,"丁":8,"戊":0,"己":2,"庚":4,"辛":6,"壬":8,"癸":0}; /* 五虎遁:甲己丙寅起/乙庚戊/丙辛庚/丁壬壬/戊癸甲寅 */
+    var s0=yinGanStart[yGan];
+    palaces.forEach(function(pal){
+      pal.gan=GAN[(s0+pal.zhiIdx-2+120)%10]; /* 寅(idx2)起顺 */
+    });
+    /* 五行局: 命宫干支纳音 */
+    var mingPal=palaces[0];
+    var mingGz=mingPal.gan+mingPal.zhi;
+    var ny=window.nayinGZ?window.nayinGZ(mingGz):null;
+    var juMap={"水":2,"木":3,"金":4,"土":5,"火":6};
+    var ju=ny?juMap[ny.charAt(ny.length-1)]:null;
+    if(!ju){ /* 纳音名末字: 海中金→金 */
+      for(var kk in juMap){ if(ny&&ny.indexOf(kk)>=0){ ju=juMap[kk]; break; } }
+    }
+    if(!ju) ju=2;
+    /* 安紫微: 局数除生日 */
+    var zwIdx;
+    if(lDay<=ju){ zwIdx={"2":1,"3":4,"4":11,"5":6,"6":9}[ju]; } /* 水二丑 木三辰 金四亥 土五午 火六酉: 六五四三二酉午亥辰丑 */
+    else{
+      var q=Math.ceil(lDay/ju), borrow=q*ju-lDay;
+      var steps=(borrow%2===0)?(q+borrow):(q-borrow);
+      zwIdx=((2+steps-1)%12+12)%12; /* 寅=idx2起, steps=1→寅 */
+    }
+    /* 天府: 对称 */
+    var tfMap={0:4,1:3,2:2,3:1,4:0,5:11,6:10,7:9,8:8,9:7,10:6,11:5};
+    var tfIdx=tfMap[zwIdx];
+    /* 紫微系(逆) */
+    var ziXi=[["紫微",0],["天机",-1],["太阳",-3],["武曲",-4],["天同",-5],["廉贞",-8]];
+    var fuXi=[["天府",0],["太阴",1],["贪狼",2],["巨门",3],["天相",4],["天梁",5],["七杀",6],["破军",10]];
+    ziXi.forEach(function(x){
+      var idx=((zwIdx+x[1])%12+12)%12;
+      var pal=palaces.find(function(pp){return pp.zhiIdx===idx;});
+      if(pal) pal.stars.push(x[0]);
+    });
+    fuXi.forEach(function(x){
+      var idx=((tfIdx+x[1])%12+12)%12;
+      var pal=palaces.find(function(pp){return pp.zhiIdx===idx;});
+      if(pal) pal.stars.push(x[0]);
+    });
+    /* 四化标记 */
+    var sh=window._ZW_SIHUA[yGan];
+    var sihua=[];
+    ["禄","权","科","忌"].forEach(function(k){
+      var st=sh[k];
+      sihua.push({star:st,type:k});
+      palaces.forEach(function(pal){
+        var si=pal.stars.indexOf(st);
+        if(si>=0) pal.stars[si]=st+(k==="禄"?"禄":k==="权"?"权":k==="科"?"科":"忌");
+      });
+    });
+    /* 身宫所属宫 */
+    var shenPal=palaces.find(function(pp){return pp.zhiIdx===shenGong;});
+    /* 大限: 阳男阴女顺行(地支顺), 阴男阳女逆行; 起限岁=局数 */
+    var yangGan={"甲":1,"丙":1,"戊":1,"庚":1,"壬":1,"乙":0,"丁":0,"己":0,"辛":0,"癸":0}[yGan];
+    var gender=inp.gender||'m';
+    var forward=(yangGan&&gender==='m')||(!yangGan&&gender==='f');
+    var daxian=[];
+    for(var di=0;di<12;di++){
+      var dxIdx=forward?((mingGong+di)%12):((mingGong-di)%12+12)%12;
+      var dpal=palaces.find(function(pp){return pp.zhiIdx===((dxIdx%12)+12)%12;});
+      daxian.push({start:ju+di*10, end:ju+di*10+9, name:dpal?dpal.name:'', zhiIdx:((dxIdx%12)+12)%12});
+    }
+    var r={lunarYear:lu.year, lunarMonth:lMonth, lunarDay:lDay, yGan:yGan, gender:gender, forward:forward,
+      mingZhi:ZHI[mingGong], mingGan:mingPal.gan, mingGz:mingGz,
+      shenZhi:ZHI[shenGong], shenGongName:shenPal?shenPal.name:"",
+      ju:ju, juName:({"2":"水二局","3":"木三局","4":"金四局","5":"土五局","6":"火六局"})[ju],
+      zwZhi:ZHI[zwIdx], tfZhi:ZHI[tfIdx],
+      palaces:palaces, sihua:sihua, shichen:h, daxian:daxian, juStart:ju};
+    return r;
+  }catch(_e){ return null; }
+};
+window._zwGender=function(g){
+  var m=document.getElementById('zw-m'), f=document.getElementById('zw-f');
+  if(!m||!f) return;
+  m.classList.toggle('active',g==='m');
+  f.classList.toggle('active',g==='f');
+};
+window._zwFillHours=function(){
+  var sel=document.getElementById('zw-hour');
+  if(!sel||sel.options.length) return;
+  var ZHI=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+  var B=["夜半","鸡鸣","平旦","日出","食时","隅中","日中","日昳","晡时","日入","黄昏","人定"];
+  for(var i=0;i<12;i++){
+    var op=document.createElement('option');
+    op.value=i; op.textContent=ZHI[i]+'时('+B[i]+')';
+    sel.appendChild(op);
+  }
+  sel.value=Math.floor(((new Date().getHours()+1)%24)/2);
+};
+window._zwFromProfile=function(){
+  try{
+    var p=window.getActiveProfile?window.getActiveProfile():null;
+    if(!p||!p.year){ try{ window.showToast&&window.showToast('先在档案里建生日','info',1800); }catch(_e){} return; }
+    document.getElementById('zw-year').value=p.year;
+    document.getElementById('zw-month').value=p.month;
+    document.getElementById('zw-day').value=p.day;
+    var h=0;
+    if(p.hour!==undefined&&p.hour!==null&&p.hour!==''){
+      h=Math.floor(((parseInt(p.hour,10)+1)%24)/2);
+    }
+    document.getElementById('zw-hour').value=h;
+    if(window._zwGender) window._zwGender(p.gender==='f'?'f':'m');
+    window._zwGo();
+  }catch(_e){ try{ window.showToast&&window.showToast('起盘失败','info',1500); }catch(_e2){} }
+};
+window._zwGo=function(){
+  try{
+    var y=parseInt(document.getElementById('zw-year').value,10);
+    var m=parseInt(document.getElementById('zw-month').value,10);
+    var d=parseInt(document.getElementById('zw-day').value,10);
+    var h=parseInt(document.getElementById('zw-hour').value,10);
+    if(!y||!m||!d||isNaN(h)){ try{ window.showToast&&window.showToast('填全生日再起盘','info',1600); }catch(_e){} return; }
+    var gender=(document.getElementById('zw-f')&&document.getElementById('zw-f').classList.contains('active'))?'f':'m';
+    var r=window.calcZiwei({year:y,month:m,day:d,hour:h,gender:gender});
+    if(!r){ try{ window.showToast&&window.showToast('排盘失败','info',1500); }catch(_e2){} return; }
+    window._zwRender(r);
+    try{
+      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_zw_v1')||'[]'); }catch(_e3){}
+      var mp=r.palaces[0].stars.length?r.palaces[0].stars.join('·'):'空宫借'+(r.palaces[6].stars.join('·')||'对宫');
+      a.push({t:Date.now(), d:y+'-'+m+'-'+d, g:mp});
+      if(a.length>20) a=a.slice(-20);
+      localStorage.setItem('zhiming_zw_v1', JSON.stringify(a));
+    }catch(_e4){}
+  }catch(_e5){}
+};
+window._zwRender=function(r){
+  try{
+    var h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
+    h+='<div style="font-size:11px;color:var(--text-hint);">农历 '+r.lunarMonth+'月'+r.lunarDay+'日 · '+r.yGan+'年 · 时辰序'+(r.shichen+1)+'</div>';
+    h+='<div style="margin-top:6px;font-size:13px;font-weight:800;">命宫 '+r.mingGan+r.mingZhi+' · '+r.juName+' · 身宫在'+r.shenZhi+'('+r.shenGongName+')</div>';
+    /* 命宫解读 */
+    var mp=r.palaces[0];
+    var starTxt=mp.stars.length?mp.stars.join('、'):'(无主星——借对宫'+r.palaces[6].stars.join('、')+'看)';
+    h+='<div style="margin-top:8px;"><b style="color:var(--pri);">👑 命宫('+mp.gan+mp.zhi+')主星：'+starTxt+'</b></div>';
+    var shown={};
+    mp.stars.forEach(function(st){
+      var base=st.replace(/[禄权科忌]/g,'');
+      if(shown[base]) return; shown[base]=1;
+      var sd=window._ZW_STAR[base];
+      if(sd) h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;"><b>'+base+'·'+sd.t+'</b>——'+sd.d+'</div>';
+    });
+    if(!mp.stars.length){
+      r.palaces[6].stars.forEach(function(st){
+        var base=st.replace(/[禄权科忌]/g,'');
+        var sd=window._ZW_STAR[base];
+        if(sd) h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;"><b>'+base+'·'+sd.t+'</b>(借)——'+sd.d+'</div>';
+      });
+    }
+    /* 四化 */
+    h+='<div style="font-size:11.5px;line-height:1.8;margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;color:var(--text-sub);"><b>生年四化('+r.yGan+'年)：</b>';
+    h+=r.sihua.map(function(x){return '<span style="color:var(--pri);">'+x.star+'化'+x.type+'</span>';}).join(' · ');
+    h+='——禄=顺流的资源，权=主导的劲，科=被看见的名，忌=要还的功课。落在哪个宫，功课就在哪。</div>';
+    /* 十二宫一览 */
+    h+='<details style="margin-top:8px;"><summary style="font-size:11.5px;cursor:pointer;color:var(--text-sub);">♟ 十二宫全览（点开看每宫主星）</summary><div style="font-size:12px;line-height:1.9;color:var(--text-sub);margin-top:6px;">';
+    r.palaces.forEach(function(pal){
+      var isM=(pal.name==='命宫');
+      h+='<div'+(isM?' style="font-weight:700;color:var(--pri);"':'')+'>'+pal.name+'('+pal.gan+pal.zhi+')：'+(pal.stars.length?pal.stars.join('、'):'空宫')+'</div>';
+    });
+    h+='</div></details>';
+    /* 四宫深读：财帛/事业/夫妻/迁移 */
+    var palaces_opp=function(r,pal){
+      var opp=r.palaces.find(function(pp){return pp.zhiIdx===((pal.zhiIdx+6)%12);});
+      return opp?(opp.stars.join('、')||'空宫'):'空宫';
+    };
+    var four=["财帛","事业","夫妻","迁移"];
+    var starShow=function(pal){
+      if(pal.stars.length) return pal.stars.join('、');
+      var opp=palaces_opp(r,pal);
+      return '空宫(借对宫'+opp+')';
+    };
+    h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🎯 人生四大事的宫位</b></div>';
+    four.forEach(function(gn){
+      var pal=r.palaces.find(function(pp){return pp.name===gn;});
+      if(!pal) return;
+      h+='<div style="margin-top:7px;"><b style="color:var(--pri);font-size:12px;">'+gn+'宫('+pal.gan+pal.zhi+')·'+(window._ZW_GONG_READ[gn]||'')+'</b></div>';
+      if(pal.stars.length){
+        pal.stars.forEach(function(st){
+          var base=st.replace(/[禄权科忌]/g,'');
+          var sd=window._ZW_STAR[base];
+          var gr=window._ZW_GONG_STAR[base]&&window._ZW_GONG_STAR[base][gn];
+          var tags=[];
+          r.sihua.forEach(function(x2){ if(x2.star===base) tags.push('化'+x2.type); });
+          h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:3px;"><b>'+st+(tags.length?('('+tags.join(',')+')'):'')+'</b>'+(sd?'（'+sd.t+'）：':'：')+(gr||'')+(sd&&!gr?sd.d:'')+'</div>';
+        });
+      }else{
+        var oppPal=r.palaces.find(function(pp){return pp.zhiIdx===((pal.zhiIdx+6)%12);});
+        h+='<div style="font-size:12px;line-height:1.8;color:var(--text-hint);margin-top:3px;">此宫无主星——借对宫'+(oppPal?oppPal.name:'')+'('+starShow(oppPal||pal)+')来看，观察力往'+(oppPal?oppPal.name:'')+'的方向借。</div>';
+        if(oppPal){
+          oppPal.stars.forEach(function(st){
+            var base=st.replace(/[禄权科忌]/g,'');
+            var gr=window._ZW_GONG_STAR[base]&&window._ZW_GONG_STAR[base][gn];
+            if(gr) h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:2px;"><b>'+base+'(借)</b>：'+gr+'</div>';
+          });
+        }
+      }
+    });
+    /* 四化落宫 */
+    h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🎈 生年四化落在哪</b></div>';
+    r.sihua.forEach(function(x2){
+      var pal=null;
+      r.palaces.forEach(function(pp){ if(pp.stars.some(function(ss){return ss.indexOf(x2.star)>=0;})) pal=pp; });
+      if(!pal) return;
+      var mean=({"禄":"带着顺流的资源——这是你的福气区","权":"你天生想主导——劲往这使，别撒手","科":"容易被看见——名声从这来","忌":"是你要还的功课——别怕，还了就轻"})[x2.type];
+      h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:3px;"><b style="color:var(--pri);">'+x2.star+'化'+x2.type+'入'+pal.name+'</b>——'+(window._ZW_GONG_READ[pal.name]||'')+'，'+mean+'。</div>';
+    });
+    /* 大限: 当前虚岁定位 */
+    try{
+      var nowY=new Date().getFullYear();
+      var vx=nowY-r.lunarYear+1;
+      var cur=r.daxian.find(function(dx){return vx>=dx.start&&vx<=dx.end;});
+      if(cur){
+        var cpal=r.palaces.find(function(pp){return pp.zhiIdx===cur.zhiIdx;});
+        h+='<div style="margin-top:10px;border-top:1px dashed var(--card-border);padding-top:8px;"><b style="font-size:12.5px;">🏆 十年大限（'+(r.forward?'顺行':'逆行')+'·'+r.juName+'起限）</b></div>';
+        h+='<div style="margin-top:6px;padding:10px 12px;border-radius:10px;background:var(--pri);color:#fff;">';
+        h+='<div style="font-size:14px;font-weight:800;">'+cur.start+'-'+cur.end+'岁 · '+cur.name+'大限 <span style="font-weight:400;font-size:11px;opacity:.85;">(你正走这限)</span></div>';
+        var cstars=cpal?cpal.stars.map(function(st){return st.replace(/[禄权科忌]/g,'');}):[];
+        if(cstars.length){
+          cstars.forEach(function(st){
+            var sd=window._ZW_STAR[st];
+            var gr=window._ZW_GONG_STAR[st]&&window._ZW_GONG_STAR[st][cpal.name];
+            if(sd) h+='<div style="font-size:12px;line-height:1.7;margin-top:4px;opacity:.95;"><b>'+st+'·'+sd.t+'</b>'+(gr?'——'+gr:'——'+sd.d)+'</div>';
+          });
+        }else{
+          h+='<div style="font-size:12px;line-height:1.7;margin-top:4px;opacity:.9;">本限无主星——借对宫来看，主题偏'+(window._ZW_GONG_READ[cur.name]||'')+'。</div>';
+        }
+        h+='<div style="font-size:11px;line-height:1.7;margin-top:5px;opacity:.9;">这十年的舞台是「'+(window._ZW_GONG_READ[cur.name]||cur.name)+'」——大限的事，以十年为单位看趋势，别拿它定明天。</div>';
+        h+='</div>';
+        h+='<details style="margin-top:7px;"><summary style="font-size:11.5px;cursor:pointer;color:var(--text-hint);">♟ 十二限全览</summary><div style="font-size:11.5px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
+        r.daxian.forEach(function(dx){
+          var dp=r.palaces.find(function(pp){return pp.zhiIdx===dx.zhiIdx;});
+          var on=vx>=dx.start&&vx<=dx.end;
+          h+='<div'+(on?' style="color:var(--pri);font-weight:700;"':'')+'>'+dx.start+'-'+dx.end+'岁 '+dx.name+'宫'+(dp&&dp.stars.length?'('+dp.stars.join('·')+')':'(空)')+(on?' ←当前':'')+'</div>';
+        });
+        h+='</div></details>';
+        /* 流年太岁 */
+        var zh="子丑寅卯辰巳午未申酉戌亥";
+        var thisYearZhi=zh[(nowY-4)%12];
+        var tyPal=r.palaces.find(function(pp){return pp.zhi===thisYearZhi;});
+        if(tyPal){
+          h+='<div style="font-size:11.5px;line-height:1.8;color:var(--text-sub);margin-top:7px;">📌 今年('+nowY+thisYearZhi+')太岁落在你的<b>'+tyPal.name+'</b>——'+(window._ZW_GONG_READ[tyPal.name]||'')+'今年被点灯，这宫的事会活跃。</div>';
+        }
+      }
+    }catch(_dx){}
+    h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">和八字对读：八字说气数，紫微说舞台——两套语言指向一致时，答案就更可信。</div>';
+    h+='</div>';
+    document.getElementById('zw-result').innerHTML=h;
+  }catch(_e){}
+};
+
+/* ═══ 周公解梦（v2.143.0）：晨间记梦——本地梦象词表×人话 ═══ */
+window.MENG_DATA=[
+ {k:['被追','追赶','追我','追杀','逃跑','逃不掉'],name:'追赶',wx:'心火',trad:'梦里被人追赶，传统解为「有事先压着没处理」，躲的是心里那件没办完的事。',mind:'现代心理学里这是最经典的焦虑梦——白天越回避什么，梦里越追你。',act:'醒来想想：最近哪件事你一直在拖着？把它拆成三步做完，追你的东西就停了。'},
+ {k:['坠落','掉下去','掉下悬崖','踏空'],name:'坠落',wx:'心火',trad:'坠梦传统主「失稳」——地位、关系或内心的支撑在变。',mind:'多数坠梦发生在入睡肌抽跃，身体先坠、梦才跟上；反复做则常与失控感有关。',act:'最近是不是有件事你「够不着」？抓不住的就先放下，能抓住的攥紧。'},
+ {k:['考试','答题','没复习','考题'],name:'考试',wx:'心火',trad:'梦里赶考，旧说主「面临检验」——你心里正在被某件事考验。',mind:'成年人做考试梦，多是现实中有个「要交答卷」的事悬着。',act:'把悬着的那件事列出来，写第一步，梦就会松。'},
+ {k:['迟到','赶不上','错过车','没赶上','误了'],name:'迟到',wx:'心火',trad:'迟到梦传统主「机会焦虑」——怕来不及、怕错过。',mind:'心理学里这是时间压力梦，常出现在日程过载的阶段。',act:'删掉日程里最不重要的一件事，给自己留一次「来得及」。'},
+ {k:['迷路','找不到路','走不出','迷了'],name:'迷路',wx:'心火',trad:'迷路主「方向未定」——现实里你正站在岔路口。',mind:'梦里找不到路，常是白天「选项太多」的反面表达。',act:'别急着选。写下两个选项你最怕失去什么，答案就清楚了。'},
+ {k:['没穿衣服','裸体','光着','衣服没了'],name:'无衣',wx:'心火',trad:'裸体梦传统主「怕被看穿」，遮掩的事怕露出来。',mind:'多与暴露焦虑有关：怕在人前出丑、怕秘密被知道。',act:'想想你在谁面前不自在——那种不自在就是梦的来源。'},
+ {k:['掉牙','牙齿掉','牙掉了','牙齿松动'],name:'掉牙',wx:'金',trad:'周公解梦最出名的梦象：传统说「亲疏变动」或「口舌」。',mind:'现代更常见的是与成长、失去控制感有关。',act:'留意最近的告别、疏远或「咬不动」的事——牙松的那块现实在哪，就在哪用力。'},
+ {k:['去世的人','死人','故去','过世','去世','已故'],name:'亡者',wx:'土',trad:'传统解为「思念所系」，梦见已故亲人多是心里在对话，不是坏兆。',mind:'心理学视为记忆与情感的整理——大脑在用最熟悉的人处理情绪。',act:'醒来发暖就当是一次探望；发沉，就给在世的家人打个电话。'},
+ {k:['蛇','蛇缠','被蛇','蛇咬','大蛇'],name:'蛇',wx:'火',trad:'蛇传统双解：主财（钱串子）也主烦恼纠缠，看梦里你的情绪。',mind:'蛇常象征变形与再生，或让你紧张的人/事。',act:'梦里怕蛇=现实有让你不舒服的纠缠；不怕=最近有进财或转变的苗头。'},
+ {k:['大水','河水','海水','洪水','水'],name:'大水',wx:'水',trad:'水主财与情：水清为吉、水浊主烦，大水漫主情绪漫过堤。',mind:'水在梦里几乎就是情绪本身——平静、湍急、深浅都对应心情。',act:'回想梦里水的样子：静的还是冲的？和你最近的心情几乎同频。'},
+ {k:['下雨','暴雨','雨中','淋雨'],name:'雨',wx:'水',trad:'雨传统主润泽与情绪释放，久旱逢雨为大吉。',mind:'雨天梦常见于压力释放期——心里的东西正在落下来。',act:'醒来若是轻松的，说明你正在排掉什么，好事。'},
+ {k:['雪','下雪','大雪','雪地'],name:'雪',wx:'水',trad:'雪主覆盖与沉淀，传统说心事暂歇。',mind:'雪是情绪的静音键——梦见雪多是想安静、想停一停。',act:'给自己安排一小时没有输入的时间，雪的梦是身体在要它。'},
+ {k:['游泳','戏水','泡水'],name:'游泳',wx:'水',trad:'入水而不沉，传统解为驾驭情感与财路。',mind:'能游=你对情绪有掌控感，是不错的信号。',act:'最近你处理情绪的方式是对的，保持。'},
+ {k:['溺水','淹没','沉底','憋气'],name:'溺水',wx:'水',trad:'溺水主被情绪淹没——事压人，不是水坏事。',mind:'常见的过载梦：信息、任务或关系把人没过头顶。',act:'先浮上来再说：从清单里划掉两件，别救全部。'},
+ {k:['鱼','钓鱼','抓鱼','大鱼','鱼群'],name:'鱼',wx:'水',trad:'鱼谐音余，传统主财、主余裕，是吉梦。',mind:'鱼也常与潜意识、灵感有关——水里的想法浮上来了。',act:'最近冒出的主意值得记下来，鱼上钩了就别空手。'},
+ {k:['船','坐船','开船','渡船','划船'],name:'船',wx:'水',trad:'船主渡——换阶段、换环境、渡过难关。',mind:'船的状态=你的状态：稳稳开=过渡顺利，漏水=过渡吃紧。',act:'你正在换挡期，看看船在梦里稳不稳，就知道节奏该怎么调。'},
+ {k:['着火','火灾','大火','烧'],name:'火',wx:'火',trad:'火主旺也主急——势头猛，脾气也猛。',mind:'火与激情、愤怒同源：梦里火烧得旺，现实中情绪也在烧。',act:'旺要趁热做事，急要先灭火——分清梦里是哪一种。'},
+ {k:['灯亮','点灯','台灯','灯火','灯'],name:'灯',wx:'火',trad:'灯主明——困惑将解，路快看清了。',mind:'灯是意识照亮潜意识的象征，常见于想通的前夜。',act:'把最近想不通的事睡前想一遍，答案常在第二天早上。'},
+ {k:['日出','朝阳','烈日','太阳'],name:'太阳',wx:'火',trad:'太阳主运旺——传统里极吉，主运势上行。',mind:'太阳与希望感直接相关，梦见日出多是心里有盼头。',act:'把那个盼头写成一句话贴在显眼处，让它照进来。'},
+ {k:['爆炸','爆炸声','轰'],name:'爆炸',wx:'火',trad:'爆炸主突然的释放——压了很久的东西炸开了。',mind:'常与压抑的愤怒或突发的变化对应。',act:'最近有没说出口的话？找个出口说出来，别让它在梦里炸。'},
+ {k:['大树','树倒','爬树','树林','树'],name:'树',wx:'木',trad:'树主根基与生长——枝繁主家兴，树倒主根基动。',mind:'树=你的成长状态：抽芽、茂盛、还是被砍，都是自己的写照。',act:'想想你的根扎在哪（关系/工作/习惯），那棵树要不要浇水。'},
+ {k:['开花','花开','桃花'],name:'花',wx:'木',trad:'花开主喜事将近，传统吉象。',mind:'花与被看见、绽放感相关——你可能在期待被认可。',act:'把做得好的事展示出来，花期就该开。'},
+ {k:['森林','丛林'],name:'森林',wx:'木',trad:'森林主深与藏——有宝藏也有迷雾。',mind:'茂密=选择与可能性多；黑暗=未知带来的不安。',act:'挑一条小路走深一点，别在入口徘徊。'},
+ {k:['飞鸟','鸟叫','群鸟','抓鸟','鸟'],name:'鸟',wx:'木',trad:'鸟主消息——飞来主信至，飞走主别离。',mind:'鸟=想法的自由度，笼中鸟=被捆住的才华。',act:'最近会有消息进来，留意；同时想想你的哪件想做的事被关着。'},
+ {k:['见龙','飞龙','龙形','龙'],name:'龙',wx:'木',trad:'龙为至吉之象，主大志与大变，古人以梦龙为贵。',mind:'龙=你心里的大版本——野心在梦里现身。',act:'梦龙之夜适合立长志——把那个不敢想的想法定下来。'},
+ {k:['怀孕','怀了','胎动','产子'],name:'孕育',wx:'木',trad:'孕妇主新事将成——不限于生育，一切怀着的计划。',mind:'怀孕梦=你在酝酿一个新身份或新项目。',act:'那个酝酿中的计划，给它一个启动日。'},
+ {k:['婴儿','抱婴儿','新生儿'],name:'婴儿',wx:'木',trad:'婴儿主新生与责任同来——新的开始是柔弱的。',mind:'新生事物刚起步，需要保护。',act:'对刚起步的事（关系/项目/习惯）温柔点，别拔苗。'},
+ {k:['结婚','婚礼','穿婚纱','娶','嫁'],name:'婚礼',wx:'木',trad:'婚主结合——两件事、两种身份正在合并。',mind:'婚礼梦常与承诺有关：准备承诺、或怕承诺。',act:'你正在合并什么？想清楚要不要签这一份心理婚约。'},
+ {k:['刀子','被刀','拿刀','剪刀','刀'],name:'刀',wx:'金',trad:'刀主断——断舍离、决断、切割关系。',mind:'刀=决策的锋利度，梦里握刀=你有权决定。',act:'有一件事需要你落刀决定——梦里已经提示你了。'},
+ {k:['捡钱','现金','钱包','发财'],name:'得财',wx:'金',trad:'梦得财传统有两解：主进项，也主耗——虚财梦常反着来。',mind:'钱梦与自我价值感关联大于真的钱。',act:'梦见捡钱别当真，想想最近什么让你觉得值——那才是真财。'},
+ {k:['丢钱','钱包丢','破财','丢东西','丢了'],name:'失物',wx:'金',trad:'丢物主患得患失——怕失去正在拥有的。',mind:'恐惧失去的梦，多出现在得到不久之后。',act:'把重要的东西（文件/关系/健康）做一次保全动作，心就安了。'},
+ {k:['金子','黄金','元宝'],name:'金',wx:'金',trad:'金主实值——与虚财相对，是真积累之象。',mind:'金=硬价值：技能、健康、信用。',act:'投资那种越放越值钱的东西，包括你自己。'},
+ {k:['开车','坐车','刹车','车'],name:'车',wx:'金',trad:'车主人生方向与掌控——谁开车、路顺不顺是关键。',mind:'开车=掌控感；副驾=被带着走；刹车失灵=失控焦虑。',act:'梦里你开车吗？不开的话，想想现实中哪件事你把方向盘交出去了。'},
+ {k:['坐飞机','起飞','航班'],name:'飞机',wx:'金',trad:'飞主远行与大跨越，起飞吉，延误主时机未到。',mind:'飞机=快速升级的愿望或焦虑。',act:'你想快点到下一个阶段——检查引擎（身体/储蓄/技能）够不够。'},
+ {k:['流血','受伤','伤口','血'],name:'血伤',wx:'火',trad:'血主耗也主警讯——提醒身体与情绪在失守。',mind:'受伤=现实里某处正在漏气。',act:'体检、睡觉、断舍一段消耗你的关系——先止血再谋进。'},
+ {k:['爬山','山顶','大山','登山','山'],name:'山',wx:'土',trad:'山主阻与贵——靠山、障碍、登顶之志。',mind:'爬山=长期目标，梦里山的高度=你觉得目标多大。',act:'把大目标切成十段坡，爬一段歇一段，别抬头看山顶太久。'},
+ {k:['房子','新房子','装修','房间','房'],name:'房',wx:'土',trad:'房主自身与心房——房子的样子就是你对现状的观感。',mind:'心理学经典：房子=自我。新房子=新身份，破房子=疲惫的自我。',act:'梦里房子哪间屋最亮？那方面就是你心里最踏实的部分。'},
+ {k:['搬新家','搬家了','搬走','搬家'],name:'搬家',wx:'土',trad:'搬家主迁与变——环境、身份、圈子的更换。',mind:'搬家梦常见于想换个活法的时期。',act:'想搬的可能是心态不只是住处——先搬心里那间。'},
+ {k:['坟地','坟墓','墓'],name:'坟',wx:'土',trad:'坟主藏与过往——旧事入土，也主财库（民俗）。',mind:'梦见坟常是旧阶段正在告别。',act:'有什么事该正式埋了？给个仪式感，翻篇。'},
+ {k:['泥土','土地','田','耕地'],name:'土地',wx:'土',trad:'土主根基与积累——种什么收什么。',mind:'土地梦=你在评估值得长期投入的事。',act:'种一棵长期主义的树：技能、关系或储蓄，选一块田。'},
+ {k:['地震','地动','塌','地陷'],name:'地震',wx:'土',trad:'地动主根基不稳——底层假设在动摇。',mind:'常见于价值观重构期：曾经确信的事不再确信。',act:'别慌，地震是把旧结构晃松——正好重建更合身的。'},
+ {k:['棺材','棺木'],name:'棺材',wx:'木',trad:'民俗谐音官财——升官发财，棺材梦反为大吉。',mind:'棺=旧我入殓，新我登场的仪式。',act:'某个旧身份该退休了，让它体面退场。'},
+ {k:['剪头发','头发掉','剪发','理发'],name:'理发',wx:'金',trad:'发主烦恼丝——剪发主去烦，也主改制。',mind:'理发=整理自我形象，想换状态。',act:'想换发型或换状态就去做，身体先动，心会跟上。'},
+ {k:['追车','赶火车','赶飞机','赶车'],name:'赶车',wx:'心火',trad:'追车主怕错过节拍——时机焦虑。',mind:'和迟到梦同源：节奏被日程拉扯。',act:'下一班车总会来。把错过恐惧换成下一班思维。'},
+ {k:['找厕所','厕所','尿急'],name:'寻厕',wx:'水',trad:'生理映射梦——身体的信号，也主找出口。',mind:'有时候梦没那么多深意，它只是身体在喊话。',act:'先去上个厕所。真的。'},
+ {k:['会飞','飞行','飞翔','飞起来'],name:'飞行',wx:'木',trad:'飞主超脱与能力上扬——传统吉梦，主志得意满。',mind:'飞行=掌控与自由感。飞得吃力=自由但负担重。',act:'你在自由期——选一件平时不敢做的事试飞。'},
+ {k:['大笑','笑醒','开心'],name:'笑',wx:'火',trad:'梦中大笑主喜至，古人以笑梦为吉兆。',mind:'积极情绪梦=心理恢复的标志。',act:'好心态不是白来的，你正在恢复期——别硬撑新重活。'},
+ {k:['梦哭','哭醒','流泪','哭'],name:'哭',wx:'水',trad:'梦中哭，传统解为释放——郁结将散，反向为吉。',mind:'梦哭是情绪排水，醒来轻=排掉了，醒来沉=还没排完。',act:'醒来轻就翻篇；醒来沉，找个人把那件事说出来。'},
+ {k:['教室','同学','老师','校园','学校'],name:'校园',wx:'木',trad:'重回校园主怀念简单，也主课题未完。',mind:'校园=被评价的时期——现实中你又在被评分。',act:'谁在给你打分？那份评价真的重要吗？'},
+ {k:['老房子','老家','外婆家','童年的家','旧家'],name:'旧宅',wx:'土',trad:'旧宅主根与来处——回望来路。',mind:'常见于转折期：往前走之前，心会回老房子看一眼。',act:'跟过去的自己说句话，然后往前走，别住回去。'},
+ {k:['清泉','泉水','清澈'],name:'清泉',wx:'水',trad:'水清为至吉——心明、财清、路净。',mind:'清澈=此刻的情绪状态很健康。',act:'记住此刻的透亮感，重要决定放在这种状态下做。'},
+ {k:['照相','镜头','自拍','拍照'],name:'拍照',wx:'金',trad:'留影主记录与被记住。',mind:'相机梦=你想留住某些正在流逝的东西。',act:'有什么正在流逝？写下来——比照片更能留住它。'},
+ {k:['黑猫','猫叫','猫'],name:'猫',wx:'木',trad:'猫主灵性与女性缘，也主若即若离的关系。',mind:'猫=独立性——你或你身边的人正在不想被驯服。',act:'给彼此一点猫的距离，关系反而近。'},
+ {k:['被狗追','狗叫','爱犬','狗'],name:'狗',wx:'土',trad:'狗主忠与友——狗亲主友至，犬吠主口舌。',mind:'狗=忠诚与守护，梦里狗的状态=你对支持系统的感受。',act:'想想你的狗（支持你的人）最近喂了没有——关系要喂。'},
+ {k:['老虎','狮子','猛兽'],name:'猛兽',wx:'木',trad:'虎主威与险——压力源巨大，但也可能是你自己的力量。',mind:'猛兽=被压抑的攻击性或欲望，它追你=你不敢承认它。',act:'别跑。回头看看它要什么——多半是你不敢要的东西。'},
+ {k:['走远路','步行','长途'],name:'远行',wx:'土',trad:'步行主脚踏实地——慢但扎实。',mind:'走路梦=你在用笨办法推进重要的事。',act:'笨办法不丢人，别被别人的飞机分心。'},
+ {k:['过桥','桥断','桥上','桥'],name:'桥',wx:'木',trad:'桥主过渡——从一段到另一段的连接。',mind:'桥=转变中的支持结构，桥断=你担心支撑不够。',act:'过渡期多备一个支撑（人/钱/plan B），桥稳心就稳。'},
+ {k:['电梯','上楼','下楼','楼梯'],name:'升降',wx:'土',trad:'升降主地位变动——上主进，下主暂退。',mind:'电梯不受控=对升降的失控感。',act:'你能控制的是楼层按钮（选择），不是电梯速度（时机）。'}
+];
+window._mengTimeHint=function(){
+  var el=document.getElementById('mengTimeHint');
+  if(!el) return;
+  var h=new Date().getHours();
+  if(h>=23||h<5) el.innerHTML='🌙 现在是深夜——今晚的梦明早记，刚醒时的细节最全。';
+  else if(h>=5&&h<10) el.innerHTML='🌅 早晨是记梦黄金档——趁刷牙前写下它。';
+  else el.innerHTML='💭 白天想起的梦也有效——记关键词就行。';
+};
+window._mengGo=function(){
+  try{
+    var inp=document.getElementById('meng-input');
+    var txt=(inp.value||'').trim();
+    if(!txt){ try{ window.showToast&&window.showToast('先写下梦里发生了什么','info',1600); }catch(_e){} return; }
+    var hits=[];
+    window.MENG_DATA.forEach(function(d){
+      for(var i=0;i<d.k.length;i++){
+        if(txt.indexOf(d.k[i])>=0){ hits.push(d); break; }
+      }
+    });
+    var h='';
+    if(!hits.length){
+      h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
+      h+='<div style="font-size:13px;font-weight:800;">🌙 这个梦不在词表里——说实话比硬解好</div>';
+      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:6px;">梦的解读没有标准答案，你自己醒来那一瞬的情绪才是钥匙：<b>心慌的梦多是压力的回声，轻松的梦多是期待的投影</b>。回想一下：醒来时你是放松的，还是心有余悸？</div>';
+      h+='<div style="font-size:12px;line-height:1.8;color:var(--text-sub);margin-top:4px;">如果反复做同一个梦，那它一定有事要说——把梦写细一点再来。</div>';
+      h+='</div>';
+    }else{
+      var main=hits[0];
+      var second=hits[1]||null;
+      h='<div style="padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
+      h+='<div style="text-align:center;margin:2px 0 4px;"><span style="font-size:26px;font-weight:800;letter-spacing:4px;color:var(--pri);">'+main.name+'之梦</span><span style="font-size:12px;color:var(--text-hint);margin-left:8px;">五行属'+main.wx+'</span></div>';
+      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:6px;"><b>🀄 传统这么说：</b>'+main.trad+'</div>';
+      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:4px;"><b>🧠 现代怎么看：</b>'+main.mind+'</div>';
+      h+='<div style="font-size:12.5px;line-height:1.8;color:var(--text-sub);margin-top:4px;"><b>👉 你可以：</b>'+main.act+'</div>';
+      if(second){
+        h+='<div style="font-size:11.5px;line-height:1.7;color:var(--text-hint);margin-top:8px;border-top:1px dashed var(--card-border);padding-top:6px;">梦还碰到「'+second.name+'」象——'+second.mind+'</div>';
+      }
+      if(hits.length>2){
+        h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:4px;">这个梦意象很稠（命中'+hits.length+'个梦象）——主看前两象，其余是背景。</div>';
+      }
+      h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">梦是心事的信使不是判决书——同一个梦，醒来情绪不同，解读方向就不同。</div>';
+      h+='</div>';
+    }
+    document.getElementById('meng-result').innerHTML=h;
+    try{
+      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_meng_v1')||'[]'); }catch(_e1){}
+      a.push({t:Date.now(), q:txt.slice(0,40), g:hits.length?hits[0].name:'未入表'});
+      if(a.length>30) a=a.slice(-30);
+      localStorage.setItem('zhiming_meng_v1', JSON.stringify(a));
+      window._mengHist();
+    }catch(_e2){}
+  }catch(_e3){}
+};
+window._mengHist=function(){
+  try{
+    var w=document.getElementById('mengHistWrap');
+    if(!w) return;
+    var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_meng_v1')||'[]'); }catch(_e4){}
+    if(!a.length){ w.innerHTML=''; return; }
+    a=a.slice(-12).reverse();
+    var h='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">💭 记过 '+a.length+' 个梦（回看）</summary><div style="font-size:11px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
+    a.forEach(function(x){
+      var d=new Date(x.t);
+      h+='· '+(d.getMonth()+1)+'/'+d.getDate()+' 「'+x.q+'」→ <b>'+x.g+'</b><br>';
+    });
+    h+='</div></details>';
+    w.innerHTML=h;
+  }catch(_e5){}
+};
+window._wenAsk=function(key){
+  try{
+    var r=window._lynCtx&&window._lynCtx.r;
+    if(!r){ try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
+    var now=new Date(); var nowY=now.getFullYear();
+    var ln=r.liunian&&(r.liunian.find(function(l){return l.year===nowY;})||r.liunian[0]);
+    var cur=r.dayun&&r.dayun.list&&(r.dayun.list.find(function(d){return nowY>=d.startYear&&nowY<=d.endYear;})||r.dayun.list[r.dayun.list.length-1]);
+    var next=(cur&&r.dayun.list)?r.dayun.list[r.dayun.list.indexOf(cur)+1]:null;
+    var dayZ=r.dayZhi, dayG=r.dayGan;
+    var zhiI={"子":0,"丑":1,"寅":2,"卯":3,"辰":4,"巳":5,"午":6,"未":7,"申":8,"酉":9,"戌":10,"亥":11};
+    var lnZ=ln?ln.gz.charAt(1):''; var lnG=ln?ln.gz.charAt(0):'';
+    var lnSS=ln?ln.ganShi:''; var lnGZ=ln?ln.gz:'';
+    var body='', verdict='', ev=[];
+    var SS_JD={ "正官":["官杀","克你的那个字透出来——新机会与新约束同时到位。","能担起来就动：约束变多的位置往往也是位置变大的位置。挑下家看『限制』是清晰的还是糊涂的。"],
+      "七杀":["官杀","七杀透干——压力型机会年，想动很正常。","动的窗口开着，但压力也是真的：新位置大概率比现在累。先问自己要的是『更大』还是『更舒服』。"],
+      "正印":["印星","印星主年——学习、证书、背景加持的收益大于换地方。","今年攒筹码比花筹码划算：考个证、补个学历、把专业攒厚。明年再动不迟。"],
+      "偏印":["印星","偏印透干——适合深耕技能、走专业路线。","换工作不如换深度：同一份工作做出别人做不出的东西，比换个东家值钱。"],
+      "食神":["食伤","食神主年——才华输出的年份，你的价值看得见。","想跳就带着作品跳：今年做出的东西是最好的谈判筹码。"],
+      "伤官":["食伤","伤官主年——憋不住想表达、想换是本能。","伤官年跳槽要管住嘴：面试别吐槽老东家，谈判别把话说死。带着成果、收着脾气，动得成。"],
+      "正财":["财星","财星透干——为钱而动的念头会特别强。","先算清账再动：新机会看实际到手和稳定性，别只盯涨幅。命里财来，挑稳的拿。"],
+      "偏财":["财星","偏财透干——机会型的钱在向你招手。","偏财要快但要稳：窗口开的时点别拖太久，条款一定要落纸面。"],
+      "比肩":["比劫","比劫主年——竞争者多，跳槽是在抢位置。","手上有真 offer 再动，别裸辞去挤独木桥。防画饼：谈好的写进合同才算数。"],
+      "劫财":["比劫","劫财透干——今年跳槽容易遇到抢食的。","大环境竞争烈：内部转岗比外部跳槽更划算，先看看脚下有没有路。"] };
+    var JD_RES={"官杀":"可动——挑约束清晰的下家","印星":"先不动——今年攒筹码","食伤":"可动——带着成果跳","财星":"可动——账算清再动","比劫":"有真 offer 再动"};
+    if(key==='career'){
+      var jd=SS_JD[lnSS]||["平","流年干对你日主无明显生克——工作大方向看你自己安排。","不构成明显的动或留信号：按现实条件做决定，命理今年不抢戏。"];
+      var cat=jd[0];
+      verdict=JD_RES[cat]||'按现实安排';
+      body='今年是 '+lnGZ+' 年，流年天干 '+lnG+' 对你日主 '+dayG+' 是<b>『'+lnSS+'』</b>——'+jd[1]+'<br>'+jd[2];
+      ev.push('流年 '+lnGZ+'：流年干十神='+lnSS+'（对日主 '+dayG+'）');
+      if(cur&&cur.endYear-nowY<=1){ body+='<br><b>另：你正处在十年换挡的尾巴上</b>（'+cur.gz+'运到 '+cur.endYear+' 年）——换挡期大动作放在新运开局更顺，今年先谈条件、明年再落地也来得及。'; ev.push('当前大运 '+cur.gz+'（'+cur.startYear+'-'+cur.endYear+'）：换挡期'); }
+      if(next){ ev.push('下一运 '+next.gz+'（'+next.startYear+' 起）：'+(window._DY_CAT&&window._DY_CAT[next.ganShi]||next.ganShi)); }
+    } else if(key==='move'){
+      var yima=(window.__SHEN_SHA_TABLE?__SHEN_SHA_TABLE.yima:{})[dayZ];
+      var lnI=zhiI[lnZ]!==undefined?zhiI[lnZ]:-1, dayI=zhiI[dayZ]!==undefined?zhiI[dayZ]:-1;
+      var chongJ=(dayI>=0&&lnI>=0&&window.SX_CHONG&&SX_CHONG[lnI]===dayI);
+      var heJ=(dayI>=0&&lnI>=0&&window.SX_HE&&SX_HE[lnI]===dayI);
+      var xiY=(r.xiYong&&r.xiYong[0])||'';
+      var dirMap={"火":"南方","水":"北方","木":"东方","金":"西方","土":"本地或中原"};
+      if(chongJ){ verdict='动象强——主动选比被动好'; body='今年 '+lnGZ+'，流年地支 '+lnZ+'<b>冲你的日支 '+dayZ+'（坐下）</b>——环境变动是今年的主旋律。冲不是坏事：被动被冲不如主动选，你想搬的那个方向，命理不反对。'; ev.push('流年支 '+lnZ+' 冲日支 '+dayZ+'（六冲）'); }
+      else if(lnZ===yima){ verdict='驿马到位——想动就是时机'; body='今年流年地支 '+lnZ+' 正好是你的<b>驿马位</b>（日支 '+dayZ+' 查驿马在 '+yima+'）——驿马主奔波迁移。今年搬、今年换城市，是顺水推舟。'; ev.push('流年支 '+lnZ+' = 日支查驿马位（'+dayZ+'→'+yima+'）'); }
+      else if(heJ){ verdict='留象——今年适合扎根'; body='今年流年地支 '+lnZ+' <b>合你的日支 '+dayZ+'</b>——合主安顿、主聚。今年适合在现在的地方扎深根：换城市这种大动，放到合劲过去再说。'; ev.push('流年支 '+lnZ+' 合日支 '+dayZ+'（六合）'); }
+      else { verdict='动静不明显——看现实需要'; body='今年 '+lnGZ+'，与你的日支既不冲也不合，驿马也未临位——命理对搬家今年不给出明显倾向。搬不搬，按工作、家庭这些现实因素定就好。'; ev.push('流年支 '+lnZ+' 与日支 '+dayZ+'：不冲不合'); }
+      if(chongJ||lnZ===yima){ if(xiY&&dirMap[xiY]){ body+='<br><b>方位参考</b>：你喜用神是『'+xiY+'』——传统方位学里对应<b>'+dirMap[xiY]+'</b>方向。挑城市时可以把这个当一条参考线（简化口径，别当唯一标准）。'; ev.push('喜用神 '+xiY+' → 方位 '+dirMap[xiY]); } }
+    } else if(key==='love'){
+      var taohua=(window.__SHEN_SHA_TABLE?__SHEN_SHA_TABLE.taohua:{})[dayZ];
+      var lnI2=zhiI[lnZ]!==undefined?zhiI[lnZ]:-1, dayI2=zhiI[dayZ]!==undefined?zhiI[dayZ]:-1;
+      var chongL=(dayI2>=0&&lnI2>=0&&window.SX_CHONG&&SX_CHONG[lnI2]===dayI2);
+      var heL=(dayI2>=0&&lnI2>=0&&window.SX_HE&&SX_HE[lnI2]===dayI2);
+      if(chongL){ verdict='考验年——冲是「动」，不是「分」'; body='今年 '+lnGZ+'，流年冲<b>日支（夫妻宫）'+dayZ+'</b>——关系会经受考验：聚少离多、口角变多，都是「冲」的表现形式。但受冲≠必分：冲主『大动』，可能是分手，也可能是同居、订婚这种大变化。<b>给自己一个月观察期</b>再下结论，别在情绪最冲的时候拍板。'; ev.push('流年支 '+lnZ+' 冲夫妻宫 '+dayZ+'（日支六冲）'); }
+      else if(heL){ verdict='增进窗口——该推进就推进'; body='今年流年 <b>合进你的夫妻宫（日支 '+dayZ+'）</b>——关系升温的窗口。暧昧的往前走一步，稳定的可以聊未来。合的年份不推进，窗口过了就要再等。'; ev.push('流年支 '+lnZ+' 合夫妻宫 '+dayZ+'（六合）'); }
+      else if(lnZ===taohua){ verdict='桃花旺年——看你要什么'; body='今年流年地支 '+lnZ+' 坐你的<b>桃花位</b>（日支 '+dayZ+' 查桃花在 '+taohua+'）——异性缘旺年。单身的社交往前走；有伴的享受魅力也守住边界，桃花旺对稳定关系是双刃剑。'; ev.push('流年支 '+lnZ+' = 桃花位（'+dayZ+'→'+taohua+'）'); }
+      else { verdict='平稳年——感情跟大势走'; body='今年 '+lnGZ+'，夫妻宫 '+dayZ+' 既不受冲也不受合，桃花未临——感情今年没有大的天象信号。关系好不好，看你们自己经营。'; ev.push('夫妻宫 '+dayZ+' 与流年 '+lnZ+'：无冲无合'); }
+      body+='<br><b>想看更细的两人互动</b>：成长页 → 人物档案 → 双人合盘，那边用两个人的盘说话。';
+    } else if(key==='money'){
+      var jd2=SS_JD[lnSS]||["平","流年干无明显生克——投资不是今年的主题。","别为了『动一动』而动钱：没有信号就是信号，守住现金流比找机会重要。"];
+      var cat2=jd2[0];
+      if(cat2==='财星'){ verdict=(r.wangshuai==='偏弱')?'看得见抓不住——防守':'求财窗口开——正业为主';
+        body='今年流年干 '+lnG+' 是<b>『'+lnSS+'』</b>——财星主年，求财的窗口开着。'+(r.wangshuai==='偏弱'?'<b>但你的命局偏弱——财多反为累</b>：看得见的钱未必拿得住，别上杠杆，别碰高波动，拿稳现金流的正业之财。':'你的命局'+(r.wangshuai==='偏旺'?'偏旺——能担财':'中和——按大流走')+'，正业之财更长久，投机仓位压小。');
+        ev.push('流年干十神='+lnSS+'（财星主年）'); ev.push('命局旺衰='+r.wangshuai);
+      } else if(cat2==='比劫'){ verdict='防破财——别跟风'; body='今年流年干是<b>『'+lnSS+'』</b>——比劫争财年，最大的风险是<b>跟着别人投</b>。今年所有拉你入伙的项目，多想三天再回话；合伙的钱、借出去的钱，都要按收不回来的假设来安排。'; ev.push('流年干十神='+lnSS+'（比劫争财）');
+      } else if(cat2==='印星'){ verdict='求稳——投资自己最划算'; body='今年流年干是<b>『'+lnSS+'』</b>——印星主年，适合『充电型』的投入：课程、证书、工具、健康。定存和稳健理财比投机划算，市场的热闹跟你关系不大。'; ev.push('流年干十神='+lnSS+'（印星主稳）');
+      } else { verdict='观望——不为动而动'; body='今年流年干是<b>『'+lnSS+'』</b>——'+jd2[1]+jd2[2]; ev.push('流年干十神='+lnSS+'（中性）'); }
+    } else { return; }
+    /* 存档钩子：回测数据源（每问每天一条） */
+    try{
+      var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_wenming_v1')||'[]'); }catch(_e1){}
+      var today=new Date().toDateString();
+      if(!a.some(function(x){ return x.q===key&&new Date(x.t).toDateString()===today; })){
+        a.push({t:Date.now(), q:key, v:verdict, y:lnGZ});
+        if(a.length>60) a=a.slice(-60);
+        localStorage.setItem('zhiming_wenming_v1', JSON.stringify(a));
+      }
+    }catch(_e2){}
+    var h='<div style="margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--card-border);">';
+    h+='<div style="font-size:13px;font-weight:800;">🎯 倾向：<span style="color:var(--pri);">'+verdict+'</span></div>';
+    h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;">'+body+'</div>';
+    h+='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">⌄ 看判定过程（'+ev.length+' 条依据）</summary><div style="font-size:11px;line-height:1.7;color:var(--text-hint);margin-top:5px;">'+ev.map(function(x){return '· '+x;}).join('<br>')+'</div></details>';
+    h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">命理给的是倾向不是保证——大事还要看现实条件。这是工具，不是答案。</div>';
+    h+='</div>';
+    var el=document.getElementById('wenAnswer');
+    if(el){ el.innerHTML=h; try{ el.scrollIntoView({block:'nearest'}); }catch(_e3){} }
+  }catch(_e4){}
+};
+
+window._lynOpen=function(idx){
+  try{
+    var ctx=window._lynCtx;
+    if(!ctx||!ctx.ly||!ctx.ly[idx]) { try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
+    var pt=ctx.ly[idx];
+    var html=window._lyExplain(pt, ctx.r);
+    var body=document.getElementById('lyModalBody');
+    if(body) body.innerHTML=html;
+    window.__openModalById('lyModal');
+  }catch(_e){}
+};
+
+window._lyOpen=function(idx){
+  try{
+    var ctx=window._lyCtx;
+    if(!ctx||!ctx.ly||!ctx.ly[idx]) { try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
+    var pt=ctx.ly[idx];
+    var html=window._lyExplain(pt, ctx.r);
+    var body=document.getElementById('lyModalBody');
+    if(body) body.innerHTML=html;
+    window.__openModalById('lyModal');
+  }catch(_e){}
+};
+/* _zh_* 别名（主包 stub 转发目标——保持原名兼容 mod 内互调） */
+window._zh_zwGo=window._zwGo;window._zh_zwFromProfile=window._zwFromProfile;window._zh_zwGender=window._zwGender;
+window._zh_zwFillHours=window._zwFillHours;
+window._zh_mengGo=window._mengGo;window._zh_mengHist=window._mengHist;window._zh_mengTimeHint=window._mengTimeHint;
+window._zh_wenAsk=window._wenAsk;window._zh_lynOpen=window._lynOpen;window._zh_lyOpen=window._lyOpen;
+</script>
+
 
 <!-- 城市搜索弹层 (v2.129.3) -->
 <div id="cityPickModal" class="cpm-mask" style="display:none;" onclick="window._closeCityPick(event)">
