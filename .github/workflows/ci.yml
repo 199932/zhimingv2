@@ -24,6 +24,10 @@ jobs:
       - name: 安装依赖（terser 由 lockfile 钉版本）
         run: npm ci
 
+      - name: 安装测试浏览器（内核断言走真实渲染链）
+        run: |
+          pip install playwright
+          python -m playwright install chromium --with-deps
       - name: 内核断言（物理不变量）
         run: python3 tests/core.test.py
 
