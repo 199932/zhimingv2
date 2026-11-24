@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.147.7</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.147.9</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2697,7 +2697,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.147.7-20261124';
+const ZHIMING_BUILD = 'v2.147.9-20261124';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -8519,6 +8519,41 @@ function detectZodiacByBirthday(){
 function zodiacSubScores(i, p, date){
   return [0,1,2,3,4].map(si=>hashScore(i, p, si, date));
 }
+/* 星座档位文案池(v2.147.8): 分数×维度→人话——静态池不再覆盖分数 */
+window._ZX_TONE=function(key,val,starName){
+  var T={
+    overall:{l:'今天整体偏闷，别硬撑，挑一件最小的事完成它就够。',m:'整体平稳，按部就班推进最稳，别乱开新摊子。',h:'今天整体顺，重要的事放在精力最好的时段办。',v:'今天状态在线，想做的事大胆排进日程。'},
+    love:{l:'感情偏淡，别硬找话题，安安静静陪着自己或对方都行。',m:'感情平稳，一句关心的话就够，不用大动作。',h:'感情运不错，适合聊天、约会、把话说开。',v:'桃花正旺，单身的大胆聊，有伴的多腻一会儿。'},
+    career:{l:'工作容易卡壳，先挑最简单的一件开个头，别恋战。',m:'工作按计划走就行，稳住节奏比冲刺重要。',h:'工作效率高，方案、汇报、谈判都适合排今天。',v:'职场高光日，提案表现冲一把，成绩容易被看见。'},
+    wealth:{l:'钱包偏紧，大额消费先放购物车躺一天再决定。',m:'财运平稳，记账和储蓄是好动作。',h:'财运在线，谈钱的事可以推进，小财有惊喜。',v:'财运旺盛，机会多但别贪快——落袋为安最重要。'},
+    health:{l:'身体在喊累，早点睡比什么都强。',m:'身体平稳，动一动、拉伸一下就很好。',h:'精力不错，适合运动出汗，把劲使出来。',v:'精力满格，安排高强度运动正合适。'}
+  };
+  var lv=val>=90?'v':(val>=75?'h':(val>=55?'m':'l'));
+  return (starName||'')+(T[key]&&T[key][lv]?T[key][lv]:'按平常节奏走就好。');
+};
+window._zxChartIntro=function(){
+  try{
+    var _cv=JSON.parse(localStorage.getItem('zhiming_chart_v1')||'null');
+    if(!_cv||!_cv.y) return '';
+    if(typeof window._chartCalc!=='function') return '';
+    var ch=window._chartCalc(_cv.y,_cv.m,_cv.d,_cv.h,_cv.mi,_cv.city);
+    if(!ch||!ch.lons) return '';
+    var SN=['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
+    var EL=['火','土','风','水'];
+    var sgn=function(lon){ return SN[Math.floor(((lon%360)+360)%360/30)]; };
+    var sun=sgn(ch.lons['太阳']), moon=sgn(ch.lons['月亮']), asc=sgn(ch.lons['上升点']);
+    var elCnt={'火':0,'土':0,'风':0,'水':0};
+    ['太阳','月亮','水星','金星','火星','木星','土星'].forEach(function(pl){
+      var sg=sgn(ch.lons[pl]); var el=EL[Math.floor(SN.indexOf(sg)/3)];
+      if(el&&elCnt[el]!==undefined) elCnt[el]++;
+    });
+    var dom='';var mx=0; for(var e in elCnt){ if(elCnt[e]>mx){mx=elCnt[e];dom=e;} }
+    var elTxt=dom==='火'?'行动力是你的底色，点火就着，记得给它找正事烧。':dom==='土'?'踏实是你的底色，慢就是你的快——稳住积累就好。':dom==='风'?'信息和想法是你的氧气，多聊多看多学就是在充电。':'情绪和直觉是你的雷达，信它，但也给它留点核实的时间。';
+    return '<div style="margin-top:8px;"><b style="color:var(--pri);">放到你的星盘里看：</b><br>'
+      +'☀️ 太阳<b>'+sun+'</b>（人生主课题）· 🌙 月亮<b>'+moon+'</b>（情绪安全区）· ⬆️ 上升<b>'+asc+'</b>（给人的第一印象）<br>'
+      +'<span style="font-size:12px;color:var(--text-sub);">七大星体里<b>'+dom+'</b>象最重——'+elTxt+'</span></div>';
+  }catch(_e){ return ''; }
+};
 function zodiacBuildSubHtml(zIdx, p, scores, date){
   const subTmpl = TEXT.zodiac.subToday; // 统一以 today 作为模板
   const t = subTmpl && subTmpl[zIdx] ? subTmpl[zIdx] : {};
@@ -8527,7 +8562,7 @@ function zodiacBuildSubHtml(zIdx, p, scores, date){
     const val = scores[i];
     const color = ZODIAC_COLORS[i];
     return `<div class="score-row"><span class="sn">${n}</span><div class="strack"><div class="sfill" style="width:${val}%;background:${color}"></div></div><span class="sc">${val}</span></div>
-    <div class="sub-block"><span class="sb-k">${n}：</span><span class="sb-p">${(t && t[keys[i]])?t[keys[i]]:("总体"+(val>=90?"极佳":val>=80?"良好":val>=70?"尚可":"一般")+"，宜把握机会。")}</span></div>`;
+    <div class="sub-block"><span class="sb-k">${n}：</span><span class="sb-p">${window._ZX_TONE(keys[i],val,ZODIAC_12[zIdx]?ZODIAC_12[zIdx].name+'座 ':'')}</span></div>`;
   }).join("");
 }
 function renderZodiac(silent){
@@ -8541,7 +8576,7 @@ function renderZodiac(silent){
   const scores = zodiacSubScores(_curZodiacIdx, p, today);
   const overallScore = scores[0];
   const subHtml = zodiacBuildSubHtml(_curZodiacIdx, p, scores, today);
-  const personality = TEXT.zodiac.personality[_curZodiacIdx] || "";
+  const personality = (TEXT.zodiac.personality[_curZodiacIdx] || "") + (typeof window._zxChartIntro==="function"?window._zxChartIntro():"");
   // 半年趋势卡：未来 6 个月综合分 SVG 折线（月粒度哈希，高峰/低谷标注）
   let halfYearChartHtml = "";
   if(p===3){
@@ -8583,6 +8618,7 @@ function renderZodiac(silent){
     <div class="card">
       <div class="card-title">星座性格简析</div>
       <div class="desc-text">${personality}</div>
+      <div id="zx-chart-intro"></div>
     </div>
     <div class="card">
       <div class="card-title">${periodNames[p]}运势 · ${z.name}座</div>
@@ -8598,6 +8634,9 @@ function renderZodiac(silent){
     var zAi = _zodiacAIEnhance(_curZodiacIdx, p, scores, summaryText);
     if(zAi) html += zAi;
   } catch(_){}
+  try {
+    if(window.__ensureMod && typeof window._zxChartIntro==='function') window.__ensureMod('chart').then(function(){ try{ var el=document.getElementById('zx-chart-intro'); var t=window._zxChartIntro(); if(el&&t) el.innerHTML=t; }catch(_e2){} }).catch(function(_e3){});
+  } catch(_zx){}
   document.getElementById("zodiac-result").innerHTML = enhanceResultHtml(html);
   document.getElementById("copyBar").style.display = "flex";
   _lastZodiacResult = {zodiacIdx:_curZodiacIdx, period:p, date:dateStr, scores, summary:summaryText, zName:z.name, periodName:periodNames[p]};
