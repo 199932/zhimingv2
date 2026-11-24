@@ -44,6 +44,17 @@ def main():
       window.Date = MockDate;
     })();
     """
+    LONGTASK_JS = """
+    (function(){
+      try{
+        window.__ltTotal = 0;
+        var po = new PerformanceObserver(function(list){
+          list.getEntries().forEach(function(e){ window.__ltTotal += e.duration; });
+        });
+        po.observe({entryTypes:['longtask']});
+      }catch(e){ window.__ltTotal = -1; }
+    })();
+    """
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         ctx = browser.new_context(viewport={'width': 390, 'height': 844},
@@ -54,6 +65,7 @@ def main():
           try{localStorage.setItem('zhiming_pin_ok','1');}catch(e){}
         })""");
         ctx.add_init_script(FREEZE_JS);
+        ctx.add_init_script(LONGTASK_JS);
         pg = ctx.new_page()
         pg.goto('http://127.0.0.1:8899/index.html?v=visual', wait_until='domcontentloaded', timeout=45000)
         pg.wait_for_timeout(4500)
@@ -90,16 +102,27 @@ def main():
                 os.remove(tmp)
                 ok = ratio <= THRESHOLD
                 results.append((key, label, '像素差异 %.2f%%' % (ratio*100), ok))
+
+        # 性能指标测量（只打印不阻断——CI机器波动大,先记录两周基线再定阈值）
+        try:
+            perf = pg.evaluate("""(function(){
+              var nav = performance.getEntriesByType('navigation')[0];
+              return {
+                dcl: nav ? Math.round(nav.domContentLoadedEventEnd) : -1,
+                nodes: document.querySelectorAll('*').length,
+                longtasks: window.__ltTotal || 0
+              };
+            })()""")
+            print()
+            print('==== 性能指标（只记录不阻断）====')
+            print('  DOMContentLoaded: %sms' % perf.get('dcl'))
+            print('  longtask 总时长: %sms' % perf.get('longtasks'))
+            print('  首屏 DOM 节点数: %s' % perf.get('nodes'))
+        except Exception as _pe:
+            print('perf 测量跳过:', str(_pe)[:80])
+
         browser.close()
 
-    print()
-    print('════ 视觉回归基线 ════')
-    for key, label, msg, ok in results:
-        print(('  ✓ ' if ok else '  ✗ ') + '%s(%s): %s' % (label, key, msg))
-    if first_run:
-        print()
-        print('⚠️ 首跑落基线——请人工过一遍 tests/baseline/*.png，')
-        print('   确认是「对的现在的样子」再提交。之后任何布局意外都会红。')
     bad = [r for r in results if not r[3]]
     if bad:
         print()
