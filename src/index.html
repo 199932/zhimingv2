@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.147.6</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.147.7</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2039,10 +2039,12 @@ body{ padding-bottom:160px; }
       </div>
       <div style="display:flex;gap:6px;">
         <button class="btn-primary" style="flex:1;" onclick="window._zwFromProfile()">📋 用档案生日起盘</button>
-        <button class="btn-secondary" style="width:auto;" onclick="window._zwGo()">起盘</button>
-      <button class="btn-secondary" style="width:auto;" onclick="window._zwCross()">⚔️ 双盘互参</button>
-      <div id="zw-cross" style="margin-top:10px;"></div>
       </div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button class="btn-secondary" style="flex:1;" onclick="window._zwGo()">起盘</button>
+        <button class="btn-secondary" style="flex:1;" onclick="window._zwCross()">⚔️ 双盘互参</button>
+      </div>
+      <div id="zw-cross" style="margin-top:10px;"></div>
       <div id="zw-result" style="margin-top:10px;"></div>
       <div class="foot-disclaimer" style="margin-top:8px;">※ 紫微为传统象征体系，与八字互相参看；解不说教，只给看自己的新角度</div>
     </div>
@@ -2695,7 +2697,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.147.6-20261124';
+const ZHIMING_BUILD = 'v2.147.7-20261124';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -32080,14 +32082,14 @@ window._zh_zwCrossGo=function(){
     else if(rel==='ke'||rel==='ke2'){ total='两套盘<span style="color:var(--warn,#c9a227);font-weight:800;">互相拉扯</span>——这不是坏盘：张力在的盘,人生剧情才够深。知道拧在哪，就赢了大半。'; }
     else { total='两套盘各说各话——正好对照着听，谁的描述更像你，听谁的。'; }
     var srcNote=(bi&&bi.y)?'八字盘取自档案副本（与排盘同源）':'八字盘用紫微同生日现场排（未建档案）';
-    var h='<div style="padding:12px 14px;border-radius:12px;background:var(--pri-light,#f5efe4);border:1px solid var(--card-border);color:var(--text,#3b2f1e);">'
+    var h='<div style="padding:12px 14px;border-radius:12px;background:var(--pri-light,#f5efe4);border:1px solid var(--card-border);color:#3b2f1e;">'
       +'<div style="font-size:14px;font-weight:800;">⚔️ 紫微 × 八字 · 双盘互参</div>'
-      +'<div style="font-size:11px;color:var(--text-hint);margin-top:2px;">'+srcNote+'</div>'
+      +'<div style="font-size:11px;color:#8a7a5f;margin-top:2px;">'+srcNote+'</div>'
       +'<div style="margin-top:8px;font-size:12.5px;line-height:1.8;">🪞 <b>性格互证</b>——'+c1+'</div>'
       +'<div style="margin-top:6px;font-size:12.5px;line-height:1.8;">⏳ <b>十年双钟</b>——'+c2+'</div>'
       +(c3?'<div style="margin-top:6px;font-size:12.5px;line-height:1.8;">⚖️ <b>忌宫 × 喜用</b>——'+c3+'</div>':'')
       +'<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--card-border);font-size:12.5px;line-height:1.8;">'+total+'</div>'
-      +'<div class="foot-disclaimer" style="margin-top:8px;">※ 紫微与八字是两套独立语言：互证=两面都说，张力=两套视角互补，均属传统互参读法。</div>'
+      +'<div class="foot-disclaimer" style="margin-top:8px;color:#8a7a5f;">※ 紫微与八字是两套独立语言：互证=两面都说，张力=两套视角互补，均属传统互参读法。</div>'
       +'</div>';
     box.innerHTML=h;
   }catch(_err){ var b2=document.getElementById('zw-cross'); if(b2) b2.innerHTML=''; }
