@@ -1,7 +1,7 @@
 name: build-check
 on:
   push:
-    branches: [main]
+  branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -28,11 +28,11 @@ jobs:
         run: |
           pip install playwright
           python -m playwright install chromium --with-deps
-      - name: 内核断言（物理不变量）
-        run: python3 tests/core.test.py
-
       - name: 构建（terser失败/体积超预算=红,裸包拒绝上线）
         run: node build.js
+
+      - name: 内核断言（物理不变量,测新产物）
+        run: python3 tests/core.test.py
 
       - name: 产物可复现（重构建零diff;sitemap.xml的lastmod写当天必异日,排除）
         run: |
@@ -55,3 +55,16 @@ jobs:
           if [ "$n" -gt 10 ]; then
             echo "::warning::坑账本已落后 $n 个 fix 提交,去补条目"
           fi
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: 装中文字体（基线截图用Noto CJK,CI与本地同族）
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+      - run: pip install playwright Pillow && python -m playwright install chromium --with-deps
+      - name: 视觉回归基线（布局意外即红;改版故意时 --refresh 重生成）
+        run: python3 tests/visual.py

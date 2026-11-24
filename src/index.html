@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.147.9</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.148.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2697,7 +2697,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.147.9-20261124';
+const ZHIMING_BUILD = 'v2.148.0-20261125';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -7108,6 +7108,7 @@ function switchTab(page){
   try{ var _cb=document.getElementById('copyBar'); if(_cb&&_cb.style.display!=='none') _cb.style.display='none'; }catch(_cbH){} /* 切页即隐复制条 */
   try{ if(window.__ensureMod) window.__ensureMod('extra').catch(function(_me){}); }catch(_me0){} /* 附加模块合集后台预取（不阻塞,函数均有typeof守卫） */
   try{ if(window.__ensureMod) window.__ensureMod('chart').catch(function(_mc0){}); }catch(_mc00){} /* 星盘模块预取（中西合参月相钩子+西玄页共用） */
+  try{ if(page&&page!=='today'&&window.__initCities) window.__initCities(); }catch(_cit0){} /* 城市库按需（非今日页才拉，v2.148.0） */
   try{ window.__closeAllModals && window.__closeAllModals(); }catch(_){}
   try{ // 兜底清不在esc栈里的弹层(如择日dayPickerModal),切页即新上下文
     document.querySelectorAll('.modal-mask.show').forEach(function(m){ m.classList.remove('show'); });
@@ -7244,6 +7245,7 @@ function goBacktest(){
  *  城市下拉构建
  * =======================================================*/
 async function buildCitySelect(){
+  try{ if(window.__initCities) window.__initCities(); }catch(_ic0){}
   try{ await window.__ensureMod('cities'); }catch(_e){ try{window.showToast&&window.showToast('城市库加载中,稍后再试','info',1600);}catch(_e2){} return; }
   const sel = document.getElementById("bz-city");
   let html = "";
@@ -8116,6 +8118,7 @@ function qimenCalc(p){
  * =======================================================*/
 let _lastQimenResult = null;
 async function buildQimenCitySelect(){
+  try{ if(window.__initCities) window.__initCities(); }catch(_ic1){}
   try{ await window.__ensureMod('cities'); }catch(_e){ return; }
   const sel = document.getElementById("qm-city");
   if (!sel) return;
@@ -13553,13 +13556,23 @@ function init(){
   try{ runInlineSelfCheck(); _log('[init] step1 runInlineSelfCheck ok'); }catch(e){ console.error('[init] step1 runInlineSelfCheck ERR:', e.message); }
   try{ initKeyboardFix(); _log('[init] step2 initKeyboardFix ok'); }catch(e){ console.error('[init] step2 initKeyboardFix ERR:', e.message); }
   try{ initTheme(); _log('[init] step3 initTheme ok'); }catch(e){ console.error('[init] step3 initTheme ERR:', e.message); }
-  window.__ensureMod('cities').then(function(){
-    try{ buildCitySelect(); buildQimenCitySelect(); buildGongzhenCitySelect(); upgradeCityPickers(); }catch(e){ console.error('[init] city mod build fail', e); }
-    try{
-      const gzSel = document.getElementById("gz-city");
-      if (gzSel && !gzSel.onchange) gzSel.addEventListener("change", onGzCityChange);
-    }catch(e){}
-  }).catch(function(e){ console.error('[init] cities mod load fail', e); });
+  /* cities 按需加载（v2.148.0 幂等入口）——今日页首屏不再拉 ~70KB 城市库；进城市页/打开档案时触发，idle 兜底 */
+  let __citiesReady = null;
+  window.__initCities = function(){
+    if (__citiesReady) return __citiesReady;
+    __citiesReady = window.__ensureMod('cities').then(function(){
+      try{ buildCitySelect(); buildQimenCitySelect(); buildGongzhenCitySelect(); upgradeCityPickers(); }catch(e){ console.error('[cities] build fail', e); }
+      try{
+        const gzSel = document.getElementById("gz-city");
+        if (gzSel && !gzSel.onchange) gzSel.addEventListener("change", onGzCityChange);
+      }catch(e){}
+    }).catch(function(e){ console.error('[cities] mod load fail', e); __citiesReady = null; });
+    return __citiesReady;
+  };
+  try{
+    const _idle = window.requestIdleCallback || function(f){ return setTimeout(f, 3000); };
+    _idle(function(){ setTimeout(function(){ window.__initCities(); }, 2500); });
+  }catch(e){ setTimeout(function(){ window.__initCities(); }, 3000); }
   try{ bindSubtabs(); _log('[init] step7 bindSubtabs ok'); }catch(e){ console.error('[init] step7 bindSubtabs ERR:', e.message); }
   try{ bootstrapUXBindings(); _log('[init] step8 bootstrapUXBindings ok'); }catch(e){ console.error('[init] step8 bootstrapUXBindings ERR:', e.message); }
 
@@ -18973,7 +18986,7 @@ try{
     }).catch(function(_sw2){});
   }
 }catch(_sw1){}
-setTimeout(function(){ try{ upgradeCityPickers(); }catch(_e){} }, 0);
+setTimeout(function(){ try{ if(typeof CITIES!=="undefined"&&Object.keys(CITIES).length) upgradeCityPickers(); }catch(_e){} }, 0);
 const _HS='h5,.desc-title,.desc-sub-title,.card-title,.bz-five-title,.bz-wuxing-title,.bz-wx-result,.aspect-title';
 function makeLongResultCollapsible(I,R){const E=document.getElementById(I);if(!E)return;const H=Array.from(E.querySelectorAll(_HS)).filter(h=>h.closest('#'+I));if(!H.length)return;const T=h=>{const t=h.textContent.trim();return t.length>20?t.slice(0,20):t};H.forEach(h=>{const B=[];let n=h.nextSibling;while(n){if(n.nodeType===1&&n.matches(_HS))break;B.push(n);n=n.nextSibling}if(!B.length)return;const W=document.createElement('div');W.className='result-block collapsible';W.dataset.title=T(h);const d=document.createElement('div');d.className='rb-header';d.innerHTML=`<span class="rb-title">${T(h)}</span><span class="rb-arrow">\u25BE</span>`;d.onclick=()=>W.classList.toggle('collapsed');const b=document.createElement('div');b.className='rb-body';h.parentNode.insertBefore(W,h);W.appendChild(d);W.appendChild(b);b.appendChild(h);B.forEach(s=>b.appendChild(s));if(R&&R.defaultCollapsed&&R.defaultCollapsed(T(h)))W.classList.add('collapsed')})}
 /* 批次C 自测 */

@@ -1,0 +1,28 @@
+name: live-check
+on:
+  schedule:
+    - cron: '17 */6 * * *'   # 每 6 小时巡检（错峰整点,避免CDN整点抖动）
+  workflow_dispatch:
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: 线上SW哈希 vs 仓库SW哈希
+        run: |
+          set -e
+          LOCAL=$(rg -o 'zhiming_v2_[0-9a-f]+' sw.js | head -1)
+          echo "仓库版本锚: $LOCAL"
+          REMOTE=$(curl -s --max-time 20 -H 'Cache-Control: no-cache' 'https://199932.github.io/zhimingv2/sw.js?v=livecheck' | rg -o 'zhiming_v2_[0-9a-f]+' | head -1)
+          echo "线上版本锚: $REMOTE"
+          if [ -z "$REMOTE" ]; then
+            echo "::warning::线上 sw.js 拉取失败——CDN抖动或Pages断链,人工确认一次"
+            exit 1
+          fi
+          if [ "$LOCAL" != "$REMOTE" ]; then
+            echo "::error::线上落后于仓库! 本地=$LOCAL 线上=$REMOTE —— 检查 Pages 部署队列(坑86)或CDN交错(坑88),空commit kick可解"
+            exit 1
+          fi
+          echo "线上与仓库同步 ✓ ($REMOTE)"
