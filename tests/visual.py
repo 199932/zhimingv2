@@ -13,7 +13,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = os.path.join(ROOT, 'tests', 'baseline')
-THRESHOLD = 0.02
+THRESHOLD = 0.05  # 5%: CI/本地字体渲染差异2-3%是环境噪声;布局崩(白底白字/竖排挤压)差异远超此数
 PAGES = [('today', '今日页'), ('cn', '中式页')]
 
 def serve():
