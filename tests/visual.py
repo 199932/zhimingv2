@@ -33,6 +33,17 @@ def main():
     srv = serve()
     time.sleep(1.0)
 
+    FREEZE_JS = """
+    (function(){
+      const RealDate = Date;
+      const FIXED = new RealDate('2026-11-25T12:00:00');
+      class MockDate extends RealDate {
+        constructor(...args){ if(args.length===0){ super(FIXED.getTime()); } else { super(...args); } }
+        static now(){ return FIXED.getTime(); }
+      }
+      window.Date = MockDate;
+    })();
+    """
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         ctx = browser.new_context(viewport={'width': 390, 'height': 844},
@@ -41,7 +52,8 @@ def main():
           if(navigator.serviceWorker){navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));}
           if(window.caches){caches.keys().then(ks=>ks.forEach(k=>caches.delete(k)));}
           try{localStorage.setItem('zhiming_pin_ok','1');}catch(e){}
-        });""")
+        })""");
+        ctx.add_init_script(FREEZE_JS);
         pg = ctx.new_page()
         pg.goto('http://127.0.0.1:8899/index.html?v=visual', wait_until='domcontentloaded', timeout=45000)
         pg.wait_for_timeout(4500)
