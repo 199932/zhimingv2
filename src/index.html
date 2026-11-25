@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.148.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.148.1</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2697,7 +2697,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.148.0-20261125';
+const ZHIMING_BUILD = 'v2.148.1-20261126';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -13569,10 +13569,20 @@ function init(){
     }).catch(function(e){ console.error('[cities] mod load fail', e); __citiesReady = null; });
     return __citiesReady;
   };
+  /* 坑151: city 预取加业务门——只有建过档案/排过盘的设备才预取,
+     纯看今日页的访客永不加载城市库(省 ~70KB gzip);switchTab 触发与直调自愈不受影响 */
+  window.__shouldPrefetchCities = function(){
+    try{
+      var p = localStorage.getItem('zhiming_v2_profiles');
+      if(p && p !== '[]' && p !== 'null') return true;
+      if(localStorage.getItem('zhiming_bazi_v1')) return true;
+    }catch(e){}
+    return false;
+  };
   try{
     const _idle = window.requestIdleCallback || function(f){ return setTimeout(f, 3000); };
-    _idle(function(){ setTimeout(function(){ window.__initCities(); }, 2500); });
-  }catch(e){ setTimeout(function(){ window.__initCities(); }, 3000); }
+    _idle(function(){ setTimeout(function(){ if(window.__shouldPrefetchCities && window.__shouldPrefetchCities()) window.__initCities(); }, 2500); });
+  }catch(e){ setTimeout(function(){ if(window.__shouldPrefetchCities && window.__shouldPrefetchCities()) window.__initCities(); }, 3000); }
   try{ bindSubtabs(); _log('[init] step7 bindSubtabs ok'); }catch(e){ console.error('[init] step7 bindSubtabs ERR:', e.message); }
   try{ bootstrapUXBindings(); _log('[init] step8 bootstrapUXBindings ok'); }catch(e){ console.error('[init] step8 bootstrapUXBindings ERR:', e.message); }
 
