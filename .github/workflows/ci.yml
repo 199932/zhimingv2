@@ -68,3 +68,5 @@ jobs:
       - run: pip install playwright Pillow && python -m playwright install chromium --with-deps
       - name: 视觉回归基线（布局意外即红;改版故意时 --refresh 重生成）
         run: python3 tests/visual.py
+      - name: 文字可见性扫描（白字白底/暗底暗字,cr<1.5即红）
+        run: python3 tests/contrast.py
