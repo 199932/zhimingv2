@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.148.1</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.149.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2697,7 +2697,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.148.1-20261126';
+const ZHIMING_BUILD = 'v2.149.0-20261126';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4559,9 +4559,20 @@ window._wenCardHTML=function(){
         var _qn={career:'💼跳槽',move:'🏠搬家',love:'❤️感情',money:'💰投资'};
         _hist=_hist.slice(-12).reverse();
         h+='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">📜 问过 '+_hist.length+' 次（点开回看）</summary><div style="font-size:11px;line-height:1.9;color:var(--text-sub);margin-top:5px;">';
-        _hist.forEach(function(x){
+        var _hitN=0,_ojN=0;
+        _hist.forEach(function(x){ if(x.o&&x.o!=='na')_ojN++; if(x.o==='hit')_hitN++; });
+        if(_ojN>=1){
+          var _rate=Math.round(_hitN*100/Math.max(_ojN,1));
+          h+='<div style="margin:3px 0 5px;color:var(--pri);font-weight:700;">已对账 '+_ojN+' 条'+(_ojN>=5?('，应验率约 '+_rate+'%'):'（样本还少，先攒着）')+'</div>';
+        }
+        _hist.forEach(function(x,xi){
           var d=new Date(x.t);
-          h+='· '+(d.getMonth()+1)+'/'+d.getDate()+' '+(_qn[x.q]||x.q)+'——'+(x.v||'')+'<br>';
+          h+='· '+(d.getMonth()+1)+'/'+d.getDate()+' '+(_qn[x.q]||x.q)+'——'+(x.v||'')+(x.o?(' <b style="color:var(--pri)">['+((window._WEN_OBJ||{})[x.o]||x.o)+']</b>'):'')+'<br>';
+          if(!x.o){
+            h+='<div style="margin:2px 0 6px;">'+Object.keys(window._WEN_OBJ||{}).map(function(ok){
+              return '<button class="switch-btn" style="width:auto;font-size:10px;padding:2px 7px;margin-right:4px;" onclick="window._wenMark('+x.t+',\''+ok+'\')">'+(window._WEN_OBJ[ok])+'</button>';
+            }).join('')+'</div>';
+          }
         });
         h+='</div></details>';
       }
@@ -31963,6 +31974,71 @@ window._mengHist=function(){
     w.innerHTML=h;
   }catch(_e5){}
 };
+/* ═══ 应期推演（v2.149.0）：问题→用神十神→流月逐月旺衰→机会窗/风险窗 ═══ */
+window._WEN_OBJ={"hit":"✓应验","part":"◐部分","miss":"✗没应","na":"—说不清"};
+window._wenMark=function(t,o){
+  try{
+    var a=JSON.parse(localStorage.getItem('zhiming_wenming_v1')||'[]');
+    var it=a.find(function(x){return x.t===t;});
+    if(it){ it.o=o; localStorage.setItem('zhiming_wenming_v1', JSON.stringify(a)); try{window.showToast&&window.showToast('已记录：'+window._WEN_OBJ[o],'info',1200);}catch(_e){} }
+  }catch(_e){}
+};
+window._wenTimingHTML=function(key,r){
+  try{
+    var USE={career:['官杀'],money:['财'],love:['财','官杀'],move:['印'],study:['印'],health:['比劫'],travel:['食伤']};
+    var cats=USE[key]; if(!cats) return '';
+    var ly=r&&r.liuyue&&r.liuyue.slice(0,12); if(!ly||!ly.length) return '';
+    var dayG=r.dayGan||r.dayG; if(!dayG) return '';
+    var SS2CAT={'比肩':'比劫','劫财':'比劫','食神':'食伤','伤官':'食伤','正财':'财','偏财':'财','正官':'官杀','七杀':'官杀','正印':'印','偏印':'印'};
+    var MNAME=['','正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
+    var CATNAME={'官杀':'官杀（位置与约束）','财':'财星（钱与机会）','印':'印星（贵人靠山）','比劫':'比劫（自身根基）','食伤':'食伤（表达与输出）'};
+    var GOOD=[],BAD=[];
+    var FOE={'官杀':'食伤','财':'比劫','印':'财','比劫':'官杀','食伤':'印'};
+    ly.forEach(function(m){
+      var mg=m.gz&&m.gz.charAt(0); if(!mg) return;
+      var ss=window._wenSS(dayG,mg); if(!ss) return;
+      var cat=SS2CAT[ss];
+      if(cats.indexOf(cat)>=0) GOOD.push({m:m.month,sc:m.score,ss:ss,gz:m.gz});
+      else if(FOE[cats[0]]===cat&&m.score<62) BAD.push({m:m.month,sc:m.score,ss:ss,gz:m.gz});
+    });
+    GOOD.sort(function(a,b){return b.sc-a.sc;});
+    BAD.sort(function(a,b){return a.sc-b.sc;});
+    var top=GOOD.slice(0,2), risk=BAD.slice(0,1);
+    var h='<div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--pri-light,#f5efe4);color:#3b2f1e;">';
+    h+='<div style="font-size:12px;font-weight:800;">⏳ 应期窗口</div>';
+    if(top.length){
+      h+='<div style="font-size:12px;line-height:1.8;margin-top:5px;">✅ 机会窗：'+top.map(function(x){return '<b>'+(MNAME[x.m]||x.m+'月')+'</b>（'+x.gz+'月，'+x.ss+'当令，能量'+x.sc+(x.sc<62?'——机会在但要出力':'，顺势')+'）';}).join('；')+'</div>';
+      h+='<div style="font-size:11.5px;line-height:1.7;color:#5a4a30;margin-top:3px;">要动就在这几月推进，把最重的动作放在能量最高的那个月。</div>';
+    } else {
+      h+='<div style="font-size:12px;line-height:1.8;margin-top:5px;">未来12个月没有明显的用神旺月——不急于动，先攒条件，等窗口再出手。</div>';
+    }
+    if(risk.length){
+      h+='<div style="font-size:12px;line-height:1.8;margin-top:4px;">⚠️ 缓行窗：'+(MNAME[risk[0].m]||risk[0].m+'月')+'（'+risk[0].gz+'月，能量'+risk[0].sc+'）——这个月别把关键步骤押上去。</div>';
+    }
+    h+='<div style="font-size:10px;color:#8a7a5f;margin-top:6px;">依据链：问题类型→用神'+(cats||[]).map(function(c){return CATNAME[c]||c;}).join('/')+'→流月干支对日主的十神与能量逐月扫描——窗口是倾向不是保证。</div>';
+    h+='</div>';
+    return h;
+  }catch(_e){ return ''; }
+};
+window._wenSS=function(dayG,otherG){
+  /* 内联十神计算(自给自足——shiShenOf是八字渲染局部函数,外部摸不到,坑46) */
+  try{
+    var WX={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+    var YY={'甲':1,'乙':0,'丙':1,'丁':0,'戊':1,'己':0,'庚':1,'辛':0,'壬':1,'癸':0};
+    var SHENG={'木':'火','火':'土','土':'金','金':'水','水':'木'};
+    var KE={'木':'土','土':'水','水':'火','火':'金','金':'木'};
+    if(dayG===otherG) return '比肩';
+    var dw=WX[dayG], ow=WX[otherG];
+    if(!dw||!ow) return null;
+    var sy=YY[dayG]===YY[otherG];
+    if(dw===ow) return sy?'比肩':'劫财';
+    if(SHENG[dw]===ow) return sy?'食神':'伤官';
+    if(KE[dw]===ow) return sy?'偏财':'正财';
+    if(KE[ow]===dw) return sy?'七杀':'正官';
+    if(SHENG[ow]===dw) return sy?'偏印':'正印';
+    return null;
+  }catch(_e){ return null; }
+};
 window._wenAsk=function(key){
   try{
     var r=window._lynCtx&&window._lynCtx.r;
@@ -32041,6 +32117,7 @@ window._wenAsk=function(key){
     h+='<div style="font-size:13px;font-weight:800;">🎯 倾向：<span style="color:var(--pri);">'+verdict+'</span></div>';
     h+='<div style="font-size:12.5px;line-height:1.8;margin-top:6px;">'+body+'</div>';
     h+='<details style="margin-top:8px;"><summary style="font-size:11px;color:var(--text-hint);cursor:pointer;">⌄ 看判定过程（'+ev.length+' 条依据）</summary><div style="font-size:11px;line-height:1.7;color:var(--text-hint);margin-top:5px;">'+ev.map(function(x){return '· '+x;}).join('<br>')+'</div></details>';
+    try{ var _tm=(window._wenTimingHTML&&window._wenTimingHTML(key,r))||''; h+=_tm; }catch(_te1){}
     h+='<div style="font-size:10.5px;color:var(--text-hint);margin-top:7px;">命理给的是倾向不是保证——大事还要看现实条件。这是工具，不是答案。</div>';
     h+='</div>';
     var el=document.getElementById('wenAnswer');
