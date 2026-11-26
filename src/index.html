@@ -1623,7 +1623,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.149.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.150.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2697,7 +2697,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.149.0-20261126';
+const ZHIMING_BUILD = 'v2.150.0-20261126';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -5628,11 +5628,36 @@ function lyBuild(yaos, askType, gzIdx){
   else if (score === -1){ level = "谨慎"; levelTip = "阻力偏多，宜缓进或先化解阻碍"; }
   else { level = "不利"; levelTip = "阻碍较大，建议三思而后行"; }
 
+  /* ---- 应期（v2.150.0 简化主流口径：旬空+值月/合月/冲空月） ---- */
+  var timing = null;
+  try{
+    var ZHI = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+    var zhiIdx = ysPos >= 0 ? LY_ZHI.indexOf(benNaj[ysPos][1]) : -1;
+    if (zhiIdx >= 0){
+      var i0 = gzIdx - (gzIdx % 10);                 /* 起卦日所在旬首 */
+      var kong = [ (i0 % 12 + 10) % 12, (i0 % 12 + 11) % 12 ];
+      var isKong = kong.indexOf(zhiIdx) >= 0;
+      var heMap = {0:1,1:0,2:11,11:2,3:10,10:3,4:9,9:4,5:8,8:5,6:7,7:6};
+      var zhiMonth = (zhiIdx - 2 + 12) % 12 + 1;     /* 寅=正月 */
+      var heZhi = heMap[zhiIdx];
+      var heMonth = (heZhi - 2 + 12) % 12 + 1;
+      var chongKong = isKong ? ((kong[0]===zhiIdx ? kong[1] : kong[0]) + 6) % 12 : -1;
+      var chongKongMonth = chongKong >= 0 ? (chongKong - 2 + 12) % 12 + 1 : -1;
+      timing = {
+        zhi: ZHI[zhiIdx], zhiIdx: zhiIdx, isKong: isKong,
+        kongNames: kong.map(function(k){ return ZHI[k]; }),
+        zhiMonth: zhiMonth, heMonth: heMonth,
+        chongKongName: chongKong >= 0 ? ZHI[chongKong] : null,
+        chongKongMonth: chongKongMonth
+      };
+    }
+  }catch(_et){ timing = null; }
+
   return {
     benIdx: thisIdx, bian, yaos: yaos.slice(), yinyang: yinyang.slice(), changePos: changePos.slice(),
     gong: g[0], gongWx: g[1], shi: g[2], ying: g[3],
     benNaj, benLq, liuShen: shens, gz: gzText,
-    ysPos, ysTypes, dongIdx, score, level, levelTip, reasons, rel, askType, askLabel: ask.label
+    ysPos, ysTypes, dongIdx, score, level, levelTip, reasons, rel, askType, askLabel: ask.label, timing: timing
   };
 }
 /* ---- DOM 渲染 ---- */
@@ -5671,6 +5696,24 @@ function lyRender(r, question){
   if (r.rel && r.rel.length) html += '<div class="kv"><span class="k">世应</span><span class="v">' + r.rel.join("；") + '</span></div>';
   html += '<div class="kv"><span class="k">参考</span><span class="v">' + r.levelTip + '（倾向分 ' + r.score + '）</span></div>';
   html += '<ul style="margin:8px 0 0 18px;padding:0;font-size:12px;color:var(--text-sub);line-height:1.8;">' + r.reasons.map(x => '<li>' + wrapTerms(x) + '</li>').join("") + '</ul>';
+  if (r.timing){
+    var MN = ['','正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
+    var tm = r.timing;
+    var MNZ = function(m){ return MN[m]||m+'月'; };
+    var th = '<div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--pri-light,#f5efe4);color:#3b2f1e;">';
+    th += '<div style="font-size:12px;font-weight:800;">⏳ 应期参考</div>';
+    if (tm.isKong){
+      th += '<div style="font-size:12px;line-height:1.8;margin-top:5px;">用神落<b>旬空</b>（'+tm.kongNames.join('、')+'空）——事在空中未实，不宜急进。</div>';
+      if (tm.chongKongMonth > 0){
+        th += '<div style="font-size:12px;line-height:1.8;margin-top:3px;">传统口径取<b>冲空</b>为突破口：'+MNZ(tm.chongKongMonth)+'（冲'+tm.chongKongName+'）前后见分晓。</div>';
+      }
+    } else {
+      th += '<div style="font-size:12px;line-height:1.8;margin-top:5px;">用神落'+tm.zhi+'支——按「值/合」口径，<b>'+MNZ(tm.zhiMonth)+'</b>（值月）与<b>'+MNZ(tm.heMonth)+'</b>（合月）最可能应。</div>';
+    }
+    th += '<div style="font-size:10px;color:#8a7a5f;margin-top:6px;">依据链：用神爻地支→旬空判定→值月/合月/冲空月——六爻应期派系众多，此为简化主流口径，仅供娱乐参考。</div>';
+    th += '</div>';
+    html += th;
+  }
   html += '<div class="hint" style="margin-top:8px;">' + askHint(r.askType) + '</div></div>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">';
   html += '<button class="btn-primary" onclick="window.lyCopy()">📋 复制结果</button>';
