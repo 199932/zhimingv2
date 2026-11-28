@@ -88,6 +88,8 @@ body.theme-dark .pab .emj{background:rgba(255,255,255,.07);}
   --modal-mask: rgba(0,0,0,0.4);
   --shadow: 0 2px 8px rgba(0,0,0,0.12);
   --pri-soft: rgba(139,111,71,0.15);
+  --pri-grow-light: #E9EFDD;
+  --pri-grow-dark: #4F6138;
 }
 body.theme-dark {
   --bg: #1A1814;
@@ -122,6 +124,8 @@ body.theme-dark {
   --modal-mask: rgba(0,0,0,0.7);
   --shadow: 0 4px 16px rgba(0,0,0,0.3);
   --pri-soft: rgba(160,130,100,0.15);
+  --pri-grow-light: #2A2F21;
+  --pri-grow-dark: #9Fb489;
 }
 /* ===== 西玄视觉系统 v2 · 星夜秘仪 ===== */
 body.theme-wu{
@@ -207,7 +211,7 @@ body.theme-dark.theme-today{--pri:#7A9AB8;--pri-light:#2A3540;--pri-dark:#B0C2D6
 .topbar .today{order:3;flex:1 1 100%;width:100%;text-align:center;font-size:11.5px;color:var(--text-sub);font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;letter-spacing:.5px;}
 .topbar .actions{order:2;display:flex;gap:2px;align-items:center;flex:1;min-width:0;justify-content:flex-end;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .topbar .actions::-webkit-scrollbar{display:none;}
-.icon-btn{width:32px;height:32px;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--text-sub);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,transform .15s;flex-shrink:0;}
+.icon-btn{width:32px;height:32px;font-size:16px;line-height:1;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--text-sub);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,transform .15s;flex-shrink:0;}
 .icon-btn .ib-lbl{display:none;font-style:normal;}
 body.theme-dark .icon-btn, body.theme-wu .icon-btn, body.theme-cn .icon-btn{color:var(--text);}
 .icon-btn:hover{background:rgba(128,128,128,.12);}
@@ -1218,7 +1222,7 @@ body.theme-dark .term {
 .primary-action .pab.pab-cn{border-color:transparent;background:var(--pri-cn-light);color:var(--pri-cn-dark);}
 .primary-action .pab.pab-wu{border-color:transparent;background:var(--pri-wu-light);color:var(--pri-wu-dark);}
 .primary-action .pab.pab-al{border-color:transparent;background:var(--pri-al-light);color:var(--pri-al-dark);}
-.primary-action .pab.pab-grow{border-color:transparent;background:#EAF7EC;color:#3E6B32;}
+.primary-action .pab.pab-grow{border-color:transparent;background:var(--pri-grow-light);color:var(--pri-grow-dark);}
 .primary-action .pab.pab-cn:hover,.primary-action .pab.pab-wu:hover,.primary-action .pab.pab-al:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.08);}
 .primary-action .pab.pab-qc{border:1px solid var(--line);background:var(--bg);color:var(--text-sub);}
 
@@ -1623,7 +1627,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.151.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.152.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2697,7 +2701,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.151.0-20261127';
+const ZHIMING_BUILD = 'v2.152.0-20261128';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
