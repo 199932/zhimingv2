@@ -148,6 +148,9 @@ def main():
             try:
                 pg.evaluate("(function(k){ if(window.switchTab) window.switchTab(k); window.scrollTo(0,0); })('%s')" % tab)
                 pg.wait_for_timeout(1200)
+                # 子签盲区补丁: 该页全部 sub-sec 临时展开再扫(否则浅底卡藏在子签深处永远不被扫——坑125家族漏网)
+                pg.evaluate("(function(){document.querySelectorAll('.page:not([style*=\"none\"]) .sub-sec').forEach(function(x){x.style.display='block';x.style.opacity='1';x.style.position='static';});})()")
+                pg.wait_for_timeout(600)
                 items = pg.evaluate(SCAN_JS)
                 for f in items:
                     f['tab'] = tab
