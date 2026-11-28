@@ -1627,7 +1627,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.152.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.153.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2701,7 +2701,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.152.0-20261128';
+const ZHIMING_BUILD = 'v2.153.0-20261128';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -7732,11 +7732,18 @@ function calcBazi(){
     ln.forEach(function(l,li){
       const jx = l.jiXiong || {score:0,label:"平",detail:""};
       const jxColor = jx.score>=1?"#5B8C3E":jx.score>0?"#7CB342":jx.score===0?"#B8860B":jx.score>-1?"#E67E22":"#C0392B";
+      /* 流年神煞mini标+喜神✦ */
+      var _ss=[];
+      try{ _ss=window._lynSS?window._lynSS(r.dayGan, r.dayZhi, (l.gz||'').charAt(0), (l.gz||'').charAt(1)):[]; }catch(_e0){}
+      var _ssE=_ss.slice(0,2).map(function(x){return x.e;}).join('');
+      var _isXi=false;
+      try{ var _wg={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'}[(l.gz||'').charAt(0)]; _isXi=r.xiYong&&r.xiYong.indexOf(_wg)>=0; }catch(_e0b){}
       h += `<div style="border:1px solid var(--line);border-radius:6px;padding:6px 4px;text-align:center;background:var(--bg);border-top:3px solid ${jxColor};cursor:pointer;" title="点按查看完整解读" onclick="window._lynOpen(${li})">
-        <div style="font-size:11px;color:var(--text-hint);">${l.year}</div>
+        <div style="font-size:11px;color:var(--text-hint);">${l.year}${_isXi?' <span title="喜神到位" style="color:#C9A227;">✦</span>':''}</div>
         <div style="font-weight:700;font-size:14px;margin:2px 0;">${l.gz}</div>
         <div style="font-size:10px;color:var(--text-hint);">${l.wx}</div>
         <div><span class="tag tag-info" style="font-size:9px;padding:0 5px;">${l.ganShi}</span></div>
+        ${_ssE?'<div style="font-size:10px;margin-top:1px;">'+_ssE+'</div>':''}
         <div style="font-size:11px;font-weight:700;color:${jxColor};margin-top:2px;">${jx.label}</div>
       </div>`;
     });
@@ -32054,6 +32061,27 @@ window._mengHist=function(){
   }catch(_e5){}
 };
 /* ═══ 应期推演（v2.149.0）：问题→用神十神→流月逐月旺衰→机会窗/风险窗 ═══ */
+/* ═══ 流年神煞（v2.153.0）：日支/日干起神煞判流年——桃花/驿马/文昌/华盖/将星/禄神/天乙 ═══ */
+window._lynSS=function(dayG,dayZhi,yearGan,yearZhi){
+  try{
+    var TA={'申':'酉','子':'酉','辰':'酉','巳':'午','酉':'午','丑':'午','寅':'卯','午':'卯','戌':'卯','亥':'子','卯':'子','未':'子'};
+    var YM={'申':'寅','子':'寅','辰':'寅','巳':'亥','酉':'亥','丑':'亥','寅':'申','午':'申','戌':'申','亥':'巳','卯':'巳','未':'巳'};
+    var HG={'申':'辰','子':'辰','辰':'辰','巳':'丑','酉':'丑','丑':'丑','寅':'戌','午':'戌','戌':'戌','亥':'未','卯':'未','未':'未'};
+    var JX={'申':'子','子':'子','辰':'子','巳':'酉','酉':'酉','丑':'酉','寅':'午','午':'午','戌':'午','亥':'卯','卯':'卯','未':'卯'};
+    var WC={'甲':'巳','乙':'午','丙':'申','戊':'申','丁':'酉','己':'酉','庚':'亥','辛':'子','壬':'寅','癸':'卯'};
+    var LS={'甲':'寅','乙':'卯','丙':'巳','戊':'巳','丁':'午','己':'午','庚':'申','辛':'酉','壬':'亥','癸':'子'};
+    var TY={'甲':['丑','未'],'戊':['丑','未'],'庚':['丑','未'],'乙':['子','申'],'己':['子','申'],'丙':['亥','酉'],'丁':['亥','酉'],'壬':['巳','卯'],'癸':['巳','卯'],'辛':['寅','午']};
+    var out=[];
+    if(dayZhi&&TA[dayZhi]===yearZhi) out.push({k:'taohua',n:'桃花',e:'🌸',d:'人缘魅力与异性缘的窗口年——感情机会变多，未婚者主动些，已婚者经营好边界'});
+    if(dayZhi&&YM[dayZhi]===yearZhi) out.push({k:'yima',n:'驿马',e:'🐎',d:'动迁与远行的信号年——换环境、出差、搬迁、旅行都利于成行'});
+    if(dayZhi&&HG[dayZhi]===yearZhi) out.push({k:'huagai',n:'华盖',e:'🎩',d:'孤独星——适合独处深耕，艺术、玄学、研究有灵感，但别把自己关太久'});
+    if(dayZhi&&JX[dayZhi]===yearZhi) out.push({k:'jiangxing',n:'将星',e:'⭐',d:'掌权星——组织与领导力放大，适合牵头做事、争取核心位置'});
+    if(dayG&&WC[dayG]===yearZhi) out.push({k:'wenchang',n:'文昌',e:'📚',d:'聪明文采年——考试、考证、写作、签约的窗口，脑子转得快'});
+    if(dayG&&LS[dayG]===yearZhi) out.push({k:'lushen',n:'禄神',e:'💰',d:'正财顺位年——工资、稳定收入、专业变现有利，求稳不求横'});
+    if(dayG&&TY[dayG]&&TY[dayG].indexOf(yearZhi)>=0) out.push({k:'tianyi',n:'天乙贵人',e:'🤝',d:'贵人扶持年——逢难有人帮，多请教、多借力、别硬扛'});
+    return out;
+  }catch(_e){ return []; }
+};
 window._WEN_OBJ={"hit":"✓应验","part":"◐部分","miss":"✗没应","na":"—说不清"};
 window._wenMark=function(t,o){
   try{
@@ -32182,6 +32210,22 @@ window._wenAsk=function(key){
       } else if(cat2==='印星'){ verdict='求稳——投资自己最划算'; body='今年流年干是<b>『'+lnSS+'』</b>——印星主年，适合『充电型』的投入：课程、证书、工具、健康。定存和稳健理财比投机划算，市场的热闹跟你关系不大。'; ev.push('流年干十神='+lnSS+'（印星主稳）');
       } else { verdict='观望——不为动而动'; body='今年流年干是<b>『'+lnSS+'』</b>——'+jd2[1]+jd2[2]; ev.push('流年干十神='+lnSS+'（中性）'); }
     } else { return; }
+    /* 流年神煞叠注（v2.153.0）：问题类型×流年神煞——有则叠句，无则不提 */
+    try{
+      var _yn=(ln&&ln.gz)?ln.gz:'';
+      var _ynG=_yn.charAt(0), _ynZ=_yn.charAt(1);
+      var _ssArr=(window._lynSS&&window._lynSS(dayG,dayZ,_ynG,_ynZ))||[];
+      var _ssPick=null;
+      if(key==='love'&&_ssArr.some(function(x){return x.k==='taohua';})) _ssPick=_ssArr.find(function(x){return x.k==='taohua';});
+      else if((key==='move'||key==='travel')&&_ssArr.some(function(x){return x.k==='yima';})) _ssPick=_ssArr.find(function(x){return x.k==='yima';});
+      else if(key==='study'&&_ssArr.some(function(x){return x.k==='wenchang';})) _ssPick=_ssArr.find(function(x){return x.k==='wenchang';});
+      else if(key==='money'&&_ssArr.some(function(x){return x.k==='lushen';})) _ssPick=_ssArr.find(function(x){return x.k==='lushen';});
+      else if((key==='career')&&_ssArr.some(function(x){return x.k==='tianyi';})) _ssPick=_ssArr.find(function(x){return x.k==='tianyi';});
+      if(_ssPick){
+        body+='此外，今年'+_ynG+_ynZ+'年恰逢<b>『'+_ssPick.n+'』</b>入命——'+_ssPick.e+' '+_ssPick.d+'。';
+        ev.push('流年神煞='+_ssPick.n+'（日'+(dayZ||'')+'起）');
+      }
+    }catch(_ssE){}
     /* 存档钩子：回测数据源（每问每天一条） */
     try{
       var a=[]; try{ a=JSON.parse(localStorage.getItem('zhiming_wenming_v1')||'[]'); }catch(_e1){}
@@ -32210,6 +32254,20 @@ window._lynOpen=function(idx){
     if(!ctx||!ctx.ly||!ctx.ly[idx]) { try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
     var pt=ctx.ly[idx];
     var html=window._lyExplain(pt, ctx.r);
+    /* 流年神煞段（v2.153.0） */
+    try{
+      var _r=ctx.r||{};
+      var _ss=window._lynSS?window._lynSS(_r.dayGan,_r.dayZhi,(pt.gz||'').charAt(0),(pt.gz||'').charAt(1)):[];
+      if(_ss.length){
+        var _sh='<div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--pri-light);color:var(--pri-dark);">';
+        _sh+='<div style="font-size:12px;font-weight:800;">✨ '+pt.year+' 神煞（日柱起）</div>';
+        _ss.forEach(function(x){
+          _sh+='<div style="font-size:12px;line-height:1.8;margin-top:5px;">'+x.e+' <b>'+x.n+'</b>——'+x.d+'</div>';
+        });
+        _sh+='<div style="font-size:10px;opacity:.7;margin-top:6px;">神煞是传统取象的窗口提示，吉凶仍看整体配合。</div></div>';
+        html+=_sh;
+      }
+    }catch(_e2){}
     var body=document.getElementById('lyModalBody');
     if(body) body.innerHTML=html;
     window.__openModalById('lyModal');
