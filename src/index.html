@@ -1627,7 +1627,7 @@ body{ padding-bottom:160px; }
 </div>
 <!-- ===== 顶部栏 ===== -->
 <div class="topbar">
-  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.153.0</span></div>
+  <div class="brand">知命 V2<span style="font-size:9px;opacity:.5;margin-left:3px;">v2.154.0</span></div>
 
   <!-- Streak 计数器已移除（用户反馈没用）——数据仍记录于 zhiming_v2_streak_data -->
   <div class="today" id="topToday">加载中...</div>
@@ -2701,7 +2701,7 @@ const DEBUG=false;const _log=(...a)=>{if(DEBUG)console.log(...a)};const _warn=(.
 // 用户手势标记：无手势时浏览器会拦截 navigator.vibrate，仅在用户已交互后启用振动反馈
 window.__userTapped=false;['touchstart','click'].forEach(function(ev){window.addEventListener(ev,function(){window.__userTapped=true;},{capture:true,passive:true});});
 
-const ZHIMING_BUILD = 'v2.153.0-20261128';
+const ZHIMING_BUILD = 'v2.154.0-20261128';
 
 // ===== E1: 全局错误拦截 =====
 window._errLog=[];
@@ -4515,10 +4515,14 @@ window._liuyueWaveHTML=function(){
     var low=pts.reduce(function(a,b){return b.sc<a.sc?b:a;});
     var nowM=new Date().getMonth()+1;
     var poly=pts.map(function(p2){return p2.x+','+p2.y;}).join(' ');
+    var _rG=null,_rZ=null;
+    try{ var _rr=(window._lynCtx&&window._lynCtx.r)||null; if(_rr){_rG=_rr.dayGan;_rZ=_rr.dayZhi;} }catch(_re){}
     var dots=pts.map(function(p2){
       var col=(p2.sc>=85?'#C25E4C':(p2.sc>=70?'#8A9A5B':'#B0876A'));
       var isNow=(p2.m===nowM);
-      return '<circle cx="'+p2.x+'" cy="'+p2.y+'" r="'+(isNow?5:3)+'" fill="'+col+'"'+(isNow?' stroke="#4A3B26" stroke-width="1.5"':'')+'/><text x="'+p2.x+'" y="'+(H-1)+'" font-size="7" text-anchor="middle" fill="var(--text-hint)">'+p2.m+'</text>'+(isNow?'<text x="'+p2.x+'" y="'+(p2.y-8)+'" font-size="7.5" text-anchor="middle" fill="#4A3B26" font-weight="700">今</text>':'');
+      var _ssE='';
+      try{ var _ss=window._lynSS?window._lynSS(_rG,_rZ,(p2.gz||'').charAt(0),(p2.gz||'').charAt(1)):[]; _ssE=_ss.slice(0,1).map(function(x){return x.e;}).join(''); }catch(_se){}
+      return '<circle cx="'+p2.x+'" cy="'+p2.y+'" r="'+(isNow?5:3)+'" fill="'+col+'"'+(isNow?' stroke="#4A3B26" stroke-width="1.5"':'')+'/><text x="'+p2.x+'" y="'+(H-1)+'" font-size="7" text-anchor="middle" fill="var(--text-hint)">'+p2.m+(_ssE?''+_ssE:'')+'</text>'+(isNow?'<text x="'+p2.x+'" y="'+(p2.y-8)+'" font-size="7.5" text-anchor="middle" fill="#4A3B26" font-weight="700">今</text>':'');
     }).join('');
     var monthNames=['','正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
     var h='<div class="card"><div class="card-title">📈 未来 12 个月的节奏 <span style="font-weight:400;font-size:10px;color:var(--text-hint);">流月能量曲线·点月份看细账</span></div>';
@@ -7664,8 +7668,10 @@ function calcBazi(){
         const tag=isHi?'<text x="'+cx+'" y="'+(cy-10)+'" font-size="9" fill="#5B8C3E" text-anchor="middle" font-weight="700">高峰 '+pt.score+'</text>'
               :(isLo?'<text x="'+cx+'" y="'+(cy+16)+'" font-size="9" fill="#B0A488" text-anchor="middle">蓄力 '+pt.score+'</text>':"");
         const gzTag='<text x="'+cx+'" y="'+(H-26)+'" font-size="8.5" fill="var(--text-hint)" text-anchor="middle">'+pt.gz+'</text>';
-        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isHi||isLo?4.5:5)+'" fill="'+c+'" style="cursor:pointer;" onclick="window._lyOpen('+i+')" ><title>'+pt.label+' '+pt.gz+'('+pt.wx+') 十神:'+pt.ganShi+' '+pt.jiXiong.label+' — 点按查看完整解读</title></circle>'+tag+gzTag
-          +'<text x="'+cx+'" y="'+(H-12)+'" font-size="9.5" fill="var(--text-sub)" text-anchor="middle">'+pt.label+'</text>';
+        var _ssE='';
+        try{ var _ss=window._lynSS?window._lynSS(r.dayGan, r.dayZhi, (pt.gz||'').charAt(0), (pt.gz||'').charAt(1)):[]; _ssE=_ss.slice(0,2).map(function(x){return x.e;}).join(''); }catch(_se){}
+        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isHi||isLo?4.5:5)+'" fill="'+c+'" style="cursor:pointer;" onclick="window._lyOpen('+i+')" ><title>'+pt.label+' '+pt.gz+'('+pt.wx+') 十神:'+pt.ganShi+' '+pt.jiXiong.label+(_ss.length?' 神煞:'+_ss.map(function(x){return x.n;}).join('、'):'')+' — 点按查看完整解读</title></circle>'+tag+gzTag
+          +'<text x="'+cx+'" y="'+(H-12)+'" font-size="9.5" fill="var(--text-sub)" text-anchor="middle">'+pt.label+(_ssE?' '+_ssE:'')+'</text>';
       }).join("");
       h += '<div class="card"><div class="card-title">📈 未来 12 个月 · 流月运势（喜用神评分）</div>';
       h += '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block;" role="img" aria-label="未来十二个月流月运势折线图">';
@@ -32280,6 +32286,20 @@ window._lyOpen=function(idx){
     if(!ctx||!ctx.ly||!ctx.ly[idx]) { try{window.showToast&&window.showToast('请先在八字页排盘','info',1600);}catch(_e){} return; }
     var pt=ctx.ly[idx];
     var html=window._lyExplain(pt, ctx.r);
+    /* 流月神煞段（v2.154.0） */
+    try{
+      var _r=ctx.r||{};
+      var _ss=window._lynSS?window._lynSS(_r.dayGan,_r.dayZhi,(pt.gz||'').charAt(0),(pt.gz||'').charAt(1)):[];
+      if(_ss.length){
+        var _sh='<div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--pri-light);color:var(--pri-dark);">';
+        _sh+='<div style="font-size:12px;font-weight:800;">✨ '+pt.label+'神煞（日柱起）</div>';
+        _ss.forEach(function(x){
+          _sh+='<div style="font-size:12px;line-height:1.8;margin-top:5px;">'+x.e+' <b>'+x.n+'</b>——'+x.d+'</div>';
+        });
+        _sh+='<div style="font-size:10px;opacity:.7;margin-top:6px;">神煞是传统取象的窗口提示，吉凶仍看整体配合。</div></div>';
+        html+=_sh;
+      }
+    }catch(_e2){}
     var body=document.getElementById('lyModalBody');
     if(body) body.innerHTML=html;
     window.__openModalById('lyModal');
